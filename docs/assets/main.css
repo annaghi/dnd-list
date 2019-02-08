@@ -1,0 +1,118 @@
+html {
+  font-family: monospace;
+  height: 100%;
+}
+body {
+  margin: 0px;
+  display: flex;
+  flex-direction: column;
+}
+main,
+nav {
+  box-sizing: border-box;
+}
+nav {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Navigation panel */
+
+nav h1 {
+  font-size: 2.2em;
+  font-weight: lighter;
+}
+nav h2 {
+  font-size: 1.3em;
+  font-weight: lighter;
+}
+
+nav p {
+  line-height: 1.5;
+  margin-bottom: 3rem;
+}
+
+nav ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+nav li {
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+  box-sizing: border-box;
+  cursor: pointer;
+  min-width: 200px;
+  margin-bottom: 5px;
+  margin-right: 5px;
+  padding: 7px 14px;
+}
+nav li:hover {
+  border-style: solid;
+  border-color: gray;
+}
+nav li.is-active {
+  border-style: dashed;
+  border-color: gray;
+}
+
+nav {
+  padding: 20px 40px;
+}
+
+/* Main panel */
+
+main {
+  background-color: #9b9b9b;
+  padding-top: 20px;
+}
+.elm-demo {
+  padding: 0 40px;
+}
+.elm-code h3 {
+  padding: 0 40px;
+}
+
+main h2 {
+  font-weight: lighter;
+  line-height: 1.9;
+  margin-top: 1.2em;
+  text-align: left;
+}
+main h3 {
+  font-weight: lighter;
+  text-align: left;
+}
+
+/* Highlight.js */
+
+main .hljs {
+  padding-bottom: 5em;
+}
+
+main pre {
+  margin: 0;
+}
+
+@media (min-width: 1200px) {
+  body {
+    flex-direction: row;
+    height: 100%;
+    overflow: hidden;
+  }
+  main,
+  nav {
+    height: 100%;
+    overflow-y: auto;
+  }
+  main {
+    flex: 1 0 0px;
+  }
+  nav {
+    flex: 0 0 300px;
+  }
+}
