@@ -429,8 +429,12 @@ draggedStyles (Draggable model) movement =
                     case movement of
                         Horizontal ->
                             [ Html.Attributes.style "position" "absolute"
-                            , Html.Attributes.style "left" (px (m.currentPosition.x - m.startPosition.x + round element.x))
-                            , Html.Attributes.style "top" (px (round element.y))
+                            , Html.Attributes.style "top" "0"
+                            , Html.Attributes.style "left" "0"
+                            , Html.Attributes.style "transform" <|
+                                translate
+                                    (m.currentPosition.x - m.startPosition.x + round element.x)
+                                    (round element.y)
                             , Html.Attributes.style "height" (px (round element.height))
                             , Html.Attributes.style "width" (px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"
@@ -438,8 +442,12 @@ draggedStyles (Draggable model) movement =
 
                         Vertical ->
                             [ Html.Attributes.style "position" "absolute"
-                            , Html.Attributes.style "left" (px (round element.x))
-                            , Html.Attributes.style "top" (px (m.currentPosition.y - m.startPosition.y + round element.y))
+                            , Html.Attributes.style "left" "0"
+                            , Html.Attributes.style "top" "0"
+                            , Html.Attributes.style "transform" <|
+                                translate
+                                    (round element.x)
+                                    (m.currentPosition.y - m.startPosition.y + round element.y)
                             , Html.Attributes.style "height" (px (round element.height))
                             , Html.Attributes.style "width" (px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"
@@ -447,8 +455,12 @@ draggedStyles (Draggable model) movement =
 
                         Free ->
                             [ Html.Attributes.style "position" "absolute"
-                            , Html.Attributes.style "left" (px (m.currentPosition.x - m.startPosition.x + round element.x))
-                            , Html.Attributes.style "top" (px (m.currentPosition.y - m.startPosition.y + round element.y))
+                            , Html.Attributes.style "left" "0"
+                            , Html.Attributes.style "top" "0"
+                            , Html.Attributes.style "transform" <|
+                                translate
+                                    (m.currentPosition.x - m.startPosition.x + round element.x)
+                                    (m.currentPosition.y - m.startPosition.y + round element.y)
                             , Html.Attributes.style "height" (px (round element.height))
                             , Html.Attributes.style "width" (px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"
@@ -461,3 +473,8 @@ draggedStyles (Draggable model) movement =
 px : Int -> String
 px n =
     String.fromInt n ++ "px"
+
+
+translate : Int -> Int -> String
+translate x y =
+    "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"
