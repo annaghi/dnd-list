@@ -48,8 +48,8 @@ type Example
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { key = 0
-      , example = Basic Example.Basic.initialModel
+    ( { key = 1
+      , example = Free Example.Free.initialModel
       }
     , Cmd.none
     )
@@ -245,7 +245,7 @@ navigationView currentKey list =
                 [ Html.Events.onClick (ButtonClicked key example)
                 , Html.Attributes.classList [ ( "is-active", key == currentKey ) ]
                 ]
-                [ Html.text ((getTitle >> .h1) example) ]
+                [ Html.text ((title >> .h1) example) ]
     in
     Html.div []
         [ Html.h2 [] [ Html.text "Examples" ]
@@ -259,10 +259,10 @@ mainView : Example -> Html.Html Msg
 mainView example =
     let
         h2 =
-            (getTitle >> .h2) example
+            (title >> .h2) example
 
         h3 =
-            (getTitle >> .h3) example
+            (title >> .h3) example
     in
     case example of
         Basic basic ->
@@ -340,8 +340,8 @@ type alias Header =
     }
 
 
-getTitle : Example -> Header
-getTitle example =
+title : Example -> Header
+title example =
     case example of
         Basic _ ->
             { h1 = "Basic"
