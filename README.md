@@ -15,7 +15,7 @@ dragEvents : (Msg -> m) -> Int -> String -> List (Html.Attribute m)
 
 dropEvents : (Msg -> m) -> Int -> List (Html.Attribute m)
 
-draggedStyles : Draggable -> Movement -> Point -> List (Html.Attribute m)
+draggedStyles : Draggable -> Movement -> List (Html.Attribute m)
 ```
 
 ## Example
