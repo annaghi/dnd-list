@@ -8,8 +8,8 @@ module DnDList exposing
 
 {-| While dragging a list item, the mouse events and the list reordering are handled internally by this module.
 
-First you need to create a `System` variable which holds the information and functions related to the drag operation.
-Using this variable you can wire up the internal model, subscriptions, and commands into your model, subscriptions and commands respectively.
+First you need to create a `System` object which holds the information and functions related to the drag operation.
+Using this object you can wire up the internal model, subscriptions, and commands into your model, subscriptions and commands respectively.
 Also you can get access to the drag and drop events as well as the dragged position styles in your `view` functions.
 
 Finally you need to wrap up the internal messages into your message, and pass them along with your sortable list to the internal `DnDList.update` function within your `update` funcion.
