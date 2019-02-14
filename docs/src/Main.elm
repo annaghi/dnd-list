@@ -61,7 +61,7 @@ init _ =
 
 type Msg
     = NoOp
-    | ButtonClicked Int Example
+    | LinkClicked Int Example
     | BasicMsg Example.Basic.Msg
     | FreeMsg Example.Free.Msg
     | HorizontalMsg Example.Horizontal.Msg
@@ -75,7 +75,7 @@ update message model =
         NoOp ->
             ( model, Cmd.none )
 
-        ButtonClicked key example ->
+        LinkClicked key example ->
             ( { model | key = key, example = example }
             , jumpToTop "main"
             )
@@ -232,7 +232,7 @@ cardView =
                 [ Html.Attributes.href "https://package.elm-lang.org/packages/annaghi/dnd-list/latest" ]
                 [ Html.text "Docs" ]
             ]
-        , Html.p [] [ Html.text "Drag and Drop for sortable lists in Elm web apps with mouse events" ]
+        , Html.p [] [ Html.text "Drag and Drop for sortable lists in Elm web apps with mouse support" ]
         ]
 
 
@@ -242,10 +242,10 @@ navigationView currentKey list =
         linkView : Int -> Example -> Html.Html Msg
         linkView key example =
             Html.li
-                [ Html.Events.onClick (ButtonClicked key example)
+                [ Html.Events.onClick (LinkClicked key example)
                 , Html.Attributes.classList [ ( "is-active", key == currentKey ) ]
                 ]
-                [ Html.text ((title >> .h1) example) ]
+                [ Html.text ((heading >> .h1) example) ]
     in
     Html.div []
         [ Html.h2 [] [ Html.text "Examples" ]
@@ -258,56 +258,58 @@ navigationView currentKey list =
 mainView : Example -> Html.Html Msg
 mainView example =
     let
+        h2 : String
         h2 =
-            (title >> .h2) example
+            (heading >> .h2) example
 
+        h3 : String
         h3 =
-            (title >> .h3) example
+            (heading >> .h3) example
     in
     case example of
         Basic basic ->
             Html.main_ [ Html.Attributes.id "main" ]
-                [ exampleView h2 h3 BasicMsg (Example.Basic.view basic)
-                , codeView Example.Basic.source
+                [ demoView h2 h3 BasicMsg (Example.Basic.view basic)
+                , sourceView Example.Basic.source
                 ]
 
         Free free ->
             Html.main_ [ Html.Attributes.id "main" ]
-                [ exampleView h2 h3 FreeMsg (Example.Free.view free)
-                , codeView Example.Free.source
+                [ demoView h2 h3 FreeMsg (Example.Free.view free)
+                , sourceView Example.Free.source
                 ]
 
         Horizontal horizontal ->
             Html.main_ [ Html.Attributes.id "main" ]
-                [ exampleView h2 h3 HorizontalMsg (Example.Horizontal.view horizontal)
-                , codeView Example.Horizontal.source
+                [ demoView h2 h3 HorizontalMsg (Example.Horizontal.view horizontal)
+                , sourceView Example.Horizontal.source
                 ]
 
         Vertical vertical ->
             Html.main_ [ Html.Attributes.id "main" ]
-                [ exampleView h2 h3 VerticalMsg (Example.Vertical.view vertical)
-                , codeView Example.Vertical.source
+                [ demoView h2 h3 VerticalMsg (Example.Vertical.view vertical)
+                , sourceView Example.Vertical.source
                 ]
 
         WithTwoLists withTwoLists ->
             Html.main_ [ Html.Attributes.id "main" ]
-                [ exampleView h2 h3 WithTwoListsMsg (Example.WithTwoLists.view withTwoLists)
-                , codeView Example.WithTwoLists.source
+                [ demoView h2 h3 WithTwoListsMsg (Example.WithTwoLists.view withTwoLists)
+                , sourceView Example.WithTwoLists.source
                 ]
 
 
-exampleView : String -> String -> (a -> msg) -> Html.Html a -> Html.Html msg
-exampleView h2 h3 toMsg details =
+demoView : String -> String -> (a -> msg) -> Html.Html a -> Html.Html msg
+demoView h2 h3 toMsg demo =
     Html.div
         [ Html.Attributes.class "elm-demo" ]
         [ Html.h2 [] [ Html.text h2 ]
         , Html.h3 [] [ Html.text h3 ]
-        , Html.map toMsg details
+        , Html.map toMsg demo
         ]
 
 
-codeView : String -> Html.Html msg
-codeView source =
+sourceView : String -> Html.Html msg
+sourceView source =
     Html.div
         [ Html.Attributes.class "elm-code" ]
         [ Html.h3 [] [ Html.text "Source" ]
@@ -333,15 +335,15 @@ code string =
 -- HELPERS
 
 
-type alias Header =
+type alias Heading =
     { h1 : String
     , h2 : String
     , h3 : String
     }
 
 
-title : Example -> Header
-title example =
+heading : Example -> Heading
+heading example =
     case example of
         Basic _ ->
             { h1 = "Basic"
