@@ -6542,7 +6542,7 @@ var author$project$Main$cardView = A2(
 			_List_Nil,
 			_List_fromArray(
 				[
-					elm$html$Html$text('Drag and Drop for sortable lists in Elm web apps with mouse events')
+					elm$html$Html$text('Drag and Drop for sortable lists in Elm web apps with mouse support')
 				]))
 		]));
 var author$project$Example$Basic$source = '\n    module Basic exposing (main)\n\n    import Browser\n    import DnDList\n    import Html\n    import Html.Attributes\n\n\n\n    -- MAIN\n\n\n    main : Program () Model Msg\n    main =\n        Browser.element\n            { init = init\n            , view = view\n            , update = update\n            , subscriptions = subscriptions\n            }\n\n\n\n    -- DATA\n\n\n    data : List String\n    data =\n        [ "Apples", "Bananas", "Cherries", "Dates" ]\n\n\n\n    -- SYSTEM\n\n\n    system : DnDList.System Msg\n    system =\n        DnDList.create DnDMsg\n\n\n\n    -- MODEL\n\n\n    type alias Model =\n        { draggable : DnDList.Draggable\n        , items : List String\n        }\n\n\n    initialModel : Model\n    initialModel =\n        { draggable = system.draggable\n        , items = data\n        }\n\n\n    init : () -> ( Model, Cmd Msg )\n    init _ =\n        ( initialModel, Cmd.none )\n\n\n\n    -- SUBSCRIPTIONS\n\n\n    subscriptions : Model -> Sub Msg\n    subscriptions model =\n        system.subscriptions model.draggable\n\n\n\n    -- UPDATE\n\n\n    type Msg\n        = NoOp\n        | DnDMsg DnDList.Msg\n\n\n    update : Msg -> Model -> ( Model, Cmd Msg )\n    update msg model =\n        case msg of\n            NoOp ->\n                ( model, Cmd.none )\n\n            DnDMsg message ->\n                let\n                    ( draggable, items ) =\n                        DnDList.update message model.draggable model.items\n                in\n                ( { model | draggable = draggable, items = items }\n                , system.commands model.draggable\n                )\n\n\n\n    -- VIEW\n\n\n    view : Model -> Html.Html Msg\n    view model =\n        let\n            maybeDragIndex : Maybe Int\n            maybeDragIndex =\n                DnDList.getDragIndex model.draggable\n        in\n        Html.section\n            [ Html.Attributes.style "margin" "6em 0"\n            , Html.Attributes.style "text-align" "center"\n            ]\n            [ model.items\n                |> List.indexedMap (itemView maybeDragIndex)\n                |> Html.div []\n            , draggedItemView model.draggable model.items\n            ]\n\n\n    itemView : Maybe Int -> Int -> String -> Html.Html Msg\n    itemView maybeDragIndex index item =\n        case maybeDragIndex of\n            Just dragIndex ->\n                if dragIndex /= index then\n                    Html.p\n                        (system.dropEvents index)\n                        [ Html.text item ]\n\n                else\n                    Html.p [] [ Html.text "[---------]" ]\n\n            Nothing ->\n                let\n                    itemId : String\n                    itemId =\n                        "id-" ++ String.replace " " "-" item\n                in\n                Html.p\n                    (Html.Attributes.id itemId :: system.dragEvents index itemId)\n                    [ Html.text item ]\n\n\n    draggedItemView : DnDList.Draggable -> List String -> Html.Html Msg\n    draggedItemView draggable items =\n        let\n            maybeItem : Maybe String\n            maybeItem =\n                DnDList.getDragIndex draggable\n                    |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n        in\n        case maybeItem of\n            Just item ->\n                Html.div\n                    (system.draggedStyles draggable DnDList.Free)\n                    [ Html.text item ]\n\n            Nothing ->\n                Html.text ""\n    ';
@@ -7548,6 +7548,52 @@ var author$project$Example$WithTwoLists$view = function (model) {
 				A2(author$project$Example$WithTwoLists$draggedNumberView, model.n, model.F)
 			]));
 };
+var elm$html$Html$h2 = _VirtualDom_node('h2');
+var elm$html$Html$h3 = _VirtualDom_node('h3');
+var elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
+var elm$html$Html$map = elm$virtual_dom$VirtualDom$map;
+var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
+var author$project$Main$demoView = F4(
+	function (h2, h3, toMsg, demo) {
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('elm-demo')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$h2,
+					_List_Nil,
+					_List_fromArray(
+						[
+							elm$html$Html$text(h2)
+						])),
+					A2(
+					elm$html$Html$h3,
+					_List_Nil,
+					_List_fromArray(
+						[
+							elm$html$Html$text(h3)
+						])),
+					A2(elm$html$Html$map, toMsg, demo)
+				]));
+	});
+var author$project$Main$heading = function (example) {
+	switch (example.$) {
+		case 0:
+			return {w: 'Basic', x: 'Basic example', y: 'Sortable list'};
+		case 1:
+			return {w: 'Free', x: 'Free drag movement', y: 'Example with keyed nodes'};
+		case 2:
+			return {w: 'Horizontal', x: 'Horizontal drag only', y: 'Example with keyed nodes'};
+		case 3:
+			return {w: 'Vertical', x: 'Vertical drag only', y: 'Example with keyed nodes'};
+		default:
+			return {w: 'Two lists', x: 'Two independent lists', y: 'Example with keyed nodes'};
+	}
+};
 var elm$virtual_dom$VirtualDom$property = F2(
 	function (key, value) {
 		return A2(
@@ -7571,9 +7617,7 @@ var author$project$Main$elmCode = F2(
 	function (attrs, elems) {
 		return A3(elm$html$Html$node, 'elm-code', attrs, elems);
 	});
-var elm$html$Html$h3 = _VirtualDom_node('h3');
-var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
-var author$project$Main$codeView = function (source) {
+var author$project$Main$sourceView = function (source) {
 	return A2(
 		elm$html$Html$div,
 		_List_fromArray(
@@ -7598,50 +7642,6 @@ var author$project$Main$codeView = function (source) {
 				_List_Nil)
 			]));
 };
-var elm$html$Html$h2 = _VirtualDom_node('h2');
-var elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
-var elm$html$Html$map = elm$virtual_dom$VirtualDom$map;
-var author$project$Main$exampleView = F4(
-	function (h2, h3, toMsg, details) {
-		return A2(
-			elm$html$Html$div,
-			_List_fromArray(
-				[
-					elm$html$Html$Attributes$class('elm-demo')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					elm$html$Html$h2,
-					_List_Nil,
-					_List_fromArray(
-						[
-							elm$html$Html$text(h2)
-						])),
-					A2(
-					elm$html$Html$h3,
-					_List_Nil,
-					_List_fromArray(
-						[
-							elm$html$Html$text(h3)
-						])),
-					A2(elm$html$Html$map, toMsg, details)
-				]));
-	});
-var author$project$Main$title = function (example) {
-	switch (example.$) {
-		case 0:
-			return {w: 'Basic', x: 'Basic example', y: 'Sortable list'};
-		case 1:
-			return {w: 'Free', x: 'Free drag movement', y: 'Example with keyed nodes'};
-		case 2:
-			return {w: 'Horizontal', x: 'Horizontal drag only', y: 'Example with keyed nodes'};
-		case 3:
-			return {w: 'Vertical', x: 'Vertical drag only', y: 'Example with keyed nodes'};
-		default:
-			return {w: 'Two lists', x: 'Two independent lists', y: 'Example with keyed nodes'};
-	}
-};
 var elm$core$Basics$composeR = F3(
 	function (f, g, x) {
 		return g(
@@ -7651,13 +7651,13 @@ var elm$html$Html$main_ = _VirtualDom_node('main');
 var author$project$Main$mainView = function (example) {
 	var h3 = A2(
 		elm$core$Basics$composeR,
-		author$project$Main$title,
+		author$project$Main$heading,
 		function ($) {
 			return $.y;
 		})(example);
 	var h2 = A2(
 		elm$core$Basics$composeR,
-		author$project$Main$title,
+		author$project$Main$heading,
 		function ($) {
 			return $.x;
 		})(example);
@@ -7673,12 +7673,12 @@ var author$project$Main$mainView = function (example) {
 				_List_fromArray(
 					[
 						A4(
-						author$project$Main$exampleView,
+						author$project$Main$demoView,
 						h2,
 						h3,
 						author$project$Main$BasicMsg,
 						author$project$Example$Basic$view(basic)),
-						author$project$Main$codeView(author$project$Example$Basic$source)
+						author$project$Main$sourceView(author$project$Example$Basic$source)
 					]));
 		case 1:
 			var free = example.a;
@@ -7691,12 +7691,12 @@ var author$project$Main$mainView = function (example) {
 				_List_fromArray(
 					[
 						A4(
-						author$project$Main$exampleView,
+						author$project$Main$demoView,
 						h2,
 						h3,
 						author$project$Main$FreeMsg,
 						author$project$Example$Free$view(free)),
-						author$project$Main$codeView(author$project$Example$Free$source)
+						author$project$Main$sourceView(author$project$Example$Free$source)
 					]));
 		case 2:
 			var horizontal = example.a;
@@ -7709,12 +7709,12 @@ var author$project$Main$mainView = function (example) {
 				_List_fromArray(
 					[
 						A4(
-						author$project$Main$exampleView,
+						author$project$Main$demoView,
 						h2,
 						h3,
 						author$project$Main$HorizontalMsg,
 						author$project$Example$Horizontal$view(horizontal)),
-						author$project$Main$codeView(author$project$Example$Horizontal$source)
+						author$project$Main$sourceView(author$project$Example$Horizontal$source)
 					]));
 		case 3:
 			var vertical = example.a;
@@ -7727,12 +7727,12 @@ var author$project$Main$mainView = function (example) {
 				_List_fromArray(
 					[
 						A4(
-						author$project$Main$exampleView,
+						author$project$Main$demoView,
 						h2,
 						h3,
 						author$project$Main$VerticalMsg,
 						author$project$Example$Vertical$view(vertical)),
-						author$project$Main$codeView(author$project$Example$Vertical$source)
+						author$project$Main$sourceView(author$project$Example$Vertical$source)
 					]));
 		default:
 			var withTwoLists = example.a;
@@ -7745,16 +7745,16 @@ var author$project$Main$mainView = function (example) {
 				_List_fromArray(
 					[
 						A4(
-						author$project$Main$exampleView,
+						author$project$Main$demoView,
 						h2,
 						h3,
 						author$project$Main$WithTwoListsMsg,
 						author$project$Example$WithTwoLists$view(withTwoLists)),
-						author$project$Main$codeView(author$project$Example$WithTwoLists$source)
+						author$project$Main$sourceView(author$project$Example$WithTwoLists$source)
 					]));
 	}
 };
-var author$project$Main$ButtonClicked = F2(
+var author$project$Main$LinkClicked = F2(
 	function (a, b) {
 		return {$: 1, a: a, b: b};
 	});
@@ -7810,7 +7810,7 @@ var author$project$Main$navigationView = F2(
 					_List_fromArray(
 						[
 							elm$html$Html$Events$onClick(
-							A2(author$project$Main$ButtonClicked, key, example)),
+							A2(author$project$Main$LinkClicked, key, example)),
 							elm$html$Html$Attributes$classList(
 							_List_fromArray(
 								[
@@ -7824,7 +7824,7 @@ var author$project$Main$navigationView = F2(
 							elm$html$Html$text(
 							A2(
 								elm$core$Basics$composeR,
-								author$project$Main$title,
+								author$project$Main$heading,
 								function ($) {
 									return $.w;
 								})(example))
