@@ -1,6 +1,6 @@
 # DnD List
 
-Drag and Drop for sortable lists in Elm web apps with mouse events.
+Drag and Drop for sortable lists in Elm web apps with mouse support.
 
 [Demos and Sources](https://annaghi.github.io/dnd-list/)
 
