@@ -7,15 +7,15 @@ Drag and Drop for sortable lists in Elm web apps with mouse support.
 ## Basic API
 
 ```elm
-create : (Msg -> m) -> System m
+create : (DnDList.Msg -> Msg) -> DnDList.System Msg
 
-getDragIndex : Draggable -> Maybe Int
+getDragIndex : DnDList.Draggable -> Maybe Int
 
-dragEvents : (Msg -> m) -> Int -> String -> List (Html.Attribute m)
+dragEvents : Int -> String -> List (Html.Attribute Msg)
 
-dropEvents : (Msg -> m) -> Int -> List (Html.Attribute m)
+dropEvents : Int -> List (Html.Attribute Msg)
 
-draggedStyles : Draggable -> Movement -> List (Html.Attribute m)
+draggedStyles : DnDList.Draggable -> DnDList.Movement -> List (Html.Attribute Msg)
 ```
 
 ## Example
@@ -142,15 +142,6 @@ view model =
 itemView : Maybe Int -> Int -> String -> Html.Html Msg
 itemView maybeDragIndex index item =
     case maybeDragIndex of
-        Just dragIndex ->
-            if dragIndex /= index then
-                Html.p
-                    (system.dropEvents index)
-                    [ Html.text item ]
-
-            else
-                Html.p [] [ Html.text "[---------]" ]
-
         Nothing ->
             let
                 itemId : String
@@ -161,16 +152,25 @@ itemView maybeDragIndex index item =
                 (Html.Attributes.id itemId :: system.dragEvents index itemId)
                 [ Html.text item ]
 
+        Just dragIndex ->
+            if dragIndex /= index then
+                Html.p
+                    (system.dropEvents index)
+                    [ Html.text item ]
+
+            else
+                Html.p [] [ Html.text "[---------]" ]
+
 
 draggedItemView : DnDList.Draggable -> List String -> Html.Html Msg
 draggedItemView draggable items =
     let
-        maybeItem : Maybe String
-        maybeItem =
+        maybeDraggedItem : Maybe String
+        maybeDraggedItem =
             DnDList.getDragIndex draggable
                 |> Maybe.andThen (\index -> items |> List.drop index |> List.head)
     in
-    case maybeItem of
+    case maybeDraggedItem of
         Just item ->
             Html.div
                 (system.draggedStyles draggable DnDList.Free)
