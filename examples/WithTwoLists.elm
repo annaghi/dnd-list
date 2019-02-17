@@ -47,14 +47,28 @@ data2 =
 -- SYSTEM
 
 
+configFruit : DnDList.Config Msg
+configFruit =
+    { events = FruitMsg
+    , movement = DnDList.Free
+    }
+
+
 systemFruit : DnDList.System Msg
 systemFruit =
-    DnDList.create FruitMsg
+    DnDList.create configFruit
+
+
+configNumber : DnDList.Config Msg
+configNumber =
+    { events = NumberMsg
+    , movement = DnDList.Free
+    }
 
 
 systemNumber : DnDList.System Msg
 systemNumber =
-    DnDList.create NumberMsg
+    DnDList.create configNumber
 
 
 
@@ -219,10 +233,7 @@ draggedFruitView draggableFruit fruits =
     case maybeDraggedFruit of
         Just ( _, fruit ) ->
             Html.div
-                (itemStyles
-                    ++ draggedItemStyles
-                    ++ systemFruit.draggedStyles draggableFruit DnDList.Free
-                )
+                (itemStyles ++ draggedItemStyles ++ systemFruit.draggedStyles draggableFruit)
                 [ Html.div (handleStyles ++ draggedHandleStyles) []
                 , Html.div [] [ Html.text fruit ]
                 ]
@@ -286,10 +297,7 @@ draggedNumberView draggableNumber numbers =
     case maybeDraggedNumber of
         Just ( _, number ) ->
             Html.div
-                (itemStyles
-                    ++ draggedItemStyles
-                    ++ systemNumber.draggedStyles draggableNumber DnDList.Free
-                )
+                (itemStyles ++ draggedItemStyles ++ systemNumber.draggedStyles draggableNumber)
                 [ Html.div (handleStyles ++ draggedHandleStyles) []
                 , Html.div [] [ Html.text number ]
                 ]

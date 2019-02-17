@@ -40,9 +40,16 @@ data =
 -- SYSTEM
 
 
+config : DnDList.Config Msg
+config =
+    { events = DnDMsg
+    , movement = DnDList.Free
+    }
+
+
 system : DnDList.System Msg
 system =
-    DnDList.create DnDMsg
+    DnDList.create config
 
 
 
@@ -173,10 +180,7 @@ draggedItemView draggable fruits =
     case maybeDraggedFruit of
         Just ( _, fruit ) ->
             Html.div
-                (itemStyles
-                    ++ draggedItemStyles
-                    ++ system.draggedStyles draggable DnDList.Free
-                )
+                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)
                 [ Html.div (handleStyles ++ draggedHandleStyles) []
                 , Html.div [] [ Html.text fruit ]
                 ]

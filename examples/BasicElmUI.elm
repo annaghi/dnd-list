@@ -34,9 +34,16 @@ data =
 -- SYSTEM
 
 
+config : DnDList.Config Msg
+config =
+    { events = DnDMsg
+    , movement = DnDList.Free
+    }
+
+
 system : DnDList.System Msg
 system =
-    DnDList.create DnDMsg
+    DnDList.create config
 
 
 
@@ -153,7 +160,7 @@ draggedItemView draggable items =
     case maybeDraggedItem of
         Just item ->
             Element.el
-                (List.map Element.htmlAttribute (system.draggedStyles draggable DnDList.Free))
+                (List.map Element.htmlAttribute (system.draggedStyles draggable))
                 (Element.text item)
 
         Nothing ->
