@@ -1,7 +1,6 @@
 module DnDList exposing
-    ( System, create
+    ( System, create, Config, Movement(..)
     , Draggable
-    , Movement(..)
     , Msg, update
     , getDragIndex
     )
@@ -20,7 +19,7 @@ The update will return back with the reordered list.
 
 A `System` represents the information about the drag operation and the drag related functions.
 
-@docs System, create
+@docs System, create, Config, Movement
 
 
 ## System Fields
@@ -92,13 +91,10 @@ For a more detailed `update` function see [Update](#update)
 ### draggedStyles
 
 `draggedStyles` is a helper to set the current position of the dragged element.
-It accepts a `Movement` argument.
 
     Html.div
-        (system.draggedStyles model.draggable DnDList.Free)
+        (system.draggedStyles model.draggable)
         [ Html.text item ]
-
-@docs Movement
 
 
 ## Update
@@ -164,15 +160,41 @@ type alias System m =
     , commands : Draggable -> Cmd m
     , dragEvents : Int -> String -> List (Html.Attribute m)
     , dropEvents : Int -> List (Html.Attribute m)
-    , draggedStyles : Draggable -> Movement -> List (Html.Attribute m)
+    , draggedStyles : Draggable -> List (Html.Attribute m)
     }
 
 
-{-| Creates a `System` parametrized with your message wrapper.
+{-| Creates a `System` parametrized with your configuration.
 
     system : DnDList.System Msg
     system =
-        DnDList.create DnDMsg
+        DnDList.create config
+
+-}
+create : Config m -> System m
+create { events, movement } =
+    { draggable = Draggable Nothing
+    , subscriptions = subscriptions events
+    , commands = commands events
+    , dragEvents = dragEvents events
+    , dropEvents = dropEvents events
+    , draggedStyles = draggedStyles movement
+    }
+
+
+{-| Represents the `System` configuration.
+
+  - `events`: your message wrapper
+
+  - `movement`: the kind of the `Movement`
+
+Example configuration:
+
+    config : DnDList.Config Msg
+    config =
+    { events = DnDMsg
+    , movement = DnDList.Free
+    }
 
     ...
 
@@ -180,14 +202,9 @@ type alias System m =
         = DnDMsg DnDList.Msg
 
 -}
-create : (Msg -> m) -> System m
-create wrap =
-    { draggable = Draggable Nothing
-    , subscriptions = subscriptions wrap
-    , commands = commands wrap
-    , dragEvents = dragEvents wrap
-    , dropEvents = dropEvents wrap
-    , draggedStyles = draggedStyles
+type alias Config m =
+    { events : Msg -> m
+    , movement : Movement
     }
 
 
@@ -417,8 +434,8 @@ dropEvents wrap dropIndex =
     ]
 
 
-draggedStyles : Draggable -> Movement -> List (Html.Attribute m)
-draggedStyles (Draggable model) movement =
+draggedStyles : Movement -> Draggable -> List (Html.Attribute m)
+draggedStyles movement (Draggable model) =
     case model of
         Nothing ->
             []
