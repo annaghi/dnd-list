@@ -3,7 +3,7 @@
   "name": "annaghi/dnd-list",
   "summary": "Drag and Drop for sortable lists in Elm web apps with mouse support",
   "license": "BSD-3-Clause",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "exposed-modules": ["DnDList"],
   "elm-version": "0.19.0 <= v < 0.20.0",
   "dependencies": {
