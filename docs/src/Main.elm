@@ -3,6 +3,7 @@ module Main exposing (main)
 import Browser
 import Browser.Dom
 import Example.Basic
+import Example.BasicElmUI
 import Example.Free
 import Example.Horizontal
 import Example.Vertical
@@ -40,6 +41,7 @@ type alias Model =
 
 type Example
     = Basic Example.Basic.Model
+    | BasicElmUI Example.BasicElmUI.Model
     | Free Example.Free.Model
     | Horizontal Example.Horizontal.Model
     | Vertical Example.Vertical.Model
@@ -48,7 +50,7 @@ type Example
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { key = 1
+    ( { key = 2
       , example = Free Example.Free.initialModel
       }
     , Cmd.none
@@ -63,6 +65,7 @@ type Msg
     = NoOp
     | LinkClicked Int Example
     | BasicMsg Example.Basic.Msg
+    | BasicElmUIMsg Example.BasicElmUI.Msg
     | FreeMsg Example.Free.Msg
     | HorizontalMsg Example.Horizontal.Msg
     | VerticalMsg Example.Vertical.Msg
@@ -84,6 +87,14 @@ update message model =
             case model.example of
                 Basic basic ->
                     stepBasic model (Example.Basic.update msg basic)
+
+                _ ->
+                    ( model, Cmd.none )
+
+        BasicElmUIMsg msg ->
+            case model.example of
+                BasicElmUI basicElmUI ->
+                    stepBasicElmUI model (Example.BasicElmUI.update msg basicElmUI)
 
                 _ ->
                     ( model, Cmd.none )
@@ -125,6 +136,13 @@ stepBasic : Model -> ( Example.Basic.Model, Cmd Example.Basic.Msg ) -> ( Model, 
 stepBasic model ( basic, cmds ) =
     ( { model | example = Basic basic }
     , Cmd.map BasicMsg cmds
+    )
+
+
+stepBasicElmUI : Model -> ( Example.BasicElmUI.Model, Cmd Example.BasicElmUI.Msg ) -> ( Model, Cmd Msg )
+stepBasicElmUI model ( basicElmUI, cmds ) =
+    ( { model | example = BasicElmUI basicElmUI }
+    , Cmd.map BasicElmUIMsg cmds
     )
 
 
@@ -177,6 +195,9 @@ subscriptions model =
         Basic basic ->
             exampleSubscriptions BasicMsg (Example.Basic.subscriptions basic)
 
+        BasicElmUI basicElmUI ->
+            exampleSubscriptions BasicElmUIMsg (Example.BasicElmUI.subscriptions basicElmUI)
+
         Free free ->
             exampleSubscriptions FreeMsg (Example.Free.subscriptions free)
 
@@ -208,6 +229,7 @@ view model =
             , navigationView
                 model.key
                 [ Basic Example.Basic.initialModel
+                , BasicElmUI Example.BasicElmUI.initialModel
                 , Free Example.Free.initialModel
                 , Horizontal Example.Horizontal.initialModel
                 , Vertical Example.Vertical.initialModel
@@ -271,6 +293,12 @@ mainView example =
             Html.main_ [ Html.Attributes.id "main" ]
                 [ demoView h2 h3 BasicMsg (Example.Basic.view basic)
                 , sourceView Example.Basic.source
+                ]
+
+        BasicElmUI basicElmUI ->
+            Html.main_ [ Html.Attributes.id "main" ]
+                [ demoView h2 h3 BasicElmUIMsg (Example.BasicElmUI.view basicElmUI)
+                , sourceView Example.BasicElmUI.source
                 ]
 
         Free free ->
@@ -351,6 +379,12 @@ heading example =
             , h3 = "Sortable list"
             }
 
+        BasicElmUI _ ->
+            { h1 = "Basic + Elm UI"
+            , h2 = "Basic example"
+            , h3 = "Designed with mdgriffith/elm-ui"
+            }
+
         Free _ ->
             { h1 = "Free"
             , h2 = "Free drag movement"
@@ -372,5 +406,5 @@ heading example =
         WithTwoLists _ ->
             { h1 = "Two lists"
             , h2 = "Two independent lists"
-            , h3 = "Example with keyed nodes"
+            , h3 = "Without thinking: duplicate everything"
             }
