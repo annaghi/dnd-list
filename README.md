@@ -7,7 +7,7 @@ Drag and Drop for sortable lists in Elm web apps with mouse support.
 ## Basic API
 
 ```elm
-create : (DnDList.Msg -> Msg) -> DnDList.System Msg
+create : DnDList.Config Msg -> DnDList.System Msg
 
 getDragIndex : DnDList.Draggable -> Maybe Int
 
@@ -15,7 +15,7 @@ dragEvents : Int -> String -> List (Html.Attribute Msg)
 
 dropEvents : Int -> List (Html.Attribute Msg)
 
-draggedStyles : DnDList.Draggable -> DnDList.Movement -> List (Html.Attribute Msg)
+draggedStyles : DnDList.Draggable -> List (Html.Attribute Msg)
 ```
 
 ## Example
@@ -56,9 +56,16 @@ data =
 -- SYSTEM
 
 
+config : DnDList.Config Msg
+config =
+    { events = DnDMsg
+    , movement = DnDList.Free
+    }
+
+
 system : DnDList.System Msg
 system =
-    DnDList.create DnDMsg
+    DnDList.create config
 
 
 
@@ -173,7 +180,7 @@ draggedItemView draggable items =
     case maybeDraggedItem of
         Just item ->
             Html.div
-                (system.draggedStyles draggable DnDList.Free)
+                (system.draggedStyles draggable)
                 [ Html.text item ]
 
         Nothing ->
