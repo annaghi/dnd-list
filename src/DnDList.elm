@@ -219,7 +219,7 @@ getDragIndex (Draggable model) =
         |> Maybe.andThen
             (\m ->
                 m.element
-                    |> Maybe.map (\element -> m.dragIndex)
+                    |> Maybe.map (\_ -> m.dragIndex)
             )
 
 
@@ -290,7 +290,7 @@ type Msg
                         DnDList.update message model.draggable model.items
                 in
                 ( { model | draggable = draggable, items = items }
-                , dnd.commands model.draggable
+                , system.commands model.draggable
                 )
 
 -}
@@ -321,7 +321,7 @@ update msg (Draggable model) list =
             ( model
                 |> Maybe.map (\m -> { m | dragIndex = dropIndex, dropIndex = dropIndex })
                 |> Draggable
-            , reorderItems model dropIndex list
+            , reorder model dropIndex list
             )
 
         DragEnd ->
@@ -338,8 +338,8 @@ update msg (Draggable model) list =
             )
 
 
-reorderItems : Maybe Model -> Int -> List a -> List a
-reorderItems model dropIndex list =
+reorder : Maybe Model -> Int -> List a -> List a
+reorder model dropIndex list =
     case model of
         Just m ->
             if m.dragIndex < dropIndex then
