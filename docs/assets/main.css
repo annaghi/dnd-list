@@ -19,19 +19,16 @@ nav {
 /* Navigation panel */
 
 nav h1 {
-  font-size: 2.2em;
+  font-size: 2.4em;
   font-weight: lighter;
 }
 nav h2 {
-  font-size: 1.3em;
   font-weight: lighter;
 }
-
 nav p {
   line-height: 1.5;
-  margin-bottom: 3rem;
+  margin-bottom: 3em;
 }
-
 nav ul {
   list-style-type: none;
   padding: 0;
@@ -61,31 +58,29 @@ nav li.is-active {
 }
 
 nav {
-  padding: 20px 40px;
+  padding: 1em 3em;
 }
 
 /* Main panel */
 
 main {
   background-color: #9b9b9b;
-  padding-top: 20px;
+  padding-top: 2.1em;
 }
-.elm-demo {
-  padding: 0 40px;
-}
-.elm-code h3 {
-  padding: 0 40px;
-}
-
 main h2 {
   font-weight: lighter;
-  line-height: 1.9;
-  margin-top: 1.2em;
+  line-height: 2;
   text-align: left;
 }
 main h3 {
   font-weight: lighter;
   text-align: left;
+}
+.elm-demo {
+  padding: 0 3em;
+}
+.elm-code h3 {
+  padding: 0 2.6em;
 }
 
 /* Highlight.js */
@@ -97,6 +92,8 @@ main .hljs {
 main pre {
   margin: 0;
 }
+
+/* Media Queries */
 
 @media (min-width: 1200px) {
   body {
