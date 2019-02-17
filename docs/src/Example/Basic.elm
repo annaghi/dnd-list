@@ -18,9 +18,16 @@ data =
 -- SYSTEM
 
 
+config : DnDList.Config Msg
+config =
+    { events = DnDMsg
+    , movement = DnDList.Free
+    }
+
+
 system : DnDList.System Msg
 system =
-    DnDList.create DnDMsg
+    DnDList.create config
 
 
 
@@ -135,7 +142,7 @@ draggedItemView draggable items =
     case maybeDraggedItem of
         Just item ->
             Html.div
-                (system.draggedStyles draggable DnDList.Free)
+                (system.draggedStyles draggable)
                 [ Html.text item ]
 
         Nothing ->
@@ -184,9 +191,16 @@ source =
     -- SYSTEM
 
 
+    config : DnDList.Config Msg
+    config =
+        { events = DnDMsg
+        , movement = DnDList.Free
+        }
+
+
     system : DnDList.System Msg
     system =
-        DnDList.create DnDMsg
+        DnDList.create config
 
 
 
@@ -301,7 +315,7 @@ source =
         case maybeDraggedItem of
             Just item ->
                 Html.div
-                    (system.draggedStyles draggable DnDList.Free)
+                    (system.draggedStyles draggable)
                     [ Html.text item ]
 
             Nothing ->
