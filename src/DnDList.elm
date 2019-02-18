@@ -1,18 +1,17 @@
 module DnDList exposing
     ( System, create, Config, Movement(..)
     , Draggable
-    , Msg, update
-    , getDragIndex
+    , Msg
     )
 
 {-| While dragging a list item, the mouse events and the list reordering are handled internally by this module.
 
 First you need to create a `System` object which holds the information and functions related to the drag operation.
-Using this object you can wire up the internal model, subscriptions, and commands into your model, subscriptions and commands respectively.
+Using this object you can wire up the internal model, subscriptions, commands, and update into your model, subscriptions, commands, and update respectively.
 Also you can get access to the drag and drop events as well as the dragged position styles in your `view` functions.
 
-Finally you need to wrap up the internal messages into your message, and pass them along with your sortable list to the internal `DnDList.update` function within your `update` funcion.
-The update will return back with the reordered list.
+Finally you need to wrap up the internal messages into your message, and pass them along with your sortable list to the update function within your `update` funcion.
+The update will return back with a tuple of the updated `Draggable` and the reordered list.
 
 
 ## System
@@ -43,8 +42,6 @@ A `System` represents the information about the drag operation and the drag rela
 
 `commands` is a function to access the DOM for the dragged element `x`, `y`, `width` and `height` information.
 
-For a more detailed `update` function see [Update](#update)
-
     update : Msg -> Model -> ( Model, Cmd Msg )
     update msg model =
         case msg of
@@ -52,7 +49,26 @@ For a more detailed `update` function see [Update](#update)
                 let
                     updatedModel = ...
                 in
-                ( updatedModel, system.commands model.draggable )
+                ( updatedModel
+                , system.commands model.draggable
+                )
+
+
+### update
+
+`update` is a function which returns an updated `Draggable` and the reordered list for your model.
+
+    update : Msg -> Model -> ( Model, Cmd Msg )
+    update msg model =
+        case msg of
+            DnDMsg message ->
+                let
+                    ( draggable, items ) =
+                        system.update message model.draggable model.items
+                in
+                ( { model | draggable = draggable, items = items }
+                , system.commands model.draggable
+                )
 
 
 ### dragEvents
@@ -97,16 +113,18 @@ For a more detailed `update` function see [Update](#update)
         [ Html.text item ]
 
 
-## Update
+### dragIndex
 
-While dragging an item, the mouse events and the list updates are handled internally by this module.
+`dragIndex` is a helper which returns the index of the dragged element.
 
-@docs Msg, update
+    maybeDragIndex : Maybe Int
+    maybeDragIndex =
+        system.dragIndex model.draggable
 
 
-## Helper
+# Message
 
-@docs getDragIndex
+@docs Msg
 
 -}
 
@@ -124,13 +142,13 @@ It should be set in your model and can be initialized through the `System`'s `dr
 
     type alias Model =
         { draggable : DnDList.Draggable
-        , items : List a
+        , items : List Fruit
         }
 
     initialModel : Model
     initialModel =
         { draggable = system.draggable
-        , items = [...]
+        , items = data
         }
 
 -}
@@ -148,53 +166,67 @@ type alias Model =
     }
 
 
-{-| A `System` encapsulates a `Draggable` which represents the information about the drag operation,
-as well as the drag related subscriptions, commands, events and styles.
+{-| A `System` encapsulates a `Draggable` which represents the information about the drag operation and the drag related functions.
 
 For the details, see [System Fields](#system-fields)
 
 -}
-type alias System m =
+type alias System m a =
     { draggable : Draggable
     , subscriptions : Draggable -> Sub m
     , commands : Draggable -> Cmd m
+    , update : Msg -> Draggable -> List a -> ( Draggable, List a )
     , dragEvents : Int -> String -> List (Html.Attribute m)
     , dropEvents : Int -> List (Html.Attribute m)
     , draggedStyles : Draggable -> List (Html.Attribute m)
+    , dragIndex : Draggable -> Maybe Int
     }
 
 
 {-| Creates a `System` parametrized with your configuration.
 
-    system : DnDList.System Msg
+Having a list of fruits:
+
+    type alias Fruit =
+        String
+
+    data : List Fruit
+    data =
+        [ "Apples", "Bananas", "Cherries", "Dates" ]
+
+The system is a wrapper type of your message and list item types:
+
+    system : DnDList.System Msg Fruit
     system =
         DnDList.create config
 
 -}
-create : Config m -> System m
-create { events, movement } =
+create : Config m -> System m a
+create { message, movement } =
     { draggable = Draggable Nothing
-    , subscriptions = subscriptions events
-    , commands = commands events
-    , dragEvents = dragEvents events
-    , dropEvents = dropEvents events
+    , subscriptions = subscriptions message
+    , commands = commands message
+    , update = update
+    , dragEvents = dragEvents message
+    , dropEvents = dropEvents message
     , draggedStyles = draggedStyles movement
+    , dragIndex = getDragIndex
     }
 
 
 {-| Represents the `System` configuration.
 
-  - `events`: your message wrapper
+  - `message`: your message wrapper
 
-  - `movement`: the kind of the `Movement`
+  - `movement`: the kind of the `Movement`. It can be Free, Horizontal, or Vertical.
 
 Example configuration:
 
     config : DnDList.Config Msg
     config =
-    { events = DnDMsg
-    , movement = DnDList.Free
-    }
+        { message = DnDMsg
+        , movement = DnDList.Free
+        }
 
     ...
 
@@ -203,7 +235,7 @@ Example configuration:
 
 -}
 type alias Config m =
-    { events : Msg -> m
+    { message : Msg -> m
     , movement : Movement
     }
 
@@ -221,23 +253,6 @@ type alias Position =
     { x : Int
     , y : Int
     }
-
-
-{-| Returns the index of the dragged item.
-
-    maybeDragIndex : Maybe Int
-    maybeDragIndex =
-        DnDList.getDragIndex model.draggable
-
--}
-getDragIndex : Draggable -> Maybe Int
-getDragIndex (Draggable model) =
-    model
-        |> Maybe.andThen
-            (\m ->
-                m.element
-                    |> Maybe.map (\_ -> m.dragIndex)
-            )
 
 
 subscriptions : (Msg -> m) -> Draggable -> Sub m
@@ -282,7 +297,7 @@ commands wrap (Draggable model) =
                     Cmd.none
 
 
-{-| Internal message type.
+{-| Internal message type. You should wrap it within your message constructor.
 
     type Msg
         = DnDMsg DnDList.Msg
@@ -296,21 +311,6 @@ type Msg
     | GotDragged (Result Browser.Dom.Error Browser.Dom.Element)
 
 
-{-| Internal update function which returns an updated `Draggable` and the reordered list for your model.
-
-    update : Msg -> Model -> ( Model, Cmd Msg )
-    update msg model =
-        case msg of
-            DnDMsg message ->
-                let
-                    ( draggable, items ) =
-                        DnDList.update message model.draggable model.items
-                in
-                ( { model | draggable = draggable, items = items }
-                , system.commands model.draggable
-                )
-
--}
 update : Msg -> Draggable -> List a -> ( Draggable, List a )
 update msg (Draggable model) list =
     case msg of
@@ -495,3 +495,13 @@ px n =
 translate : Int -> Int -> String
 translate x y =
     "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"
+
+
+getDragIndex : Draggable -> Maybe Int
+getDragIndex (Draggable model) =
+    model
+        |> Maybe.andThen
+            (\m ->
+                m.element
+                    |> Maybe.map (\_ -> m.dragIndex)
+            )
