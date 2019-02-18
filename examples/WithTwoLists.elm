@@ -49,24 +49,24 @@ data2 =
 
 configFruit : DnDList.Config Msg
 configFruit =
-    { events = FruitMsg
+    { message = FruitMsg
     , movement = DnDList.Free
     }
 
 
-systemFruit : DnDList.System Msg
+systemFruit : DnDList.System Msg ( String, Fruit )
 systemFruit =
     DnDList.create configFruit
 
 
 configNumber : DnDList.Config Msg
 configNumber =
-    { events = NumberMsg
+    { message = NumberMsg
     , movement = DnDList.Free
     }
 
 
-systemNumber : DnDList.System Msg
+systemNumber : DnDList.System Msg ( String, String )
 systemNumber =
     DnDList.create configNumber
 
@@ -128,7 +128,7 @@ update msg model =
         FruitMsg message ->
             let
                 ( draggableFruit, fruits ) =
-                    DnDList.update message model.draggableFruit model.fruits
+                    systemFruit.update message model.draggableFruit model.fruits
             in
             ( { model
                 | draggableFruit = draggableFruit
@@ -140,7 +140,7 @@ update msg model =
         NumberMsg message ->
             let
                 ( draggableNumber, numbers ) =
-                    DnDList.update message model.draggableNumber model.numbers
+                    systemNumber.update message model.draggableNumber model.numbers
             in
             ( { model
                 | draggableNumber = draggableNumber
@@ -159,11 +159,11 @@ view model =
     let
         maybeDragFruitIndex : Maybe Int
         maybeDragFruitIndex =
-            DnDList.getDragIndex model.draggableFruit
+            systemFruit.dragIndex model.draggableFruit
 
         maybeDragNumberIndex : Maybe Int
         maybeDragNumberIndex =
-            DnDList.getDragIndex model.draggableNumber
+            systemNumber.dragIndex model.draggableNumber
     in
     Html.section
         [ Html.Attributes.style "margin" "6em 0" ]
@@ -227,7 +227,7 @@ draggedFruitView draggableFruit fruits =
     let
         maybeDraggedFruit : Maybe ( String, Fruit )
         maybeDraggedFruit =
-            DnDList.getDragIndex draggableFruit
+            systemFruit.dragIndex draggableFruit
                 |> Maybe.andThen (\index -> fruits |> List.drop index |> List.head)
     in
     case maybeDraggedFruit of
@@ -291,7 +291,7 @@ draggedNumberView draggableNumber numbers =
     let
         maybeDraggedNumber : Maybe ( String, String )
         maybeDraggedNumber =
-            DnDList.getDragIndex draggableNumber
+            systemNumber.dragIndex draggableNumber
                 |> Maybe.andThen (\index -> numbers |> List.drop index |> List.head)
     in
     case maybeDraggedNumber of
