@@ -9,7 +9,11 @@ import Html.Attributes
 -- DATA
 
 
-data : List String
+type alias Fruit =
+    String
+
+
+data : List Fruit
 data =
     [ "Apples", "Bananas", "Cherries", "Dates" ]
 
@@ -20,12 +24,12 @@ data =
 
 config : DnDList.Config Msg
 config =
-    { events = DnDMsg
+    { message = DnDMsg
     , movement = DnDList.Free
     }
 
 
-system : DnDList.System Msg
+system : DnDList.System Msg Fruit
 system =
     DnDList.create config
 
@@ -36,7 +40,7 @@ system =
 
 type alias Model =
     { draggable : DnDList.Draggable
-    , items : List String
+    , items : List Fruit
     }
 
 
@@ -79,7 +83,7 @@ update msg model =
         DnDMsg message ->
             let
                 ( draggable, items ) =
-                    DnDList.update message model.draggable model.items
+                    system.update message model.draggable model.items
             in
             ( { model | draggable = draggable, items = items }
             , system.commands model.draggable
@@ -95,7 +99,7 @@ view model =
     let
         maybeDragIndex : Maybe Int
         maybeDragIndex =
-            DnDList.getDragIndex model.draggable
+            system.dragIndex model.draggable
     in
     Html.section
         [ Html.Attributes.style "margin" "6em 0"
@@ -108,7 +112,7 @@ view model =
         ]
 
 
-itemView : Maybe Int -> Int -> String -> Html.Html Msg
+itemView : Maybe Int -> Int -> Fruit -> Html.Html Msg
 itemView maybeDragIndex index item =
     case maybeDragIndex of
         Nothing ->
@@ -131,12 +135,12 @@ itemView maybeDragIndex index item =
                 Html.p [] [ Html.text "[---------]" ]
 
 
-draggedItemView : DnDList.Draggable -> List String -> Html.Html Msg
+draggedItemView : DnDList.Draggable -> List Fruit -> Html.Html Msg
 draggedItemView draggable items =
     let
-        maybeDraggedItem : Maybe String
+        maybeDraggedItem : Maybe Fruit
         maybeDraggedItem =
-            DnDList.getDragIndex draggable
+            system.dragIndex draggable
                 |> Maybe.andThen (\index -> items |> List.drop index |> List.head)
     in
     case maybeDraggedItem of
@@ -182,7 +186,11 @@ source =
     -- DATA
 
 
-    data : List String
+    type alias Fruit =
+        String
+
+
+    data : List Fruit
     data =
         [ "Apples", "Bananas", "Cherries", "Dates" ]
 
@@ -193,12 +201,12 @@ source =
 
     config : DnDList.Config Msg
     config =
-        { events = DnDMsg
+        { message = DnDMsg
         , movement = DnDList.Free
         }
 
 
-    system : DnDList.System Msg
+    system : DnDList.System Msg Fruit
     system =
         DnDList.create config
 
@@ -209,7 +217,7 @@ source =
 
     type alias Model =
         { draggable : DnDList.Draggable
-        , items : List String
+        , items : List Fruit
         }
 
 
@@ -252,7 +260,7 @@ source =
             DnDMsg message ->
                 let
                     ( draggable, items ) =
-                        DnDList.update message model.draggable model.items
+                        system.update message model.draggable model.items
                 in
                 ( { model | draggable = draggable, items = items }
                 , system.commands model.draggable
@@ -268,7 +276,7 @@ source =
         let
             maybeDragIndex : Maybe Int
             maybeDragIndex =
-                DnDList.getDragIndex model.draggable
+                system.dragIndex model.draggable
         in
         Html.section
             [ Html.Attributes.style "margin" "6em 0"
@@ -281,7 +289,7 @@ source =
             ]
 
 
-    itemView : Maybe Int -> Int -> String -> Html.Html Msg
+    itemView : Maybe Int -> Int -> Fruit -> Html.Html Msg
     itemView maybeDragIndex index item =
         case maybeDragIndex of
             Nothing ->
@@ -304,12 +312,12 @@ source =
                     Html.p [] [ Html.text "[---------]" ]
 
 
-    draggedItemView : DnDList.Draggable -> List String -> Html.Html Msg
+    draggedItemView : DnDList.Draggable -> List Fruit -> Html.Html Msg
     draggedItemView draggable items =
         let
-            maybeDraggedItem : Maybe String
+            maybeDraggedItem : Maybe Fruit
             maybeDraggedItem =
-                DnDList.getDragIndex draggable
+                system.dragIndex draggable
                     |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)
         in
         case maybeDraggedItem of
