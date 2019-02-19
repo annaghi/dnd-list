@@ -7,16 +7,12 @@ module DnDList exposing
 {-| While dragging a list item, the mouse events and the list reordering are handled internally by this module.
 
 First you need to create a `System` object which holds the information and functions related to the drag operation.
+
 Using this object you can wire up the internal model, subscriptions, commands, and update into your model, subscriptions, commands, and update respectively.
 Also you can get access to the drag and drop events as well as the dragged position styles in your `view` functions.
 
-Finally you need to wrap up the internal messages into your message, and pass them along with your sortable list to the update function within your `update` funcion.
-The update will return back with a tuple of the updated `Draggable` and the reordered list.
-
 
 ## System
-
-A `System` represents the information about the drag operation and the drag related functions.
 
 @docs System, create, Config, Movement
 
@@ -104,6 +100,15 @@ A `System` represents the information about the drag operation and the drag rela
         |> Html.div []
 
 
+### draggedIndex
+
+`draggedIndex` is a helper which returns the index of the dragged element.
+
+    maybeDraggedIndex : Maybe Int
+    maybeDraggedIndex =
+        system.draggedIndex model.draggable
+
+
 ### draggedStyles
 
 `draggedStyles` is a helper to set the current position of the dragged element.
@@ -111,15 +116,6 @@ A `System` represents the information about the drag operation and the drag rela
     Html.div
         (system.draggedStyles model.draggable)
         [ Html.text item ]
-
-
-### dragIndex
-
-`dragIndex` is a helper which returns the index of the dragged element.
-
-    maybeDragIndex : Maybe Int
-    maybeDragIndex =
-        system.dragIndex model.draggable
 
 
 # Message
@@ -178,8 +174,8 @@ type alias System m a =
     , update : Msg -> Draggable -> List a -> ( Draggable, List a )
     , dragEvents : Int -> String -> List (Html.Attribute m)
     , dropEvents : Int -> List (Html.Attribute m)
+    , draggedIndex : Draggable -> Maybe Int
     , draggedStyles : Draggable -> List (Html.Attribute m)
-    , dragIndex : Draggable -> Maybe Int
     }
 
 
@@ -209,8 +205,8 @@ create { message, movement } =
     , update = update
     , dragEvents = dragEvents message
     , dropEvents = dropEvents message
+    , draggedIndex = draggedIndex
     , draggedStyles = draggedStyles movement
-    , dragIndex = getDragIndex
     }
 
 
@@ -270,16 +266,6 @@ subscriptions wrap (Draggable model) =
                 , Browser.Events.onMouseUp
                     (Json.Decode.succeed (wrap DragEnd))
                 ]
-
-
-pageX : Json.Decode.Decoder Int
-pageX =
-    Json.Decode.field "pageX" Json.Decode.int
-
-
-pageY : Json.Decode.Decoder Int
-pageY =
-    Json.Decode.field "pageY" Json.Decode.int
 
 
 commands : (Msg -> m) -> Draggable -> Cmd m
@@ -434,6 +420,26 @@ dropEvents wrap dropIndex =
     ]
 
 
+pageX : Json.Decode.Decoder Int
+pageX =
+    Json.Decode.field "pageX" Json.Decode.int
+
+
+pageY : Json.Decode.Decoder Int
+pageY =
+    Json.Decode.field "pageY" Json.Decode.int
+
+
+draggedIndex : Draggable -> Maybe Int
+draggedIndex (Draggable model) =
+    model
+        |> Maybe.andThen
+            (\m ->
+                m.element
+                    |> Maybe.map (\_ -> m.dragIndex)
+            )
+
+
 draggedStyles : Movement -> Draggable -> List (Html.Attribute m)
 draggedStyles movement (Draggable model) =
     case model of
@@ -495,13 +501,3 @@ px n =
 translate : Int -> Int -> String
 translate x y =
     "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"
-
-
-getDragIndex : Draggable -> Maybe Int
-getDragIndex (Draggable model) =
-    model
-        |> Maybe.andThen
-            (\m ->
-                m.element
-                    |> Maybe.map (\_ -> m.dragIndex)
-            )
