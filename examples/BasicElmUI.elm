@@ -86,16 +86,12 @@ subscriptions model =
 
 
 type Msg
-    = NoOp
-    | DnDMsg DnDList.Msg
+    = DnDMsg DnDList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         DnDMsg message ->
             let
                 ( draggable, items ) =
@@ -113,9 +109,9 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     let
-        maybeDragIndex : Maybe Int
-        maybeDragIndex =
-            system.dragIndex model.draggable
+        maybeDraggedIndex : Maybe Int
+        maybeDraggedIndex =
+            system.draggedIndex model.draggable
     in
     Element.layout
         [ Element.width Element.fill
@@ -124,13 +120,13 @@ view model =
         ]
         (Element.column
             [ Element.centerX, Element.centerY, Element.padding 10, Element.spacing 10 ]
-            (model.items |> List.indexedMap (itemView maybeDragIndex))
+            (model.items |> List.indexedMap (itemView maybeDraggedIndex))
         )
 
 
 itemView : Maybe Int -> Int -> Fruit -> Element.Element Msg
-itemView maybeDragIndex index item =
-    case maybeDragIndex of
+itemView maybeDraggedIndex index item =
+    case maybeDraggedIndex of
         Nothing ->
             let
                 itemId : String
@@ -143,8 +139,8 @@ itemView maybeDragIndex index item =
                 )
                 (Element.text item)
 
-        Just dragIndex ->
-            if dragIndex /= index then
+        Just draggedIndex ->
+            if draggedIndex /= index then
                 Element.el
                     (List.map Element.htmlAttribute (system.dropEvents index))
                     (Element.text item)
@@ -158,7 +154,7 @@ draggedItemView draggable items =
     let
         maybeDraggedItem : Maybe Fruit
         maybeDraggedItem =
-            system.dragIndex draggable
+            system.draggedIndex draggable
                 |> Maybe.andThen (\index -> items |> List.drop index |> List.head)
     in
     case maybeDraggedItem of
