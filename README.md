@@ -15,7 +15,7 @@ dragEvents : Int -> String -> List (Html.Attribute Msg)
 
 dropEvents : Int -> List (Html.Attribute Msg)
 
-dragIndex : DnDList.Draggable -> Maybe Int
+draggedIndex : DnDList.Draggable -> Maybe Int
 
 draggedStyles : DnDList.Draggable -> List (Html.Attribute Msg)
 ```
@@ -110,16 +110,12 @@ subscriptions model =
 
 
 type Msg
-    = NoOp
-    | DnDMsg DnDList.Msg
+    = DnDMsg DnDList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         DnDMsg message ->
             let
                 ( draggable, items ) =
@@ -137,24 +133,24 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     let
-        maybeDragIndex : Maybe Int
-        maybeDragIndex =
-            system.dragIndex model.draggable
+        maybeDraggedIndex : Maybe Int
+        maybeDraggedIndex =
+            system.draggedIndex model.draggable
     in
     Html.section
         [ Html.Attributes.style "margin" "6em 0"
         , Html.Attributes.style "text-align" "center"
         ]
         [ model.items
-            |> List.indexedMap (itemView maybeDragIndex)
+            |> List.indexedMap (itemView maybeDraggedIndex)
             |> Html.div []
         , draggedItemView model.draggable model.items
         ]
 
 
 itemView : Maybe Int -> Int -> Fruit -> Html.Html Msg
-itemView maybeDragIndex index item =
-    case maybeDragIndex of
+itemView maybeDraggedIndex index item =
+    case maybeDraggedIndex of
         Nothing ->
             let
                 itemId : String
@@ -165,8 +161,8 @@ itemView maybeDragIndex index item =
                 (Html.Attributes.id itemId :: system.dragEvents index itemId)
                 [ Html.text item ]
 
-        Just dragIndex ->
-            if dragIndex /= index then
+        Just draggedIndex ->
+            if draggedIndex /= index then
                 Html.p
                     (system.dropEvents index)
                     [ Html.text item ]
@@ -180,7 +176,7 @@ draggedItemView draggable items =
     let
         maybeDraggedItem : Maybe Fruit
         maybeDraggedItem =
-            system.dragIndex draggable
+            system.draggedIndex draggable
                 |> Maybe.andThen (\index -> items |> List.drop index |> List.head)
     in
     case maybeDraggedItem of
