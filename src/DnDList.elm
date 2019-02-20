@@ -1,7 +1,8 @@
 module DnDList exposing
-    ( System, create, Config, Movement(..)
-    , Draggable
+    ( System, create, Config
     , Msg
+    , Movement(..)
+    , Draggable
     )
 
 {-| While dragging a list item, the mouse events and the list reordering are handled internally by this module.
@@ -12,20 +13,30 @@ Using this object you can wire up the internal model, subscriptions, commands, a
 Also you can get access to the drag and drop events as well as the dragged position styles in your `view` functions.
 
 
-## System
+# System
 
-@docs System, create, Config, Movement
-
-
-## System Fields
+@docs System, create, Config
 
 
-### draggable
+# Message
+
+@docs Msg
+
+
+# Movement
+
+@docs Movement
+
+
+# System Fields
+
+
+## draggable
 
 @docs Draggable
 
 
-### subscriptions
+## subscriptions
 
 `subscriptions` is a function to access browser events during the drag.
 
@@ -34,14 +45,14 @@ Also you can get access to the drag and drop events as well as the dragged posit
         system.subscriptions model.draggable
 
 
-### commands
+## commands
 
 `commands` is a function to access the DOM for the dragged element `x`, `y`, `width` and `height` information.
 
     update : Msg -> Model -> ( Model, Cmd Msg )
     update msg model =
         case msg of
-            DnDMsg message ->
+            MyMsg message ->
                 let
                     updatedModel = ...
                 in
@@ -50,14 +61,14 @@ Also you can get access to the drag and drop events as well as the dragged posit
                 )
 
 
-### update
+## update
 
 `update` is a function which returns an updated `Draggable` and the reordered list for your model.
 
     update : Msg -> Model -> ( Model, Cmd Msg )
     update msg model =
         case msg of
-            DnDMsg message ->
+            MyMsg message ->
                 let
                     ( draggable, items ) =
                         system.update message model.draggable model.items
@@ -67,7 +78,7 @@ Also you can get access to the drag and drop events as well as the dragged posit
                 )
 
 
-### dragEvents
+## dragEvents
 
 `dragEvents` is a function which wraps all the events for draggable elements.
 
@@ -86,7 +97,7 @@ Also you can get access to the drag and drop events as well as the dragged posit
         |> Html.div []
 
 
-### dropEvents
+## dropEvents
 
 `dropEvents` is a function which wraps all the events for droppable elements.
 
@@ -100,7 +111,7 @@ Also you can get access to the drag and drop events as well as the dragged posit
         |> Html.div []
 
 
-### draggedIndex
+## draggedIndex
 
 `draggedIndex` is a helper which returns the index of the dragged element.
 
@@ -109,18 +120,13 @@ Also you can get access to the drag and drop events as well as the dragged posit
         system.draggedIndex model.draggable
 
 
-### draggedStyles
+## draggedStyles
 
 `draggedStyles` is a helper to set the current position of the dragged element.
 
     Html.div
         (system.draggedStyles model.draggable)
         [ Html.text item ]
-
-
-# Message
-
-@docs Msg
 
 -}
 
@@ -220,14 +226,9 @@ Example configuration:
 
     config : DnDList.Config Msg
     config =
-        { message = DnDMsg
+        { message = MyMsg
         , movement = DnDList.Free
         }
-
-    ...
-
-    type Msg
-        = DnDMsg DnDList.Msg
 
 -}
 type alias Config m =
@@ -286,7 +287,7 @@ commands wrap (Draggable model) =
 {-| Internal message type. You should wrap it within your message constructor.
 
     type Msg
-        = DnDMsg DnDList.Msg
+        = MyMsg DnDList.Msg
 
 -}
 type Msg
