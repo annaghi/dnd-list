@@ -174,7 +174,7 @@ fruitView maybeDraggedIndex index ( key, fruit ) =
             let
                 fruitId : String
                 fruitId =
-                    "id-" ++ String.replace " " "-" fruit
+                    "id-" ++ fruit
             in
             ( key
             , Html.div
@@ -238,7 +238,7 @@ numberView maybeDraggedIndex index ( key, number ) =
             let
                 numberId : String
                 numberId =
-                    "id-" ++ String.replace " " "-" (String.fromInt number)
+                    "id-" ++ String.fromInt number
             in
             ( key
             , Html.div
@@ -561,7 +561,7 @@ source =
                 let
                     fruitId : String
                     fruitId =
-                        "id-" ++ String.replace " " "-" fruit
+                        "id-" ++ fruit
                 in
                 ( key
                 , Html.div
@@ -625,7 +625,7 @@ source =
                 let
                     numberId : String
                     numberId =
-                        "id-" ++ String.replace " " "-" (String.fromInt number)
+                        "id-" ++ String.fromInt number
                 in
                 ( key
                 , Html.div

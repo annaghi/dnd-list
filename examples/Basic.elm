@@ -39,7 +39,7 @@ data =
 
 config : DnDList.Config Msg
 config =
-    { message = DnDMsg
+    { message = MyMsg
     , movement = DnDList.Free
     }
 
@@ -85,13 +85,13 @@ subscriptions model =
 
 
 type Msg
-    = DnDMsg DnDList.Msg
+    = MyMsg DnDList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        DnDMsg message ->
+        MyMsg message ->
             let
                 ( draggable, items ) =
                     system.update message model.draggable model.items
@@ -130,7 +130,7 @@ itemView maybeDraggedIndex index item =
             let
                 itemId : String
                 itemId =
-                    "id-" ++ String.replace " " "-" item
+                    "id-" ++ item
             in
             Html.p
                 (Html.Attributes.id itemId :: system.dragEvents index itemId)

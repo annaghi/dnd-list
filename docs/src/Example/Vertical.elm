@@ -31,7 +31,7 @@ data =
 
 config : DnDList.Config Msg
 config =
-    { message = DnDMsg
+    { message = MyMsg
     , movement = DnDList.Vertical
     }
 
@@ -77,13 +77,13 @@ subscriptions model =
 
 
 type Msg
-    = DnDMsg DnDList.Msg
+    = MyMsg DnDList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        DnDMsg message ->
+        MyMsg message ->
             let
                 ( draggable, fruits ) =
                     system.update message model.draggable model.fruits
@@ -120,7 +120,7 @@ itemView maybeDraggedIndex index ( key, fruit ) =
             let
                 fruitId : String
                 fruitId =
-                    "id-" ++ String.replace " " "-" fruit
+                    "id-" ++ fruit
             in
             ( key
             , Html.div
@@ -279,7 +279,7 @@ source =
 
     config : DnDList.Config Msg
     config =
-        { message = DnDMsg
+        { message = MyMsg
         , movement = DnDList.Vertical
         }
 
@@ -325,13 +325,13 @@ source =
 
 
     type Msg
-        = DnDMsg DnDList.Msg
+        = MyMsg DnDList.Msg
 
 
     update : Msg -> Model -> ( Model, Cmd Msg )
     update msg model =
         case msg of
-            DnDMsg message ->
+            MyMsg message ->
                 let
                     ( draggable, fruits ) =
                         system.update message model.draggable model.fruits
@@ -368,7 +368,7 @@ source =
                 let
                     fruitId : String
                     fruitId =
-                        "id-" ++ String.replace " " "-" fruit
+                        "id-" ++ fruit
                 in
                 ( key
                 , Html.div
