@@ -185,7 +185,7 @@ type alias System m a =
     }
 
 
-{-| Creates a `System` parametrized with your configuration.
+{-| Creates a `System` object according to your configuration.
 
 Having a list of fruits:
 
@@ -196,7 +196,7 @@ Having a list of fruits:
     data =
         [ "Apples", "Bananas", "Cherries", "Dates" ]
 
-The system is a wrapper type of your message and list item types:
+The `System` is a wrapper type around your message and list item types:
 
     system : DnDList.System Msg Fruit
     system =
