@@ -1,6 +1,6 @@
-# DnD List
-
 [![Latest Version](https://img.shields.io/elm-package/v/annaghi/dnd-list.svg?label=version)](https://package.elm-lang.org/packages/annaghi/dnd-list/latest/)
+
+# DnD List
 
 Drag and Drop for sortable lists in Elm web apps with mouse support.
 
