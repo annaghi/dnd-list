@@ -414,11 +414,7 @@ dragEvents wrap dragIndex elementId =
 
 dropEvents : (Msg -> m) -> Int -> List (Html.Attribute m)
 dropEvents wrap dropIndex =
-    [ Html.Events.preventDefaultOn "mouseover"
-        (Json.Decode.succeed (wrap (DragOver dropIndex))
-            |> Json.Decode.map (\msg -> ( msg, True ))
-        )
-    ]
+    [ Html.Events.onMouseOver (wrap (DragOver dropIndex)) ]
 
 
 pageX : Json.Decode.Decoder Int
