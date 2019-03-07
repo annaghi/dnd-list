@@ -247,8 +247,8 @@ type Movement
 
 
 type alias Position =
-    { x : Int
-    , y : Int
+    { x : Float
+    , y : Float
     }
 
 
@@ -417,14 +417,14 @@ dropEvents wrap dropIndex =
     [ Html.Events.onMouseOver (wrap (DragOver dropIndex)) ]
 
 
-pageX : Json.Decode.Decoder Int
+pageX : Json.Decode.Decoder Float
 pageX =
-    Json.Decode.field "pageX" Json.Decode.int
+    Json.Decode.field "pageX" Json.Decode.float
 
 
-pageY : Json.Decode.Decoder Int
+pageY : Json.Decode.Decoder Float
 pageY =
-    Json.Decode.field "pageY" Json.Decode.int
+    Json.Decode.field "pageY" Json.Decode.float
 
 
 draggedIndex : Draggable -> Maybe Int
@@ -453,7 +453,7 @@ draggedStyles movement (Draggable model) =
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "transform" <|
                                 translate
-                                    (m.currentPosition.x - m.startPosition.x + round element.x)
+                                    (round (m.currentPosition.x - m.startPosition.x + element.x))
                                     (round element.y)
                             , Html.Attributes.style "height" (px (round element.height))
                             , Html.Attributes.style "width" (px (round element.width))
@@ -467,7 +467,7 @@ draggedStyles movement (Draggable model) =
                             , Html.Attributes.style "transform" <|
                                 translate
                                     (round element.x)
-                                    (m.currentPosition.y - m.startPosition.y + round element.y)
+                                    (round (m.currentPosition.y - m.startPosition.y + element.y))
                             , Html.Attributes.style "height" (px (round element.height))
                             , Html.Attributes.style "width" (px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"
@@ -479,8 +479,8 @@ draggedStyles movement (Draggable model) =
                             , Html.Attributes.style "top" "0"
                             , Html.Attributes.style "transform" <|
                                 translate
-                                    (m.currentPosition.x - m.startPosition.x + round element.x)
-                                    (m.currentPosition.y - m.startPosition.y + round element.y)
+                                    (round (m.currentPosition.x - m.startPosition.x + element.x))
+                                    (round (m.currentPosition.y - m.startPosition.y + element.y))
                             , Html.Attributes.style "height" (px (round element.height))
                             , Html.Attributes.style "width" (px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"
