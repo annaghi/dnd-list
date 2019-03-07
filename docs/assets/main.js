@@ -5204,9 +5204,9 @@ var author$project$DnDList$Position = F2(
 		return {I: x, J: y};
 	});
 var elm$json$Json$Decode$field = _Json_decodeField;
-var elm$json$Json$Decode$int = _Json_decodeInt;
-var author$project$DnDList$pageX = A2(elm$json$Json$Decode$field, 'pageX', elm$json$Json$Decode$int);
-var author$project$DnDList$pageY = A2(elm$json$Json$Decode$field, 'pageY', elm$json$Json$Decode$int);
+var elm$json$Json$Decode$float = _Json_decodeFloat;
+var author$project$DnDList$pageX = A2(elm$json$Json$Decode$field, 'pageX', elm$json$Json$Decode$float);
+var author$project$DnDList$pageY = A2(elm$json$Json$Decode$field, 'pageY', elm$json$Json$Decode$float);
 var elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
 	return {$: 2, a: a};
 };
@@ -5304,7 +5304,7 @@ var author$project$DnDList$draggedStyles = F2(
 								'transform',
 								A2(
 									author$project$DnDList$translate,
-									(m.M.I - m.ah.I) + elm$core$Basics$round(element.I),
+									elm$core$Basics$round((m.M.I - m.ah.I) + element.I),
 									elm$core$Basics$round(element.J))),
 								A2(
 								elm$html$Html$Attributes$style,
@@ -5330,7 +5330,7 @@ var author$project$DnDList$draggedStyles = F2(
 								A2(
 									author$project$DnDList$translate,
 									elm$core$Basics$round(element.I),
-									(m.M.J - m.ah.J) + elm$core$Basics$round(element.J))),
+									elm$core$Basics$round((m.M.J - m.ah.J) + element.J))),
 								A2(
 								elm$html$Html$Attributes$style,
 								'height',
@@ -5354,8 +5354,8 @@ var author$project$DnDList$draggedStyles = F2(
 								'transform',
 								A2(
 									author$project$DnDList$translate,
-									(m.M.I - m.ah.I) + elm$core$Basics$round(element.I),
-									(m.M.J - m.ah.J) + elm$core$Basics$round(element.J))),
+									elm$core$Basics$round((m.M.I - m.ah.I) + element.I),
+									elm$core$Basics$round((m.M.J - m.ah.J) + element.J))),
 								A2(
 								elm$html$Html$Attributes$style,
 								'height',
@@ -5377,21 +5377,29 @@ var author$project$DnDList$draggedStyles = F2(
 var author$project$DnDList$DragOver = function (a) {
 	return {$: 2, a: a};
 };
+var elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 0, a: a};
+};
+var elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var elm$html$Html$Events$onMouseOver = function (msg) {
+	return A2(
+		elm$html$Html$Events$on,
+		'mouseover',
+		elm$json$Json$Decode$succeed(msg));
+};
 var author$project$DnDList$dropEvents = F2(
 	function (wrap, dropIndex) {
 		return _List_fromArray(
 			[
-				A2(
-				elm$html$Html$Events$preventDefaultOn,
-				'mouseover',
-				A2(
-					elm$json$Json$Decode$map,
-					function (msg) {
-						return _Utils_Tuple2(msg, true);
-					},
-					elm$json$Json$Decode$succeed(
-						wrap(
-							author$project$DnDList$DragOver(dropIndex)))))
+				elm$html$Html$Events$onMouseOver(
+				wrap(
+					author$project$DnDList$DragOver(dropIndex)))
 			]);
 	});
 var author$project$DnDList$Drag = function (a) {
@@ -13480,16 +13488,6 @@ var elm$html$Html$Attributes$classList = function (classes) {
 				elm$core$Tuple$first,
 				A2(elm$core$List$filter, elm$core$Tuple$second, classes))));
 };
-var elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 0, a: a};
-};
-var elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
 var elm$html$Html$Events$onClick = function (msg) {
 	return A2(
 		elm$html$Html$Events$on,
