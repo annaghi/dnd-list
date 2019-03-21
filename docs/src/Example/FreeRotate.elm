@@ -1,9 +1,12 @@
 module Example.FreeRotate exposing (Model, Msg, initialModel, source, subscriptions, update, view)
 
+import Browser.Events
 import DnDList
 import Html
 import Html.Attributes
+import Html.Events
 import Html.Keyed
+import Json.Decode
 
 
 
@@ -67,7 +70,15 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    system.subscriptions model.draggable
+    Sub.batch
+        [ system.subscriptions model.draggable
+        , if model.affected == [] then
+            Sub.none
+
+          else
+            Browser.Events.onMouseDown
+                (Json.Decode.succeed ClearAffected)
+        ]
 
 
 
@@ -76,6 +87,7 @@ subscriptions model =
 
 type Msg
     = MyMsg DnDList.Msg
+    | ClearAffected
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -107,6 +119,9 @@ update msg model =
             ( { model | draggable = draggable, items = items, affected = affected }
             , system.commands model.draggable
             )
+
+        ClearAffected ->
+            ( { model | affected = [] }, Cmd.none )
 
 
 
@@ -238,10 +253,12 @@ source =
 module FreeRotate exposing (main)
 
 import Browser
+import Browser.Events
 import DnDList
 import Html
 import Html.Attributes
 import Html.Keyed
+import Json.Decode
 
 
 
@@ -319,7 +336,15 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    system.subscriptions model.draggable
+    Sub.batch
+        [ system.subscriptions model.draggable
+        , if model.affected == [] then
+            Sub.none
+
+          else
+            Browser.Events.onMouseDown
+                (Json.Decode.succeed ClearAffected)
+        ]
 
 
 
@@ -328,6 +353,7 @@ subscriptions model =
 
 type Msg
     = MyMsg DnDList.Msg
+    | ClearAffected
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -359,6 +385,9 @@ update msg model =
             ( { model | draggable = draggable, items = items, affected = affected }
             , system.commands model.draggable
             )
+
+        ClearAffected ->
+            ( { model | affected = [] }, Cmd.none )
 
 
 
