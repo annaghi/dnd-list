@@ -354,7 +354,7 @@ update movement msg (Draggable model) list =
 
         DragEnter dropIdx ->
             ( model
-                |> Maybe.map (\m -> { m | dragIdx = dropIdx, dropIdx = dropIdx })
+                |> Maybe.map (\m -> { m | dragIdx = dropIdx })
                 |> Draggable
             , case movement of
                 Free Swap ->
