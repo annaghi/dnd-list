@@ -416,13 +416,13 @@ heading example =
         FreeRotate _ ->
             { h1 = "Free Rotate"
             , h2 = "Free drag movement - Rotate"
-            , h3 = "The items between the dragged and the target have been rotated"
+            , h3 = "The items between the dragged and the drop target items have been rotated"
             }
 
         FreeSwap _ ->
             { h1 = "Free Swap"
             , h2 = "Free drag movement - Swap"
-            , h3 = "The dragged and the target items have been swapped"
+            , h3 = "The dragged and the drop target items have been swapped"
             }
 
         Horizontal _ ->

@@ -122,7 +122,7 @@ Also you can get access to the drag and drop events as well as the dragged posit
 
 ## dropIndex
 
-`dropIndex` is a helper which returns the index of the target element.
+`dropIndex` is a helper which returns the index of the item that the dragged item was dropped on.
 
     maybeDropIndex : Maybe Int
     maybeDropIndex =
