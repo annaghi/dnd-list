@@ -182,16 +182,16 @@ type alias Model =
 For the details, see [System Fields](#system-fields)
 
 -}
-type alias System m a =
+type alias System msg a =
     { draggable : Draggable
-    , subscriptions : Draggable -> Sub m
-    , commands : Draggable -> Cmd m
+    , subscriptions : Draggable -> Sub msg
+    , commands : Draggable -> Cmd msg
     , update : Msg -> Draggable -> List a -> ( Draggable, List a )
-    , dragEvents : Int -> String -> List (Html.Attribute m)
-    , dropEvents : Int -> List (Html.Attribute m)
+    , dragEvents : Int -> String -> List (Html.Attribute msg)
+    , dropEvents : Int -> List (Html.Attribute msg)
     , dragIndex : Draggable -> Maybe Int
     , dropIndex : Draggable -> Maybe Int
-    , draggedStyles : Draggable -> List (Html.Attribute m)
+    , draggedStyles : Draggable -> List (Html.Attribute msg)
     }
 
 
@@ -213,7 +213,7 @@ The `System` is a wrapper type around your message and list item types:
         DnDList.create config
 
 -}
-create : Config m -> System m a
+create : Config msg -> System msg a
 create { message, movement } =
     { draggable = Draggable Nothing
     , subscriptions = subscriptions message
@@ -242,8 +242,8 @@ Example configuration:
         }
 
 -}
-type alias Config m =
-    { message : Msg -> m
+type alias Config msg =
+    { message : Msg -> msg
     , movement : Movement
     }
 
@@ -275,7 +275,7 @@ type alias Position =
     }
 
 
-subscriptions : (Msg -> m) -> Draggable -> Sub m
+subscriptions : (Msg -> msg) -> Draggable -> Sub msg
 subscriptions wrap (Draggable model) =
     case model of
         Nothing ->
@@ -292,7 +292,7 @@ subscriptions wrap (Draggable model) =
                 ]
 
 
-commands : (Msg -> m) -> Draggable -> Cmd m
+commands : (Msg -> msg) -> Draggable -> Cmd msg
 commands wrap (Draggable model) =
     case model of
         Nothing ->
@@ -316,8 +316,8 @@ commands wrap (Draggable model) =
 type Msg
     = DragStart Int String Position
     | Drag Position
-    | DragEnter Int
     | DragOver Int
+    | DragEnter Int
     | DragEnd
     | GotDragged (Result Browser.Dom.Error Browser.Dom.Element)
 
@@ -478,7 +478,7 @@ rotateRecursive list =
             y :: rotateRecursive (x :: rest)
 
 
-dragEvents : (Msg -> m) -> Int -> String -> List (Html.Attribute m)
+dragEvents : (Msg -> msg) -> Int -> String -> List (Html.Attribute msg)
 dragEvents wrap dragIdx elementId =
     [ Html.Events.preventDefaultOn "mousedown"
         (Json.Decode.map2 Position pageX pageY
@@ -488,7 +488,7 @@ dragEvents wrap dragIdx elementId =
     ]
 
 
-dropEvents : (Msg -> m) -> Int -> List (Html.Attribute m)
+dropEvents : (Msg -> msg) -> Int -> List (Html.Attribute msg)
 dropEvents wrap dropIdx =
     [ Html.Events.onMouseOver (wrap (DragOver dropIdx))
     , Html.Events.onMouseEnter (wrap (DragEnter dropIdx))
@@ -525,7 +525,7 @@ dropIndex (Draggable model) =
             )
 
 
-draggedStyles : Movement -> Draggable -> List (Html.Attribute m)
+draggedStyles : Movement -> Draggable -> List (Html.Attribute msg)
 draggedStyles movement (Draggable model) =
     case model of
         Nothing ->
