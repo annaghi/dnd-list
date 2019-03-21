@@ -115,22 +115,22 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     let
-        maybeDraggedIndex : Maybe Int
-        maybeDraggedIndex =
-            system.draggedIndex model.draggable
+        maybeDragIndex : Maybe Int
+        maybeDragIndex =
+            system.dragIndex model.draggable
     in
     Html.section
         [ Html.Attributes.style "margin" "6em 0 3em 0" ]
         [ model.fruits
-            |> List.indexedMap (itemView maybeDraggedIndex)
+            |> List.indexedMap (itemView maybeDragIndex)
             |> Html.Keyed.node "div" containerStyles
         , draggedItemView model.draggable model.fruits
         ]
 
 
 itemView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )
-itemView maybeDraggedIndex index ( key, fruit ) =
-    case maybeDraggedIndex of
+itemView maybeDragIndex index ( key, fruit ) =
+    case maybeDragIndex of
         Nothing ->
             let
                 fruitId : String
@@ -148,8 +148,8 @@ itemView maybeDraggedIndex index ( key, fruit ) =
                 ]
             )
 
-        Just draggedIndex ->
-            if draggedIndex /= index then
+        Just dragIndex ->
+            if dragIndex /= index then
                 ( key
                 , Html.div
                     [ Html.Attributes.style "margin-bottom" "3em" ]
@@ -174,7 +174,7 @@ draggedItemView draggable fruits =
     let
         maybeDraggedFruit : Maybe KeyedFruit
         maybeDraggedFruit =
-            system.draggedIndex draggable
+            system.dragIndex draggable
                 |> Maybe.andThen (\index -> fruits |> List.drop index |> List.head)
     in
     case maybeDraggedFruit of

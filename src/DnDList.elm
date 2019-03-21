@@ -1,7 +1,7 @@
 module DnDList exposing
     ( System, create, Config
     , Msg
-    , Movement(..)
+    , Movement(..), Operation(..)
     , Draggable
     )
 
@@ -25,7 +25,7 @@ Also you can get access to the drag and drop events as well as the dragged posit
 
 # Movement
 
-@docs Movement
+@docs Movement, Operation
 
 
 # System Fields
@@ -111,18 +111,28 @@ Also you can get access to the drag and drop events as well as the dragged posit
         |> Html.div []
 
 
-## draggedIndex
+## dragIndex
 
-`draggedIndex` is a helper which returns the index of the dragged element.
+`dragIndex` is a helper which returns the index of the dragged element.
 
-    maybeDraggedIndex : Maybe Int
-    maybeDraggedIndex =
-        system.draggedIndex model.draggable
+    maybeDragIndex : Maybe Int
+    maybeDragIndex =
+        system.dragIndex model.draggable
+
+
+## dropIndex
+
+`dropIndex` is a helper which returns the index of the item that the dragged element was dropped on.
+
+    maybeDropIndex : Maybe Int
+    maybeDropIndex =
+        system.dropIndex model.draggable
 
 
 ## draggedStyles
 
 `draggedStyles` is a helper to set the current position of the dragged element.
+The position is absolute to the `body` tag.
 
     Html.div
         (system.draggedStyles model.draggable)
@@ -159,8 +169,8 @@ type Draggable
 
 
 type alias Model =
-    { dragIndex : Int
-    , dropIndex : Int
+    { dragIdx : Int
+    , dropIdx : Int
     , startPosition : Position
     , currentPosition : Position
     , element : Maybe Browser.Dom.Element
@@ -173,15 +183,16 @@ type alias Model =
 For the details, see [System Fields](#system-fields)
 
 -}
-type alias System m a =
+type alias System msg a =
     { draggable : Draggable
-    , subscriptions : Draggable -> Sub m
-    , commands : Draggable -> Cmd m
+    , subscriptions : Draggable -> Sub msg
+    , commands : Draggable -> Cmd msg
     , update : Msg -> Draggable -> List a -> ( Draggable, List a )
-    , dragEvents : Int -> String -> List (Html.Attribute m)
-    , dropEvents : Int -> List (Html.Attribute m)
-    , draggedIndex : Draggable -> Maybe Int
-    , draggedStyles : Draggable -> List (Html.Attribute m)
+    , dragEvents : Int -> String -> List (Html.Attribute msg)
+    , dropEvents : Int -> List (Html.Attribute msg)
+    , dragIndex : Draggable -> Maybe Int
+    , dropIndex : Draggable -> Maybe Int
+    , draggedStyles : Draggable -> List (Html.Attribute msg)
     }
 
 
@@ -203,22 +214,23 @@ The `System` is a wrapper type around your message and list item types:
         DnDList.create config
 
 -}
-create : Config m -> System m a
+create : Config msg -> System msg a
 create { message, movement } =
     { draggable = Draggable Nothing
     , subscriptions = subscriptions message
     , commands = commands message
-    , update = update
+    , update = update movement
     , dragEvents = dragEvents message
     , dropEvents = dropEvents message
-    , draggedIndex = draggedIndex
+    , dragIndex = dragIndex
+    , dropIndex = dropIndex
     , draggedStyles = draggedStyles movement
     }
 
 
 {-| Represents the `System` configuration.
 
-  - `message`: your message wrapper
+  - `message`: your message wrapper.
 
   - `movement`: the kind of the `Movement`. It can be Free, Horizontal, or Vertical.
 
@@ -227,12 +239,12 @@ Example configuration:
     config : DnDList.Config Msg
     config =
         { message = MyMsg
-        , movement = DnDList.Free
+        , movement = DnDList.Free DnDList.Rotate
         }
 
 -}
-type alias Config m =
-    { message : Msg -> m
+type alias Config msg =
+    { message : Msg -> msg
     , movement : Movement
     }
 
@@ -241,9 +253,21 @@ type alias Config m =
 Dragging can be restricted to vertical or horizontal axis only, or it can be free.
 -}
 type Movement
-    = Free
+    = Free Operation
     | Horizontal
     | Vertical
+
+
+{-| Represents the type of the list reordering operation.
+
+  - `Rotate`: the items between the dragged and the target will be circularly shifted.
+
+  - `Swap`: the dragged and the target items will be swapped, and no other items will be affected.
+
+-}
+type Operation
+    = Rotate
+    | Swap
 
 
 type alias Position =
@@ -252,7 +276,7 @@ type alias Position =
     }
 
 
-subscriptions : (Msg -> m) -> Draggable -> Sub m
+subscriptions : (Msg -> msg) -> Draggable -> Sub msg
 subscriptions wrap (Draggable model) =
     case model of
         Nothing ->
@@ -269,7 +293,7 @@ subscriptions wrap (Draggable model) =
                 ]
 
 
-commands : (Msg -> m) -> Draggable -> Cmd m
+commands : (Msg -> msg) -> Draggable -> Cmd msg
 commands wrap (Draggable model) =
     case model of
         Nothing ->
@@ -294,18 +318,19 @@ type Msg
     = DragStart Int String Position
     | Drag Position
     | DragOver Int
+    | DragEnter Int
     | DragEnd
     | GotDragged (Result Browser.Dom.Error Browser.Dom.Element)
 
 
-update : Msg -> Draggable -> List a -> ( Draggable, List a )
-update msg (Draggable model) list =
+update : Movement -> Msg -> Draggable -> List a -> ( Draggable, List a )
+update movement msg (Draggable model) list =
     case msg of
-        DragStart dragIndex elementId xy ->
+        DragStart dragIdx elementId xy ->
             ( Draggable <|
                 Just
-                    { dragIndex = dragIndex
-                    , dropIndex = dragIndex
+                    { dragIdx = dragIdx
+                    , dropIdx = dragIdx
                     , startPosition = xy
                     , currentPosition = xy
                     , element = Nothing
@@ -321,11 +346,23 @@ update msg (Draggable model) list =
             , list
             )
 
-        DragOver dropIndex ->
+        DragOver dropIdx ->
             ( model
-                |> Maybe.map (\m -> { m | dragIndex = dropIndex, dropIndex = dropIndex })
+                |> Maybe.map (\m -> { m | dropIdx = dropIdx })
                 |> Draggable
-            , reorder model dropIndex list
+            , list
+            )
+
+        DragEnter dropIdx ->
+            ( model
+                |> Maybe.map (\m -> { m | dragIdx = dropIdx })
+                |> Draggable
+            , case movement of
+                Free Swap ->
+                    swapReorder model dropIdx list
+
+                _ ->
+                    rotateReorder model dropIdx list
             )
 
         DragEnd ->
@@ -342,20 +379,60 @@ update msg (Draggable model) list =
             )
 
 
-reorder : Maybe Model -> Int -> List a -> List a
-reorder model dropIndex list =
+swapReorder : Maybe Model -> Int -> List a -> List a
+swapReorder model dropIdx list =
     case model of
         Just m ->
-            if m.dragIndex < dropIndex then
-                rotate m.dragIndex dropIndex list
+            if m.dragIdx /= dropIdx then
+                swap m.dragIdx dropIdx list
 
-            else if m.dragIndex > dropIndex then
+            else
+                list
+
+        Nothing ->
+            list
+
+
+swap : Int -> Int -> List a -> List a
+swap i j list =
+    let
+        item_i : List a
+        item_i =
+            list |> List.drop i |> List.take 1
+
+        item_j : List a
+        item_j =
+            list |> List.drop j |> List.take 1
+    in
+    list
+        |> List.indexedMap
+            (\index item ->
+                if index == i then
+                    item_j
+
+                else if index == j then
+                    item_i
+
+                else
+                    [ item ]
+            )
+        |> List.concat
+
+
+rotateReorder : Maybe Model -> Int -> List a -> List a
+rotateReorder model dropIdx list =
+    case model of
+        Just m ->
+            if m.dragIdx < dropIdx then
+                rotate m.dragIdx dropIdx list
+
+            else if m.dragIdx > dropIdx then
                 let
                     n : Int
                     n =
                         List.length list - 1
                 in
-                List.reverse (rotate (n - m.dragIndex) (n - dropIndex) (List.reverse list))
+                List.reverse (rotate (n - m.dragIdx) (n - dropIdx) (List.reverse list))
 
             else
                 list
@@ -402,19 +479,21 @@ rotateRecursive list =
             y :: rotateRecursive (x :: rest)
 
 
-dragEvents : (Msg -> m) -> Int -> String -> List (Html.Attribute m)
-dragEvents wrap dragIndex elementId =
+dragEvents : (Msg -> msg) -> Int -> String -> List (Html.Attribute msg)
+dragEvents wrap dragIdx elementId =
     [ Html.Events.preventDefaultOn "mousedown"
         (Json.Decode.map2 Position pageX pageY
-            |> Json.Decode.map (wrap << DragStart dragIndex elementId)
+            |> Json.Decode.map (wrap << DragStart dragIdx elementId)
             |> Json.Decode.map (\msg -> ( msg, True ))
         )
     ]
 
 
-dropEvents : (Msg -> m) -> Int -> List (Html.Attribute m)
-dropEvents wrap dropIndex =
-    [ Html.Events.onMouseOver (wrap (DragOver dropIndex)) ]
+dropEvents : (Msg -> msg) -> Int -> List (Html.Attribute msg)
+dropEvents wrap dropIdx =
+    [ Html.Events.onMouseOver (wrap (DragOver dropIdx))
+    , Html.Events.onMouseEnter (wrap (DragEnter dropIdx))
+    ]
 
 
 pageX : Json.Decode.Decoder Float
@@ -427,17 +506,27 @@ pageY =
     Json.Decode.field "pageY" Json.Decode.float
 
 
-draggedIndex : Draggable -> Maybe Int
-draggedIndex (Draggable model) =
+dragIndex : Draggable -> Maybe Int
+dragIndex (Draggable model) =
     model
         |> Maybe.andThen
             (\m ->
                 m.element
-                    |> Maybe.map (\_ -> m.dragIndex)
+                    |> Maybe.map (\_ -> m.dragIdx)
             )
 
 
-draggedStyles : Movement -> Draggable -> List (Html.Attribute m)
+dropIndex : Draggable -> Maybe Int
+dropIndex (Draggable model) =
+    model
+        |> Maybe.andThen
+            (\m ->
+                m.element
+                    |> Maybe.map (\_ -> m.dropIdx)
+            )
+
+
+draggedStyles : Movement -> Draggable -> List (Html.Attribute msg)
 draggedStyles movement (Draggable model) =
     case model of
         Nothing ->
@@ -473,7 +562,7 @@ draggedStyles movement (Draggable model) =
                             , Html.Attributes.style "pointer-events" "none"
                             ]
 
-                        Free ->
+                        Free _ ->
                             [ Html.Attributes.style "position" "absolute"
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "top" "0"

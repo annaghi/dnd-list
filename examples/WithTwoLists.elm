@@ -58,7 +58,7 @@ data2 =
 configFruit : DnDList.Config Msg
 configFruit =
     { message = FruitMsg
-    , movement = DnDList.Free
+    , movement = DnDList.Free DnDList.Rotate
     }
 
 
@@ -70,7 +70,7 @@ systemFruit =
 configNumber : DnDList.Config Msg
 configNumber =
     { message = NumberMsg
-    , movement = DnDList.Free
+    , movement = DnDList.Free DnDList.Rotate
     }
 
 
@@ -163,11 +163,11 @@ view model =
     let
         maybeDragFruitIndex : Maybe Int
         maybeDragFruitIndex =
-            systemFruit.draggedIndex model.draggableFruit
+            systemFruit.dragIndex model.draggableFruit
 
         maybeDragNumberIndex : Maybe Int
         maybeDragNumberIndex =
-            systemNumber.draggedIndex model.draggableNumber
+            systemNumber.dragIndex model.draggableNumber
     in
     Html.section
         [ Html.Attributes.style "margin" "6em 0" ]
@@ -183,8 +183,8 @@ view model =
 
 
 fruitView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )
-fruitView maybeDraggedIndex index ( key, fruit ) =
-    case maybeDraggedIndex of
+fruitView maybeDragIndex index ( key, fruit ) =
+    case maybeDragIndex of
         Nothing ->
             let
                 fruitId : String
@@ -202,8 +202,8 @@ fruitView maybeDraggedIndex index ( key, fruit ) =
                 ]
             )
 
-        Just draggedIndex ->
-            if draggedIndex /= index then
+        Just dragIndex ->
+            if dragIndex /= index then
                 ( key
                 , Html.div
                     [ Html.Attributes.style "margin" "0 2em 2em 2em" ]
@@ -231,7 +231,7 @@ draggedFruitView draggableFruit fruits =
     let
         maybeDraggedFruit : Maybe KeyedFruit
         maybeDraggedFruit =
-            systemFruit.draggedIndex draggableFruit
+            systemFruit.dragIndex draggableFruit
                 |> Maybe.andThen (\index -> fruits |> List.drop index |> List.head)
     in
     case maybeDraggedFruit of
@@ -247,8 +247,8 @@ draggedFruitView draggableFruit fruits =
 
 
 numberView : Maybe Int -> Int -> KeyedNumber -> ( String, Html.Html Msg )
-numberView maybeDraggedIndex index ( key, number ) =
-    case maybeDraggedIndex of
+numberView maybeDragIndex index ( key, number ) =
+    case maybeDragIndex of
         Nothing ->
             let
                 numberId : String
@@ -266,8 +266,8 @@ numberView maybeDraggedIndex index ( key, number ) =
                 ]
             )
 
-        Just draggedIndex ->
-            if draggedIndex /= index then
+        Just dragIndex ->
+            if dragIndex /= index then
                 ( key
                 , Html.div
                     [ Html.Attributes.style "margin" "2em 2em 0 2em" ]
@@ -295,7 +295,7 @@ draggedNumberView draggableNumber numbers =
     let
         maybeDraggedNumber : Maybe KeyedNumber
         maybeDraggedNumber =
-            systemNumber.draggedIndex draggableNumber
+            systemNumber.dragIndex draggableNumber
                 |> Maybe.andThen (\index -> numbers |> List.drop index |> List.head)
     in
     case maybeDraggedNumber of

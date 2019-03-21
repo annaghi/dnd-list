@@ -26,7 +26,7 @@ data =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Free
+    , movement = DnDList.Free DnDList.Rotate
     }
 
 
@@ -94,9 +94,9 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     let
-        maybeDraggedIndex : Maybe Int
-        maybeDraggedIndex =
-            system.draggedIndex model.draggable
+        maybeDragIndex : Maybe Int
+        maybeDragIndex =
+            system.dragIndex model.draggable
     in
     Element.layout
         [ Element.width Element.fill
@@ -105,13 +105,13 @@ view model =
         ]
         (Element.column
             [ Element.centerX, Element.centerY, Element.padding 10, Element.spacing 10 ]
-            (model.items |> List.indexedMap (itemView maybeDraggedIndex))
+            (model.items |> List.indexedMap (itemView maybeDragIndex))
         )
 
 
 itemView : Maybe Int -> Int -> Fruit -> Element.Element Msg
-itemView maybeDraggedIndex index item =
-    case maybeDraggedIndex of
+itemView maybeDragIndex index item =
+    case maybeDragIndex of
         Nothing ->
             let
                 itemId : String
@@ -124,8 +124,8 @@ itemView maybeDraggedIndex index item =
                 )
                 (Element.text item)
 
-        Just draggedIndex ->
-            if draggedIndex /= index then
+        Just dragIndex ->
+            if dragIndex /= index then
                 Element.el
                     (List.map Element.htmlAttribute (system.dropEvents index))
                     (Element.text item)
@@ -139,7 +139,7 @@ draggedItemView draggable items =
     let
         maybeDraggedItem : Maybe Fruit
         maybeDraggedItem =
-            system.draggedIndex draggable
+            system.dragIndex draggable
                 |> Maybe.andThen (\index -> items |> List.drop index |> List.head)
     in
     case maybeDraggedItem of
@@ -159,171 +159,171 @@ draggedItemView draggable items =
 source : String
 source =
     """
-    module BasicElmUI exposing (main)
+module BasicElmUI exposing (main)
 
-    import Browser
-    import DnDList
-    import Element
-    import Html
-    import Html.Attributes
-
-
-
-    -- MAIN
-
-
-    main : Program () Model Msg
-    main =
-        Browser.element
-            { init = init
-            , view = view
-            , update = update
-            , subscriptions = subscriptions
-            }
+import Browser
+import DnDList
+import Element
+import Html
+import Html.Attributes
 
 
 
-    -- DATA
+-- MAIN
 
 
-    type alias Fruit =
-        String
-
-
-    data : List Fruit
-    data =
-        [ "Apples", "Bananas", "Cherries", "Dates" ]
-
-
-
-    -- SYSTEM
-
-
-    config : DnDList.Config Msg
-    config =
-        { message = MyMsg
-        , movement = DnDList.Free
+main : Program () Model Msg
+main =
+    Browser.element
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
         }
 
 
-    system : DnDList.System Msg Fruit
-    system =
-        DnDList.create config
+
+-- DATA
+
+
+type alias Fruit =
+    String
+
+
+data : List Fruit
+data =
+    [ "Apples", "Bananas", "Cherries", "Dates" ]
 
 
 
-    -- MODEL
+-- SYSTEM
 
 
-    type alias Model =
-        { draggable : DnDList.Draggable
-        , items : List Fruit
-        }
+config : DnDList.Config Msg
+config =
+    { message = MyMsg
+    , movement = DnDList.Free DnDList.Rotate
+    }
 
 
-    initialModel : Model
-    initialModel =
-        { draggable = system.draggable
-        , items = data
-        }
-
-
-    init : () -> ( Model, Cmd Msg )
-    init _ =
-        ( initialModel, Cmd.none )
+system : DnDList.System Msg Fruit
+system =
+    DnDList.create config
 
 
 
-    -- SUBSCRIPTIONS
+-- MODEL
 
 
-    subscriptions : Model -> Sub Msg
-    subscriptions model =
-        system.subscriptions model.draggable
+type alias Model =
+    { draggable : DnDList.Draggable
+    , items : List Fruit
+    }
 
 
+initialModel : Model
+initialModel =
+    { draggable = system.draggable
+    , items = data
+    }
 
-    -- UPDATE
 
-
-    type Msg
-        = MyMsg DnDList.Msg
-
-
-    update : Msg -> Model -> ( Model, Cmd Msg )
-    update msg model =
-        case msg of
-            MyMsg message ->
-                let
-                    ( draggable, items ) =
-                        system.update message model.draggable model.items
-                in
-                ( { model | draggable = draggable, items = items }
-                , system.commands model.draggable
-                )
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( initialModel, Cmd.none )
 
 
 
-    -- VIEW
+-- SUBSCRIPTIONS
 
 
-    view : Model -> Html.Html Msg
-    view model =
-        let
-            maybeDraggedIndex : Maybe Int
-            maybeDraggedIndex =
-                system.draggedIndex model.draggable
-        in
-        Element.layout
-            [ Element.width Element.fill
-            , Element.height Element.fill
-            , Element.inFront (draggedItemView model.draggable model.items)
-            ]
-            (Element.column
-                [ Element.centerX, Element.centerY, Element.padding 10, Element.spacing 10 ]
-                (model.items |> List.indexedMap (itemView maybeDraggedIndex))
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    system.subscriptions model.draggable
+
+
+
+-- UPDATE
+
+
+type Msg
+    = MyMsg DnDList.Msg
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        MyMsg message ->
+            let
+                ( draggable, items ) =
+                    system.update message model.draggable model.items
+            in
+            ( { model | draggable = draggable, items = items }
+            , system.commands model.draggable
             )
 
 
-    itemView : Maybe Int -> Int -> Fruit -> Element.Element Msg
-    itemView maybeDraggedIndex index item =
-        case maybeDraggedIndex of
-            Nothing ->
-                let
-                    itemId : String
-                    itemId =
-                        "id-" ++ item
-                in
+
+-- VIEW
+
+
+view : Model -> Html.Html Msg
+view model =
+    let
+        maybeDragIndex : Maybe Int
+        maybeDragIndex =
+            system.dragIndex model.draggable
+    in
+    Element.layout
+        [ Element.width Element.fill
+        , Element.height Element.fill
+        , Element.inFront (draggedItemView model.draggable model.items)
+        ]
+        (Element.column
+            [ Element.centerX, Element.centerY, Element.padding 10, Element.spacing 10 ]
+            (model.items |> List.indexedMap (itemView maybeDragIndex))
+        )
+
+
+itemView : Maybe Int -> Int -> Fruit -> Element.Element Msg
+itemView maybeDragIndex index item =
+    case maybeDragIndex of
+        Nothing ->
+            let
+                itemId : String
+                itemId =
+                    "id-" ++ item
+            in
+            Element.el
+                (Element.htmlAttribute (Html.Attributes.id itemId)
+                    :: List.map Element.htmlAttribute (system.dragEvents index itemId)
+                )
+                (Element.text item)
+
+        Just dragIndex ->
+            if dragIndex /= index then
                 Element.el
-                    (Element.htmlAttribute (Html.Attributes.id itemId)
-                        :: List.map Element.htmlAttribute (system.dragEvents index itemId)
-                    )
+                    (List.map Element.htmlAttribute (system.dropEvents index))
                     (Element.text item)
 
-            Just draggedIndex ->
-                if draggedIndex /= index then
-                    Element.el
-                        (List.map Element.htmlAttribute (system.dropEvents index))
-                        (Element.text item)
-
-                else
-                    Element.el [] (Element.text "[---------]")
+            else
+                Element.el [] (Element.text "[---------]")
 
 
-    draggedItemView : DnDList.Draggable -> List Fruit -> Element.Element Msg
-    draggedItemView draggable items =
-        let
-            maybeDraggedItem : Maybe Fruit
-            maybeDraggedItem =
-                system.draggedIndex draggable
-                    |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)
-        in
-        case maybeDraggedItem of
-            Just item ->
-                Element.el
-                    (List.map Element.htmlAttribute (system.draggedStyles draggable))
-                    (Element.text item)
+draggedItemView : DnDList.Draggable -> List Fruit -> Element.Element Msg
+draggedItemView draggable items =
+    let
+        maybeDraggedItem : Maybe Fruit
+        maybeDraggedItem =
+            system.dragIndex draggable
+                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)
+    in
+    case maybeDraggedItem of
+        Just item ->
+            Element.el
+                (List.map Element.htmlAttribute (system.draggedStyles draggable))
+                (Element.text item)
 
-            Nothing ->
-                Element.none
+        Nothing ->
+            Element.none
     """

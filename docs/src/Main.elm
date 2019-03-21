@@ -4,7 +4,8 @@ import Browser
 import Browser.Dom
 import Example.Basic
 import Example.BasicElmUI
-import Example.Free
+import Example.FreeRotate
+import Example.FreeSwap
 import Example.Horizontal
 import Example.Vertical
 import Example.WithTwoLists
@@ -42,7 +43,8 @@ type alias Model =
 type Example
     = Basic Example.Basic.Model
     | BasicElmUI Example.BasicElmUI.Model
-    | Free Example.Free.Model
+    | FreeRotate Example.FreeRotate.Model
+    | FreeSwap Example.FreeSwap.Model
     | Horizontal Example.Horizontal.Model
     | Vertical Example.Vertical.Model
     | WithTwoLists Example.WithTwoLists.Model
@@ -51,7 +53,7 @@ type Example
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { key = 2
-      , example = Free Example.Free.initialModel
+      , example = FreeRotate Example.FreeRotate.initialModel
       }
     , Cmd.none
     )
@@ -66,7 +68,8 @@ type Msg
     | LinkClicked Int Example
     | BasicMsg Example.Basic.Msg
     | BasicElmUIMsg Example.BasicElmUI.Msg
-    | FreeMsg Example.Free.Msg
+    | FreeRotateMsg Example.FreeRotate.Msg
+    | FreeSwapMsg Example.FreeSwap.Msg
     | HorizontalMsg Example.Horizontal.Msg
     | VerticalMsg Example.Vertical.Msg
     | WithTwoListsMsg Example.WithTwoLists.Msg
@@ -99,10 +102,18 @@ update message model =
                 _ ->
                     ( model, Cmd.none )
 
-        FreeMsg msg ->
+        FreeRotateMsg msg ->
             case model.example of
-                Free free ->
-                    stepFree model (Example.Free.update msg free)
+                FreeRotate freeRotate ->
+                    stepFreeRotate model (Example.FreeRotate.update msg freeRotate)
+
+                _ ->
+                    ( model, Cmd.none )
+
+        FreeSwapMsg msg ->
+            case model.example of
+                FreeSwap freeSwap ->
+                    stepFreeSwap model (Example.FreeSwap.update msg freeSwap)
 
                 _ ->
                     ( model, Cmd.none )
@@ -146,10 +157,17 @@ stepBasicElmUI model ( basicElmUI, cmds ) =
     )
 
 
-stepFree : Model -> ( Example.Free.Model, Cmd Example.Free.Msg ) -> ( Model, Cmd Msg )
-stepFree model ( free, cmds ) =
-    ( { model | example = Free free }
-    , Cmd.map FreeMsg cmds
+stepFreeRotate : Model -> ( Example.FreeRotate.Model, Cmd Example.FreeRotate.Msg ) -> ( Model, Cmd Msg )
+stepFreeRotate model ( freeRotate, cmds ) =
+    ( { model | example = FreeRotate freeRotate }
+    , Cmd.map FreeRotateMsg cmds
+    )
+
+
+stepFreeSwap : Model -> ( Example.FreeSwap.Model, Cmd Example.FreeSwap.Msg ) -> ( Model, Cmd Msg )
+stepFreeSwap model ( freeSwap, cmds ) =
+    ( { model | example = FreeSwap freeSwap }
+    , Cmd.map FreeSwapMsg cmds
     )
 
 
@@ -198,8 +216,11 @@ subscriptions model =
         BasicElmUI basicElmUI ->
             exampleSubscriptions BasicElmUIMsg (Example.BasicElmUI.subscriptions basicElmUI)
 
-        Free free ->
-            exampleSubscriptions FreeMsg (Example.Free.subscriptions free)
+        FreeRotate freeRotate ->
+            exampleSubscriptions FreeRotateMsg (Example.FreeRotate.subscriptions freeRotate)
+
+        FreeSwap freeSwap ->
+            exampleSubscriptions FreeSwapMsg (Example.FreeSwap.subscriptions freeSwap)
 
         Horizontal horizontal ->
             exampleSubscriptions HorizontalMsg (Example.Horizontal.subscriptions horizontal)
@@ -230,7 +251,8 @@ view model =
                 model.key
                 [ Basic Example.Basic.initialModel
                 , BasicElmUI Example.BasicElmUI.initialModel
-                , Free Example.Free.initialModel
+                , FreeRotate Example.FreeRotate.initialModel
+                , FreeSwap Example.FreeSwap.initialModel
                 , Horizontal Example.Horizontal.initialModel
                 , Vertical Example.Vertical.initialModel
                 , WithTwoLists Example.WithTwoLists.initialModel
@@ -301,10 +323,16 @@ mainView example =
                 , sourceView Example.BasicElmUI.source
                 ]
 
-        Free free ->
+        FreeRotate freeRotate ->
             Html.main_ [ Html.Attributes.id "main" ]
-                [ demoView h2 h3 FreeMsg (Example.Free.view free)
-                , sourceView Example.Free.source
+                [ demoView h2 h3 FreeRotateMsg (Example.FreeRotate.view freeRotate)
+                , sourceView Example.FreeRotate.source
+                ]
+
+        FreeSwap freeSwap ->
+            Html.main_ [ Html.Attributes.id "main" ]
+                [ demoView h2 h3 FreeSwapMsg (Example.FreeSwap.view freeSwap)
+                , sourceView Example.FreeSwap.source
                 ]
 
         Horizontal horizontal ->
@@ -385,10 +413,16 @@ heading example =
             , h3 = "Designed with mdgriffith/elm-ui"
             }
 
-        Free _ ->
-            { h1 = "Free"
-            , h2 = "Free drag movement"
-            , h3 = "Example with keyed nodes"
+        FreeRotate _ ->
+            { h1 = "Free Rotate"
+            , h2 = "Free drag movement - Rotate"
+            , h3 = "The items between the dragged and the drop target items have been rotated"
+            }
+
+        FreeSwap _ ->
+            { h1 = "Free Swap"
+            , h2 = "Free drag movement - Swap"
+            , h3 = "The dragged and the drop target items have been swapped"
             }
 
         Horizontal _ ->

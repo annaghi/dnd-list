@@ -40,7 +40,7 @@ data =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Free
+    , movement = DnDList.Free DnDList.Rotate
     }
 
 
@@ -108,24 +108,24 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     let
-        maybeDraggedIndex : Maybe Int
-        maybeDraggedIndex =
-            system.draggedIndex model.draggable
+        maybeDragIndex : Maybe Int
+        maybeDragIndex =
+            system.dragIndex model.draggable
     in
     Html.section
         [ Html.Attributes.style "margin" "6em 0"
         , Html.Attributes.style "text-align" "center"
         ]
         [ model.items
-            |> List.indexedMap (itemView maybeDraggedIndex)
+            |> List.indexedMap (itemView maybeDragIndex)
             |> Html.div []
         , draggedItemView model.draggable model.items
         ]
 
 
 itemView : Maybe Int -> Int -> Fruit -> Html.Html Msg
-itemView maybeDraggedIndex index item =
-    case maybeDraggedIndex of
+itemView maybeDragIndex index item =
+    case maybeDragIndex of
         Nothing ->
             let
                 itemId : String
@@ -136,8 +136,8 @@ itemView maybeDraggedIndex index item =
                 (Html.Attributes.id itemId :: system.dragEvents index itemId)
                 [ Html.text item ]
 
-        Just draggedIndex ->
-            if draggedIndex /= index then
+        Just dragIndex ->
+            if dragIndex /= index then
                 Html.p
                     (system.dropEvents index)
                     [ Html.text item ]
@@ -151,7 +151,7 @@ draggedItemView draggable items =
     let
         maybeDraggedItem : Maybe Fruit
         maybeDraggedItem =
-            system.draggedIndex draggable
+            system.dragIndex draggable
                 |> Maybe.andThen (\index -> items |> List.drop index |> List.head)
     in
     case maybeDraggedItem of
