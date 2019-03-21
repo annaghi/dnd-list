@@ -1,12 +1,10 @@
 module FreeRotate exposing (main)
 
 import Browser
-import Browser.Events
 import DnDList
 import Html
 import Html.Attributes
 import Html.Keyed
-import Json.Decode
 
 
 
@@ -84,13 +82,7 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        [ system.subscriptions model.draggable
-        , Browser.Events.onClick
-            (Json.Decode.succeed ClearAffected)
-        , Browser.Events.onKeyDown
-            (Json.Decode.succeed ClearAffected)
-        ]
+    system.subscriptions model.draggable
 
 
 
@@ -232,6 +224,7 @@ itemStyles =
     [ Html.Attributes.style "background" "#1a8994"
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
+    , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "font-size" "large"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
