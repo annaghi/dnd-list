@@ -132,6 +132,7 @@ Also you can get access to the drag and drop events as well as the dragged posit
 ## draggedStyles
 
 `draggedStyles` is a helper to set the current position of the dragged element.
+The position is absolute to the `body` tag.
 
     Html.div
         (system.draggedStyles model.draggable)
