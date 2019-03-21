@@ -102,17 +102,17 @@ update msg model =
                 ( draggable, items ) =
                     system.update message model.draggable model.items
 
-                ( dragIdx, dropIdx ) =
+                ( maybeDragIndex, maybeDropIndex ) =
                     ( system.dragIndex draggable, system.dropIndex draggable )
 
                 affected =
-                    case ( dragIdx, dropIdx ) of
-                        ( Just dragX, Just dropX ) ->
-                            if dragX < dropX then
-                                List.range dragX dropX
+                    case ( maybeDragIndex, maybeDropIndex ) of
+                        ( Just dragIndex, Just dropIndex ) ->
+                            if dragIndex < dropIndex then
+                                List.range dragIndex dropIndex
 
-                            else if dragX > dropX then
-                                List.range dropX dragX
+                            else if dragIndex > dropIndex then
+                                List.range dropIndex dragIndex
 
                             else
                                 model.affected

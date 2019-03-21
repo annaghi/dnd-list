@@ -87,17 +87,17 @@ update msg model =
                 ( draggable, items ) =
                     system.update message model.draggable model.items
 
-                ( dragIdx, dropIdx ) =
+                ( maybeDragIndex, maybeDropIndex ) =
                     ( system.dragIndex draggable, system.dropIndex draggable )
 
                 affected =
-                    case ( dragIdx, dropIdx ) of
-                        ( Just dragX, Just dropX ) ->
-                            if dragX < dropX then
-                                dragX :: dropX :: []
+                    case ( maybeDragIndex, maybeDropIndex ) of
+                        ( Just dragIndex, Just dropIndex ) ->
+                            if dragIndex < dropIndex then
+                                dragIndex :: dropIndex :: []
 
-                            else if dragX > dropX then
-                                dropX :: dragX :: []
+                            else if dragIndex > dropIndex then
+                                dropIndex :: dragIndex :: []
 
                             else
                                 model.affected
@@ -343,17 +343,17 @@ update msg model =
                 ( draggable, items ) =
                     system.update message model.draggable model.items
 
-                ( dragIdx, dropIdx ) =
+                ( maybeDragIndex, maybeDropIndex ) =
                     ( system.dragIndex draggable, system.dropIndex draggable )
 
                 affected =
-                    case ( dragIdx, dropIdx ) of
-                        ( Just dragX, Just dropX ) ->
-                            if dragX < dropX then
-                                dragX :: dropX :: []
+                    case ( maybeDragIndex, maybeDropIndex ) of
+                        ( Just dragIndex, Just dropIndex ) ->
+                            if dragIndex < dropIndex then
+                                dragIndex :: dropIndex :: []
 
-                            else if dragX > dropX then
-                                dropX :: dragX :: []
+                            else if dragIndex > dropIndex then
+                                dropIndex :: dragIndex :: []
 
                             else
                                 model.affected
