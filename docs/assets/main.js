@@ -13626,9 +13626,9 @@ var author$project$Main$heading = function (example) {
 		case 1:
 			return {t: 'Basic + Elm UI', u: 'Basic example', v: 'Designed with mdgriffith/elm-ui'};
 		case 2:
-			return {t: 'Free Rotate', u: 'Free drag movement - Rotate', v: 'The items between the dragged and the target have been rotated'};
+			return {t: 'Free Rotate', u: 'Free drag movement - Rotate', v: 'The items between the dragged and the drop target items have been rotated'};
 		case 3:
-			return {t: 'Free Swap', u: 'Free drag movement - Swap', v: 'The dragged and the target items have been swapped'};
+			return {t: 'Free Swap', u: 'Free drag movement - Swap', v: 'The dragged and the drop target items have been swapped'};
 		case 4:
 			return {t: 'Horizontal', u: 'Horizontal drag only', v: 'Example with keyed nodes'};
 		case 5:
