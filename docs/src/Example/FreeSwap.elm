@@ -76,7 +76,6 @@ subscriptions model =
 
 type Msg
     = MyMsg DnDList.Msg
-    | ClearAffected
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -108,9 +107,6 @@ update msg model =
             ( { model | draggable = draggable, items = items, affected = affected }
             , system.commands model.draggable
             )
-
-        ClearAffected ->
-            ( { model | affected = [] }, Cmd.none )
 
 
 
@@ -332,7 +328,6 @@ subscriptions model =
 
 type Msg
     = MyMsg DnDList.Msg
-    | ClearAffected
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -364,9 +359,6 @@ update msg model =
             ( { model | draggable = draggable, items = items, affected = affected }
             , system.commands model.draggable
             )
-
-        ClearAffected ->
-            ( { model | affected = [] }, Cmd.none )
 
 
 
