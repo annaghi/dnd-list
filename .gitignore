@@ -10,9 +10,7 @@ docs.json
 # VS Code settings
 .vscode
 
-live-reload.sh
 package.json
-public
 
 # gh-pages
 docs/live-reload.sh
