@@ -4271,7 +4271,7 @@ function _Browser_getElement(id)
 				a0: _Browser_doc.documentElement.clientWidth,
 				aS: _Browser_doc.documentElement.clientHeight
 			},
-			F: {
+			D: {
 				K: x + rect.left,
 				L: y + rect.top,
 				a0: rect.width,
@@ -4432,8 +4432,8 @@ var elm$core$Set$toList = function (_n0) {
 	return elm$core$Dict$keys(dict);
 };
 var elm$core$Basics$append = _Utils_append;
-var elm$core$Basics$sub = _Basics_sub;
 var elm$core$Basics$add = _Basics_add;
+var elm$core$Basics$gt = _Utils_gt;
 var elm$core$List$foldl = F3(
 	function (func, acc, list) {
 		foldl:
@@ -4453,51 +4453,6 @@ var elm$core$List$foldl = F3(
 			}
 		}
 	});
-var elm$core$List$length = function (xs) {
-	return A3(
-		elm$core$List$foldl,
-		F2(
-			function (_n0, i) {
-				return i + 1;
-			}),
-		0,
-		xs);
-};
-var elm$core$List$map2 = _List_map2;
-var elm$core$Basics$le = _Utils_le;
-var elm$core$List$rangeHelp = F3(
-	function (lo, hi, list) {
-		rangeHelp:
-		while (true) {
-			if (_Utils_cmp(lo, hi) < 1) {
-				var $temp$lo = lo,
-					$temp$hi = hi - 1,
-					$temp$list = A2(elm$core$List$cons, hi, list);
-				lo = $temp$lo;
-				hi = $temp$hi;
-				list = $temp$list;
-				continue rangeHelp;
-			} else {
-				return list;
-			}
-		}
-	});
-var elm$core$List$range = F2(
-	function (lo, hi) {
-		return A3(elm$core$List$rangeHelp, lo, hi, _List_Nil);
-	});
-var elm$core$List$indexedMap = F2(
-	function (f, xs) {
-		return A3(
-			elm$core$List$map2,
-			f,
-			A2(
-				elm$core$List$range,
-				0,
-				elm$core$List$length(xs) - 1),
-			xs);
-	});
-var elm$core$Basics$gt = _Utils_gt;
 var elm$core$List$reverse = function (list) {
 	return A3(elm$core$List$foldl, elm$core$List$cons, _List_Nil, list);
 };
@@ -4570,28 +4525,42 @@ var elm$core$List$map = F2(
 			_List_Nil,
 			xs);
 	});
+var elm$core$Basics$le = _Utils_le;
+var elm$core$Basics$sub = _Basics_sub;
+var elm$core$List$rangeHelp = F3(
+	function (lo, hi, list) {
+		rangeHelp:
+		while (true) {
+			if (_Utils_cmp(lo, hi) < 1) {
+				var $temp$lo = lo,
+					$temp$hi = hi - 1,
+					$temp$list = A2(elm$core$List$cons, hi, list);
+				lo = $temp$lo;
+				hi = $temp$hi;
+				list = $temp$list;
+				continue rangeHelp;
+			} else {
+				return list;
+			}
+		}
+	});
+var elm$core$List$range = F2(
+	function (lo, hi) {
+		return A3(elm$core$List$rangeHelp, lo, hi, _List_Nil);
+	});
 var elm$core$Maybe$Just = function (a) {
 	return {$: 0, a: a};
 };
 var elm$core$Maybe$Nothing = {$: 1};
 var elm$core$String$fromInt = _String_fromNumber;
-var elm$core$Tuple$pair = F2(
-	function (a, b) {
-		return _Utils_Tuple2(a, b);
-	});
 var author$project$Example$FreeRotate$data = A2(
 	elm$core$List$map,
-	function (_n0) {
-		var k = _n0.a;
-		var v = _n0.b;
+	function (i) {
 		return _Utils_Tuple2(
-			'key-' + elm$core$String$fromInt(k),
-			v);
+			'key-' + elm$core$String$fromInt(i),
+			elm$core$String$fromInt(i));
 	},
-	A2(
-		elm$core$List$indexedMap,
-		elm$core$Tuple$pair,
-		A2(elm$core$List$range, 1, 9)));
+	A2(elm$core$List$range, 1, 9));
 var author$project$DnDList$Draggable = elm$core$Basics$identity;
 var author$project$DnDList$GotDragged = function (a) {
 	return {$: 5, a: a};
@@ -4843,6 +4812,28 @@ var elm$core$Char$isDigit = function (_char) {
 var elm$core$Char$isAlphaNum = function (_char) {
 	return elm$core$Char$isLower(_char) || (elm$core$Char$isUpper(_char) || elm$core$Char$isDigit(_char));
 };
+var elm$core$List$length = function (xs) {
+	return A3(
+		elm$core$List$foldl,
+		F2(
+			function (_n0, i) {
+				return i + 1;
+			}),
+		0,
+		xs);
+};
+var elm$core$List$map2 = _List_map2;
+var elm$core$List$indexedMap = F2(
+	function (f, xs) {
+		return A3(
+			elm$core$List$map2,
+			f,
+			A2(
+				elm$core$List$range,
+				0,
+				elm$core$List$length(xs) - 1),
+			xs);
+	});
 var elm$core$String$all = _String_all;
 var elm$core$String$join = F2(
 	function (sep, chunks) {
@@ -5183,7 +5174,7 @@ var author$project$DnDList$commands = F2(
 			return elm$core$Platform$Cmd$none;
 		} else {
 			var m = model.a;
-			var _n2 = m.F;
+			var _n2 = m.D;
 			if (_n2.$ === 1) {
 				return A2(
 					elm$core$Task$attempt,
@@ -5267,7 +5258,7 @@ var author$project$DnDList$dragIndex = function (_n0) {
 				function (_n1) {
 					return m.n;
 				},
-				m.F);
+				m.D);
 		},
 		model);
 };
@@ -5288,9 +5279,9 @@ var author$project$DnDList$draggedStyles = F2(
 			return _List_Nil;
 		} else {
 			var m = model.a;
-			var _n2 = m.F;
+			var _n2 = m.D;
 			if (!_n2.$) {
-				var element = _n2.a.F;
+				var element = _n2.a.D;
 				switch (movement.$) {
 					case 1:
 						return _List_fromArray(
@@ -5423,7 +5414,7 @@ var author$project$DnDList$dropIndex = function (_n0) {
 				function (_n1) {
 					return m.aA;
 				},
-				m.F);
+				m.D);
 		},
 		model);
 };
@@ -6127,7 +6118,7 @@ var author$project$DnDList$update = F4(
 				var xy = msg.c;
 				return _Utils_Tuple2(
 					elm$core$Maybe$Just(
-						{O: xy, n: dragIdx, aA: dragIdx, F: elm$core$Maybe$Nothing, aP: elementId, ai: xy}),
+						{O: xy, n: dragIdx, aA: dragIdx, D: elm$core$Maybe$Nothing, aP: elementId, ai: xy}),
 					list);
 			case 1:
 				var xy = msg.a;
@@ -6186,7 +6177,7 @@ var author$project$DnDList$update = F4(
 								return _Utils_update(
 									m,
 									{
-										F: elm$core$Maybe$Just(element)
+										D: elm$core$Maybe$Just(element)
 									});
 							},
 							model),
@@ -6298,25 +6289,25 @@ var author$project$Example$Vertical$subscriptions = function (model) {
 var author$project$Example$WithTwoLists$FruitMsg = function (a) {
 	return {$: 0, a: a};
 };
-var author$project$Example$WithTwoLists$configFruit = {
+var author$project$Example$WithTwoLists$fruitConfig = {
 	bu: author$project$Example$WithTwoLists$FruitMsg,
 	bw: author$project$DnDList$Free(0)
 };
-var author$project$Example$WithTwoLists$systemFruit = author$project$DnDList$create(author$project$Example$WithTwoLists$configFruit);
+var author$project$Example$WithTwoLists$fruitSystem = author$project$DnDList$create(author$project$Example$WithTwoLists$fruitConfig);
 var author$project$Example$WithTwoLists$NumberMsg = function (a) {
 	return {$: 1, a: a};
 };
-var author$project$Example$WithTwoLists$configNumber = {
+var author$project$Example$WithTwoLists$numberConfig = {
 	bu: author$project$Example$WithTwoLists$NumberMsg,
 	bw: author$project$DnDList$Free(0)
 };
-var author$project$Example$WithTwoLists$systemNumber = author$project$DnDList$create(author$project$Example$WithTwoLists$configNumber);
+var author$project$Example$WithTwoLists$numberSystem = author$project$DnDList$create(author$project$Example$WithTwoLists$numberConfig);
 var author$project$Example$WithTwoLists$subscriptions = function (model) {
 	return elm$core$Platform$Sub$batch(
 		_List_fromArray(
 			[
-				author$project$Example$WithTwoLists$systemFruit.bQ(model.D),
-				author$project$Example$WithTwoLists$systemNumber.bQ(model.E)
+				author$project$Example$WithTwoLists$fruitSystem.bQ(model.E),
+				author$project$Example$WithTwoLists$numberSystem.bQ(model.G)
 			]));
 };
 var author$project$Main$BasicElmUIMsg = function (a) {
@@ -6468,13 +6459,10 @@ var author$project$Example$FreeSwap$update = F2(
 				if ((!_n3.a.$) && (!_n3.b.$)) {
 					var dragIndex = _n3.a.a;
 					var dropIndex = _n3.b.a;
-					return (_Utils_cmp(dragIndex, dropIndex) < 0) ? A2(
+					return (!_Utils_eq(dragIndex, dropIndex)) ? A2(
 						elm$core$List$cons,
 						dragIndex,
-						A2(elm$core$List$cons, dropIndex, _List_Nil)) : ((_Utils_cmp(dragIndex, dropIndex) > 0) ? A2(
-						elm$core$List$cons,
-						dropIndex,
-						A2(elm$core$List$cons, dragIndex, _List_Nil)) : model.z);
+						A2(elm$core$List$cons, dropIndex, _List_Nil)) : model.z;
 				} else {
 					return model.z;
 				}
@@ -6520,24 +6508,24 @@ var author$project$Example$WithTwoLists$update = F2(
 	function (msg, model) {
 		if (!msg.$) {
 			var message = msg.a;
-			var _n1 = A3(author$project$Example$WithTwoLists$systemFruit.bU, message, model.D, model.aa);
-			var draggableFruit = _n1.a;
+			var _n1 = A3(author$project$Example$WithTwoLists$fruitSystem.bU, message, model.E, model.aa);
+			var fruitDraggable = _n1.a;
 			var fruits = _n1.b;
 			return _Utils_Tuple2(
 				_Utils_update(
 					model,
-					{D: draggableFruit, aa: fruits}),
-				author$project$Example$WithTwoLists$systemFruit.bb(model.D));
+					{E: fruitDraggable, aa: fruits}),
+				author$project$Example$WithTwoLists$fruitSystem.bb(model.E));
 		} else {
 			var message = msg.a;
-			var _n2 = A3(author$project$Example$WithTwoLists$systemNumber.bU, message, model.E, model.ad);
-			var draggableNumber = _n2.a;
+			var _n2 = A3(author$project$Example$WithTwoLists$numberSystem.bU, message, model.G, model.ad);
+			var numberDraggable = _n2.a;
 			var numbers = _n2.b;
 			return _Utils_Tuple2(
 				_Utils_update(
 					model,
-					{E: draggableNumber, ad: numbers}),
-				author$project$Example$WithTwoLists$systemNumber.bb(model.E));
+					{G: numberDraggable, ad: numbers}),
+				author$project$Example$WithTwoLists$numberSystem.bb(model.G));
 		}
 	});
 var author$project$Main$NoOp = {$: 0};
@@ -6766,76 +6754,54 @@ var author$project$Example$BasicElmUI$data = _List_fromArray(
 var author$project$Example$BasicElmUI$initialModel = {bf: author$project$Example$BasicElmUI$system.bf, ab: author$project$Example$BasicElmUI$data};
 var author$project$Example$FreeSwap$data = A2(
 	elm$core$List$map,
-	function (_n0) {
-		var k = _n0.a;
-		var v = _n0.b;
+	function (i) {
 		return _Utils_Tuple2(
-			'key-' + elm$core$String$fromInt(k),
-			v);
+			'key-' + elm$core$String$fromInt(i),
+			elm$core$String$fromInt(i));
 	},
-	A2(
-		elm$core$List$indexedMap,
-		elm$core$Tuple$pair,
-		A2(elm$core$List$range, 1, 9)));
+	A2(elm$core$List$range, 1, 9));
 var author$project$Example$FreeSwap$initialModel = {z: _List_Nil, bf: author$project$Example$FreeSwap$system.bf, ab: author$project$Example$FreeSwap$data};
 var author$project$Example$Horizontal$data = A2(
-	elm$core$List$map,
-	function (_n0) {
-		var k = _n0.a;
-		var v = _n0.b;
-		return _Utils_Tuple2(
-			'key-' + elm$core$String$fromInt(k),
-			v);
-	},
-	A2(
-		elm$core$List$indexedMap,
-		elm$core$Tuple$pair,
-		_List_fromArray(
-			['Apples', 'Bananas', 'Cherries', 'Dates'])));
+	elm$core$List$indexedMap,
+	F2(
+		function (k, v) {
+			return _Utils_Tuple2(
+				'key-' + elm$core$String$fromInt(k),
+				v);
+		}),
+	_List_fromArray(
+		['Apples', 'Bananas', 'Cherries', 'Dates']));
 var author$project$Example$Horizontal$initialModel = {bf: author$project$Example$Horizontal$system.bf, aa: author$project$Example$Horizontal$data};
 var author$project$Example$Vertical$data = A2(
-	elm$core$List$map,
-	function (_n0) {
-		var k = _n0.a;
-		var v = _n0.b;
-		return _Utils_Tuple2(
-			'key-' + elm$core$String$fromInt(k),
-			v);
-	},
-	A2(
-		elm$core$List$indexedMap,
-		elm$core$Tuple$pair,
-		_List_fromArray(
-			['Apples', 'Bananas', 'Cherries', 'Dates'])));
+	elm$core$List$indexedMap,
+	F2(
+		function (k, v) {
+			return _Utils_Tuple2(
+				'key-' + elm$core$String$fromInt(k),
+				v);
+		}),
+	_List_fromArray(
+		['Apples', 'Bananas', 'Cherries', 'Dates']));
 var author$project$Example$Vertical$initialModel = {bf: author$project$Example$Vertical$system.bf, aa: author$project$Example$Vertical$data};
 var author$project$Example$WithTwoLists$data1 = A2(
-	elm$core$List$map,
-	function (_n0) {
-		var k = _n0.a;
-		var v = _n0.b;
-		return _Utils_Tuple2(
-			'key-fruit-' + elm$core$String$fromInt(k),
-			v);
-	},
-	A2(
-		elm$core$List$indexedMap,
-		elm$core$Tuple$pair,
-		_List_fromArray(
-			['Apples', 'Bananas', 'Cherries', 'Dates'])));
+	elm$core$List$indexedMap,
+	F2(
+		function (k, v) {
+			return _Utils_Tuple2(
+				'key-fruit-' + elm$core$String$fromInt(k),
+				v);
+		}),
+	_List_fromArray(
+		['Apples', 'Bananas', 'Cherries', 'Dates']));
 var author$project$Example$WithTwoLists$data2 = A2(
 	elm$core$List$map,
-	function (_n0) {
-		var k = _n0.a;
-		var v = _n0.b;
+	function (i) {
 		return _Utils_Tuple2(
-			'key-number-' + elm$core$String$fromInt(k),
-			v);
+			'key-number-' + elm$core$String$fromInt(i),
+			i);
 	},
-	A2(
-		elm$core$List$indexedMap,
-		elm$core$Tuple$pair,
-		A2(elm$core$List$range, 1, 6)));
-var author$project$Example$WithTwoLists$initialModel = {D: author$project$Example$WithTwoLists$systemFruit.bf, E: author$project$Example$WithTwoLists$systemNumber.bf, aa: author$project$Example$WithTwoLists$data1, ad: author$project$Example$WithTwoLists$data2};
+	A2(elm$core$List$range, 1, 6));
+var author$project$Example$WithTwoLists$initialModel = {E: author$project$Example$WithTwoLists$fruitSystem.bf, aa: author$project$Example$WithTwoLists$data1, G: author$project$Example$WithTwoLists$numberSystem.bf, ad: author$project$Example$WithTwoLists$data2};
 var elm$html$Html$a = _VirtualDom_node('a');
 var elm$html$Html$div = _VirtualDom_node('div');
 var elm$html$Html$h1 = _VirtualDom_node('h1');
@@ -12604,7 +12570,7 @@ var author$project$Example$BasicElmUI$view = function (model) {
 				author$project$Example$BasicElmUI$itemView(maybeDragIndex),
 				model.ab)));
 };
-var author$project$Example$FreeRotate$source = '\nmodule FreeRotate exposing (main)\n\nimport Browser\nimport Browser.Events\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\nimport Json.Decode\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias KeyedItem =\n    ( String, Int )\n\n\ndata : List KeyedItem\ndata =\n    List.range 1 9\n        |> List.indexedMap Tuple.pair\n        |> List.map (\\( k, v ) -> ( "key-" ++ String.fromInt k, v ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Rotate\n    }\n\n\nsystem : DnDList.System Msg KeyedItem\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List KeyedItem\n    , affected : List Int\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    , affected = []\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ system.subscriptions model.draggable\n        , if model.affected == [] then\n            Sub.none\n\n          else\n            Browser.Events.onMouseDown\n                (Json.Decode.succeed ClearAffected)\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n    | ClearAffected\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n\n                ( maybeDragIndex, maybeDropIndex ) =\n                    ( system.dragIndex draggable, system.dropIndex draggable )\n\n                affected =\n                    case ( maybeDragIndex, maybeDropIndex ) of\n                        ( Just dragIndex, Just dropIndex ) ->\n                            if dragIndex < dropIndex then\n                                List.range dragIndex dropIndex\n\n                            else if dragIndex > dropIndex then\n                                List.range dropIndex dragIndex\n\n                            else\n                                model.affected\n\n                        _ ->\n                            model.affected\n            in\n            ( { model | draggable = draggable, items = items, affected = affected }\n            , system.commands model.draggable\n            )\n\n        ClearAffected ->\n            ( { model | affected = [] }, Cmd.none )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0 3em 0" ]\n        [ model.items\n            |> List.indexedMap (itemView model.affected maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.items\n        ]\n\n\nitemView : List Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )\nitemView affected maybeDragIndex index ( key, item ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ String.fromInt item\n\n                styles : List (Html.Attribute Msg)\n                styles =\n                    itemStyles\n                        ++ (if List.member index affected then\n                                affectedItemStyles\n\n                            else\n                                []\n                           )\n            in\n            ( key\n            , Html.div\n                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)\n                [ Html.div [] [ Html.text (String.fromInt item) ] ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    (itemStyles ++ system.dropEvents index)\n                    [ Html.div [] [ Html.text (String.fromInt item) ] ]\n                )\n\n            else\n                ( key\n                , Html.div (itemStyles ++ overedItemStyles) []\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe KeyedItem\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just ( _, item ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.div [] [ Html.text (String.fromInt item) ] ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "grid"\n    , Html.Attributes.style "grid-template-columns" "5em 5em 5em"\n    , Html.Attributes.style "grid-template-rows" "5em 5em 5em"\n    , Html.Attributes.style "grid-gap" "5em"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "background" "#1a8994"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "color" "white"\n    , Html.Attributes.style "cursor" "pointer"\n    , Html.Attributes.style "font-size" "large"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#941a89" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\naffectedItemStyles : List (Html.Attribute msg)\naffectedItemStyles =\n    [ Html.Attributes.style "background" "#0f4d53" ]\n    ';
+var author$project$Example$FreeRotate$source = '\nmodule FreeRotate exposing (main)\n\nimport Browser\nimport Browser.Events\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\nimport Json.Decode\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias KeyedItem =\n    ( String, String )\n\n\ndata : List KeyedItem\ndata =\n    List.range 1 9\n        |> List.map (\\i -> ( "key-" ++ String.fromInt i, String.fromInt i ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Rotate\n    }\n\n\nsystem : DnDList.System Msg KeyedItem\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List KeyedItem\n    , affected : List Int\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    , affected = []\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ system.subscriptions model.draggable\n        , if model.affected == [] then\n            Sub.none\n\n          else\n            Browser.Events.onMouseDown\n                (Json.Decode.succeed ClearAffected)\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n    | ClearAffected\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n\n                ( maybeDragIndex, maybeDropIndex ) =\n                    ( system.dragIndex draggable, system.dropIndex draggable )\n\n                affected : List Int\n                affected =\n                    case ( maybeDragIndex, maybeDropIndex ) of\n                        ( Just dragIndex, Just dropIndex ) ->\n                            if dragIndex < dropIndex then\n                                List.range dragIndex dropIndex\n\n                            else if dragIndex > dropIndex then\n                                List.range dropIndex dragIndex\n\n                            else\n                                model.affected\n\n                        _ ->\n                            model.affected\n            in\n            ( { model | draggable = draggable, items = items, affected = affected }\n            , system.commands model.draggable\n            )\n\n        ClearAffected ->\n            ( { model | affected = [] }, Cmd.none )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.items\n            |> List.indexedMap (itemView model.affected maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.items\n        ]\n\n\nitemView : List Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )\nitemView affected maybeDragIndex index ( key, item ) =\n    let\n        styles : List (Html.Attribute Msg)\n        styles =\n            itemStyles\n                ++ (if List.member index affected then\n                        affectedItemStyles\n\n                    else\n                        []\n                   )\n    in\n    case maybeDragIndex of\n        Nothing ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ item\n            in\n            ( key\n            , Html.div\n                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)\n                [ Html.text item ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    (styles ++ system.dropEvents index)\n                    [ Html.text item ]\n                )\n\n            else\n                ( key\n                , Html.div (itemStyles ++ overedItemStyles) []\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe KeyedItem\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just ( _, item ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.text item ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "grid"\n    , Html.Attributes.style "grid-template-columns" "5em 5em 5em"\n    , Html.Attributes.style "grid-template-rows" "5em 5em 5em"\n    , Html.Attributes.style "grid-gap" "5em"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "background" "#1a8994"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "color" "white"\n    , Html.Attributes.style "cursor" "pointer"\n    , Html.Attributes.style "font-size" "large"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#941a89" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\naffectedItemStyles : List (Html.Attribute msg)\naffectedItemStyles =\n    [ Html.Attributes.style "background" "#0f4d53" ]\n    ';
 var author$project$Example$FreeRotate$containerStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'grid'),
@@ -12649,14 +12615,7 @@ var author$project$Example$FreeRotate$draggedItemView = F2(
 						author$project$Example$FreeRotate$system.bg(draggable))),
 				_List_fromArray(
 					[
-						A2(
-						elm$html$Html$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								elm$html$Html$text(
-								elm$core$String$fromInt(item))
-							]))
+						elm$html$Html$text(item)
 					]));
 		} else {
 			return elm$html$Html$text('');
@@ -12683,11 +12642,11 @@ var author$project$Example$FreeRotate$itemView = F4(
 	function (affected, maybeDragIndex, index, _n0) {
 		var key = _n0.a;
 		var item = _n0.b;
+		var styles = _Utils_ap(
+			author$project$Example$FreeRotate$itemStyles,
+			A2(elm$core$List$member, index, affected) ? author$project$Example$FreeRotate$affectedItemStyles : _List_Nil);
 		if (maybeDragIndex.$ === 1) {
-			var styles = _Utils_ap(
-				author$project$Example$FreeRotate$itemStyles,
-				A2(elm$core$List$member, index, affected) ? author$project$Example$FreeRotate$affectedItemStyles : _List_Nil);
-			var itemId = 'id-' + elm$core$String$fromInt(item);
+			var itemId = 'id-' + item;
 			return _Utils_Tuple2(
 				key,
 				A2(
@@ -12700,14 +12659,7 @@ var author$project$Example$FreeRotate$itemView = F4(
 							A2(author$project$Example$FreeRotate$system.bd, index, itemId))),
 					_List_fromArray(
 						[
-							A2(
-							elm$html$Html$div,
-							_List_Nil,
-							_List_fromArray(
-								[
-									elm$html$Html$text(
-									elm$core$String$fromInt(item))
-								]))
+							elm$html$Html$text(item)
 						])));
 		} else {
 			var dragIndex = maybeDragIndex.a;
@@ -12716,18 +12668,11 @@ var author$project$Example$FreeRotate$itemView = F4(
 				A2(
 					elm$html$Html$div,
 					_Utils_ap(
-						author$project$Example$FreeRotate$itemStyles,
+						styles,
 						author$project$Example$FreeRotate$system.bh(index)),
 					_List_fromArray(
 						[
-							A2(
-							elm$html$Html$div,
-							_List_Nil,
-							_List_fromArray(
-								[
-									elm$html$Html$text(
-									elm$core$String$fromInt(item))
-								]))
+							elm$html$Html$text(item)
 						]))) : _Utils_Tuple2(
 				key,
 				A2(
@@ -12743,7 +12688,7 @@ var author$project$Example$FreeRotate$view = function (model) {
 		elm$html$Html$section,
 		_List_fromArray(
 			[
-				A2(elm$html$Html$Attributes$style, 'margin', '6em 0 3em 0')
+				A2(elm$html$Html$Attributes$style, 'margin', '6em 0')
 			]),
 		_List_fromArray(
 			[
@@ -12758,7 +12703,7 @@ var author$project$Example$FreeRotate$view = function (model) {
 				A2(author$project$Example$FreeRotate$draggedItemView, model.bf, model.ab)
 			]));
 };
-var author$project$Example$FreeSwap$source = '\nmodule FreeSwap exposing (main)\n\nimport Browser\nimport Browser.Events\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\nimport Json.Decode\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias KeyedItem =\n    ( String, Int )\n\n\ndata : List KeyedItem\ndata =\n    List.range 1 9\n        |> List.indexedMap Tuple.pair\n        |> List.map (\\( k, v ) -> ( "key-" ++ String.fromInt k, v ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Swap\n    }\n\n\nsystem : DnDList.System Msg KeyedItem\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List KeyedItem\n    , affected : List Int\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    , affected = []\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ system.subscriptions model.draggable\n        , if model.affected == [] then\n            Sub.none\n\n          else\n            Browser.Events.onMouseDown\n                (Json.Decode.succeed ClearAffected)\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n    | ClearAffected\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n\n                ( maybeDragIndex, maybeDropIndex ) =\n                    ( system.dragIndex draggable, system.dropIndex draggable )\n\n                affected =\n                    case ( maybeDragIndex, maybeDropIndex ) of\n                        ( Just dragIndex, Just dropIndex ) ->\n                            if dragIndex < dropIndex then\n                                dragIndex :: dropIndex :: []\n\n                            else if dragIndex > dropIndex then\n                                dropIndex :: dragIndex :: []\n\n                            else\n                                model.affected\n\n                        _ ->\n                            model.affected\n            in\n            ( { model | draggable = draggable, items = items, affected = affected }\n            , system.commands model.draggable\n            )\n\n        ClearAffected ->\n            ( { model | affected = [] }, Cmd.none )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0 3em 0" ]\n        [ model.items\n            |> List.indexedMap (itemView model.affected maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.items\n        ]\n\n\nitemView : List Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )\nitemView affected maybeDragIndex index ( key, item ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ String.fromInt item\n\n                styles : List (Html.Attribute Msg)\n                styles =\n                    itemStyles\n                        ++ (if List.member index affected then\n                                affectedItemStyles\n\n                            else\n                                []\n                           )\n            in\n            ( key\n            , Html.div\n                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)\n                [ Html.div [] [ Html.text (String.fromInt item) ] ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    (itemStyles ++ system.dropEvents index)\n                    [ Html.div [] [ Html.text (String.fromInt item) ] ]\n                )\n\n            else\n                ( key\n                , Html.div (itemStyles ++ overedItemStyles) []\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe KeyedItem\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just ( _, item ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.div [] [ Html.text (String.fromInt item) ] ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "grid"\n    , Html.Attributes.style "grid-template-columns" "5em 5em 5em"\n    , Html.Attributes.style "grid-template-rows" "5em 5em 5em"\n    , Html.Attributes.style "grid-gap" "5em"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "background" "#941a89"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "color" "white"\n    , Html.Attributes.style "cursor" "pointer"\n    , Html.Attributes.style "font-size" "large"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#1a8994" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\naffectedItemStyles : List (Html.Attribute msg)\naffectedItemStyles =\n    [ Html.Attributes.style "background" "#530f4d" ]\n    ';
+var author$project$Example$FreeSwap$source = '\nmodule FreeSwap exposing (main)\n\nimport Browser\nimport Browser.Events\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\nimport Json.Decode\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias KeyedItem =\n    ( String, String )\n\n\ndata : List KeyedItem\ndata =\n    List.range 1 9\n        |> List.map (\\i -> ( "key-" ++ String.fromInt i, String.fromInt i ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Swap\n    }\n\n\nsystem : DnDList.System Msg KeyedItem\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List KeyedItem\n    , affected : List Int\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    , affected = []\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ system.subscriptions model.draggable\n        , if model.affected == [] then\n            Sub.none\n\n          else\n            Browser.Events.onMouseDown\n                (Json.Decode.succeed ClearAffected)\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n    | ClearAffected\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n\n                ( maybeDragIndex, maybeDropIndex ) =\n                    ( system.dragIndex draggable, system.dropIndex draggable )\n\n                affected : List Int\n                affected =\n                    case ( maybeDragIndex, maybeDropIndex ) of\n                        ( Just dragIndex, Just dropIndex ) ->\n                            if dragIndex /= dropIndex then\n                                dragIndex :: dropIndex :: []\n\n                            else\n                                model.affected\n\n                        _ ->\n                            model.affected\n            in\n            ( { model | draggable = draggable, items = items, affected = affected }\n            , system.commands model.draggable\n            )\n\n        ClearAffected ->\n            ( { model | affected = [] }, Cmd.none )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.items\n            |> List.indexedMap (itemView model.affected maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.items\n        ]\n\n\nitemView : List Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )\nitemView affected maybeDragIndex index ( key, item ) =\n    let\n        styles : List (Html.Attribute Msg)\n        styles =\n            itemStyles\n                ++ (if List.member index affected then\n                        affectedItemStyles\n\n                    else\n                        []\n                   )\n    in\n    case maybeDragIndex of\n        Nothing ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ item\n            in\n            ( key\n            , Html.div\n                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)\n                [ Html.text item ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    (styles ++ system.dropEvents index)\n                    [ Html.text item ]\n                )\n\n            else\n                ( key\n                , Html.div (itemStyles ++ overedItemStyles) []\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe KeyedItem\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just ( _, item ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.text item ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "grid"\n    , Html.Attributes.style "grid-template-columns" "5em 5em 5em"\n    , Html.Attributes.style "grid-template-rows" "5em 5em 5em"\n    , Html.Attributes.style "grid-gap" "5em"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "background" "#941a89"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "color" "white"\n    , Html.Attributes.style "cursor" "pointer"\n    , Html.Attributes.style "font-size" "large"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#1a8994" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\naffectedItemStyles : List (Html.Attribute msg)\naffectedItemStyles =\n    [ Html.Attributes.style "background" "#530f4d" ]\n    ';
 var author$project$Example$FreeSwap$containerStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'grid'),
@@ -12803,14 +12748,7 @@ var author$project$Example$FreeSwap$draggedItemView = F2(
 						author$project$Example$FreeSwap$system.bg(draggable))),
 				_List_fromArray(
 					[
-						A2(
-						elm$html$Html$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								elm$html$Html$text(
-								elm$core$String$fromInt(item))
-							]))
+						elm$html$Html$text(item)
 					]));
 		} else {
 			return elm$html$Html$text('');
@@ -12828,11 +12766,11 @@ var author$project$Example$FreeSwap$itemView = F4(
 	function (affected, maybeDragIndex, index, _n0) {
 		var key = _n0.a;
 		var item = _n0.b;
+		var styles = _Utils_ap(
+			author$project$Example$FreeSwap$itemStyles,
+			A2(elm$core$List$member, index, affected) ? author$project$Example$FreeSwap$affectedItemStyles : _List_Nil);
 		if (maybeDragIndex.$ === 1) {
-			var styles = _Utils_ap(
-				author$project$Example$FreeSwap$itemStyles,
-				A2(elm$core$List$member, index, affected) ? author$project$Example$FreeSwap$affectedItemStyles : _List_Nil);
-			var itemId = 'id-' + elm$core$String$fromInt(item);
+			var itemId = 'id-' + item;
 			return _Utils_Tuple2(
 				key,
 				A2(
@@ -12845,14 +12783,7 @@ var author$project$Example$FreeSwap$itemView = F4(
 							A2(author$project$Example$FreeSwap$system.bd, index, itemId))),
 					_List_fromArray(
 						[
-							A2(
-							elm$html$Html$div,
-							_List_Nil,
-							_List_fromArray(
-								[
-									elm$html$Html$text(
-									elm$core$String$fromInt(item))
-								]))
+							elm$html$Html$text(item)
 						])));
 		} else {
 			var dragIndex = maybeDragIndex.a;
@@ -12861,18 +12792,11 @@ var author$project$Example$FreeSwap$itemView = F4(
 				A2(
 					elm$html$Html$div,
 					_Utils_ap(
-						author$project$Example$FreeSwap$itemStyles,
+						styles,
 						author$project$Example$FreeSwap$system.bh(index)),
 					_List_fromArray(
 						[
-							A2(
-							elm$html$Html$div,
-							_List_Nil,
-							_List_fromArray(
-								[
-									elm$html$Html$text(
-									elm$core$String$fromInt(item))
-								]))
+							elm$html$Html$text(item)
 						]))) : _Utils_Tuple2(
 				key,
 				A2(
@@ -12887,7 +12811,7 @@ var author$project$Example$FreeSwap$view = function (model) {
 		elm$html$Html$section,
 		_List_fromArray(
 			[
-				A2(elm$html$Html$Attributes$style, 'margin', '6em 0 3em 0')
+				A2(elm$html$Html$Attributes$style, 'margin', '6em 0')
 			]),
 		_List_fromArray(
 			[
@@ -12902,7 +12826,7 @@ var author$project$Example$FreeSwap$view = function (model) {
 				A2(author$project$Example$FreeSwap$draggedItemView, model.bf, model.ab)
 			]));
 };
-var author$project$Example$Horizontal$source = '\nmodule Horizontal exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ntype alias KeyedFruit =\n    ( String, Fruit )\n\n\ndata : List KeyedFruit\ndata =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n        |> List.indexedMap Tuple.pair\n        |> List.map (\\( k, v ) -> ( "key-" ++ String.fromInt k, v ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Horizontal\n    }\n\n\nsystem : DnDList.System Msg KeyedFruit\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , fruits : List KeyedFruit\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , fruits = data\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    system.subscriptions model.draggable\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, fruits ) =\n                    system.update message model.draggable model.fruits\n            in\n            ( { model | draggable = draggable, fruits = fruits }\n            , system.commands model.draggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.fruits\n            |> List.indexedMap (itemView maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.fruits\n        ]\n\n\nitemView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )\nitemView maybeDragIndex index ( key, fruit ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                fruitId : String\n                fruitId =\n                    "id-" ++ fruit\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin" "0 2em" ]\n                [ Html.div\n                    (Html.Attributes.id fruitId :: itemStyles)\n                    [ Html.div (handleStyles ++ system.dragEvents index fruitId) []\n                    , Html.div [] [ Html.text fruit ]\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em" ]\n                    [ Html.div\n                        (itemStyles ++ system.dropEvents index)\n                        [ Html.div handleStyles []\n                        , Html.div [] [ Html.text fruit ]\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em" ]\n                    [ Html.div (itemStyles ++ overedItemStyles) [] ]\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg\ndraggedItemView draggable fruits =\n    let\n        maybeDraggedFruit : Maybe KeyedFruit\n        maybeDraggedFruit =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)\n    in\n    case maybeDraggedFruit of\n        Just ( _, fruit ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.div [] [ Html.text fruit ]\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "width" "180px"\n    , Html.Attributes.style "height" "100px"\n    , Html.Attributes.style "background" "#cddc39"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#dc9a39" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\nhandleStyles : List (Html.Attribute msg)\nhandleStyles =\n    [ Html.Attributes.style "width" "50px"\n    , Html.Attributes.style "height" "50px"\n    , Html.Attributes.style "background" "#afb42b"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "margin" "20px"\n    , Html.Attributes.style "cursor" "pointer"\n    ]\n\n\ndraggedHandleStyles : List (Html.Attribute msg)\ndraggedHandleStyles =\n    [ Html.Attributes.style "background" "#b4752b" ]\n    ';
+var author$project$Example$Horizontal$source = '\nmodule Horizontal exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ntype alias KeyedFruit =\n    ( String, Fruit )\n\n\ndata : List KeyedFruit\ndata =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n        |> List.indexedMap (\\k v -> ( "key-" ++ String.fromInt k, v ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Horizontal\n    }\n\n\nsystem : DnDList.System Msg KeyedFruit\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , fruits : List KeyedFruit\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , fruits = data\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    system.subscriptions model.draggable\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, fruits ) =\n                    system.update message model.draggable model.fruits\n            in\n            ( { model | draggable = draggable, fruits = fruits }\n            , system.commands model.draggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.fruits\n            |> List.indexedMap (itemView maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.fruits\n        ]\n\n\nitemView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )\nitemView maybeDragIndex index ( key, fruit ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                fruitId : String\n                fruitId =\n                    "id-" ++ fruit\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin" "0 2em" ]\n                [ Html.div\n                    (Html.Attributes.id fruitId :: itemStyles)\n                    [ Html.div (handleStyles ++ system.dragEvents index fruitId) []\n                    , Html.text fruit\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em" ]\n                    [ Html.div\n                        (itemStyles ++ system.dropEvents index)\n                        [ Html.div handleStyles []\n                        , Html.text fruit\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em" ]\n                    [ Html.div (itemStyles ++ overedItemStyles) [] ]\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg\ndraggedItemView draggable fruits =\n    let\n        maybeDraggedFruit : Maybe KeyedFruit\n        maybeDraggedFruit =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)\n    in\n    case maybeDraggedFruit of\n        Just ( _, fruit ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.text fruit\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "width" "180px"\n    , Html.Attributes.style "height" "100px"\n    , Html.Attributes.style "background" "#cddc39"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#dc9a39" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\nhandleStyles : List (Html.Attribute msg)\nhandleStyles =\n    [ Html.Attributes.style "width" "50px"\n    , Html.Attributes.style "height" "50px"\n    , Html.Attributes.style "background" "#afb42b"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "margin" "20px"\n    , Html.Attributes.style "cursor" "pointer"\n    ]\n\n\ndraggedHandleStyles : List (Html.Attribute msg)\ndraggedHandleStyles =\n    [ Html.Attributes.style "background" "#b4752b" ]\n    ';
 var author$project$Example$Horizontal$containerStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
@@ -12960,13 +12884,7 @@ var author$project$Example$Horizontal$draggedItemView = F2(
 						elm$html$Html$div,
 						_Utils_ap(author$project$Example$Horizontal$handleStyles, author$project$Example$Horizontal$draggedHandleStyles),
 						_List_Nil),
-						A2(
-						elm$html$Html$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								elm$html$Html$text(fruit)
-							]))
+						elm$html$Html$text(fruit)
 					]));
 		} else {
 			return elm$html$Html$text('');
@@ -13006,13 +12924,7 @@ var author$project$Example$Horizontal$itemView = F3(
 										author$project$Example$Horizontal$handleStyles,
 										A2(author$project$Example$Horizontal$system.bd, index, fruitId)),
 									_List_Nil),
-									A2(
-									elm$html$Html$div,
-									_List_Nil,
-									_List_fromArray(
-										[
-											elm$html$Html$text(fruit)
-										]))
+									elm$html$Html$text(fruit)
 								]))
 						])));
 		} else {
@@ -13035,13 +12947,7 @@ var author$project$Example$Horizontal$itemView = F3(
 							_List_fromArray(
 								[
 									A2(elm$html$Html$div, author$project$Example$Horizontal$handleStyles, _List_Nil),
-									A2(
-									elm$html$Html$div,
-									_List_Nil,
-									_List_fromArray(
-										[
-											elm$html$Html$text(fruit)
-										]))
+									elm$html$Html$text(fruit)
 								]))
 						]))) : _Utils_Tuple2(
 				key,
@@ -13081,7 +12987,7 @@ var author$project$Example$Horizontal$view = function (model) {
 				A2(author$project$Example$Horizontal$draggedItemView, model.bf, model.aa)
 			]));
 };
-var author$project$Example$Vertical$source = '\nmodule Vertical exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ntype alias KeyedFruit =\n    ( String, Fruit )\n\n\ndata : List KeyedFruit\ndata =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n        |> List.indexedMap Tuple.pair\n        |> List.map (\\( k, v ) -> ( "key-" ++ String.fromInt k, v ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Vertical\n    }\n\n\nsystem : DnDList.System Msg KeyedFruit\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , fruits : List KeyedFruit\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , fruits = data\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    system.subscriptions model.draggable\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, fruits ) =\n                    system.update message model.draggable model.fruits\n            in\n            ( { model | draggable = draggable, fruits = fruits }\n            , system.commands model.draggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0 3em 0" ]\n        [ model.fruits\n            |> List.indexedMap (itemView maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.fruits\n        ]\n\n\nitemView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )\nitemView maybeDragIndex index ( key, fruit ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                fruitId : String\n                fruitId =\n                    "id-" ++ fruit\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin-bottom" "3em" ]\n                [ Html.div\n                    (Html.Attributes.id fruitId :: itemStyles)\n                    [ Html.div (handleStyles ++ system.dragEvents index fruitId) []\n                    , Html.div [] [ Html.text fruit ]\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin-bottom" "3em" ]\n                    [ Html.div\n                        (itemStyles ++ system.dropEvents index)\n                        [ Html.div handleStyles []\n                        , Html.div [] [ Html.text fruit ]\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin-bottom" "3em" ]\n                    [ Html.div (itemStyles ++ overedItemStyles) [] ]\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg\ndraggedItemView draggable fruits =\n    let\n        maybeDraggedFruit : Maybe KeyedFruit\n        maybeDraggedFruit =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)\n    in\n    case maybeDraggedFruit of\n        Just ( _, fruit ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.div [] [ Html.text fruit ]\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "flex-direction" "column"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "width" "180px"\n    , Html.Attributes.style "height" "100px"\n    , Html.Attributes.style "background" "#cddc39"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#dc9a39" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\nhandleStyles : List (Html.Attribute msg)\nhandleStyles =\n    [ Html.Attributes.style "width" "50px"\n    , Html.Attributes.style "height" "50px"\n    , Html.Attributes.style "background" "#afb42b"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "margin" "20px"\n    , Html.Attributes.style "cursor" "pointer"\n    ]\n\n\ndraggedHandleStyles : List (Html.Attribute msg)\ndraggedHandleStyles =\n    [ Html.Attributes.style "background" "#b4752b" ]\n    ';
+var author$project$Example$Vertical$source = '\nmodule Vertical exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ntype alias KeyedFruit =\n    ( String, Fruit )\n\n\ndata : List KeyedFruit\ndata =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n        |> List.indexedMap (\\k v -> ( "key-" ++ String.fromInt k, v ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Vertical\n    }\n\n\nsystem : DnDList.System Msg KeyedFruit\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , fruits : List KeyedFruit\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , fruits = data\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    system.subscriptions model.draggable\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, fruits ) =\n                    system.update message model.draggable model.fruits\n            in\n            ( { model | draggable = draggable, fruits = fruits }\n            , system.commands model.draggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0 3em 0" ]\n        [ model.fruits\n            |> List.indexedMap (itemView maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.fruits\n        ]\n\n\nitemView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )\nitemView maybeDragIndex index ( key, fruit ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                fruitId : String\n                fruitId =\n                    "id-" ++ fruit\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin-bottom" "3em" ]\n                [ Html.div\n                    (Html.Attributes.id fruitId :: itemStyles)\n                    [ Html.div (handleStyles ++ system.dragEvents index fruitId) []\n                    , Html.text fruit\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin-bottom" "3em" ]\n                    [ Html.div\n                        (itemStyles ++ system.dropEvents index)\n                        [ Html.div handleStyles []\n                        , Html.text fruit\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin-bottom" "3em" ]\n                    [ Html.div (itemStyles ++ overedItemStyles) [] ]\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg\ndraggedItemView draggable fruits =\n    let\n        maybeDraggedFruit : Maybe KeyedFruit\n        maybeDraggedFruit =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)\n    in\n    case maybeDraggedFruit of\n        Just ( _, fruit ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.text fruit\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "flex-direction" "column"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "width" "180px"\n    , Html.Attributes.style "height" "100px"\n    , Html.Attributes.style "background" "#cddc39"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#dc9a39" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\nhandleStyles : List (Html.Attribute msg)\nhandleStyles =\n    [ Html.Attributes.style "width" "50px"\n    , Html.Attributes.style "height" "50px"\n    , Html.Attributes.style "background" "#afb42b"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "margin" "20px"\n    , Html.Attributes.style "cursor" "pointer"\n    ]\n\n\ndraggedHandleStyles : List (Html.Attribute msg)\ndraggedHandleStyles =\n    [ Html.Attributes.style "background" "#b4752b" ]\n    ';
 var author$project$Example$Vertical$containerStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
@@ -13140,13 +13046,7 @@ var author$project$Example$Vertical$draggedItemView = F2(
 						elm$html$Html$div,
 						_Utils_ap(author$project$Example$Vertical$handleStyles, author$project$Example$Vertical$draggedHandleStyles),
 						_List_Nil),
-						A2(
-						elm$html$Html$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								elm$html$Html$text(fruit)
-							]))
+						elm$html$Html$text(fruit)
 					]));
 		} else {
 			return elm$html$Html$text('');
@@ -13186,13 +13086,7 @@ var author$project$Example$Vertical$itemView = F3(
 										author$project$Example$Vertical$handleStyles,
 										A2(author$project$Example$Vertical$system.bd, index, fruitId)),
 									_List_Nil),
-									A2(
-									elm$html$Html$div,
-									_List_Nil,
-									_List_fromArray(
-										[
-											elm$html$Html$text(fruit)
-										]))
+									elm$html$Html$text(fruit)
 								]))
 						])));
 		} else {
@@ -13215,13 +13109,7 @@ var author$project$Example$Vertical$itemView = F3(
 							_List_fromArray(
 								[
 									A2(elm$html$Html$div, author$project$Example$Vertical$handleStyles, _List_Nil),
-									A2(
-									elm$html$Html$div,
-									_List_Nil,
-									_List_fromArray(
-										[
-											elm$html$Html$text(fruit)
-										]))
+									elm$html$Html$text(fruit)
 								]))
 						]))) : _Utils_Tuple2(
 				key,
@@ -13261,13 +13149,13 @@ var author$project$Example$Vertical$view = function (model) {
 				A2(author$project$Example$Vertical$draggedItemView, model.bf, model.aa)
 			]));
 };
-var author$project$Example$WithTwoLists$source = '\nmodule WithTwoLists exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ntype alias KeyedFruit =\n    ( String, Fruit )\n\n\ntype alias KeyedNumber =\n    ( String, Int )\n\n\ndata1 : List KeyedFruit\ndata1 =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n        |> List.indexedMap Tuple.pair\n        |> List.map (\\( k, v ) -> ( "key-fruit-" ++ String.fromInt k, v ))\n\n\ndata2 : List KeyedNumber\ndata2 =\n    List.range 1 6\n        |> List.indexedMap Tuple.pair\n        |> List.map (\\( k, v ) -> ( "key-number-" ++ String.fromInt k, v ))\n\n\n\n-- SYSTEM\n\n\nconfigFruit : DnDList.Config Msg\nconfigFruit =\n    { message = FruitMsg\n    , movement = DnDList.Free DnDList.Rotate\n    }\n\n\nsystemFruit : DnDList.System Msg KeyedFruit\nsystemFruit =\n    DnDList.create configFruit\n\n\nconfigNumber : DnDList.Config Msg\nconfigNumber =\n    { message = NumberMsg\n    , movement = DnDList.Free DnDList.Rotate\n    }\n\n\nsystemNumber : DnDList.System Msg KeyedNumber\nsystemNumber =\n    DnDList.create configNumber\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggableFruit : DnDList.Draggable\n    , draggableNumber : DnDList.Draggable\n    , fruits : List KeyedFruit\n    , numbers : List KeyedNumber\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggableFruit = systemFruit.draggable\n    , draggableNumber = systemNumber.draggable\n    , fruits = data1\n    , numbers = data2\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ systemFruit.subscriptions model.draggableFruit\n        , systemNumber.subscriptions model.draggableNumber\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = FruitMsg DnDList.Msg\n    | NumberMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        FruitMsg message ->\n            let\n                ( draggableFruit, fruits ) =\n                    systemFruit.update message model.draggableFruit model.fruits\n            in\n            ( { model\n                | draggableFruit = draggableFruit\n                , fruits = fruits\n              }\n            , systemFruit.commands model.draggableFruit\n            )\n\n        NumberMsg message ->\n            let\n                ( draggableNumber, numbers ) =\n                    systemNumber.update message model.draggableNumber model.numbers\n            in\n            ( { model\n                | draggableNumber = draggableNumber\n                , numbers = numbers\n              }\n            , systemNumber.commands model.draggableNumber\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragFruitIndex : Maybe Int\n        maybeDragFruitIndex =\n            systemFruit.dragIndex model.draggableFruit\n\n        maybeDragNumberIndex : Maybe Int\n        maybeDragNumberIndex =\n            systemNumber.dragIndex model.draggableNumber\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.fruits\n            |> List.indexedMap (fruitView maybeDragFruitIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , model.numbers\n            |> List.indexedMap (numberView maybeDragNumberIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedFruitView model.draggableFruit model.fruits\n        , draggedNumberView model.draggableNumber model.numbers\n        ]\n\n\nfruitView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )\nfruitView maybeDragIndex index ( key, fruit ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                fruitId : String\n                fruitId =\n                    "id-" ++ fruit\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin" "0 2em 2em 2em" ]\n                [ Html.div\n                    (Html.Attributes.id fruitId :: itemStyles ++ fruitStyles)\n                    [ Html.div (handleStyles ++ fruitHandleStyles ++ systemFruit.dragEvents index fruitId) []\n                    , Html.div [] [ Html.text fruit ]\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em 2em 2em" ]\n                    [ Html.div\n                        (itemStyles\n                            ++ fruitStyles\n                            ++ systemFruit.dropEvents index\n                        )\n                        [ Html.div (handleStyles ++ fruitHandleStyles) []\n                        , Html.div [] [ Html.text fruit ]\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em 2em 2em" ]\n                    [ Html.div (itemStyles ++ overedItemStyles) [] ]\n                )\n\n\ndraggedFruitView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg\ndraggedFruitView draggableFruit fruits =\n    let\n        maybeDraggedFruit : Maybe KeyedFruit\n        maybeDraggedFruit =\n            systemFruit.dragIndex draggableFruit\n                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)\n    in\n    case maybeDraggedFruit of\n        Just ( _, fruit ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ systemFruit.draggedStyles draggableFruit)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.div [] [ Html.text fruit ]\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\nnumberView : Maybe Int -> Int -> KeyedNumber -> ( String, Html.Html Msg )\nnumberView maybeDragIndex index ( key, number ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                numberId : String\n                numberId =\n                    "id-" ++ String.fromInt number\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin" "2em 2em 0 2em" ]\n                [ Html.div\n                    (Html.Attributes.id numberId :: itemStyles ++ numberStyles)\n                    [ Html.div (handleStyles ++ numberHandleStyles ++ systemNumber.dragEvents index numberId) []\n                    , Html.div [] [ Html.text (String.fromInt number) ]\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "2em 2em 0 2em" ]\n                    [ Html.div\n                        (itemStyles\n                            ++ numberStyles\n                            ++ systemNumber.dropEvents index\n                        )\n                        [ Html.div (handleStyles ++ numberHandleStyles) []\n                        , Html.div [] [ Html.text (String.fromInt number) ]\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "2em 2em 0 2em" ]\n                    [ Html.div (itemStyles ++ overedItemStyles) [] ]\n                )\n\n\ndraggedNumberView : DnDList.Draggable -> List KeyedNumber -> Html.Html Msg\ndraggedNumberView draggableNumber numbers =\n    let\n        maybeDraggedNumber : Maybe KeyedNumber\n        maybeDraggedNumber =\n            systemNumber.dragIndex draggableNumber\n                |> Maybe.andThen (\\index -> numbers |> List.drop index |> List.head)\n    in\n    case maybeDraggedNumber of\n        Just ( _, number ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ systemNumber.draggedStyles draggableNumber)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.div [] [ Html.text (String.fromInt number) ]\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "flex-wrap" "wrap"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "flex-end"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "width" "180px"\n    , Html.Attributes.style "height" "100px"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    ]\n\n\nfruitStyles : List (Html.Attribute msg)\nfruitStyles =\n    [ Html.Attributes.style "background" "#cddc39" ]\n\n\nnumberStyles : List (Html.Attribute msg)\nnumberStyles =\n    [ Html.Attributes.style "background" "#39cddc" ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#dc9a39" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\nhandleStyles : List (Html.Attribute msg)\nhandleStyles =\n    [ Html.Attributes.style "width" "50px"\n    , Html.Attributes.style "height" "50px"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "margin" "20px"\n    , Html.Attributes.style "cursor" "pointer"\n    ]\n\n\nfruitHandleStyles : List (Html.Attribute msg)\nfruitHandleStyles =\n    [ Html.Attributes.style "background" "#afb42b" ]\n\n\nnumberHandleStyles : List (Html.Attribute msg)\nnumberHandleStyles =\n    [ Html.Attributes.style "background" "#2bafb4" ]\n\n\ndraggedHandleStyles : List (Html.Attribute msg)\ndraggedHandleStyles =\n    [ Html.Attributes.style "background" "#b4752b" ]\n    ';
+var author$project$Example$WithTwoLists$source = '\nmodule WithTwoLists exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ntype alias KeyedFruit =\n    ( String, Fruit )\n\n\ntype alias KeyedNumber =\n    ( String, Int )\n\n\ndata1 : List KeyedFruit\ndata1 =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n        |> List.indexedMap (\\k v -> ( "key-fruit-" ++ String.fromInt k, v ))\n\n\ndata2 : List KeyedNumber\ndata2 =\n    List.range 1 6\n        |> List.map (\\i -> ( "key-number-" ++ String.fromInt i, i ))\n\n\n\n-- SYSTEM\n\n\nfruitConfig : DnDList.Config Msg\nfruitConfig =\n    { message = FruitMsg\n    , movement = DnDList.Free DnDList.Rotate\n    }\n\n\nfruitSystem : DnDList.System Msg KeyedFruit\nfruitSystem =\n    DnDList.create fruitConfig\n\n\nnumberConfig : DnDList.Config Msg\nnumberConfig =\n    { message = NumberMsg\n    , movement = DnDList.Free DnDList.Rotate\n    }\n\n\nnumberSystem : DnDList.System Msg KeyedNumber\nnumberSystem =\n    DnDList.create numberConfig\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { fruitDraggable : DnDList.Draggable\n    , numberDraggable : DnDList.Draggable\n    , fruits : List KeyedFruit\n    , numbers : List KeyedNumber\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { fruitDraggable = fruitSystem.draggable\n    , numberDraggable = numberSystem.draggable\n    , fruits = data1\n    , numbers = data2\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ fruitSystem.subscriptions model.fruitDraggable\n        , numberSystem.subscriptions model.numberDraggable\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = FruitMsg DnDList.Msg\n    | NumberMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        FruitMsg message ->\n            let\n                ( fruitDraggable, fruits ) =\n                    fruitSystem.update message model.fruitDraggable model.fruits\n            in\n            ( { model\n                | fruitDraggable = fruitDraggable\n                , fruits = fruits\n              }\n            , fruitSystem.commands model.fruitDraggable\n            )\n\n        NumberMsg message ->\n            let\n                ( numberDraggable, numbers ) =\n                    numberSystem.update message model.numberDraggable model.numbers\n            in\n            ( { model\n                | numberDraggable = numberDraggable\n                , numbers = numbers\n              }\n            , numberSystem.commands model.numberDraggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeFruitDragIndex : Maybe Int\n        maybeFruitDragIndex =\n            fruitSystem.dragIndex model.fruitDraggable\n\n        maybeNumberDragIndex : Maybe Int\n        maybeNumberDragIndex =\n            numberSystem.dragIndex model.numberDraggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.fruits\n            |> List.indexedMap (fruitView maybeFruitDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , model.numbers\n            |> List.indexedMap (numberView maybeNumberDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedFruitView model.fruitDraggable model.fruits\n        , draggedNumberView model.numberDraggable model.numbers\n        ]\n\n\nfruitView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )\nfruitView maybeDragIndex index ( key, fruit ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                fruitId : String\n                fruitId =\n                    "id-" ++ fruit\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin" "0 2em 2em 0" ]\n                [ Html.div\n                    (Html.Attributes.id fruitId :: itemStyles ++ fruitStyles)\n                    [ Html.div (handleStyles ++ fruitHandleStyles ++ fruitSystem.dragEvents index fruitId) []\n                    , Html.text fruit\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em 2em 0" ]\n                    [ Html.div\n                        (itemStyles\n                            ++ fruitStyles\n                            ++ fruitSystem.dropEvents index\n                        )\n                        [ Html.div (handleStyles ++ fruitHandleStyles) []\n                        , Html.text fruit\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em 2em 0" ]\n                    [ Html.div (itemStyles ++ overedItemStyles) [] ]\n                )\n\n\ndraggedFruitView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg\ndraggedFruitView fruitDraggable fruits =\n    let\n        maybeDraggedFruit : Maybe KeyedFruit\n        maybeDraggedFruit =\n            fruitSystem.dragIndex fruitDraggable\n                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)\n    in\n    case maybeDraggedFruit of\n        Just ( _, fruit ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ fruitSystem.draggedStyles fruitDraggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.text fruit\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\nnumberView : Maybe Int -> Int -> KeyedNumber -> ( String, Html.Html Msg )\nnumberView maybeDragIndex index ( key, number ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                numberId : String\n                numberId =\n                    "id-" ++ String.fromInt number\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin" "2em 2em 0 0" ]\n                [ Html.div\n                    (Html.Attributes.id numberId :: itemStyles ++ numberStyles)\n                    [ Html.div (handleStyles ++ numberHandleStyles ++ numberSystem.dragEvents index numberId) []\n                    , Html.text (String.fromInt number)\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "2em 2em 0 0" ]\n                    [ Html.div\n                        (itemStyles\n                            ++ numberStyles\n                            ++ numberSystem.dropEvents index\n                        )\n                        [ Html.div (handleStyles ++ numberHandleStyles) []\n                        , Html.text (String.fromInt number)\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "2em 2em 0 0" ]\n                    [ Html.div (itemStyles ++ overedItemStyles) [] ]\n                )\n\n\ndraggedNumberView : DnDList.Draggable -> List KeyedNumber -> Html.Html Msg\ndraggedNumberView numberDraggable numbers =\n    let\n        maybeDraggedNumber : Maybe KeyedNumber\n        maybeDraggedNumber =\n            numberSystem.dragIndex numberDraggable\n                |> Maybe.andThen (\\index -> numbers |> List.drop index |> List.head)\n    in\n    case maybeDraggedNumber of\n        Just ( _, number ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ numberSystem.draggedStyles numberDraggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.text (String.fromInt number)\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "flex-wrap" "wrap"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "flex-start"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "width" "180px"\n    , Html.Attributes.style "height" "100px"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    ]\n\n\nfruitStyles : List (Html.Attribute msg)\nfruitStyles =\n    [ Html.Attributes.style "background" "#cddc39" ]\n\n\nnumberStyles : List (Html.Attribute msg)\nnumberStyles =\n    [ Html.Attributes.style "background" "#7cdc39" ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#dc9a39" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\nhandleStyles : List (Html.Attribute msg)\nhandleStyles =\n    [ Html.Attributes.style "width" "50px"\n    , Html.Attributes.style "height" "50px"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "margin" "20px"\n    , Html.Attributes.style "cursor" "pointer"\n    ]\n\n\nfruitHandleStyles : List (Html.Attribute msg)\nfruitHandleStyles =\n    [ Html.Attributes.style "background" "#afb42b" ]\n\n\nnumberHandleStyles : List (Html.Attribute msg)\nnumberHandleStyles =\n    [ Html.Attributes.style "background" "#6bb42b" ]\n\n\ndraggedHandleStyles : List (Html.Attribute msg)\ndraggedHandleStyles =\n    [ Html.Attributes.style "background" "#b4752b" ]\n    ';
 var author$project$Example$WithTwoLists$containerStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'flex-wrap', 'wrap'),
 		A2(elm$html$Html$Attributes$style, 'align-items', 'center'),
-		A2(elm$html$Html$Attributes$style, 'justify-content', 'flex-end')
+		A2(elm$html$Html$Attributes$style, 'justify-content', 'flex-start')
 	]);
 var author$project$Example$WithTwoLists$draggedHandleStyles = _List_fromArray(
 	[
@@ -13294,14 +13182,14 @@ var author$project$Example$WithTwoLists$itemStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'align-items', 'center')
 	]);
 var author$project$Example$WithTwoLists$draggedFruitView = F2(
-	function (draggableFruit, fruits) {
+	function (fruitDraggable, fruits) {
 		var maybeDraggedFruit = A2(
 			elm$core$Maybe$andThen,
 			function (index) {
 				return elm$core$List$head(
 					A2(elm$core$List$drop, index, fruits));
 			},
-			author$project$Example$WithTwoLists$systemFruit.be(draggableFruit));
+			author$project$Example$WithTwoLists$fruitSystem.be(fruitDraggable));
 		if (!maybeDraggedFruit.$) {
 			var _n1 = maybeDraggedFruit.a;
 			var fruit = _n1.b;
@@ -13311,34 +13199,28 @@ var author$project$Example$WithTwoLists$draggedFruitView = F2(
 					author$project$Example$WithTwoLists$itemStyles,
 					_Utils_ap(
 						author$project$Example$WithTwoLists$draggedItemStyles,
-						author$project$Example$WithTwoLists$systemFruit.bg(draggableFruit))),
+						author$project$Example$WithTwoLists$fruitSystem.bg(fruitDraggable))),
 				_List_fromArray(
 					[
 						A2(
 						elm$html$Html$div,
 						_Utils_ap(author$project$Example$WithTwoLists$handleStyles, author$project$Example$WithTwoLists$draggedHandleStyles),
 						_List_Nil),
-						A2(
-						elm$html$Html$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								elm$html$Html$text(fruit)
-							]))
+						elm$html$Html$text(fruit)
 					]));
 		} else {
 			return elm$html$Html$text('');
 		}
 	});
 var author$project$Example$WithTwoLists$draggedNumberView = F2(
-	function (draggableNumber, numbers) {
+	function (numberDraggable, numbers) {
 		var maybeDraggedNumber = A2(
 			elm$core$Maybe$andThen,
 			function (index) {
 				return elm$core$List$head(
 					A2(elm$core$List$drop, index, numbers));
 			},
-			author$project$Example$WithTwoLists$systemNumber.be(draggableNumber));
+			author$project$Example$WithTwoLists$numberSystem.be(numberDraggable));
 		if (!maybeDraggedNumber.$) {
 			var _n1 = maybeDraggedNumber.a;
 			var number = _n1.b;
@@ -13348,21 +13230,15 @@ var author$project$Example$WithTwoLists$draggedNumberView = F2(
 					author$project$Example$WithTwoLists$itemStyles,
 					_Utils_ap(
 						author$project$Example$WithTwoLists$draggedItemStyles,
-						author$project$Example$WithTwoLists$systemNumber.bg(draggableNumber))),
+						author$project$Example$WithTwoLists$numberSystem.bg(numberDraggable))),
 				_List_fromArray(
 					[
 						A2(
 						elm$html$Html$div,
 						_Utils_ap(author$project$Example$WithTwoLists$handleStyles, author$project$Example$WithTwoLists$draggedHandleStyles),
 						_List_Nil),
-						A2(
-						elm$html$Html$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								elm$html$Html$text(
-								elm$core$String$fromInt(number))
-							]))
+						elm$html$Html$text(
+						elm$core$String$fromInt(number))
 					]));
 		} else {
 			return elm$html$Html$text('');
@@ -13392,7 +13268,7 @@ var author$project$Example$WithTwoLists$fruitView = F3(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							A2(elm$html$Html$Attributes$style, 'margin', '0 2em 2em 2em')
+							A2(elm$html$Html$Attributes$style, 'margin', '0 2em 2em 0')
 						]),
 					_List_fromArray(
 						[
@@ -13410,15 +13286,9 @@ var author$project$Example$WithTwoLists$fruitView = F3(
 										author$project$Example$WithTwoLists$handleStyles,
 										_Utils_ap(
 											author$project$Example$WithTwoLists$fruitHandleStyles,
-											A2(author$project$Example$WithTwoLists$systemFruit.bd, index, fruitId))),
+											A2(author$project$Example$WithTwoLists$fruitSystem.bd, index, fruitId))),
 									_List_Nil),
-									A2(
-									elm$html$Html$div,
-									_List_Nil,
-									_List_fromArray(
-										[
-											elm$html$Html$text(fruit)
-										]))
+									elm$html$Html$text(fruit)
 								]))
 						])));
 		} else {
@@ -13429,7 +13299,7 @@ var author$project$Example$WithTwoLists$fruitView = F3(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							A2(elm$html$Html$Attributes$style, 'margin', '0 2em 2em 2em')
+							A2(elm$html$Html$Attributes$style, 'margin', '0 2em 2em 0')
 						]),
 					_List_fromArray(
 						[
@@ -13439,20 +13309,14 @@ var author$project$Example$WithTwoLists$fruitView = F3(
 								author$project$Example$WithTwoLists$itemStyles,
 								_Utils_ap(
 									author$project$Example$WithTwoLists$fruitStyles,
-									author$project$Example$WithTwoLists$systemFruit.bh(index))),
+									author$project$Example$WithTwoLists$fruitSystem.bh(index))),
 							_List_fromArray(
 								[
 									A2(
 									elm$html$Html$div,
 									_Utils_ap(author$project$Example$WithTwoLists$handleStyles, author$project$Example$WithTwoLists$fruitHandleStyles),
 									_List_Nil),
-									A2(
-									elm$html$Html$div,
-									_List_Nil,
-									_List_fromArray(
-										[
-											elm$html$Html$text(fruit)
-										]))
+									elm$html$Html$text(fruit)
 								]))
 						]))) : _Utils_Tuple2(
 				key,
@@ -13460,7 +13324,7 @@ var author$project$Example$WithTwoLists$fruitView = F3(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							A2(elm$html$Html$Attributes$style, 'margin', '0 2em 2em 2em')
+							A2(elm$html$Html$Attributes$style, 'margin', '0 2em 2em 0')
 						]),
 					_List_fromArray(
 						[
@@ -13473,11 +13337,11 @@ var author$project$Example$WithTwoLists$fruitView = F3(
 	});
 var author$project$Example$WithTwoLists$numberHandleStyles = _List_fromArray(
 	[
-		A2(elm$html$Html$Attributes$style, 'background', '#2bafb4')
+		A2(elm$html$Html$Attributes$style, 'background', '#6bb42b')
 	]);
 var author$project$Example$WithTwoLists$numberStyles = _List_fromArray(
 	[
-		A2(elm$html$Html$Attributes$style, 'background', '#39cddc')
+		A2(elm$html$Html$Attributes$style, 'background', '#7cdc39')
 	]);
 var author$project$Example$WithTwoLists$numberView = F3(
 	function (maybeDragIndex, index, _n0) {
@@ -13491,7 +13355,7 @@ var author$project$Example$WithTwoLists$numberView = F3(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							A2(elm$html$Html$Attributes$style, 'margin', '2em 2em 0 2em')
+							A2(elm$html$Html$Attributes$style, 'margin', '2em 2em 0 0')
 						]),
 					_List_fromArray(
 						[
@@ -13509,16 +13373,10 @@ var author$project$Example$WithTwoLists$numberView = F3(
 										author$project$Example$WithTwoLists$handleStyles,
 										_Utils_ap(
 											author$project$Example$WithTwoLists$numberHandleStyles,
-											A2(author$project$Example$WithTwoLists$systemNumber.bd, index, numberId))),
+											A2(author$project$Example$WithTwoLists$numberSystem.bd, index, numberId))),
 									_List_Nil),
-									A2(
-									elm$html$Html$div,
-									_List_Nil,
-									_List_fromArray(
-										[
-											elm$html$Html$text(
-											elm$core$String$fromInt(number))
-										]))
+									elm$html$Html$text(
+									elm$core$String$fromInt(number))
 								]))
 						])));
 		} else {
@@ -13529,7 +13387,7 @@ var author$project$Example$WithTwoLists$numberView = F3(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							A2(elm$html$Html$Attributes$style, 'margin', '2em 2em 0 2em')
+							A2(elm$html$Html$Attributes$style, 'margin', '2em 2em 0 0')
 						]),
 					_List_fromArray(
 						[
@@ -13539,21 +13397,15 @@ var author$project$Example$WithTwoLists$numberView = F3(
 								author$project$Example$WithTwoLists$itemStyles,
 								_Utils_ap(
 									author$project$Example$WithTwoLists$numberStyles,
-									author$project$Example$WithTwoLists$systemNumber.bh(index))),
+									author$project$Example$WithTwoLists$numberSystem.bh(index))),
 							_List_fromArray(
 								[
 									A2(
 									elm$html$Html$div,
 									_Utils_ap(author$project$Example$WithTwoLists$handleStyles, author$project$Example$WithTwoLists$numberHandleStyles),
 									_List_Nil),
-									A2(
-									elm$html$Html$div,
-									_List_Nil,
-									_List_fromArray(
-										[
-											elm$html$Html$text(
-											elm$core$String$fromInt(number))
-										]))
+									elm$html$Html$text(
+									elm$core$String$fromInt(number))
 								]))
 						]))) : _Utils_Tuple2(
 				key,
@@ -13561,7 +13413,7 @@ var author$project$Example$WithTwoLists$numberView = F3(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							A2(elm$html$Html$Attributes$style, 'margin', '2em 2em 0 2em')
+							A2(elm$html$Html$Attributes$style, 'margin', '2em 2em 0 0')
 						]),
 					_List_fromArray(
 						[
@@ -13573,8 +13425,8 @@ var author$project$Example$WithTwoLists$numberView = F3(
 		}
 	});
 var author$project$Example$WithTwoLists$view = function (model) {
-	var maybeDragNumberIndex = author$project$Example$WithTwoLists$systemNumber.be(model.E);
-	var maybeDragFruitIndex = author$project$Example$WithTwoLists$systemFruit.be(model.D);
+	var maybeNumberDragIndex = author$project$Example$WithTwoLists$numberSystem.be(model.G);
+	var maybeFruitDragIndex = author$project$Example$WithTwoLists$fruitSystem.be(model.E);
 	return A2(
 		elm$html$Html$section,
 		_List_fromArray(
@@ -13589,7 +13441,7 @@ var author$project$Example$WithTwoLists$view = function (model) {
 				author$project$Example$WithTwoLists$containerStyles,
 				A2(
 					elm$core$List$indexedMap,
-					author$project$Example$WithTwoLists$fruitView(maybeDragFruitIndex),
+					author$project$Example$WithTwoLists$fruitView(maybeFruitDragIndex),
 					model.aa)),
 				A3(
 				elm$html$Html$Keyed$node,
@@ -13597,14 +13449,13 @@ var author$project$Example$WithTwoLists$view = function (model) {
 				author$project$Example$WithTwoLists$containerStyles,
 				A2(
 					elm$core$List$indexedMap,
-					author$project$Example$WithTwoLists$numberView(maybeDragNumberIndex),
+					author$project$Example$WithTwoLists$numberView(maybeNumberDragIndex),
 					model.ad)),
-				A2(author$project$Example$WithTwoLists$draggedFruitView, model.D, model.aa),
-				A2(author$project$Example$WithTwoLists$draggedNumberView, model.E, model.ad)
+				A2(author$project$Example$WithTwoLists$draggedFruitView, model.E, model.aa),
+				A2(author$project$Example$WithTwoLists$draggedNumberView, model.G, model.ad)
 			]));
 };
 var elm$html$Html$h2 = _VirtualDom_node('h2');
-var elm$html$Html$h3 = _VirtualDom_node('h3');
 var elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var elm$html$Html$map = elm$virtual_dom$VirtualDom$map;
 var author$project$Main$demoView = F4(
@@ -13625,7 +13476,7 @@ var author$project$Main$demoView = F4(
 							elm$html$Html$text(h2)
 						])),
 					A2(
-					elm$html$Html$h3,
+					elm$html$Html$p,
 					_List_Nil,
 					_List_fromArray(
 						[
@@ -13671,6 +13522,7 @@ var author$project$Main$elmCode = F2(
 	function (attrs, elems) {
 		return A3(elm$html$Html$node, 'elm-code', attrs, elems);
 	});
+var elm$html$Html$h3 = _VirtualDom_node('h3');
 var author$project$Main$sourceView = function (source) {
 	return A2(
 		elm$html$Html$div,
