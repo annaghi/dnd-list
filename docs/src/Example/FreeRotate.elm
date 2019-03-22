@@ -218,7 +218,7 @@ containerStyles =
 
 itemStyles : List (Html.Attribute msg)
 itemStyles =
-    [ Html.Attributes.style "background" "#1a8994"
+    [ Html.Attributes.style "background" "#1e9daa"
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
@@ -231,7 +231,7 @@ itemStyles =
 
 draggedItemStyles : List (Html.Attribute msg)
 draggedItemStyles =
-    [ Html.Attributes.style "background" "#941a89" ]
+    [ Html.Attributes.style "background" "#aa1e9d" ]
 
 
 overedItemStyles : List (Html.Attribute msg)
@@ -241,7 +241,7 @@ overedItemStyles =
 
 affectedItemStyles : List (Html.Attribute msg)
 affectedItemStyles =
-    [ Html.Attributes.style "background" "#0f4d53" ]
+    [ Html.Attributes.style "background" "#136169" ]
 
 
 
@@ -485,7 +485,7 @@ containerStyles =
 
 itemStyles : List (Html.Attribute msg)
 itemStyles =
-    [ Html.Attributes.style "background" "#1a8994"
+    [ Html.Attributes.style "background" "#1e9daa"
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
@@ -498,7 +498,7 @@ itemStyles =
 
 draggedItemStyles : List (Html.Attribute msg)
 draggedItemStyles =
-    [ Html.Attributes.style "background" "#941a89" ]
+    [ Html.Attributes.style "background" "#aa1e9d" ]
 
 
 overedItemStyles : List (Html.Attribute msg)
@@ -508,5 +508,5 @@ overedItemStyles =
 
 affectedItemStyles : List (Html.Attribute msg)
 affectedItemStyles =
-    [ Html.Attributes.style "background" "#0f4d53" ]
+    [ Html.Attributes.style "background" "#136169" ]
     """
