@@ -70,7 +70,6 @@ main {
 main h2 {
   font-weight: lighter;
   line-height: 2;
-  text-align: left;
 }
 main h3 {
   font-weight: lighter;
@@ -78,7 +77,6 @@ main h3 {
 main p {
   font-weight: lighter;
   margin-top: 1.5em;
-  text-align: left;
 }
 .elm-demo {
   padding: 0 3em;
