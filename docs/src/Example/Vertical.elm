@@ -21,7 +21,7 @@ type alias KeyedFruit =
 data : List KeyedFruit
 data =
     [ "Apples", "Bananas", "Cherries", "Dates" ]
-        |> List.indexedMap (\k v -> ( "key-" ++ String.fromInt k, v ))
+        |> List.map (\v -> ( "key-" ++ v, v ))
 
 
 
@@ -268,7 +268,7 @@ type alias KeyedFruit =
 data : List KeyedFruit
 data =
     [ "Apples", "Bananas", "Cherries", "Dates" ]
-        |> List.indexedMap (\\k v -> ( "key-" ++ String.fromInt k, v ))
+        |> List.map (\\v -> ( "key-" ++ v, v ))
 
 
 

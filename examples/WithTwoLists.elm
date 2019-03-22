@@ -40,7 +40,7 @@ type alias KeyedNumber =
 data1 : List KeyedFruit
 data1 =
     [ "Apples", "Bananas", "Cherries", "Dates" ]
-        |> List.indexedMap (\k v -> ( "key-fruit-" ++ String.fromInt k, v ))
+        |> List.map (\v -> ( "key-fruit-" ++ v, v ))
 
 
 data2 : List KeyedNumber
