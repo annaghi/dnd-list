@@ -260,9 +260,9 @@ type Movement
 
 {-| Represents the type of the list reordering operation.
 
-  - `Rotate`: the items between the dragged and the target will be circularly shifted.
+  - `Rotate`: the items between the dragged and the drop target elements will be circularly shifted.
 
-  - `Swap`: the dragged and the target items will be swapped, and no other items will be affected.
+  - `Swap`: the dragged and the drop target elements will be swapped, and no other items will be affected.
 
 -}
 type Operation

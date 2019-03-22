@@ -359,7 +359,7 @@ demoView h2 h3 toMsg demo =
     Html.div
         [ Html.Attributes.class "elm-demo" ]
         [ Html.h2 [] [ Html.text h2 ]
-        , Html.h3 [] [ Html.text h3 ]
+        , Html.p [] [ Html.text h3 ]
         , Html.map toMsg demo
         ]
 
