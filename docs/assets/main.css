@@ -65,7 +65,7 @@ nav {
 
 main {
   background-color: #9b9b9b;
-  padding-top: 2.1em;
+  padding-top: 2em;
 }
 main h2 {
   font-weight: lighter;
@@ -74,6 +74,10 @@ main h2 {
 }
 main h3 {
   font-weight: lighter;
+}
+main p {
+  font-weight: lighter;
+  margin-top: 1.5em;
   text-align: left;
 }
 .elm-demo {
