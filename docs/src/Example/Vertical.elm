@@ -21,8 +21,7 @@ type alias KeyedFruit =
 data : List KeyedFruit
 data =
     [ "Apples", "Bananas", "Cherries", "Dates" ]
-        |> List.indexedMap Tuple.pair
-        |> List.map (\( k, v ) -> ( "key-" ++ String.fromInt k, v ))
+        |> List.indexedMap (\k v -> ( "key-" ++ String.fromInt k, v ))
 
 
 
@@ -128,7 +127,7 @@ itemView maybeDragIndex index ( key, fruit ) =
                 [ Html.div
                     (Html.Attributes.id fruitId :: itemStyles)
                     [ Html.div (handleStyles ++ system.dragEvents index fruitId) []
-                    , Html.div [] [ Html.text fruit ]
+                    , Html.text fruit
                     ]
                 ]
             )
@@ -141,7 +140,7 @@ itemView maybeDragIndex index ( key, fruit ) =
                     [ Html.div
                         (itemStyles ++ system.dropEvents index)
                         [ Html.div handleStyles []
-                        , Html.div [] [ Html.text fruit ]
+                        , Html.text fruit
                         ]
                     ]
                 )
@@ -167,7 +166,7 @@ draggedItemView draggable fruits =
             Html.div
                 (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)
                 [ Html.div (handleStyles ++ draggedHandleStyles) []
-                , Html.div [] [ Html.text fruit ]
+                , Html.text fruit
                 ]
 
         Nothing ->
@@ -269,8 +268,7 @@ type alias KeyedFruit =
 data : List KeyedFruit
 data =
     [ "Apples", "Bananas", "Cherries", "Dates" ]
-        |> List.indexedMap Tuple.pair
-        |> List.map (\\( k, v ) -> ( "key-" ++ String.fromInt k, v ))
+        |> List.indexedMap (\\k v -> ( "key-" ++ String.fromInt k, v ))
 
 
 
@@ -376,7 +374,7 @@ itemView maybeDragIndex index ( key, fruit ) =
                 [ Html.div
                     (Html.Attributes.id fruitId :: itemStyles)
                     [ Html.div (handleStyles ++ system.dragEvents index fruitId) []
-                    , Html.div [] [ Html.text fruit ]
+                    , Html.text fruit
                     ]
                 ]
             )
@@ -389,7 +387,7 @@ itemView maybeDragIndex index ( key, fruit ) =
                     [ Html.div
                         (itemStyles ++ system.dropEvents index)
                         [ Html.div handleStyles []
-                        , Html.div [] [ Html.text fruit ]
+                        , Html.text fruit
                         ]
                     ]
                 )
@@ -415,7 +413,7 @@ draggedItemView draggable fruits =
             Html.div
                 (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)
                 [ Html.div (handleStyles ++ draggedHandleStyles) []
-                , Html.div [] [ Html.text fruit ]
+                , Html.text fruit
                 ]
 
         Nothing ->

@@ -28,14 +28,13 @@ main =
 
 
 type alias KeyedItem =
-    ( String, Int )
+    ( String, String )
 
 
 data : List KeyedItem
 data =
     List.range 1 9
-        |> List.indexedMap Tuple.pair
-        |> List.map (\( k, v ) -> ( "key-" ++ String.fromInt k, v ))
+        |> List.map (\i -> ( "key-" ++ String.fromInt i, String.fromInt i ))
 
 
 
@@ -115,6 +114,7 @@ update msg model =
                 ( maybeDragIndex, maybeDropIndex ) =
                     ( system.dragIndex draggable, system.dropIndex draggable )
 
+                affected : List Int
                 affected =
                     case ( maybeDragIndex, maybeDropIndex ) of
                         ( Just dragIndex, Just dropIndex ) ->
@@ -150,7 +150,7 @@ view model =
             system.dragIndex model.draggable
     in
     Html.section
-        [ Html.Attributes.style "margin" "6em 0 3em 0" ]
+        [ Html.Attributes.style "margin" "6em 0" ]
         [ model.items
             |> List.indexedMap (itemView model.affected maybeDragIndex)
             |> Html.Keyed.node "div" containerStyles
@@ -160,35 +160,36 @@ view model =
 
 itemView : List Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )
 itemView affected maybeDragIndex index ( key, item ) =
+    let
+        styles : List (Html.Attribute Msg)
+        styles =
+            itemStyles
+                ++ (if List.member index affected then
+                        affectedItemStyles
+
+                    else
+                        []
+                   )
+    in
     case maybeDragIndex of
         Nothing ->
             let
                 itemId : String
                 itemId =
-                    "id-" ++ String.fromInt item
-
-                styles : List (Html.Attribute Msg)
-                styles =
-                    itemStyles
-                        ++ (if List.member index affected then
-                                affectedItemStyles
-
-                            else
-                                []
-                           )
+                    "id-" ++ item
             in
             ( key
             , Html.div
                 (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)
-                [ Html.div [] [ Html.text (String.fromInt item) ] ]
+                [ Html.text item ]
             )
 
         Just dragIndex ->
             if dragIndex /= index then
                 ( key
                 , Html.div
-                    (itemStyles ++ system.dropEvents index)
-                    [ Html.div [] [ Html.text (String.fromInt item) ] ]
+                    (styles ++ system.dropEvents index)
+                    [ Html.text item ]
                 )
 
             else
@@ -209,7 +210,7 @@ draggedItemView draggable items =
         Just ( _, item ) ->
             Html.div
                 (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)
-                [ Html.div [] [ Html.text (String.fromInt item) ] ]
+                [ Html.text item ]
 
         Nothing ->
             Html.text ""
