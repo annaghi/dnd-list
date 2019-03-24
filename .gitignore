@@ -9,10 +9,3 @@ docs.json
 
 # VS Code settings
 .vscode
-
-package.json
-
-# gh-pages
-docs/live-reload.sh
-docs/optimize.sh
-docs/elm.json
