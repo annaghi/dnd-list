@@ -1,10 +1,11 @@
-module Basic.Free exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
+module Basic.Free exposing (Model, Msg, commands, initialModel, main, source, subscriptions, update, view)
 
 import Browser
 import DnDList
 import Html
 import Html.Attributes
 import Html.Keyed
+import Random
 
 
 
@@ -25,18 +26,13 @@ main =
 -- DATA
 
 
-type alias Fruit =
+type alias Color =
     String
 
 
-type alias KeyedFruit =
-    ( String, Fruit )
-
-
-data : List KeyedFruit
-data =
-    [ "Apples", "Bananas", "Cherries", "Dates" ]
-        |> List.map (\v -> ( "key-" ++ v, v ))
+colors : List Color
+colors =
+    [ "#39a5dc", "#3997dc", "#398adc", "#397cdc", "#396edc", "#3961dc", "#3953dc" ]
 
 
 
@@ -46,11 +42,11 @@ data =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Free DnDList.Swap DnDList.OnDrag
+    , movement = DnDList.Free DnDList.Swap DnDList.OnDrop
     }
 
 
-system : DnDList.System Msg KeyedFruit
+system : DnDList.System Msg Item
 system =
     DnDList.create config
 
@@ -59,22 +55,32 @@ system =
 -- MODEL
 
 
+type Item
+    = Item Color Width
+
+
+type alias Width =
+    Int
+
+
 type alias Model =
     { draggable : DnDList.Draggable
-    , fruits : List KeyedFruit
+    , items : List Item
     }
 
 
 initialModel : Model
 initialModel =
     { draggable = system.draggable
-    , fruits = data
+    , items = []
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initialModel, Cmd.none )
+    ( initialModel
+    , Cmd.none
+    )
 
 
 
@@ -87,22 +93,43 @@ subscriptions model =
 
 
 
+-- COMMANDS
+
+
+commands : Cmd Msg
+commands =
+    Random.generate NewMasonry (Random.list (List.length colors) (Random.int 1 200))
+
+
+
 -- UPDATE
 
 
 type Msg
-    = MyMsg DnDList.Msg
+    = NewMasonry (List Int)
+    | MyMsg DnDList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        NewMasonry widths ->
+            ( { model
+                | items =
+                    List.map2
+                        (\color width -> Item color (width + 50))
+                        colors
+                        widths
+              }
+            , Cmd.none
+            )
+
         MyMsg message ->
             let
-                ( draggable, fruits ) =
-                    system.update message model.draggable model.fruits
+                ( draggable, items ) =
+                    system.update message model.draggable model.items
             in
-            ( { model | draggable = draggable, fruits = fruits }
+            ( { model | draggable = draggable, items = items }
             , system.commands model.draggable
             )
 
@@ -117,64 +144,63 @@ view model =
         maybeDragIndex : Maybe Int
         maybeDragIndex =
             system.dragIndex model.draggable
+
+        maybeDropIndex : Maybe Int
+        maybeDropIndex =
+            system.dropIndex model.draggable
     in
     Html.section
         [ Html.Attributes.style "margin" "6em 0" ]
-        [ model.fruits
-            |> List.indexedMap (itemView maybeDragIndex)
-            |> Html.Keyed.node "div" containerStyles
-        , draggedItemView model.draggable model.fruits
+        [ model.items
+            |> List.indexedMap (itemView maybeDragIndex maybeDropIndex)
+            |> Html.div containerStyles
+        , draggedItemView model.draggable model.items
         ]
 
 
-itemView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )
-itemView maybeDragIndex index ( key, fruit ) =
-    case maybeDragIndex of
-        Nothing ->
-            let
-                fruitId : String
-                fruitId =
-                    "id-" ++ fruit
-            in
-            ( key
-            , Html.div
-                (Html.Attributes.id fruitId :: itemStyles)
-                [ Html.div (handleStyles ++ system.dragEvents index fruitId) []
-                , Html.text fruit
-                ]
-            )
+itemView : Maybe Int -> Maybe Int -> Int -> Item -> Html.Html Msg
+itemView maybeDragIndex maybeDropIndex index (Item color width) =
+    case ( maybeDragIndex, maybeDropIndex ) of
+        ( Just dragIndex, Just dropIndex ) ->
+            if dragIndex /= index && dropIndex /= index then
+                Html.div
+                    (itemStyles color width ++ system.dropEvents index)
+                    []
 
-        Just dragIndex ->
-            if dragIndex /= index then
-                ( key
-                , Html.div
-                    (itemStyles ++ system.dropEvents index)
-                    [ Html.div handleStyles []
-                    , Html.text fruit
-                    ]
-                )
+            else if dragIndex /= index && dropIndex == index then
+                Html.div
+                    (itemStyles color width ++ overedItemStyles ++ system.dropEvents index)
+                    []
 
             else
-                ( key
-                , Html.div (itemStyles ++ placeholderItemStyles) []
-                )
+                Html.div
+                    (itemStyles color width ++ placeholderItemStyles)
+                    []
 
-
-draggedItemView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg
-draggedItemView draggable fruits =
-    let
-        maybeDraggedFruit : Maybe KeyedFruit
-        maybeDraggedFruit =
-            system.dragIndex draggable
-                |> Maybe.andThen (\index -> fruits |> List.drop index |> List.head)
-    in
-    case maybeDraggedFruit of
-        Just ( _, fruit ) ->
+        _ ->
+            let
+                itemId : String
+                itemId =
+                    "id-" ++ String.fromInt index
+            in
             Html.div
-                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)
-                [ Html.div (handleStyles ++ draggedHandleStyles) []
-                , Html.text fruit
-                ]
+                (Html.Attributes.id itemId :: itemStyles color width ++ system.dragEvents index itemId)
+                []
+
+
+draggedItemView : DnDList.Draggable -> List Item -> Html.Html Msg
+draggedItemView draggable items =
+    let
+        maybeDraggedItem : Maybe Item
+        maybeDraggedItem =
+            system.dragIndex draggable
+                |> Maybe.andThen (\index -> items |> List.drop index |> List.head)
+    in
+    case maybeDraggedItem of
+        Just (Item color width) ->
+            Html.div
+                (itemStyles color width ++ system.draggedStyles draggable)
+                []
 
         Nothing ->
             Html.text ""
@@ -186,26 +212,21 @@ draggedItemView draggable fruits =
 
 containerStyles : List (Html.Attribute msg)
 containerStyles =
-    [ Html.Attributes.style "display" "grid"
-    , Html.Attributes.style "grid-template-columns" "180px 180px"
-    , Html.Attributes.style "grid-template-rows" "100px 100px"
-    , Html.Attributes.style "grid-gap" "5em 10em"
-    , Html.Attributes.style "justify-content" "center"
+    [ Html.Attributes.style "display" "flex"
+    , Html.Attributes.style "flex-wrap" "wrap"
+    , Html.Attributes.style "margin" "0 auto"
+    , Html.Attributes.style "max-width" "40em"
     ]
 
 
-itemStyles : List (Html.Attribute msg)
-itemStyles =
-    [ Html.Attributes.style "background" "#cddc39"
-    , Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "display" "flex"
-    , Html.Attributes.style "align-items" "center"
+itemStyles : Color -> Width -> List (Html.Attribute msg)
+itemStyles color width =
+    [ Html.Attributes.style "background" color
+    , Html.Attributes.style "flex" "1 0 auto"
+    , Html.Attributes.style "height" "5em"
+    , Html.Attributes.style "margin" "0 1.5em 1.5em 0"
+    , Html.Attributes.style "width" (String.fromInt width ++ "px")
     ]
-
-
-draggedItemStyles : List (Html.Attribute msg)
-draggedItemStyles =
-    [ Html.Attributes.style "background" "#dc9a39" ]
 
 
 placeholderItemStyles : List (Html.Attribute msg)
@@ -213,20 +234,9 @@ placeholderItemStyles =
     [ Html.Attributes.style "background" "dimgray" ]
 
 
-handleStyles : List (Html.Attribute msg)
-handleStyles =
-    [ Html.Attributes.style "width" "50px"
-    , Html.Attributes.style "height" "50px"
-    , Html.Attributes.style "background" "#afb42b"
-    , Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "margin" "20px"
-    , Html.Attributes.style "cursor" "pointer"
-    ]
-
-
-draggedHandleStyles : List (Html.Attribute msg)
-draggedHandleStyles =
-    [ Html.Attributes.style "background" "#b4752b" ]
+overedItemStyles : List (Html.Attribute msg)
+overedItemStyles =
+    [ Html.Attributes.style "opacity" "0.7" ]
 
 
 
@@ -243,6 +253,7 @@ import DnDList
 import Html
 import Html.Attributes
 import Html.Keyed
+import Random
 
 
 
@@ -263,18 +274,13 @@ main =
 -- DATA
 
 
-type alias Fruit =
+type alias Color =
     String
 
 
-type alias KeyedFruit =
-    ( String, Fruit )
-
-
-data : List KeyedFruit
-data =
-    [ "Apples", "Bananas", "Cherries", "Dates" ]
-        |> List.map (\\v -> ( "key-" ++ v, v ))
+colors : List Color
+colors =
+    [ "#39a5dc", "#3997dc", "#398adc", "#397cdc", "#396edc", "#3961dc", "#3953dc" ]
 
 
 
@@ -284,11 +290,11 @@ data =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Free DnDList.Swap DnDList.OnDrag
+    , movement = DnDList.Free DnDList.Swap DnDList.OnDrop
     }
 
 
-system : DnDList.System Msg KeyedFruit
+system : DnDList.System Msg Item
 system =
     DnDList.create config
 
@@ -297,22 +303,32 @@ system =
 -- MODEL
 
 
+type Item
+    = Item Color Width
+
+
+type alias Width =
+    Int
+
+
 type alias Model =
     { draggable : DnDList.Draggable
-    , fruits : List KeyedFruit
+    , items : List Item
     }
 
 
 initialModel : Model
 initialModel =
     { draggable = system.draggable
-    , fruits = data
+    , items = []
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initialModel, Cmd.none )
+    ( initialModel
+    , Cmd.none
+    )
 
 
 
@@ -325,22 +341,43 @@ subscriptions model =
 
 
 
+-- COMMANDS
+
+
+commands : Cmd Msg
+commands =
+    Random.generate NewMasonry (Random.list (List.length colors) (Random.int 1 200))
+
+
+
 -- UPDATE
 
 
 type Msg
-    = MyMsg DnDList.Msg
+    = NewMasonry (List Int)
+    | MyMsg DnDList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        NewMasonry widths ->
+            ( { model
+                | items =
+                    List.map2
+                        (\\color width -> Item color (width + 50))
+                        colors
+                        widths
+              }
+            , Cmd.none
+            )
+
         MyMsg message ->
             let
-                ( draggable, fruits ) =
-                    system.update message model.draggable model.fruits
+                ( draggable, items ) =
+                    system.update message model.draggable model.items
             in
-            ( { model | draggable = draggable, fruits = fruits }
+            ( { model | draggable = draggable, items = items }
             , system.commands model.draggable
             )
 
@@ -355,64 +392,63 @@ view model =
         maybeDragIndex : Maybe Int
         maybeDragIndex =
             system.dragIndex model.draggable
+
+        maybeDropIndex : Maybe Int
+        maybeDropIndex =
+            system.dropIndex model.draggable
     in
     Html.section
         [ Html.Attributes.style "margin" "6em 0" ]
-        [ model.fruits
-            |> List.indexedMap (itemView maybeDragIndex)
-            |> Html.Keyed.node "div" containerStyles
-        , draggedItemView model.draggable model.fruits
+        [ model.items
+            |> List.indexedMap (itemView maybeDragIndex maybeDropIndex)
+            |> Html.div containerStyles
+        , draggedItemView model.draggable model.items
         ]
 
 
-itemView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )
-itemView maybeDragIndex index ( key, fruit ) =
-    case maybeDragIndex of
-        Nothing ->
-            let
-                fruitId : String
-                fruitId =
-                    "id-" ++ fruit
-            in
-            ( key
-            , Html.div
-                (Html.Attributes.id fruitId :: itemStyles)
-                [ Html.div (handleStyles ++ system.dragEvents index fruitId) []
-                , Html.text fruit
-                ]
-            )
+itemView : Maybe Int -> Maybe Int -> Int -> Item -> Html.Html Msg
+itemView maybeDragIndex maybeDropIndex index (Item color width) =
+    case ( maybeDragIndex, maybeDropIndex ) of
+        ( Just dragIndex, Just dropIndex ) ->
+            if dragIndex /= index && dropIndex /= index then
+                Html.div
+                    (itemStyles color width ++ system.dropEvents index)
+                    []
 
-        Just dragIndex ->
-            if dragIndex /= index then
-                ( key
-                , Html.div
-                    (itemStyles ++ system.dropEvents index)
-                    [ Html.div handleStyles []
-                    , Html.text fruit
-                    ]
-                )
+            else if dragIndex /= index && dropIndex == index then
+                Html.div
+                    (itemStyles color width ++ overedItemStyles ++ system.dropEvents index)
+                    []
 
             else
-                ( key
-                , Html.div (itemStyles ++ placeholderItemStyles) []
-                )
+                Html.div
+                    (itemStyles color width ++ placeholderItemStyles)
+                    []
 
-
-draggedItemView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg
-draggedItemView draggable fruits =
-    let
-        maybeDraggedFruit : Maybe KeyedFruit
-        maybeDraggedFruit =
-            system.dragIndex draggable
-                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)
-    in
-    case maybeDraggedFruit of
-        Just ( _, fruit ) ->
+        _ ->
+            let
+                itemId : String
+                itemId =
+                    "id-" ++ String.fromInt index
+            in
             Html.div
-                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)
-                [ Html.div (handleStyles ++ draggedHandleStyles) []
-                , Html.text fruit
-                ]
+                (Html.Attributes.id itemId :: itemStyles color width ++ system.dragEvents index itemId)
+                []
+
+
+draggedItemView : DnDList.Draggable -> List Item -> Html.Html Msg
+draggedItemView draggable items =
+    let
+        maybeDraggedItem : Maybe Item
+        maybeDraggedItem =
+            system.dragIndex draggable
+                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)
+    in
+    case maybeDraggedItem of
+        Just (Item color width) ->
+            Html.div
+                (itemStyles color width ++ system.draggedStyles draggable)
+                []
 
         Nothing ->
             Html.text ""
@@ -424,26 +460,21 @@ draggedItemView draggable fruits =
 
 containerStyles : List (Html.Attribute msg)
 containerStyles =
-    [ Html.Attributes.style "display" "grid"
-    , Html.Attributes.style "grid-template-columns" "180px 180px"
-    , Html.Attributes.style "grid-template-rows" "100px 100px"
-    , Html.Attributes.style "grid-gap" "5em 10em"
-    , Html.Attributes.style "justify-content" "center"
+    [ Html.Attributes.style "display" "flex"
+    , Html.Attributes.style "flex-wrap" "wrap"
+    , Html.Attributes.style "margin" "0 auto"
+    , Html.Attributes.style "max-width" "40em"
     ]
 
 
-itemStyles : List (Html.Attribute msg)
-itemStyles =
-    [ Html.Attributes.style "background" "#cddc39"
-    , Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "display" "flex"
-    , Html.Attributes.style "align-items" "center"
+itemStyles : Color -> Width -> List (Html.Attribute msg)
+itemStyles color width =
+    [ Html.Attributes.style "background" color
+    , Html.Attributes.style "flex" "1 0 auto"
+    , Html.Attributes.style "height" "5em"
+    , Html.Attributes.style "margin" "0 1.5em 1.5em 0"
+    , Html.Attributes.style "width" (String.fromInt width ++ "px")
     ]
-
-
-draggedItemStyles : List (Html.Attribute msg)
-draggedItemStyles =
-    [ Html.Attributes.style "background" "#dc9a39" ]
 
 
 placeholderItemStyles : List (Html.Attribute msg)
@@ -451,18 +482,7 @@ placeholderItemStyles =
     [ Html.Attributes.style "background" "dimgray" ]
 
 
-handleStyles : List (Html.Attribute msg)
-handleStyles =
-    [ Html.Attributes.style "width" "50px"
-    , Html.Attributes.style "height" "50px"
-    , Html.Attributes.style "background" "#afb42b"
-    , Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "margin" "20px"
-    , Html.Attributes.style "cursor" "pointer"
-    ]
-
-
-draggedHandleStyles : List (Html.Attribute msg)
-draggedHandleStyles =
-    [ Html.Attributes.style "background" "#b4752b" ]
+overedItemStyles : List (Html.Attribute msg)
+overedItemStyles =
+    [ Html.Attributes.style "opacity" "0.7" ]
     """
