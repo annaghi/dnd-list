@@ -1,0 +1,118 @@
+html {
+  font-family: monospace;
+  height: 100%;
+}
+body {
+  margin: 0px;
+  display: flex;
+  flex-direction: column;
+}
+main,
+nav {
+  box-sizing: border-box;
+}
+nav {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Navigation panel */
+
+nav h1 {
+  font-size: 2.4em;
+  font-weight: lighter;
+}
+nav h2 {
+  font-weight: lighter;
+}
+nav p {
+  line-height: 1.5;
+  margin-bottom: 3em;
+}
+nav ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+nav li {
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+  box-sizing: border-box;
+  cursor: pointer;
+  min-width: 200px;
+  margin-bottom: 5px;
+  margin-right: 5px;
+  padding: 7px 14px;
+}
+nav li:hover {
+  border-style: solid;
+  border-color: gray;
+}
+nav li.is-active {
+  border-style: dashed;
+  border-color: gray;
+}
+
+nav {
+  padding: 1em 3em;
+}
+
+/* Main panel */
+
+main {
+  background-color: #afafaf;
+  padding-top: 2em;
+}
+main h2 {
+  font-weight: lighter;
+  line-height: 2;
+}
+main h3 {
+  font-weight: lighter;
+}
+main p {
+  font-weight: lighter;
+  margin-top: 1.5em;
+}
+.elm-demo {
+  padding: 0 3em;
+}
+.elm-code h3 {
+  padding: 0 2.6em;
+}
+
+/* Highlight.js */
+
+main .hljs {
+  padding-bottom: 5em;
+  padding-left: 3em;
+}
+
+main pre {
+  margin: 0;
+}
+
+/* Media Queries */
+
+@media (min-width: 1200px) {
+  body {
+    flex-direction: row;
+    height: 100%;
+    overflow: hidden;
+  }
+  main,
+  nav {
+    height: 100%;
+    overflow-y: auto;
+  }
+  main {
+    flex: 1 0 0px;
+  }
+  nav {
+    flex: 0 0 300px;
+  }
+}
