@@ -600,11 +600,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.a_.am === region.bj.am)
+	if (region.a0.ao === region.be.ao)
 	{
-		return 'on line ' + region.a_.am;
+		return 'on line ' + region.a0.ao;
 	}
-	return 'on lines ' + region.a_.am + ' through ' + region.bj.am;
+	return 'on lines ' + region.a0.ao + ' through ' + region.be.ao;
 }
 
 
@@ -850,6 +850,244 @@ function _Basics_not(bool) { return !bool; }
 var _Basics_and = F2(function(a, b) { return a && b; });
 var _Basics_or  = F2(function(a, b) { return a || b; });
 var _Basics_xor = F2(function(a, b) { return a !== b; });
+
+
+
+// TASKS
+
+function _Scheduler_succeed(value)
+{
+	return {
+		$: 0,
+		a: value
+	};
+}
+
+function _Scheduler_fail(error)
+{
+	return {
+		$: 1,
+		a: error
+	};
+}
+
+function _Scheduler_binding(callback)
+{
+	return {
+		$: 2,
+		b: callback,
+		c: null
+	};
+}
+
+var _Scheduler_andThen = F2(function(callback, task)
+{
+	return {
+		$: 3,
+		b: callback,
+		d: task
+	};
+});
+
+var _Scheduler_onError = F2(function(callback, task)
+{
+	return {
+		$: 4,
+		b: callback,
+		d: task
+	};
+});
+
+function _Scheduler_receive(callback)
+{
+	return {
+		$: 5,
+		b: callback
+	};
+}
+
+
+// PROCESSES
+
+var _Scheduler_guid = 0;
+
+function _Scheduler_rawSpawn(task)
+{
+	var proc = {
+		$: 0,
+		e: _Scheduler_guid++,
+		f: task,
+		g: null,
+		h: []
+	};
+
+	_Scheduler_enqueue(proc);
+
+	return proc;
+}
+
+function _Scheduler_spawn(task)
+{
+	return _Scheduler_binding(function(callback) {
+		callback(_Scheduler_succeed(_Scheduler_rawSpawn(task)));
+	});
+}
+
+function _Scheduler_rawSend(proc, msg)
+{
+	proc.h.push(msg);
+	_Scheduler_enqueue(proc);
+}
+
+var _Scheduler_send = F2(function(proc, msg)
+{
+	return _Scheduler_binding(function(callback) {
+		_Scheduler_rawSend(proc, msg);
+		callback(_Scheduler_succeed(_Utils_Tuple0));
+	});
+});
+
+function _Scheduler_kill(proc)
+{
+	return _Scheduler_binding(function(callback) {
+		var task = proc.f;
+		if (task.$ === 2 && task.c)
+		{
+			task.c();
+		}
+
+		proc.f = null;
+
+		callback(_Scheduler_succeed(_Utils_Tuple0));
+	});
+}
+
+
+/* STEP PROCESSES
+
+type alias Process =
+  { $ : tag
+  , id : unique_id
+  , root : Task
+  , stack : null | { $: SUCCEED | FAIL, a: callback, b: stack }
+  , mailbox : [msg]
+  }
+
+*/
+
+
+var _Scheduler_working = false;
+var _Scheduler_queue = [];
+
+
+function _Scheduler_enqueue(proc)
+{
+	_Scheduler_queue.push(proc);
+	if (_Scheduler_working)
+	{
+		return;
+	}
+	_Scheduler_working = true;
+	while (proc = _Scheduler_queue.shift())
+	{
+		_Scheduler_step(proc);
+	}
+	_Scheduler_working = false;
+}
+
+
+function _Scheduler_step(proc)
+{
+	while (proc.f)
+	{
+		var rootTag = proc.f.$;
+		if (rootTag === 0 || rootTag === 1)
+		{
+			while (proc.g && proc.g.$ !== rootTag)
+			{
+				proc.g = proc.g.i;
+			}
+			if (!proc.g)
+			{
+				return;
+			}
+			proc.f = proc.g.b(proc.f.a);
+			proc.g = proc.g.i;
+		}
+		else if (rootTag === 2)
+		{
+			proc.f.c = proc.f.b(function(newRoot) {
+				proc.f = newRoot;
+				_Scheduler_enqueue(proc);
+			});
+			return;
+		}
+		else if (rootTag === 5)
+		{
+			if (proc.h.length === 0)
+			{
+				return;
+			}
+			proc.f = proc.f.b(proc.h.shift());
+		}
+		else // if (rootTag === 3 || rootTag === 4)
+		{
+			proc.g = {
+				$: rootTag === 3 ? 0 : 1,
+				b: proc.f.b,
+				i: proc.g
+			};
+			proc.f = proc.f.d;
+		}
+	}
+}
+
+
+
+function _Char_toCode(char)
+{
+	var code = char.charCodeAt(0);
+	if (0xD800 <= code && code <= 0xDBFF)
+	{
+		return (code - 0xD800) * 0x400 + char.charCodeAt(1) - 0xDC00 + 0x10000
+	}
+	return code;
+}
+
+function _Char_fromCode(code)
+{
+	return _Utils_chr(
+		(code < 0 || 0x10FFFF < code)
+			? '\uFFFD'
+			:
+		(code <= 0xFFFF)
+			? String.fromCharCode(code)
+			:
+		(code -= 0x10000,
+			String.fromCharCode(Math.floor(code / 0x400) + 0xD800, code % 0x400 + 0xDC00)
+		)
+	);
+}
+
+function _Char_toUpper(char)
+{
+	return _Utils_chr(char.toUpperCase());
+}
+
+function _Char_toLower(char)
+{
+	return _Utils_chr(char.toLowerCase());
+}
+
+function _Char_toLocaleUpper(char)
+{
+	return _Utils_chr(char.toLocaleUpperCase());
+}
+
+function _Char_toLocaleLower(char)
+{
+	return _Utils_chr(char.toLocaleLowerCase());
+}
 
 
 
@@ -1162,244 +1400,6 @@ function _String_fromList(chars)
 	return _List_toArray(chars).join('');
 }
 
-
-
-
-// TASKS
-
-function _Scheduler_succeed(value)
-{
-	return {
-		$: 0,
-		a: value
-	};
-}
-
-function _Scheduler_fail(error)
-{
-	return {
-		$: 1,
-		a: error
-	};
-}
-
-function _Scheduler_binding(callback)
-{
-	return {
-		$: 2,
-		b: callback,
-		c: null
-	};
-}
-
-var _Scheduler_andThen = F2(function(callback, task)
-{
-	return {
-		$: 3,
-		b: callback,
-		d: task
-	};
-});
-
-var _Scheduler_onError = F2(function(callback, task)
-{
-	return {
-		$: 4,
-		b: callback,
-		d: task
-	};
-});
-
-function _Scheduler_receive(callback)
-{
-	return {
-		$: 5,
-		b: callback
-	};
-}
-
-
-// PROCESSES
-
-var _Scheduler_guid = 0;
-
-function _Scheduler_rawSpawn(task)
-{
-	var proc = {
-		$: 0,
-		e: _Scheduler_guid++,
-		f: task,
-		g: null,
-		h: []
-	};
-
-	_Scheduler_enqueue(proc);
-
-	return proc;
-}
-
-function _Scheduler_spawn(task)
-{
-	return _Scheduler_binding(function(callback) {
-		callback(_Scheduler_succeed(_Scheduler_rawSpawn(task)));
-	});
-}
-
-function _Scheduler_rawSend(proc, msg)
-{
-	proc.h.push(msg);
-	_Scheduler_enqueue(proc);
-}
-
-var _Scheduler_send = F2(function(proc, msg)
-{
-	return _Scheduler_binding(function(callback) {
-		_Scheduler_rawSend(proc, msg);
-		callback(_Scheduler_succeed(_Utils_Tuple0));
-	});
-});
-
-function _Scheduler_kill(proc)
-{
-	return _Scheduler_binding(function(callback) {
-		var task = proc.f;
-		if (task.$ === 2 && task.c)
-		{
-			task.c();
-		}
-
-		proc.f = null;
-
-		callback(_Scheduler_succeed(_Utils_Tuple0));
-	});
-}
-
-
-/* STEP PROCESSES
-
-type alias Process =
-  { $ : tag
-  , id : unique_id
-  , root : Task
-  , stack : null | { $: SUCCEED | FAIL, a: callback, b: stack }
-  , mailbox : [msg]
-  }
-
-*/
-
-
-var _Scheduler_working = false;
-var _Scheduler_queue = [];
-
-
-function _Scheduler_enqueue(proc)
-{
-	_Scheduler_queue.push(proc);
-	if (_Scheduler_working)
-	{
-		return;
-	}
-	_Scheduler_working = true;
-	while (proc = _Scheduler_queue.shift())
-	{
-		_Scheduler_step(proc);
-	}
-	_Scheduler_working = false;
-}
-
-
-function _Scheduler_step(proc)
-{
-	while (proc.f)
-	{
-		var rootTag = proc.f.$;
-		if (rootTag === 0 || rootTag === 1)
-		{
-			while (proc.g && proc.g.$ !== rootTag)
-			{
-				proc.g = proc.g.i;
-			}
-			if (!proc.g)
-			{
-				return;
-			}
-			proc.f = proc.g.b(proc.f.a);
-			proc.g = proc.g.i;
-		}
-		else if (rootTag === 2)
-		{
-			proc.f.c = proc.f.b(function(newRoot) {
-				proc.f = newRoot;
-				_Scheduler_enqueue(proc);
-			});
-			return;
-		}
-		else if (rootTag === 5)
-		{
-			if (proc.h.length === 0)
-			{
-				return;
-			}
-			proc.f = proc.f.b(proc.h.shift());
-		}
-		else // if (rootTag === 3 || rootTag === 4)
-		{
-			proc.g = {
-				$: rootTag === 3 ? 0 : 1,
-				b: proc.f.b,
-				i: proc.g
-			};
-			proc.f = proc.f.d;
-		}
-	}
-}
-
-
-
-function _Char_toCode(char)
-{
-	var code = char.charCodeAt(0);
-	if (0xD800 <= code && code <= 0xDBFF)
-	{
-		return (code - 0xD800) * 0x400 + char.charCodeAt(1) - 0xDC00 + 0x10000
-	}
-	return code;
-}
-
-function _Char_fromCode(code)
-{
-	return _Utils_chr(
-		(code < 0 || 0x10FFFF < code)
-			? '\uFFFD'
-			:
-		(code <= 0xFFFF)
-			? String.fromCharCode(code)
-			:
-		(code -= 0x10000,
-			String.fromCharCode(Math.floor(code / 0x400) + 0xD800, code % 0x400 + 0xDC00)
-		)
-	);
-}
-
-function _Char_toUpper(char)
-{
-	return _Utils_chr(char.toUpperCase());
-}
-
-function _Char_toLower(char)
-{
-	return _Utils_chr(char.toLowerCase());
-}
-
-function _Char_toLocaleUpper(char)
-{
-	return _Utils_chr(char.toLocaleUpperCase());
-}
-
-function _Char_toLocaleLower(char)
-{
-	return _Utils_chr(char.toLocaleLowerCase());
-}
 
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.cL,
-		impl.bU,
-		impl.bQ,
+		impl.cI,
+		impl.bN,
+		impl.bJ,
 		function() { return function() {} }
 	);
 });
@@ -2659,9 +2659,9 @@ var _VirtualDom_mapEventTuple = F2(function(func, tuple)
 var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
-		bu: func(record.bu),
-		a$: record.a$,
-		aX: record.aX
+		cN: func(record.cN),
+		a1: record.a1,
+		aZ: record.aZ
 	}
 });
 
@@ -2929,11 +2929,11 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 		// 3 = Custom
 
 		var value = result.a;
-		var message = !tag ? value : tag < 3 ? value.a : value.bu;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.a$;
+		var message = !tag ? value : tag < 3 ? value.a : value.cN;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.a1;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.aX) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.aZ) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3883,11 +3883,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.cL,
-		impl.bU,
-		impl.bQ,
+		impl.cI,
+		impl.bN,
+		impl.bJ,
 		function(sendToApp, initialModel) {
-			var view = impl.dz;
+			var view = impl.dx;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3919,12 +3919,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.cL,
-		impl.bU,
-		impl.bQ,
+		impl.cI,
+		impl.bN,
+		impl.bJ,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.an && impl.an(sendToApp)
-			var view = impl.dz;
+			var divertHrefToApp = impl.ap && impl.ap(sendToApp)
+			var view = impl.dx;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3932,12 +3932,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.cg);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.b9);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.du) && (_VirtualDom_doc.title = title = doc.du);
+				(title !== doc.j) && (_VirtualDom_doc.title = title = doc.j);
 			});
 		}
 	);
@@ -3993,12 +3993,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.cV;
-	var onUrlRequest = impl.cW;
+	var onUrlChange = impl.cU;
+	var onUrlRequest = impl.cV;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		an: function(sendToApp)
+		ap: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4014,9 +4014,9 @@ function _Browser_application(impl)
 					var next = elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.bI === next.bI
-							&& curr.bp === next.bp
-							&& curr.bF.a === next.bF.a
+							&& curr.bB === next.bB
+							&& curr.bk === next.bk
+							&& curr.by.a === next.by.a
 						)
 							? elm$browser$Browser$Internal(next)
 							: elm$browser$Browser$External(href)
@@ -4024,13 +4024,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		cL: function(flags)
+		cI: function(flags)
 		{
-			return A3(impl.cL, flags, _Browser_getUrl(), key);
+			return A3(impl.cI, flags, _Browser_getUrl(), key);
 		},
-		dz: impl.dz,
-		bU: impl.bU,
-		bQ: impl.bQ
+		dx: impl.dx,
+		bN: impl.bN,
+		bJ: impl.bJ
 	});
 }
 
@@ -4096,17 +4096,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { cF: 'hidden', cp: 'visibilitychange' }
+		? { cC: 'hidden', ci: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { cF: 'mozHidden', cp: 'mozvisibilitychange' }
+		? { cC: 'mozHidden', ci: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { cF: 'msHidden', cp: 'msvisibilitychange' }
+		? { cC: 'msHidden', ci: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { cF: 'webkitHidden', cp: 'webkitvisibilitychange' }
-		: { cF: 'hidden', cp: 'visibilitychange' };
+		? { cC: 'webkitHidden', ci: 'webkitvisibilitychange' }
+		: { cC: 'hidden', ci: 'visibilitychange' };
 }
 
 
@@ -4187,12 +4187,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		bN: _Browser_getScene(),
-		bX: {
-			K: _Browser_window.pageXOffset,
-			L: _Browser_window.pageYOffset,
-			a0: _Browser_doc.documentElement.clientWidth,
-			aS: _Browser_doc.documentElement.clientHeight
+		bG: _Browser_getScene(),
+		bQ: {
+			L: _Browser_window.pageXOffset,
+			M: _Browser_window.pageYOffset,
+			a2: _Browser_doc.documentElement.clientWidth,
+			aU: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4202,8 +4202,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		a0: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		aS: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		a2: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		aU: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4226,15 +4226,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			bN: {
-				a0: node.scrollWidth,
-				aS: node.scrollHeight
+			bG: {
+				a2: node.scrollWidth,
+				aU: node.scrollHeight
 			},
-			bX: {
-				K: node.scrollLeft,
-				L: node.scrollTop,
-				a0: node.clientWidth,
-				aS: node.clientHeight
+			bQ: {
+				L: node.scrollLeft,
+				M: node.scrollTop,
+				a2: node.clientWidth,
+				aU: node.clientHeight
 			}
 		};
 	});
@@ -4264,18 +4264,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			bN: _Browser_getScene(),
-			bX: {
-				K: x,
-				L: y,
-				a0: _Browser_doc.documentElement.clientWidth,
-				aS: _Browser_doc.documentElement.clientHeight
+			bG: _Browser_getScene(),
+			bQ: {
+				L: x,
+				M: y,
+				a2: _Browser_doc.documentElement.clientWidth,
+				aU: _Browser_doc.documentElement.clientHeight
 			},
-			D: {
-				K: x + rect.left,
-				L: y + rect.top,
-				a0: rect.width,
-				aS: rect.height
+			E: {
+				L: x + rect.left,
+				M: y + rect.top,
+				a2: rect.width,
+				aU: rect.height
 			}
 		};
 	});
@@ -4525,45 +4525,30 @@ var elm$core$List$map = F2(
 			_List_Nil,
 			xs);
 	});
-var elm$core$Basics$le = _Utils_le;
-var elm$core$Basics$sub = _Basics_sub;
-var elm$core$List$rangeHelp = F3(
-	function (lo, hi, list) {
-		rangeHelp:
-		while (true) {
-			if (_Utils_cmp(lo, hi) < 1) {
-				var $temp$lo = lo,
-					$temp$hi = hi - 1,
-					$temp$list = A2(elm$core$List$cons, hi, list);
-				lo = $temp$lo;
-				hi = $temp$hi;
-				list = $temp$list;
-				continue rangeHelp;
-			} else {
-				return list;
-			}
-		}
-	});
-var elm$core$List$range = F2(
-	function (lo, hi) {
-		return A3(elm$core$List$rangeHelp, lo, hi, _List_Nil);
-	});
-var elm$core$Maybe$Just = function (a) {
-	return {$: 0, a: a};
-};
-var elm$core$Maybe$Nothing = {$: 1};
-var elm$core$String$fromInt = _String_fromNumber;
-var author$project$Example$FreeRotate$data = A2(
+var author$project$Basic$Free$data = A2(
 	elm$core$List$map,
-	function (i) {
-		return _Utils_Tuple2(
-			'key-' + elm$core$String$fromInt(i),
-			elm$core$String$fromInt(i));
+	function (v) {
+		return _Utils_Tuple2('key-' + v, v);
 	},
-	A2(elm$core$List$range, 1, 9));
+	_List_fromArray(
+		['Apples', 'Bananas', 'Cherries', 'Dates']));
+var author$project$Basic$Free$MyMsg = elm$core$Basics$identity;
+var author$project$DnDList$Free = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
+	});
+var author$project$DnDList$OnDrag = 0;
+var author$project$DnDList$Swap = 1;
+var elm$core$Basics$identity = function (x) {
+	return x;
+};
+var author$project$Basic$Free$config = {
+	cN: elm$core$Basics$identity,
+	cP: A2(author$project$DnDList$Free, 1, 0)
+};
 var author$project$DnDList$Draggable = elm$core$Basics$identity;
 var author$project$DnDList$GotDragged = function (a) {
-	return {$: 5, a: a};
+	return {$: 6, a: a};
 };
 var elm$browser$Browser$External = function (a) {
 	return {$: 1, a: a};
@@ -4581,6 +4566,10 @@ var elm$core$Basics$never = function (_n0) {
 		continue never;
 	}
 };
+var elm$core$Maybe$Just = function (a) {
+	return {$: 0, a: a};
+};
+var elm$core$Maybe$Nothing = {$: 1};
 var elm$core$Basics$False = 1;
 var elm$core$Basics$True = 0;
 var elm$core$Result$isOk = function (result) {
@@ -4589,9 +4578,6 @@ var elm$core$Result$isOk = function (result) {
 	} else {
 		return false;
 	}
-};
-var elm$core$Basics$identity = function (x) {
-	return x;
 };
 var elm$core$Task$Perform = elm$core$Basics$identity;
 var elm$core$Task$succeed = _Scheduler_succeed;
@@ -4705,6 +4691,7 @@ var elm$core$Basics$max = F2(
 		return (_Utils_cmp(x, y) > 0) ? x : y;
 	});
 var elm$core$Basics$mul = _Basics_mul;
+var elm$core$Basics$sub = _Basics_sub;
 var elm$core$Elm$JsArray$length = _JsArray_length;
 var elm$core$Array$builderToArray = F2(
 	function (reverseNodeList, builder) {
@@ -4758,6 +4745,7 @@ var elm$core$Array$initializeHelp = F5(
 			}
 		}
 	});
+var elm$core$Basics$le = _Utils_le;
 var elm$core$Basics$remainderBy = _Basics_remainderBy;
 var elm$core$Array$initialize = F2(
 	function (len, fn) {
@@ -4823,6 +4811,27 @@ var elm$core$List$length = function (xs) {
 		xs);
 };
 var elm$core$List$map2 = _List_map2;
+var elm$core$List$rangeHelp = F3(
+	function (lo, hi, list) {
+		rangeHelp:
+		while (true) {
+			if (_Utils_cmp(lo, hi) < 1) {
+				var $temp$lo = lo,
+					$temp$hi = hi - 1,
+					$temp$list = A2(elm$core$List$cons, hi, list);
+				lo = $temp$lo;
+				hi = $temp$hi;
+				list = $temp$list;
+				continue rangeHelp;
+			} else {
+				return list;
+			}
+		}
+	});
+var elm$core$List$range = F2(
+	function (lo, hi) {
+		return A3(elm$core$List$rangeHelp, lo, hi, _List_Nil);
+	});
 var elm$core$List$indexedMap = F2(
 	function (f, xs) {
 		return A3(
@@ -4835,6 +4844,7 @@ var elm$core$List$indexedMap = F2(
 			xs);
 	});
 var elm$core$String$all = _String_all;
+var elm$core$String$fromInt = _String_fromNumber;
 var elm$core$String$join = F2(
 	function (sep, chunks) {
 		return A2(
@@ -5037,7 +5047,7 @@ var elm$core$String$contains = _String_contains;
 var elm$core$String$toInt = _String_toInt;
 var elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {bl: fragment, bp: host, bD: path, bF: port_, bI: protocol, bJ: query};
+		return {bg: fragment, bk: host, bw: path, by: port_, bB: protocol, bC: query};
 	});
 var elm$url$Url$chompBeforePath = F5(
 	function (protocol, path, params, frag, str) {
@@ -5174,12 +5184,12 @@ var author$project$DnDList$commands = F2(
 			return elm$core$Platform$Cmd$none;
 		} else {
 			var m = model.a;
-			var _n2 = m.D;
+			var _n2 = m.E;
 			if (_n2.$ === 1) {
 				return A2(
 					elm$core$Task$attempt,
 					A2(elm$core$Basics$composeL, wrap, author$project$DnDList$GotDragged),
-					elm$browser$Browser$Dom$getElement(m.aP));
+					elm$browser$Browser$Dom$getElement(m.aR));
 			} else {
 				return elm$core$Platform$Cmd$none;
 			}
@@ -5191,7 +5201,7 @@ var author$project$DnDList$DragStart = F3(
 	});
 var author$project$DnDList$Position = F2(
 	function (x, y) {
-		return {K: x, L: y};
+		return {L: x, M: y};
 	});
 var elm$json$Json$Decode$field = _Json_decodeField;
 var elm$json$Json$Decode$float = _Json_decodeFloat;
@@ -5256,9 +5266,9 @@ var author$project$DnDList$dragIndex = function (_n0) {
 			return A2(
 				elm$core$Maybe$map,
 				function (_n1) {
-					return m.n;
+					return m.h;
 				},
-				m.D);
+				m.E);
 		},
 		model);
 };
@@ -5279,9 +5289,9 @@ var author$project$DnDList$draggedStyles = F2(
 			return _List_Nil;
 		} else {
 			var m = model.a;
-			var _n2 = m.D;
+			var _n2 = m.E;
 			if (!_n2.$) {
-				var element = _n2.a.D;
+				var element = _n2.a.E;
 				switch (movement.$) {
 					case 1:
 						return _List_fromArray(
@@ -5294,18 +5304,18 @@ var author$project$DnDList$draggedStyles = F2(
 								'transform',
 								A2(
 									author$project$DnDList$translate,
-									elm$core$Basics$round((m.O.K - m.ai.K) + element.K),
-									elm$core$Basics$round(element.L))),
+									elm$core$Basics$round((m.P.L - m.ak.L) + element.L),
+									elm$core$Basics$round(element.M))),
 								A2(
 								elm$html$Html$Attributes$style,
 								'height',
 								author$project$DnDList$px(
-									elm$core$Basics$round(element.aS))),
+									elm$core$Basics$round(element.aU))),
 								A2(
 								elm$html$Html$Attributes$style,
 								'width',
 								author$project$DnDList$px(
-									elm$core$Basics$round(element.a0))),
+									elm$core$Basics$round(element.a2))),
 								A2(elm$html$Html$Attributes$style, 'pointer-events', 'none')
 							]);
 					case 2:
@@ -5319,18 +5329,18 @@ var author$project$DnDList$draggedStyles = F2(
 								'transform',
 								A2(
 									author$project$DnDList$translate,
-									elm$core$Basics$round(element.K),
-									elm$core$Basics$round((m.O.L - m.ai.L) + element.L))),
+									elm$core$Basics$round(element.L),
+									elm$core$Basics$round((m.P.M - m.ak.M) + element.M))),
 								A2(
 								elm$html$Html$Attributes$style,
 								'height',
 								author$project$DnDList$px(
-									elm$core$Basics$round(element.aS))),
+									elm$core$Basics$round(element.aU))),
 								A2(
 								elm$html$Html$Attributes$style,
 								'width',
 								author$project$DnDList$px(
-									elm$core$Basics$round(element.a0))),
+									elm$core$Basics$round(element.a2))),
 								A2(elm$html$Html$Attributes$style, 'pointer-events', 'none')
 							]);
 					default:
@@ -5344,18 +5354,18 @@ var author$project$DnDList$draggedStyles = F2(
 								'transform',
 								A2(
 									author$project$DnDList$translate,
-									elm$core$Basics$round((m.O.K - m.ai.K) + element.K),
-									elm$core$Basics$round((m.O.L - m.ai.L) + element.L))),
+									elm$core$Basics$round((m.P.L - m.ak.L) + element.L),
+									elm$core$Basics$round((m.P.M - m.ak.M) + element.M))),
 								A2(
 								elm$html$Html$Attributes$style,
 								'height',
 								author$project$DnDList$px(
-									elm$core$Basics$round(element.aS))),
+									elm$core$Basics$round(element.aU))),
 								A2(
 								elm$html$Html$Attributes$style,
 								'width',
 								author$project$DnDList$px(
-									elm$core$Basics$round(element.a0))),
+									elm$core$Basics$round(element.a2))),
 								A2(elm$html$Html$Attributes$style, 'pointer-events', 'none')
 							]);
 				}
@@ -5367,6 +5377,7 @@ var author$project$DnDList$draggedStyles = F2(
 var author$project$DnDList$DragEnter = function (a) {
 	return {$: 3, a: a};
 };
+var author$project$DnDList$DragLeave = {$: 4};
 var author$project$DnDList$DragOver = function (a) {
 	return {$: 2, a: a};
 };
@@ -5386,6 +5397,12 @@ var elm$html$Html$Events$onMouseEnter = function (msg) {
 		'mouseenter',
 		elm$json$Json$Decode$succeed(msg));
 };
+var elm$html$Html$Events$onMouseLeave = function (msg) {
+	return A2(
+		elm$html$Html$Events$on,
+		'mouseleave',
+		elm$json$Json$Decode$succeed(msg));
+};
 var elm$html$Html$Events$onMouseOver = function (msg) {
 	return A2(
 		elm$html$Html$Events$on,
@@ -5401,7 +5418,9 @@ var author$project$DnDList$dropEvents = F2(
 					author$project$DnDList$DragOver(dropIdx))),
 				elm$html$Html$Events$onMouseEnter(
 				wrap(
-					author$project$DnDList$DragEnter(dropIdx)))
+					author$project$DnDList$DragEnter(dropIdx))),
+				elm$html$Html$Events$onMouseLeave(
+				wrap(author$project$DnDList$DragLeave))
 			]);
 	});
 var author$project$DnDList$dropIndex = function (_n0) {
@@ -5412,16 +5431,16 @@ var author$project$DnDList$dropIndex = function (_n0) {
 			return A2(
 				elm$core$Maybe$map,
 				function (_n1) {
-					return m.aA;
+					return m.aa;
 				},
-				m.D);
+				m.E);
 		},
 		model);
 };
 var author$project$DnDList$Drag = function (a) {
 	return {$: 1, a: a};
 };
-var author$project$DnDList$DragEnd = {$: 4};
+var author$project$DnDList$DragEnd = {$: 5};
 var elm$browser$Browser$Events$Document = 0;
 var elm$browser$Browser$Events$MySub = F3(
 	function (a, b, c) {
@@ -5429,7 +5448,7 @@ var elm$browser$Browser$Events$MySub = F3(
 	});
 var elm$browser$Browser$Events$State = F2(
 	function (subs, pids) {
-		return {bE: pids, bP: subs};
+		return {bx: pids, bI: subs};
 	});
 var elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
 var elm$core$Dict$empty = elm$core$Dict$RBEmpty_elm_builtin;
@@ -5453,7 +5472,7 @@ var elm$browser$Browser$Events$addKey = function (sub) {
 };
 var elm$browser$Browser$Events$Event = F2(
 	function (key, event) {
-		return {bk: event, aD: key};
+		return {bf: event, aE: key};
 	});
 var elm$core$Platform$sendToSelf = _Platform_sendToSelf;
 var elm$browser$Browser$Events$spawn = F3(
@@ -5736,7 +5755,7 @@ var elm$browser$Browser$Events$onEffects = F3(
 			stepLeft,
 			stepBoth,
 			stepRight,
-			state.bE,
+			state.bx,
 			elm$core$Dict$fromList(newSubs),
 			_Utils_Tuple3(_List_Nil, elm$core$Dict$empty, _List_Nil));
 		var deadPids = _n0.a;
@@ -5782,8 +5801,8 @@ var elm$core$List$filterMap = F2(
 	});
 var elm$browser$Browser$Events$onSelfMsg = F3(
 	function (router, _n0, state) {
-		var key = _n0.aD;
-		var event = _n0.bk;
+		var key = _n0.aE;
+		var event = _n0.bf;
 		var toMessage = function (_n2) {
 			var subKey = _n2.a;
 			var _n3 = _n2.b;
@@ -5792,7 +5811,7 @@ var elm$browser$Browser$Events$onSelfMsg = F3(
 			var decoder = _n3.c;
 			return _Utils_eq(subKey, key) ? A2(_Browser_decodeEvent, decoder, event) : elm$core$Maybe$Nothing;
 		};
-		var messages = A2(elm$core$List$filterMap, toMessage, state.bP);
+		var messages = A2(elm$core$List$filterMap, toMessage, state.bI);
 		return A2(
 			elm$core$Task$andThen,
 			function (_n1) {
@@ -6048,15 +6067,15 @@ var author$project$DnDList$rotateReorder = F3(
 	function (model, dropIdx, list) {
 		if (!model.$) {
 			var m = model.a;
-			if (_Utils_cmp(m.n, dropIdx) < 0) {
-				return A3(author$project$DnDList$rotate, m.n, dropIdx, list);
+			if (_Utils_cmp(m.h, dropIdx) < 0) {
+				return A3(author$project$DnDList$rotate, m.h, dropIdx, list);
 			} else {
-				if (_Utils_cmp(m.n, dropIdx) > 0) {
+				if (_Utils_cmp(m.h, dropIdx) > 0) {
 					var n = elm$core$List$length(list) - 1;
 					return elm$core$List$reverse(
 						A3(
 							author$project$DnDList$rotate,
-							n - m.n,
+							n - m.h,
 							n - dropIdx,
 							elm$core$List$reverse(list)));
 				} else {
@@ -6103,7 +6122,7 @@ var author$project$DnDList$swapReorder = F3(
 	function (model, dropIdx, list) {
 		if (!model.$) {
 			var m = model.a;
-			return (!_Utils_eq(m.n, dropIdx)) ? A3(author$project$DnDList$swap, m.n, dropIdx, list) : list;
+			return (!_Utils_eq(m.h, dropIdx)) ? A3(author$project$DnDList$swap, m.h, dropIdx, list) : list;
 		} else {
 			return list;
 		}
@@ -6118,7 +6137,7 @@ var author$project$DnDList$update = F4(
 				var xy = msg.c;
 				return _Utils_Tuple2(
 					elm$core$Maybe$Just(
-						{O: xy, n: dragIdx, aA: dragIdx, D: elm$core$Maybe$Nothing, aP: elementId, ai: xy}),
+						{P: xy, h: dragIdx, aa: dragIdx, E: elm$core$Maybe$Nothing, aR: elementId, ak: xy}),
 					list);
 			case 1:
 				var xy = msg.a;
@@ -6128,7 +6147,7 @@ var author$project$DnDList$update = F4(
 						function (m) {
 							return _Utils_update(
 								m,
-								{O: xy});
+								{P: xy});
 						},
 						model),
 					list);
@@ -6140,30 +6159,108 @@ var author$project$DnDList$update = F4(
 						function (m) {
 							return _Utils_update(
 								m,
-								{aA: dropIdx});
+								{aa: dropIdx});
 						},
 						model),
 					list);
 			case 3:
 				var dropIdx = msg.a;
+				if (!movement.$) {
+					if (!movement.b) {
+						if (!movement.a) {
+							var _n3 = movement.a;
+							var _n4 = movement.b;
+							return _Utils_Tuple2(
+								A2(
+									elm$core$Maybe$map,
+									function (m) {
+										return _Utils_update(
+											m,
+											{h: dropIdx});
+									},
+									model),
+								A3(author$project$DnDList$rotateReorder, model, dropIdx, list));
+						} else {
+							var _n5 = movement.a;
+							var _n6 = movement.b;
+							return _Utils_Tuple2(
+								A2(
+									elm$core$Maybe$map,
+									function (m) {
+										return _Utils_update(
+											m,
+											{h: dropIdx});
+									},
+									model),
+								A3(author$project$DnDList$swapReorder, model, dropIdx, list));
+						}
+					} else {
+						var _n7 = movement.b;
+						return _Utils_Tuple2(model, list);
+					}
+				} else {
+					return _Utils_Tuple2(
+						A2(
+							elm$core$Maybe$map,
+							function (m) {
+								return _Utils_update(
+									m,
+									{h: dropIdx});
+							},
+							model),
+						A3(author$project$DnDList$swapReorder, model, dropIdx, list));
+				}
+			case 4:
 				return _Utils_Tuple2(
 					A2(
 						elm$core$Maybe$map,
 						function (m) {
 							return _Utils_update(
 								m,
-								{n: dropIdx});
+								{aa: m.h});
 						},
 						model),
-					function () {
-						if ((!movement.$) && (movement.a === 1)) {
-							var _n3 = movement.a;
-							return A3(author$project$DnDList$swapReorder, model, dropIdx, list);
+					list);
+			case 5:
+				var dropIdx = A2(
+					elm$core$Maybe$map,
+					function (m) {
+						return m.aa;
+					},
+					model);
+				var _n8 = _Utils_Tuple2(movement, dropIdx);
+				_n8$2:
+				while (true) {
+					if (!_n8.a.$) {
+						if (!_n8.a.a) {
+							if ((_n8.a.b === 1) && (!_n8.b.$)) {
+								var _n9 = _n8.a;
+								var _n10 = _n9.a;
+								var _n11 = _n9.b;
+								var index = _n8.b.a;
+								return _Utils_Tuple2(
+									elm$core$Maybe$Nothing,
+									A3(author$project$DnDList$rotateReorder, model, index, list));
+							} else {
+								break _n8$2;
+							}
 						} else {
-							return A3(author$project$DnDList$rotateReorder, model, dropIdx, list);
+							if ((_n8.a.b === 1) && (!_n8.b.$)) {
+								var _n12 = _n8.a;
+								var _n13 = _n12.a;
+								var _n14 = _n12.b;
+								var index = _n8.b.a;
+								return _Utils_Tuple2(
+									elm$core$Maybe$Nothing,
+									A3(author$project$DnDList$swapReorder, model, index, list));
+							} else {
+								break _n8$2;
+							}
 						}
-					}());
-			case 4:
+					} else {
+						break _n8$2;
+					}
+				}
 				return _Utils_Tuple2(elm$core$Maybe$Nothing, list);
 			default:
 				if (msg.a.$ === 1) {
@@ -6177,7 +6274,7 @@ var author$project$DnDList$update = F4(
 								return _Utils_update(
 									m,
 									{
-										D: elm$core$Maybe$Just(element)
+										E: elm$core$Maybe$Just(element)
 									});
 							},
 							model),
@@ -6186,128 +6283,165 @@ var author$project$DnDList$update = F4(
 		}
 	});
 var author$project$DnDList$create = function (_n0) {
-	var message = _n0.bu;
-	var movement = _n0.bw;
+	var message = _n0.cN;
+	var movement = _n0.cP;
 	return {
-		bb: author$project$DnDList$commands(message),
-		bd: author$project$DnDList$dragEvents(message),
-		be: author$project$DnDList$dragIndex,
-		bf: elm$core$Maybe$Nothing,
-		bg: author$project$DnDList$draggedStyles(movement),
-		bh: author$project$DnDList$dropEvents(message),
-		bi: author$project$DnDList$dropIndex,
-		bQ: author$project$DnDList$subscriptions(message),
-		bU: author$project$DnDList$update(movement)
+		cn: author$project$DnDList$commands(message),
+		cs: author$project$DnDList$dragEvents(message),
+		aQ: author$project$DnDList$dragIndex,
+		v: elm$core$Maybe$Nothing,
+		ct: author$project$DnDList$draggedStyles(movement),
+		cu: author$project$DnDList$dropEvents(message),
+		cv: author$project$DnDList$dropIndex,
+		bJ: author$project$DnDList$subscriptions(message),
+		bN: author$project$DnDList$update(movement)
 	};
 };
-var author$project$DnDList$Free = function (a) {
-	return {$: 0, a: a};
-};
-var author$project$DnDList$Rotate = 0;
-var author$project$Example$FreeRotate$MyMsg = function (a) {
-	return {$: 0, a: a};
-};
-var author$project$Example$FreeRotate$config = {
-	bu: author$project$Example$FreeRotate$MyMsg,
-	bw: author$project$DnDList$Free(0)
-};
-var author$project$Example$FreeRotate$system = author$project$DnDList$create(author$project$Example$FreeRotate$config);
-var author$project$Example$FreeRotate$initialModel = {z: _List_Nil, bf: author$project$Example$FreeRotate$system.bf, ab: author$project$Example$FreeRotate$data};
-var author$project$Main$FreeRotate = function (a) {
+var author$project$Basic$Free$system = author$project$DnDList$create(author$project$Basic$Free$config);
+var author$project$Basic$Free$initialModel = {v: author$project$Basic$Free$system.v, ac: author$project$Basic$Free$data};
+var author$project$Main$Free = function (a) {
 	return {$: 2, a: a};
 };
 var author$project$Main$init = function (_n0) {
 	return _Utils_Tuple2(
 		{
-			a: author$project$Main$FreeRotate(author$project$Example$FreeRotate$initialModel),
-			aD: 2
+			a: author$project$Main$Free(author$project$Basic$Free$initialModel),
+			aE: 2
 		},
 		elm$core$Platform$Cmd$none);
 };
-var author$project$Example$Basic$MyMsg = elm$core$Basics$identity;
-var author$project$Example$Basic$config = {
-	bu: elm$core$Basics$identity,
-	bw: author$project$DnDList$Free(0)
+var author$project$Advanced$FreeRotateOnDrag$ClearAffected = {$: 1};
+var author$project$Advanced$FreeRotateOnDrag$MyMsg = function (a) {
+	return {$: 0, a: a};
 };
-var author$project$Example$Basic$system = author$project$DnDList$create(author$project$Example$Basic$config);
-var author$project$Example$Basic$subscriptions = function (model) {
-	return author$project$Example$Basic$system.bQ(model.bf);
+var author$project$DnDList$Rotate = 0;
+var author$project$Advanced$FreeRotateOnDrag$config = {
+	cN: author$project$Advanced$FreeRotateOnDrag$MyMsg,
+	cP: A2(author$project$DnDList$Free, 0, 0)
 };
-var author$project$Example$BasicElmUI$MyMsg = elm$core$Basics$identity;
-var author$project$Example$BasicElmUI$config = {
-	bu: elm$core$Basics$identity,
-	bw: author$project$DnDList$Free(0)
-};
-var author$project$Example$BasicElmUI$system = author$project$DnDList$create(author$project$Example$BasicElmUI$config);
-var author$project$Example$BasicElmUI$subscriptions = function (model) {
-	return author$project$Example$BasicElmUI$system.bQ(model.bf);
-};
-var author$project$Example$FreeRotate$ClearAffected = {$: 1};
+var author$project$Advanced$FreeRotateOnDrag$system = author$project$DnDList$create(author$project$Advanced$FreeRotateOnDrag$config);
 var elm$browser$Browser$Events$onMouseDown = A2(elm$browser$Browser$Events$on, 0, 'mousedown');
-var author$project$Example$FreeRotate$subscriptions = function (model) {
+var author$project$Advanced$FreeRotateOnDrag$subscriptions = function (model) {
 	return elm$core$Platform$Sub$batch(
 		_List_fromArray(
 			[
-				author$project$Example$FreeRotate$system.bQ(model.bf),
-				_Utils_eq(model.z, _List_Nil) ? elm$core$Platform$Sub$none : elm$browser$Browser$Events$onMouseDown(
-				elm$json$Json$Decode$succeed(author$project$Example$FreeRotate$ClearAffected))
+				author$project$Advanced$FreeRotateOnDrag$system.bJ(model.v),
+				_Utils_eq(model.A, _List_Nil) ? elm$core$Platform$Sub$none : elm$browser$Browser$Events$onMouseDown(
+				elm$json$Json$Decode$succeed(author$project$Advanced$FreeRotateOnDrag$ClearAffected))
 			]));
 };
-var author$project$Example$FreeSwap$ClearAffected = {$: 1};
-var author$project$DnDList$Swap = 1;
-var author$project$Example$FreeSwap$MyMsg = function (a) {
+var author$project$Advanced$FreeRotateOnDrop$ClearAffected = {$: 1};
+var author$project$Advanced$FreeRotateOnDrop$MyMsg = function (a) {
 	return {$: 0, a: a};
 };
-var author$project$Example$FreeSwap$config = {
-	bu: author$project$Example$FreeSwap$MyMsg,
-	bw: author$project$DnDList$Free(1)
+var author$project$DnDList$OnDrop = 1;
+var author$project$Advanced$FreeRotateOnDrop$config = {
+	cN: author$project$Advanced$FreeRotateOnDrop$MyMsg,
+	cP: A2(author$project$DnDList$Free, 0, 1)
 };
-var author$project$Example$FreeSwap$system = author$project$DnDList$create(author$project$Example$FreeSwap$config);
-var author$project$Example$FreeSwap$subscriptions = function (model) {
+var author$project$Advanced$FreeRotateOnDrop$system = author$project$DnDList$create(author$project$Advanced$FreeRotateOnDrop$config);
+var author$project$Advanced$FreeRotateOnDrop$subscriptions = function (model) {
 	return elm$core$Platform$Sub$batch(
 		_List_fromArray(
 			[
-				author$project$Example$FreeSwap$system.bQ(model.bf),
-				_Utils_eq(model.z, _List_Nil) ? elm$core$Platform$Sub$none : elm$browser$Browser$Events$onMouseDown(
-				elm$json$Json$Decode$succeed(author$project$Example$FreeSwap$ClearAffected))
+				author$project$Advanced$FreeRotateOnDrop$system.bJ(model.v),
+				_Utils_eq(model.A, _List_Nil) ? elm$core$Platform$Sub$none : elm$browser$Browser$Events$onMouseDown(
+				elm$json$Json$Decode$succeed(author$project$Advanced$FreeRotateOnDrop$ClearAffected))
 			]));
 };
+var author$project$Advanced$FreeSwapOnDrag$ClearAffected = {$: 1};
+var author$project$Advanced$FreeSwapOnDrag$MyMsg = function (a) {
+	return {$: 0, a: a};
+};
+var author$project$Advanced$FreeSwapOnDrag$config = {
+	cN: author$project$Advanced$FreeSwapOnDrag$MyMsg,
+	cP: A2(author$project$DnDList$Free, 1, 0)
+};
+var author$project$Advanced$FreeSwapOnDrag$system = author$project$DnDList$create(author$project$Advanced$FreeSwapOnDrag$config);
+var author$project$Advanced$FreeSwapOnDrag$subscriptions = function (model) {
+	return elm$core$Platform$Sub$batch(
+		_List_fromArray(
+			[
+				author$project$Advanced$FreeSwapOnDrag$system.bJ(model.v),
+				_Utils_eq(model.A, _List_Nil) ? elm$core$Platform$Sub$none : elm$browser$Browser$Events$onMouseDown(
+				elm$json$Json$Decode$succeed(author$project$Advanced$FreeSwapOnDrag$ClearAffected))
+			]));
+};
+var author$project$Advanced$FreeSwapOnDrop$ClearAffected = {$: 1};
+var author$project$Advanced$FreeSwapOnDrop$MyMsg = function (a) {
+	return {$: 0, a: a};
+};
+var author$project$Advanced$FreeSwapOnDrop$config = {
+	cN: author$project$Advanced$FreeSwapOnDrop$MyMsg,
+	cP: A2(author$project$DnDList$Free, 1, 1)
+};
+var author$project$Advanced$FreeSwapOnDrop$system = author$project$DnDList$create(author$project$Advanced$FreeSwapOnDrop$config);
+var author$project$Advanced$FreeSwapOnDrop$subscriptions = function (model) {
+	return elm$core$Platform$Sub$batch(
+		_List_fromArray(
+			[
+				author$project$Advanced$FreeSwapOnDrop$system.bJ(model.v),
+				_Utils_eq(model.A, _List_Nil) ? elm$core$Platform$Sub$none : elm$browser$Browser$Events$onMouseDown(
+				elm$json$Json$Decode$succeed(author$project$Advanced$FreeSwapOnDrop$ClearAffected))
+			]));
+};
+var author$project$Basic$Basic$MyMsg = elm$core$Basics$identity;
+var author$project$Basic$Basic$config = {
+	cN: elm$core$Basics$identity,
+	cP: A2(author$project$DnDList$Free, 0, 0)
+};
+var author$project$Basic$Basic$system = author$project$DnDList$create(author$project$Basic$Basic$config);
+var author$project$Basic$Basic$subscriptions = function (model) {
+	return author$project$Basic$Basic$system.bJ(model.v);
+};
+var author$project$Basic$BasicElmUI$MyMsg = elm$core$Basics$identity;
+var author$project$Basic$BasicElmUI$config = {
+	cN: elm$core$Basics$identity,
+	cP: A2(author$project$DnDList$Free, 0, 0)
+};
+var author$project$Basic$BasicElmUI$system = author$project$DnDList$create(author$project$Basic$BasicElmUI$config);
+var author$project$Basic$BasicElmUI$subscriptions = function (model) {
+	return author$project$Basic$BasicElmUI$system.bJ(model.v);
+};
+var author$project$Basic$Free$subscriptions = function (model) {
+	return author$project$Basic$Free$system.bJ(model.v);
+};
+var author$project$Basic$Horizontal$MyMsg = elm$core$Basics$identity;
 var author$project$DnDList$Horizontal = {$: 1};
-var author$project$Example$Horizontal$MyMsg = elm$core$Basics$identity;
-var author$project$Example$Horizontal$config = {bu: elm$core$Basics$identity, bw: author$project$DnDList$Horizontal};
-var author$project$Example$Horizontal$system = author$project$DnDList$create(author$project$Example$Horizontal$config);
-var author$project$Example$Horizontal$subscriptions = function (model) {
-	return author$project$Example$Horizontal$system.bQ(model.bf);
+var author$project$Basic$Horizontal$config = {cN: elm$core$Basics$identity, cP: author$project$DnDList$Horizontal};
+var author$project$Basic$Horizontal$system = author$project$DnDList$create(author$project$Basic$Horizontal$config);
+var author$project$Basic$Horizontal$subscriptions = function (model) {
+	return author$project$Basic$Horizontal$system.bJ(model.v);
 };
+var author$project$Basic$Vertical$MyMsg = elm$core$Basics$identity;
 var author$project$DnDList$Vertical = {$: 2};
-var author$project$Example$Vertical$MyMsg = elm$core$Basics$identity;
-var author$project$Example$Vertical$config = {bu: elm$core$Basics$identity, bw: author$project$DnDList$Vertical};
-var author$project$Example$Vertical$system = author$project$DnDList$create(author$project$Example$Vertical$config);
-var author$project$Example$Vertical$subscriptions = function (model) {
-	return author$project$Example$Vertical$system.bQ(model.bf);
+var author$project$Basic$Vertical$config = {cN: elm$core$Basics$identity, cP: author$project$DnDList$Vertical};
+var author$project$Basic$Vertical$system = author$project$DnDList$create(author$project$Basic$Vertical$config);
+var author$project$Basic$Vertical$subscriptions = function (model) {
+	return author$project$Basic$Vertical$system.bJ(model.v);
 };
-var author$project$Example$WithTwoLists$FruitMsg = function (a) {
+var author$project$Basic$WithTwoLists$FruitMsg = function (a) {
 	return {$: 0, a: a};
 };
-var author$project$Example$WithTwoLists$fruitConfig = {
-	bu: author$project$Example$WithTwoLists$FruitMsg,
-	bw: author$project$DnDList$Free(0)
+var author$project$Basic$WithTwoLists$fruitConfig = {
+	cN: author$project$Basic$WithTwoLists$FruitMsg,
+	cP: A2(author$project$DnDList$Free, 0, 0)
 };
-var author$project$Example$WithTwoLists$fruitSystem = author$project$DnDList$create(author$project$Example$WithTwoLists$fruitConfig);
-var author$project$Example$WithTwoLists$NumberMsg = function (a) {
+var author$project$Basic$WithTwoLists$fruitSystem = author$project$DnDList$create(author$project$Basic$WithTwoLists$fruitConfig);
+var author$project$Basic$WithTwoLists$NumberMsg = function (a) {
 	return {$: 1, a: a};
 };
-var author$project$Example$WithTwoLists$numberConfig = {
-	bu: author$project$Example$WithTwoLists$NumberMsg,
-	bw: author$project$DnDList$Free(0)
+var author$project$Basic$WithTwoLists$numberConfig = {
+	cN: author$project$Basic$WithTwoLists$NumberMsg,
+	cP: A2(author$project$DnDList$Free, 0, 0)
 };
-var author$project$Example$WithTwoLists$numberSystem = author$project$DnDList$create(author$project$Example$WithTwoLists$numberConfig);
-var author$project$Example$WithTwoLists$subscriptions = function (model) {
+var author$project$Basic$WithTwoLists$numberSystem = author$project$DnDList$create(author$project$Basic$WithTwoLists$numberConfig);
+var author$project$Basic$WithTwoLists$subscriptions = function (model) {
 	return elm$core$Platform$Sub$batch(
 		_List_fromArray(
 			[
-				author$project$Example$WithTwoLists$fruitSystem.bQ(model.E),
-				author$project$Example$WithTwoLists$numberSystem.bQ(model.G)
+				author$project$Basic$WithTwoLists$fruitSystem.bJ(model.F),
+				author$project$Basic$WithTwoLists$numberSystem.bJ(model.H)
 			]));
 };
 var author$project$Main$BasicElmUIMsg = function (a) {
@@ -6316,20 +6450,29 @@ var author$project$Main$BasicElmUIMsg = function (a) {
 var author$project$Main$BasicMsg = function (a) {
 	return {$: 2, a: a};
 };
-var author$project$Main$FreeRotateMsg = function (a) {
+var author$project$Main$FreeMsg = function (a) {
 	return {$: 4, a: a};
 };
-var author$project$Main$FreeSwapMsg = function (a) {
-	return {$: 5, a: a};
+var author$project$Main$FreeRotateOnDragMsg = function (a) {
+	return {$: 8, a: a};
+};
+var author$project$Main$FreeRotateOnDropMsg = function (a) {
+	return {$: 9, a: a};
+};
+var author$project$Main$FreeSwapOnDragMsg = function (a) {
+	return {$: 10, a: a};
+};
+var author$project$Main$FreeSwapOnDropMsg = function (a) {
+	return {$: 11, a: a};
 };
 var author$project$Main$HorizontalMsg = function (a) {
-	return {$: 6, a: a};
+	return {$: 5, a: a};
 };
 var author$project$Main$VerticalMsg = function (a) {
-	return {$: 7, a: a};
+	return {$: 6, a: a};
 };
 var author$project$Main$WithTwoListsMsg = function (a) {
-	return {$: 8, a: a};
+	return {$: 7, a: a};
 };
 var elm$core$Platform$Sub$map = _Platform_map;
 var author$project$Main$exampleSubscriptions = F2(
@@ -6344,79 +6487,73 @@ var author$project$Main$subscriptions = function (model) {
 			return A2(
 				author$project$Main$exampleSubscriptions,
 				author$project$Main$BasicMsg,
-				author$project$Example$Basic$subscriptions(basic));
+				author$project$Basic$Basic$subscriptions(basic));
 		case 1:
 			var basicElmUI = _n0.a;
 			return A2(
 				author$project$Main$exampleSubscriptions,
 				author$project$Main$BasicElmUIMsg,
-				author$project$Example$BasicElmUI$subscriptions(basicElmUI));
+				author$project$Basic$BasicElmUI$subscriptions(basicElmUI));
 		case 2:
-			var freeRotate = _n0.a;
+			var free = _n0.a;
 			return A2(
 				author$project$Main$exampleSubscriptions,
-				author$project$Main$FreeRotateMsg,
-				author$project$Example$FreeRotate$subscriptions(freeRotate));
+				author$project$Main$FreeMsg,
+				author$project$Basic$Free$subscriptions(free));
 		case 3:
-			var freeSwap = _n0.a;
-			return A2(
-				author$project$Main$exampleSubscriptions,
-				author$project$Main$FreeSwapMsg,
-				author$project$Example$FreeSwap$subscriptions(freeSwap));
-		case 4:
 			var horizontal = _n0.a;
 			return A2(
 				author$project$Main$exampleSubscriptions,
 				author$project$Main$HorizontalMsg,
-				author$project$Example$Horizontal$subscriptions(horizontal));
-		case 5:
+				author$project$Basic$Horizontal$subscriptions(horizontal));
+		case 4:
 			var vertical = _n0.a;
 			return A2(
 				author$project$Main$exampleSubscriptions,
 				author$project$Main$VerticalMsg,
-				author$project$Example$Vertical$subscriptions(vertical));
-		default:
+				author$project$Basic$Vertical$subscriptions(vertical));
+		case 5:
 			var withTwoLists = _n0.a;
 			return A2(
 				author$project$Main$exampleSubscriptions,
 				author$project$Main$WithTwoListsMsg,
-				author$project$Example$WithTwoLists$subscriptions(withTwoLists));
+				author$project$Basic$WithTwoLists$subscriptions(withTwoLists));
+		case 6:
+			var freeRotateOnDrag = _n0.a;
+			return A2(
+				author$project$Main$exampleSubscriptions,
+				author$project$Main$FreeRotateOnDragMsg,
+				author$project$Advanced$FreeRotateOnDrag$subscriptions(freeRotateOnDrag));
+		case 7:
+			var freeRotateOnDrop = _n0.a;
+			return A2(
+				author$project$Main$exampleSubscriptions,
+				author$project$Main$FreeRotateOnDropMsg,
+				author$project$Advanced$FreeRotateOnDrop$subscriptions(freeRotateOnDrop));
+		case 8:
+			var freeSwapOnDrag = _n0.a;
+			return A2(
+				author$project$Main$exampleSubscriptions,
+				author$project$Main$FreeSwapOnDragMsg,
+				author$project$Advanced$FreeSwapOnDrag$subscriptions(freeSwapOnDrag));
+		default:
+			var freeSwapOnDrop = _n0.a;
+			return A2(
+				author$project$Main$exampleSubscriptions,
+				author$project$Main$FreeSwapOnDropMsg,
+				author$project$Advanced$FreeSwapOnDrop$subscriptions(freeSwapOnDrop));
 	}
 };
-var author$project$Example$Basic$update = F2(
-	function (msg, model) {
-		var message = msg;
-		var _n1 = A3(author$project$Example$Basic$system.bU, message, model.bf, model.ab);
-		var draggable = _n1.a;
-		var items = _n1.b;
-		return _Utils_Tuple2(
-			_Utils_update(
-				model,
-				{bf: draggable, ab: items}),
-			author$project$Example$Basic$system.bb(model.bf));
-	});
-var author$project$Example$BasicElmUI$update = F2(
-	function (msg, model) {
-		var message = msg;
-		var _n1 = A3(author$project$Example$BasicElmUI$system.bU, message, model.bf, model.ab);
-		var draggable = _n1.a;
-		var items = _n1.b;
-		return _Utils_Tuple2(
-			_Utils_update(
-				model,
-				{bf: draggable, ab: items}),
-			author$project$Example$BasicElmUI$system.bb(model.bf));
-	});
-var author$project$Example$FreeRotate$update = F2(
+var author$project$Advanced$FreeRotateOnDrag$update = F2(
 	function (msg, model) {
 		if (!msg.$) {
 			var message = msg.a;
-			var _n1 = A3(author$project$Example$FreeRotate$system.bU, message, model.bf, model.ab);
+			var _n1 = A3(author$project$Advanced$FreeRotateOnDrag$system.bN, message, model.v, model.ad);
 			var draggable = _n1.a;
 			var items = _n1.b;
 			var _n2 = _Utils_Tuple2(
-				author$project$Example$FreeRotate$system.be(draggable),
-				author$project$Example$FreeRotate$system.bi(draggable));
+				author$project$Advanced$FreeRotateOnDrag$system.aQ(draggable),
+				author$project$Advanced$FreeRotateOnDrag$system.cv(draggable));
 			var maybeDragIndex = _n2.a;
 			var maybeDropIndex = _n2.b;
 			var affected = function () {
@@ -6424,34 +6561,69 @@ var author$project$Example$FreeRotate$update = F2(
 				if ((!_n3.a.$) && (!_n3.b.$)) {
 					var dragIndex = _n3.a.a;
 					var dropIndex = _n3.b.a;
-					return (_Utils_cmp(dragIndex, dropIndex) < 0) ? A2(elm$core$List$range, dragIndex, dropIndex) : ((_Utils_cmp(dragIndex, dropIndex) > 0) ? A2(elm$core$List$range, dropIndex, dragIndex) : model.z);
+					return (_Utils_cmp(dragIndex, dropIndex) < 0) ? A2(elm$core$List$range, dragIndex, dropIndex) : ((_Utils_cmp(dragIndex, dropIndex) > 0) ? A2(elm$core$List$range, dropIndex, dragIndex) : model.A);
 				} else {
-					return model.z;
+					return model.A;
 				}
 			}();
 			return _Utils_Tuple2(
 				_Utils_update(
 					model,
-					{z: affected, bf: draggable, ab: items}),
-				author$project$Example$FreeRotate$system.bb(model.bf));
+					{A: affected, v: draggable, ad: items}),
+				author$project$Advanced$FreeRotateOnDrag$system.cn(model.v));
 		} else {
 			return _Utils_Tuple2(
 				_Utils_update(
 					model,
-					{z: _List_Nil}),
+					{A: _List_Nil}),
 				elm$core$Platform$Cmd$none);
 		}
 	});
-var author$project$Example$FreeSwap$update = F2(
+var author$project$Advanced$FreeRotateOnDrop$update = F2(
 	function (msg, model) {
 		if (!msg.$) {
 			var message = msg.a;
-			var _n1 = A3(author$project$Example$FreeSwap$system.bU, message, model.bf, model.ab);
+			var _n1 = A3(author$project$Advanced$FreeRotateOnDrop$system.bN, message, model.v, model.ad);
 			var draggable = _n1.a;
 			var items = _n1.b;
 			var _n2 = _Utils_Tuple2(
-				author$project$Example$FreeSwap$system.be(draggable),
-				author$project$Example$FreeSwap$system.bi(draggable));
+				author$project$Advanced$FreeRotateOnDrop$system.aQ(draggable),
+				author$project$Advanced$FreeRotateOnDrop$system.cv(draggable));
+			var maybeDragIndex = _n2.a;
+			var maybeDropIndex = _n2.b;
+			var affected = function () {
+				var _n3 = _Utils_Tuple2(maybeDragIndex, maybeDropIndex);
+				if ((!_n3.a.$) && (!_n3.b.$)) {
+					var dragIndex = _n3.a.a;
+					var dropIndex = _n3.b.a;
+					return (_Utils_cmp(dragIndex, dropIndex) < 0) ? A2(elm$core$List$range, dragIndex, dropIndex) : ((_Utils_cmp(dragIndex, dropIndex) > 0) ? A2(elm$core$List$range, dropIndex, dragIndex) : _List_Nil);
+				} else {
+					return model.A;
+				}
+			}();
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{A: affected, v: draggable, ad: items}),
+				author$project$Advanced$FreeRotateOnDrop$system.cn(model.v));
+		} else {
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{A: _List_Nil}),
+				elm$core$Platform$Cmd$none);
+		}
+	});
+var author$project$Advanced$FreeSwapOnDrag$update = F2(
+	function (msg, model) {
+		if (!msg.$) {
+			var message = msg.a;
+			var _n1 = A3(author$project$Advanced$FreeSwapOnDrag$system.bN, message, model.v, model.ad);
+			var draggable = _n1.a;
+			var items = _n1.b;
+			var _n2 = _Utils_Tuple2(
+				author$project$Advanced$FreeSwapOnDrag$system.aQ(draggable),
+				author$project$Advanced$FreeSwapOnDrag$system.cv(draggable));
 			var maybeDragIndex = _n2.a;
 			var maybeDropIndex = _n2.b;
 			var affected = function () {
@@ -6462,70 +6634,144 @@ var author$project$Example$FreeSwap$update = F2(
 					return (!_Utils_eq(dragIndex, dropIndex)) ? A2(
 						elm$core$List$cons,
 						dragIndex,
-						A2(elm$core$List$cons, dropIndex, _List_Nil)) : model.z;
+						A2(elm$core$List$cons, dropIndex, _List_Nil)) : model.A;
 				} else {
-					return model.z;
+					return model.A;
 				}
 			}();
 			return _Utils_Tuple2(
 				_Utils_update(
 					model,
-					{z: affected, bf: draggable, ab: items}),
-				author$project$Example$FreeSwap$system.bb(model.bf));
+					{A: affected, v: draggable, ad: items}),
+				author$project$Advanced$FreeSwapOnDrag$system.cn(model.v));
 		} else {
 			return _Utils_Tuple2(
 				_Utils_update(
 					model,
-					{z: _List_Nil}),
+					{A: _List_Nil}),
 				elm$core$Platform$Cmd$none);
 		}
 	});
-var author$project$Example$Horizontal$update = F2(
-	function (msg, model) {
-		var message = msg;
-		var _n1 = A3(author$project$Example$Horizontal$system.bU, message, model.bf, model.aa);
-		var draggable = _n1.a;
-		var fruits = _n1.b;
-		return _Utils_Tuple2(
-			_Utils_update(
-				model,
-				{bf: draggable, aa: fruits}),
-			author$project$Example$Horizontal$system.bb(model.bf));
-	});
-var author$project$Example$Vertical$update = F2(
-	function (msg, model) {
-		var message = msg;
-		var _n1 = A3(author$project$Example$Vertical$system.bU, message, model.bf, model.aa);
-		var draggable = _n1.a;
-		var fruits = _n1.b;
-		return _Utils_Tuple2(
-			_Utils_update(
-				model,
-				{bf: draggable, aa: fruits}),
-			author$project$Example$Vertical$system.bb(model.bf));
-	});
-var author$project$Example$WithTwoLists$update = F2(
+var author$project$Advanced$FreeSwapOnDrop$update = F2(
 	function (msg, model) {
 		if (!msg.$) {
 			var message = msg.a;
-			var _n1 = A3(author$project$Example$WithTwoLists$fruitSystem.bU, message, model.E, model.aa);
+			var _n1 = A3(author$project$Advanced$FreeSwapOnDrop$system.bN, message, model.v, model.ad);
+			var draggable = _n1.a;
+			var items = _n1.b;
+			var _n2 = _Utils_Tuple2(
+				author$project$Advanced$FreeSwapOnDrop$system.aQ(draggable),
+				author$project$Advanced$FreeSwapOnDrop$system.cv(draggable));
+			var maybeDragIndex = _n2.a;
+			var maybeDropIndex = _n2.b;
+			var affected = function () {
+				var _n3 = _Utils_Tuple2(maybeDragIndex, maybeDropIndex);
+				if ((!_n3.a.$) && (!_n3.b.$)) {
+					var dragIndex = _n3.a.a;
+					var dropIndex = _n3.b.a;
+					return (!_Utils_eq(dragIndex, dropIndex)) ? A2(
+						elm$core$List$cons,
+						dragIndex,
+						A2(elm$core$List$cons, dropIndex, _List_Nil)) : _List_Nil;
+				} else {
+					return model.A;
+				}
+			}();
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{A: affected, v: draggable, ad: items}),
+				author$project$Advanced$FreeSwapOnDrop$system.cn(model.v));
+		} else {
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{A: _List_Nil}),
+				elm$core$Platform$Cmd$none);
+		}
+	});
+var author$project$Basic$Basic$update = F2(
+	function (msg, model) {
+		var message = msg;
+		var _n1 = A3(author$project$Basic$Basic$system.bN, message, model.v, model.ad);
+		var draggable = _n1.a;
+		var items = _n1.b;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{v: draggable, ad: items}),
+			author$project$Basic$Basic$system.cn(model.v));
+	});
+var author$project$Basic$BasicElmUI$update = F2(
+	function (msg, model) {
+		var message = msg;
+		var _n1 = A3(author$project$Basic$BasicElmUI$system.bN, message, model.v, model.ad);
+		var draggable = _n1.a;
+		var items = _n1.b;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{v: draggable, ad: items}),
+			author$project$Basic$BasicElmUI$system.cn(model.v));
+	});
+var author$project$Basic$Free$update = F2(
+	function (msg, model) {
+		var message = msg;
+		var _n1 = A3(author$project$Basic$Free$system.bN, message, model.v, model.ac);
+		var draggable = _n1.a;
+		var fruits = _n1.b;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{v: draggable, ac: fruits}),
+			author$project$Basic$Free$system.cn(model.v));
+	});
+var author$project$Basic$Horizontal$update = F2(
+	function (msg, model) {
+		var message = msg;
+		var _n1 = A3(author$project$Basic$Horizontal$system.bN, message, model.v, model.ac);
+		var draggable = _n1.a;
+		var fruits = _n1.b;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{v: draggable, ac: fruits}),
+			author$project$Basic$Horizontal$system.cn(model.v));
+	});
+var author$project$Basic$Vertical$update = F2(
+	function (msg, model) {
+		var message = msg;
+		var _n1 = A3(author$project$Basic$Vertical$system.bN, message, model.v, model.ac);
+		var draggable = _n1.a;
+		var fruits = _n1.b;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{v: draggable, ac: fruits}),
+			author$project$Basic$Vertical$system.cn(model.v));
+	});
+var author$project$Basic$WithTwoLists$update = F2(
+	function (msg, model) {
+		if (!msg.$) {
+			var message = msg.a;
+			var _n1 = A3(author$project$Basic$WithTwoLists$fruitSystem.bN, message, model.F, model.ac);
 			var fruitDraggable = _n1.a;
 			var fruits = _n1.b;
 			return _Utils_Tuple2(
 				_Utils_update(
 					model,
-					{E: fruitDraggable, aa: fruits}),
-				author$project$Example$WithTwoLists$fruitSystem.bb(model.E));
+					{F: fruitDraggable, ac: fruits}),
+				author$project$Basic$WithTwoLists$fruitSystem.cn(model.F));
 		} else {
 			var message = msg.a;
-			var _n2 = A3(author$project$Example$WithTwoLists$numberSystem.bU, message, model.G, model.ad);
+			var _n2 = A3(author$project$Basic$WithTwoLists$numberSystem.bN, message, model.H, model.af);
 			var numberDraggable = _n2.a;
 			var numbers = _n2.b;
 			return _Utils_Tuple2(
 				_Utils_update(
 					model,
-					{G: numberDraggable, ad: numbers}),
-				author$project$Example$WithTwoLists$numberSystem.bb(model.G));
+					{H: numberDraggable, af: numbers}),
+				author$project$Basic$WithTwoLists$numberSystem.cn(model.H));
 		}
 	});
 var author$project$Main$NoOp = {$: 0};
@@ -6575,35 +6821,80 @@ var author$project$Main$stepBasicElmUI = F2(
 				}),
 			A2(elm$core$Platform$Cmd$map, author$project$Main$BasicElmUIMsg, cmds));
 	});
-var author$project$Main$stepFreeRotate = F2(
+var author$project$Main$stepFree = F2(
 	function (model, _n0) {
-		var freeRotate = _n0.a;
+		var free = _n0.a;
 		var cmds = _n0.b;
 		return _Utils_Tuple2(
 			_Utils_update(
 				model,
 				{
-					a: author$project$Main$FreeRotate(freeRotate)
+					a: author$project$Main$Free(free)
 				}),
-			A2(elm$core$Platform$Cmd$map, author$project$Main$FreeRotateMsg, cmds));
+			A2(elm$core$Platform$Cmd$map, author$project$Main$FreeMsg, cmds));
 	});
-var author$project$Main$FreeSwap = function (a) {
-	return {$: 3, a: a};
+var author$project$Main$FreeRotateOnDrag = function (a) {
+	return {$: 6, a: a};
 };
-var author$project$Main$stepFreeSwap = F2(
+var author$project$Main$stepFreeRotateOnDrag = F2(
 	function (model, _n0) {
-		var freeSwap = _n0.a;
+		var freeRotateOnDrag = _n0.a;
 		var cmds = _n0.b;
 		return _Utils_Tuple2(
 			_Utils_update(
 				model,
 				{
-					a: author$project$Main$FreeSwap(freeSwap)
+					a: author$project$Main$FreeRotateOnDrag(freeRotateOnDrag)
 				}),
-			A2(elm$core$Platform$Cmd$map, author$project$Main$FreeSwapMsg, cmds));
+			A2(elm$core$Platform$Cmd$map, author$project$Main$FreeRotateOnDragMsg, cmds));
+	});
+var author$project$Main$FreeRotateOnDrop = function (a) {
+	return {$: 7, a: a};
+};
+var author$project$Main$stepFreeRotateOnDrop = F2(
+	function (model, _n0) {
+		var freeRotateOnDrop = _n0.a;
+		var cmds = _n0.b;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{
+					a: author$project$Main$FreeRotateOnDrop(freeRotateOnDrop)
+				}),
+			A2(elm$core$Platform$Cmd$map, author$project$Main$FreeRotateOnDropMsg, cmds));
+	});
+var author$project$Main$FreeSwapOnDrag = function (a) {
+	return {$: 8, a: a};
+};
+var author$project$Main$stepFreeSwapOnDrag = F2(
+	function (model, _n0) {
+		var freeSwapOnDrag = _n0.a;
+		var cmds = _n0.b;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{
+					a: author$project$Main$FreeSwapOnDrag(freeSwapOnDrag)
+				}),
+			A2(elm$core$Platform$Cmd$map, author$project$Main$FreeSwapOnDragMsg, cmds));
+	});
+var author$project$Main$FreeSwapOnDrop = function (a) {
+	return {$: 9, a: a};
+};
+var author$project$Main$stepFreeSwapOnDrop = F2(
+	function (model, _n0) {
+		var freeSwapOnDrop = _n0.a;
+		var cmds = _n0.b;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{
+					a: author$project$Main$FreeSwapOnDrop(freeSwapOnDrop)
+				}),
+			A2(elm$core$Platform$Cmd$map, author$project$Main$FreeSwapOnDropMsg, cmds));
 	});
 var author$project$Main$Horizontal = function (a) {
-	return {$: 4, a: a};
+	return {$: 3, a: a};
 };
 var author$project$Main$stepHorizontal = F2(
 	function (model, _n0) {
@@ -6618,7 +6909,7 @@ var author$project$Main$stepHorizontal = F2(
 			A2(elm$core$Platform$Cmd$map, author$project$Main$HorizontalMsg, cmds));
 	});
 var author$project$Main$Vertical = function (a) {
-	return {$: 5, a: a};
+	return {$: 4, a: a};
 };
 var author$project$Main$stepVertical = F2(
 	function (model, _n0) {
@@ -6633,7 +6924,7 @@ var author$project$Main$stepVertical = F2(
 			A2(elm$core$Platform$Cmd$map, author$project$Main$VerticalMsg, cmds));
 	});
 var author$project$Main$WithTwoLists = function (a) {
-	return {$: 6, a: a};
+	return {$: 5, a: a};
 };
 var author$project$Main$stepWithTwoLists = F2(
 	function (model, _n0) {
@@ -6658,7 +6949,7 @@ var author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{a: example, aD: key}),
+						{a: example, aE: key}),
 					author$project$Main$jumpToTop('main'));
 			case 2:
 				var msg = message.a;
@@ -6668,7 +6959,7 @@ var author$project$Main$update = F2(
 					return A2(
 						author$project$Main$stepBasic,
 						model,
-						A2(author$project$Example$Basic$update, msg, basic));
+						A2(author$project$Basic$Basic$update, msg, basic));
 				} else {
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
@@ -6680,7 +6971,7 @@ var author$project$Main$update = F2(
 					return A2(
 						author$project$Main$stepBasicElmUI,
 						model,
-						A2(author$project$Example$BasicElmUI$update, msg, basicElmUI));
+						A2(author$project$Basic$BasicElmUI$update, msg, basicElmUI));
 				} else {
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
@@ -6688,11 +6979,11 @@ var author$project$Main$update = F2(
 				var msg = message.a;
 				var _n3 = model.a;
 				if (_n3.$ === 2) {
-					var freeRotate = _n3.a;
+					var free = _n3.a;
 					return A2(
-						author$project$Main$stepFreeRotate,
+						author$project$Main$stepFree,
 						model,
-						A2(author$project$Example$FreeRotate$update, msg, freeRotate));
+						A2(author$project$Basic$Free$update, msg, free));
 				} else {
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
@@ -6700,11 +6991,11 @@ var author$project$Main$update = F2(
 				var msg = message.a;
 				var _n4 = model.a;
 				if (_n4.$ === 3) {
-					var freeSwap = _n4.a;
+					var horizontal = _n4.a;
 					return A2(
-						author$project$Main$stepFreeSwap,
+						author$project$Main$stepHorizontal,
 						model,
-						A2(author$project$Example$FreeSwap$update, msg, freeSwap));
+						A2(author$project$Basic$Horizontal$update, msg, horizontal));
 				} else {
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
@@ -6712,11 +7003,11 @@ var author$project$Main$update = F2(
 				var msg = message.a;
 				var _n5 = model.a;
 				if (_n5.$ === 4) {
-					var horizontal = _n5.a;
+					var vertical = _n5.a;
 					return A2(
-						author$project$Main$stepHorizontal,
+						author$project$Main$stepVertical,
 						model,
-						A2(author$project$Example$Horizontal$update, msg, horizontal));
+						A2(author$project$Basic$Vertical$update, msg, vertical));
 				} else {
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
@@ -6724,35 +7015,65 @@ var author$project$Main$update = F2(
 				var msg = message.a;
 				var _n6 = model.a;
 				if (_n6.$ === 5) {
-					var vertical = _n6.a;
+					var withTwoLists = _n6.a;
 					return A2(
-						author$project$Main$stepVertical,
+						author$project$Main$stepWithTwoLists,
 						model,
-						A2(author$project$Example$Vertical$update, msg, vertical));
+						A2(author$project$Basic$WithTwoLists$update, msg, withTwoLists));
+				} else {
+					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+				}
+			case 8:
+				var msg = message.a;
+				var _n7 = model.a;
+				if (_n7.$ === 6) {
+					var freeRotateOnDrag = _n7.a;
+					return A2(
+						author$project$Main$stepFreeRotateOnDrag,
+						model,
+						A2(author$project$Advanced$FreeRotateOnDrag$update, msg, freeRotateOnDrag));
+				} else {
+					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+				}
+			case 9:
+				var msg = message.a;
+				var _n8 = model.a;
+				if (_n8.$ === 7) {
+					var freeRotateOnDrop = _n8.a;
+					return A2(
+						author$project$Main$stepFreeRotateOnDrop,
+						model,
+						A2(author$project$Advanced$FreeRotateOnDrop$update, msg, freeRotateOnDrop));
+				} else {
+					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+				}
+			case 10:
+				var msg = message.a;
+				var _n9 = model.a;
+				if (_n9.$ === 8) {
+					var freeSwapOnDrag = _n9.a;
+					return A2(
+						author$project$Main$stepFreeSwapOnDrag,
+						model,
+						A2(author$project$Advanced$FreeSwapOnDrag$update, msg, freeSwapOnDrag));
 				} else {
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
 			default:
 				var msg = message.a;
-				var _n7 = model.a;
-				if (_n7.$ === 6) {
-					var withTwoLists = _n7.a;
+				var _n10 = model.a;
+				if (_n10.$ === 9) {
+					var freeSwapOnDrop = _n10.a;
 					return A2(
-						author$project$Main$stepWithTwoLists,
+						author$project$Main$stepFreeSwapOnDrop,
 						model,
-						A2(author$project$Example$WithTwoLists$update, msg, withTwoLists));
+						A2(author$project$Advanced$FreeSwapOnDrop$update, msg, freeSwapOnDrop));
 				} else {
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
 		}
 	});
-var author$project$Example$Basic$data = _List_fromArray(
-	['Apples', 'Bananas', 'Cherries', 'Dates']);
-var author$project$Example$Basic$initialModel = {bf: author$project$Example$Basic$system.bf, ab: author$project$Example$Basic$data};
-var author$project$Example$BasicElmUI$data = _List_fromArray(
-	['Apples', 'Bananas', 'Cherries', 'Dates']);
-var author$project$Example$BasicElmUI$initialModel = {bf: author$project$Example$BasicElmUI$system.bf, ab: author$project$Example$BasicElmUI$data};
-var author$project$Example$FreeSwap$data = A2(
+var author$project$Advanced$FreeRotateOnDrag$data = A2(
 	elm$core$List$map,
 	function (i) {
 		return _Utils_Tuple2(
@@ -6760,31 +7081,64 @@ var author$project$Example$FreeSwap$data = A2(
 			elm$core$String$fromInt(i));
 	},
 	A2(elm$core$List$range, 1, 9));
-var author$project$Example$FreeSwap$initialModel = {z: _List_Nil, bf: author$project$Example$FreeSwap$system.bf, ab: author$project$Example$FreeSwap$data};
-var author$project$Example$Horizontal$data = A2(
+var author$project$Advanced$FreeRotateOnDrag$initialModel = {A: _List_Nil, v: author$project$Advanced$FreeRotateOnDrag$system.v, ad: author$project$Advanced$FreeRotateOnDrag$data};
+var author$project$Advanced$FreeRotateOnDrop$data = A2(
+	elm$core$List$map,
+	function (i) {
+		return _Utils_Tuple2(
+			'key-' + elm$core$String$fromInt(i),
+			elm$core$String$fromInt(i));
+	},
+	A2(elm$core$List$range, 1, 9));
+var author$project$Advanced$FreeRotateOnDrop$initialModel = {A: _List_Nil, v: author$project$Advanced$FreeRotateOnDrop$system.v, ad: author$project$Advanced$FreeRotateOnDrop$data};
+var author$project$Advanced$FreeSwapOnDrag$data = A2(
+	elm$core$List$map,
+	function (i) {
+		return _Utils_Tuple2(
+			'key-' + elm$core$String$fromInt(i),
+			elm$core$String$fromInt(i));
+	},
+	A2(elm$core$List$range, 1, 9));
+var author$project$Advanced$FreeSwapOnDrag$initialModel = {A: _List_Nil, v: author$project$Advanced$FreeSwapOnDrag$system.v, ad: author$project$Advanced$FreeSwapOnDrag$data};
+var author$project$Advanced$FreeSwapOnDrop$data = A2(
+	elm$core$List$map,
+	function (i) {
+		return _Utils_Tuple2(
+			'key-' + elm$core$String$fromInt(i),
+			elm$core$String$fromInt(i));
+	},
+	A2(elm$core$List$range, 1, 9));
+var author$project$Advanced$FreeSwapOnDrop$initialModel = {A: _List_Nil, v: author$project$Advanced$FreeSwapOnDrop$system.v, ad: author$project$Advanced$FreeSwapOnDrop$data};
+var author$project$Basic$Basic$data = _List_fromArray(
+	['Apples', 'Bananas', 'Cherries', 'Dates']);
+var author$project$Basic$Basic$initialModel = {v: author$project$Basic$Basic$system.v, ad: author$project$Basic$Basic$data};
+var author$project$Basic$BasicElmUI$data = _List_fromArray(
+	['Apples', 'Bananas', 'Cherries', 'Dates']);
+var author$project$Basic$BasicElmUI$initialModel = {v: author$project$Basic$BasicElmUI$system.v, ad: author$project$Basic$BasicElmUI$data};
+var author$project$Basic$Horizontal$data = A2(
 	elm$core$List$map,
 	function (v) {
 		return _Utils_Tuple2('key-' + v, v);
 	},
 	_List_fromArray(
 		['Apples', 'Bananas', 'Cherries', 'Dates']));
-var author$project$Example$Horizontal$initialModel = {bf: author$project$Example$Horizontal$system.bf, aa: author$project$Example$Horizontal$data};
-var author$project$Example$Vertical$data = A2(
+var author$project$Basic$Horizontal$initialModel = {v: author$project$Basic$Horizontal$system.v, ac: author$project$Basic$Horizontal$data};
+var author$project$Basic$Vertical$data = A2(
 	elm$core$List$map,
 	function (v) {
 		return _Utils_Tuple2('key-' + v, v);
 	},
 	_List_fromArray(
 		['Apples', 'Bananas', 'Cherries', 'Dates']));
-var author$project$Example$Vertical$initialModel = {bf: author$project$Example$Vertical$system.bf, aa: author$project$Example$Vertical$data};
-var author$project$Example$WithTwoLists$data1 = A2(
+var author$project$Basic$Vertical$initialModel = {v: author$project$Basic$Vertical$system.v, ac: author$project$Basic$Vertical$data};
+var author$project$Basic$WithTwoLists$data1 = A2(
 	elm$core$List$map,
 	function (v) {
 		return _Utils_Tuple2('key-fruit-' + v, v);
 	},
 	_List_fromArray(
 		['Apples', 'Bananas', 'Cherries', 'Dates']));
-var author$project$Example$WithTwoLists$data2 = A2(
+var author$project$Basic$WithTwoLists$data2 = A2(
 	elm$core$List$map,
 	function (i) {
 		return _Utils_Tuple2(
@@ -6792,7 +7146,7 @@ var author$project$Example$WithTwoLists$data2 = A2(
 			i);
 	},
 	A2(elm$core$List$range, 1, 6));
-var author$project$Example$WithTwoLists$initialModel = {E: author$project$Example$WithTwoLists$fruitSystem.bf, aa: author$project$Example$WithTwoLists$data1, G: author$project$Example$WithTwoLists$numberSystem.bf, ad: author$project$Example$WithTwoLists$data2};
+var author$project$Basic$WithTwoLists$initialModel = {F: author$project$Basic$WithTwoLists$fruitSystem.v, ac: author$project$Basic$WithTwoLists$data1, H: author$project$Basic$WithTwoLists$numberSystem.v, af: author$project$Basic$WithTwoLists$data2};
 var elm$html$Html$a = _VirtualDom_node('a');
 var elm$html$Html$div = _VirtualDom_node('div');
 var elm$html$Html$h1 = _VirtualDom_node('h1');
@@ -6860,7 +7214,30 @@ var author$project$Main$cardView = A2(
 					elm$html$Html$text('Drag and Drop for sortable lists in Elm web apps with mouse support')
 				]))
 		]));
-var author$project$Example$Basic$source = '\nmodule Basic exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ndata : List Fruit\ndata =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Rotate\n    }\n\n\nsystem : DnDList.System Msg Fruit\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List Fruit\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    system.subscriptions model.draggable\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n            in\n            ( { model | draggable = draggable, items = items }\n            , system.commands model.draggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0"\n        , Html.Attributes.style "text-align" "center"\n        ]\n        [ model.items\n            |> List.indexedMap (itemView maybeDragIndex)\n            |> Html.div []\n        , draggedItemView model.draggable model.items\n        ]\n\n\nitemView : Maybe Int -> Int -> Fruit -> Html.Html Msg\nitemView maybeDragIndex index item =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ item\n            in\n            Html.p\n                (Html.Attributes.id itemId :: system.dragEvents index itemId)\n                [ Html.text item ]\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                Html.p\n                    (system.dropEvents index)\n                    [ Html.text item ]\n\n            else\n                Html.p [] [ Html.text "[---------]" ]\n\n\ndraggedItemView : DnDList.Draggable -> List Fruit -> Html.Html Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe Fruit\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just item ->\n            Html.div\n                (system.draggedStyles draggable)\n                [ Html.text item ]\n\n        Nothing ->\n            Html.text ""\n    ';
+var author$project$Advanced$FreeRotateOnDrag$source = '\nmodule FreeRotateOnDrag exposing (main)\n\nimport Browser\nimport Browser.Events\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Events\nimport Html.Keyed\nimport Json.Decode\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias KeyedItem =\n    ( String, String )\n\n\ndata : List KeyedItem\ndata =\n    List.range 1 9\n        |> List.map (\\i -> ( "key-" ++ String.fromInt i, String.fromInt i ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag\n    }\n\n\nsystem : DnDList.System Msg KeyedItem\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List KeyedItem\n    , affected : List Int\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    , affected = []\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ system.subscriptions model.draggable\n        , if model.affected == [] then\n            Sub.none\n\n          else\n            Browser.Events.onMouseDown\n                (Json.Decode.succeed ClearAffected)\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n    | ClearAffected\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n\n                ( maybeDragIndex, maybeDropIndex ) =\n                    ( system.dragIndex draggable, system.dropIndex draggable )\n\n                affected : List Int\n                affected =\n                    case ( maybeDragIndex, maybeDropIndex ) of\n                        ( Just dragIndex, Just dropIndex ) ->\n                            if dragIndex < dropIndex then\n                                List.range dragIndex dropIndex\n\n                            else if dragIndex > dropIndex then\n                                List.range dropIndex dragIndex\n\n                            else\n                                model.affected\n\n                        _ ->\n                            model.affected\n            in\n            ( { model | draggable = draggable, items = items, affected = affected }\n            , system.commands model.draggable\n            )\n\n        ClearAffected ->\n            ( { model | affected = [] }, Cmd.none )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.items\n            |> List.indexedMap (itemView model.affected maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.items\n        ]\n\n\nitemView : List Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )\nitemView affected maybeDragIndex index ( key, item ) =\n    let\n        styles : List (Html.Attribute Msg)\n        styles =\n            itemStyles\n                ++ (if List.member index affected then\n                        affectedItemStyles\n\n                    else\n                        []\n                   )\n    in\n    case maybeDragIndex of\n        Nothing ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ item\n            in\n            ( key\n            , Html.div\n                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)\n                [ Html.text item ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    (styles ++ system.dropEvents index)\n                    [ Html.text item ]\n                )\n\n            else\n                ( key\n                , Html.div (itemStyles ++ placeholderItemStyles) []\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe KeyedItem\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just ( _, item ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.text item ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "grid"\n    , Html.Attributes.style "grid-template-columns" "5em 5em 5em"\n    , Html.Attributes.style "grid-template-rows" "5em 5em 5em"\n    , Html.Attributes.style "grid-gap" "5em"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "background" "#1e9daa"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "color" "white"\n    , Html.Attributes.style "cursor" "pointer"\n    , Html.Attributes.style "font-size" "1.2em"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#aa1e9d" ]\n\n\nplaceholderItemStyles : List (Html.Attribute msg)\nplaceholderItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\naffectedItemStyles : List (Html.Attribute msg)\naffectedItemStyles =\n    [ Html.Attributes.style "background" "#136169" ]\n    ';
+var author$project$Advanced$FreeRotateOnDrag$containerStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'display', 'grid'),
+		A2(elm$html$Html$Attributes$style, 'grid-template-columns', '5em 5em 5em'),
+		A2(elm$html$Html$Attributes$style, 'grid-template-rows', '5em 5em 5em'),
+		A2(elm$html$Html$Attributes$style, 'grid-gap', '5em'),
+		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
+	]);
+var author$project$Advanced$FreeRotateOnDrag$draggedItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#aa1e9d')
+	]);
+var author$project$Advanced$FreeRotateOnDrag$itemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#1e9daa'),
+		A2(elm$html$Html$Attributes$style, 'border-radius', '8px'),
+		A2(elm$html$Html$Attributes$style, 'color', 'white'),
+		A2(elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+		A2(elm$html$Html$Attributes$style, 'font-size', '1.2em'),
+		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
+		A2(elm$html$Html$Attributes$style, 'align-items', 'center'),
+		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
+	]);
 var elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -6870,7 +7247,7 @@ var elm$core$List$head = function (list) {
 		return elm$core$Maybe$Nothing;
 	}
 };
-var author$project$Example$Basic$draggedItemView = F2(
+var author$project$Advanced$FreeRotateOnDrag$draggedItemView = F2(
 	function (draggable, items) {
 		var maybeDraggedItem = A2(
 			elm$core$Maybe$andThen,
@@ -6878,12 +7255,17 @@ var author$project$Example$Basic$draggedItemView = F2(
 				return elm$core$List$head(
 					A2(elm$core$List$drop, index, items));
 			},
-			author$project$Example$Basic$system.be(draggable));
+			author$project$Advanced$FreeRotateOnDrag$system.aQ(draggable));
 		if (!maybeDraggedItem.$) {
-			var item = maybeDraggedItem.a;
+			var _n1 = maybeDraggedItem.a;
+			var item = _n1.b;
 			return A2(
 				elm$html$Html$div,
-				author$project$Example$Basic$system.bg(draggable),
+				_Utils_ap(
+					author$project$Advanced$FreeRotateOnDrag$itemStyles,
+					_Utils_ap(
+						author$project$Advanced$FreeRotateOnDrag$draggedItemStyles,
+						author$project$Advanced$FreeRotateOnDrag$system.ct(draggable))),
 				_List_fromArray(
 					[
 						elm$html$Html$text(item)
@@ -6892,8 +7274,578 @@ var author$project$Example$Basic$draggedItemView = F2(
 			return elm$html$Html$text('');
 		}
 	});
+var author$project$Advanced$FreeRotateOnDrag$affectedItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#136169')
+	]);
+var author$project$Advanced$FreeRotateOnDrag$placeholderItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', 'dimgray')
+	]);
+var elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
 var elm$html$Html$Attributes$id = elm$html$Html$Attributes$stringProperty('id');
-var author$project$Example$Basic$itemView = F3(
+var author$project$Advanced$FreeRotateOnDrag$itemView = F4(
+	function (affected, maybeDragIndex, index, _n0) {
+		var key = _n0.a;
+		var item = _n0.b;
+		var styles = _Utils_ap(
+			author$project$Advanced$FreeRotateOnDrag$itemStyles,
+			A2(elm$core$List$member, index, affected) ? author$project$Advanced$FreeRotateOnDrag$affectedItemStyles : _List_Nil);
+		if (maybeDragIndex.$ === 1) {
+			var itemId = 'id-' + item;
+			return _Utils_Tuple2(
+				key,
+				A2(
+					elm$html$Html$div,
+					A2(
+						elm$core$List$cons,
+						elm$html$Html$Attributes$id(itemId),
+						_Utils_ap(
+							styles,
+							A2(author$project$Advanced$FreeRotateOnDrag$system.cs, index, itemId))),
+					_List_fromArray(
+						[
+							elm$html$Html$text(item)
+						])));
+		} else {
+			var dragIndex = maybeDragIndex.a;
+			return (!_Utils_eq(dragIndex, index)) ? _Utils_Tuple2(
+				key,
+				A2(
+					elm$html$Html$div,
+					_Utils_ap(
+						styles,
+						author$project$Advanced$FreeRotateOnDrag$system.cu(index)),
+					_List_fromArray(
+						[
+							elm$html$Html$text(item)
+						]))) : _Utils_Tuple2(
+				key,
+				A2(
+					elm$html$Html$div,
+					_Utils_ap(author$project$Advanced$FreeRotateOnDrag$itemStyles, author$project$Advanced$FreeRotateOnDrag$placeholderItemStyles),
+					_List_Nil));
+		}
+	});
+var elm$html$Html$section = _VirtualDom_node('section');
+var elm$virtual_dom$VirtualDom$keyedNode = function (tag) {
+	return _VirtualDom_keyedNode(
+		_VirtualDom_noScript(tag));
+};
+var elm$html$Html$Keyed$node = elm$virtual_dom$VirtualDom$keyedNode;
+var author$project$Advanced$FreeRotateOnDrag$view = function (model) {
+	var maybeDragIndex = author$project$Advanced$FreeRotateOnDrag$system.aQ(model.v);
+	return A2(
+		elm$html$Html$section,
+		_List_fromArray(
+			[
+				A2(elm$html$Html$Attributes$style, 'margin', '6em 0')
+			]),
+		_List_fromArray(
+			[
+				A3(
+				elm$html$Html$Keyed$node,
+				'div',
+				author$project$Advanced$FreeRotateOnDrag$containerStyles,
+				A2(
+					elm$core$List$indexedMap,
+					A2(author$project$Advanced$FreeRotateOnDrag$itemView, model.A, maybeDragIndex),
+					model.ad)),
+				A2(author$project$Advanced$FreeRotateOnDrag$draggedItemView, model.v, model.ad)
+			]));
+};
+var author$project$Advanced$FreeRotateOnDrop$source = '\nmodule FreeRotateOnDrop exposing (main)\n\nimport Browser\nimport Browser.Events\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Events\nimport Html.Keyed\nimport Json.Decode\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias KeyedItem =\n    ( String, String )\n\n\ndata : List KeyedItem\ndata =\n    List.range 1 9\n        |> List.map (\\i -> ( "key-" ++ String.fromInt i, String.fromInt i ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrop\n    }\n\n\nsystem : DnDList.System Msg KeyedItem\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List KeyedItem\n    , affected : List Int\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    , affected = []\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ system.subscriptions model.draggable\n        , if model.affected == [] then\n            Sub.none\n\n          else\n            Browser.Events.onMouseDown\n                (Json.Decode.succeed ClearAffected)\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n    | ClearAffected\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n\n                ( maybeDragIndex, maybeDropIndex ) =\n                    ( system.dragIndex draggable, system.dropIndex draggable )\n\n                affected : List Int\n                affected =\n                    case ( maybeDragIndex, maybeDropIndex ) of\n                        ( Just dragIndex, Just dropIndex ) ->\n                            if dragIndex < dropIndex then\n                                List.range dragIndex dropIndex\n\n                            else if dragIndex > dropIndex then\n                                List.range dropIndex dragIndex\n\n                            else\n                                []\n\n                        _ ->\n                            model.affected\n            in\n            ( { model | draggable = draggable, items = items, affected = affected }\n            , system.commands model.draggable\n            )\n\n        ClearAffected ->\n            ( { model | affected = [] }, Cmd.none )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n\n        maybeDropIndex : Maybe Int\n        maybeDropIndex =\n            system.dropIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.items\n            |> List.indexedMap (itemView model.affected maybeDragIndex maybeDropIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.items\n        ]\n\n\nitemView : List Int -> Maybe Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )\nitemView affected maybeDragIndex maybeDropIndex index ( key, item ) =\n    case ( maybeDragIndex, maybeDropIndex ) of\n        ( Nothing, Nothing ) ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ item\n\n                styles : List (Html.Attribute Msg)\n                styles =\n                    itemStyles\n                        ++ (if List.member index affected then\n                                affectedItemStyles\n\n                            else\n                                []\n                           )\n            in\n            ( key\n            , Html.div\n                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)\n                [ Html.text item ]\n            )\n\n        ( Just dragIndex, Just dropIndex ) ->\n            if dragIndex /= index && dropIndex /= index then\n                ( key\n                , Html.div\n                    (itemStyles ++ system.dropEvents index)\n                    [ Html.text item ]\n                )\n\n            else if dragIndex /= index && dropIndex == index then\n                ( key\n                , Html.div\n                    (itemStyles ++ overedItemStyles ++ system.dropEvents index)\n                    [ Html.text item ]\n                )\n\n            else\n                ( key\n                , Html.div (itemStyles ++ placeholderItemStyles) []\n                )\n\n        _ ->\n            ( "", Html.text "" )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe KeyedItem\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just ( _, item ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.text item ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "grid"\n    , Html.Attributes.style "grid-template-columns" "7em 7em 7em"\n    , Html.Attributes.style "grid-template-rows" "7em 7em 7em"\n    , Html.Attributes.style "grid-gap" "2em"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "background" "#1e9daa"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "color" "white"\n    , Html.Attributes.style "cursor" "pointer"\n    , Html.Attributes.style "font-size" "1.2em"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#aa1e9d" ]\n\n\nplaceholderItemStyles : List (Html.Attribute msg)\nplaceholderItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "#63bdc7" ]\n\n\naffectedItemStyles : List (Html.Attribute msg)\naffectedItemStyles =\n    [ Html.Attributes.style "background" "#136169" ]\n    ';
+var author$project$Advanced$FreeRotateOnDrop$containerStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'display', 'grid'),
+		A2(elm$html$Html$Attributes$style, 'grid-template-columns', '7em 7em 7em'),
+		A2(elm$html$Html$Attributes$style, 'grid-template-rows', '7em 7em 7em'),
+		A2(elm$html$Html$Attributes$style, 'grid-gap', '2em'),
+		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
+	]);
+var author$project$Advanced$FreeRotateOnDrop$draggedItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#aa1e9d')
+	]);
+var author$project$Advanced$FreeRotateOnDrop$itemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#1e9daa'),
+		A2(elm$html$Html$Attributes$style, 'border-radius', '8px'),
+		A2(elm$html$Html$Attributes$style, 'color', 'white'),
+		A2(elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+		A2(elm$html$Html$Attributes$style, 'font-size', '1.2em'),
+		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
+		A2(elm$html$Html$Attributes$style, 'align-items', 'center'),
+		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
+	]);
+var author$project$Advanced$FreeRotateOnDrop$draggedItemView = F2(
+	function (draggable, items) {
+		var maybeDraggedItem = A2(
+			elm$core$Maybe$andThen,
+			function (index) {
+				return elm$core$List$head(
+					A2(elm$core$List$drop, index, items));
+			},
+			author$project$Advanced$FreeRotateOnDrop$system.aQ(draggable));
+		if (!maybeDraggedItem.$) {
+			var _n1 = maybeDraggedItem.a;
+			var item = _n1.b;
+			return A2(
+				elm$html$Html$div,
+				_Utils_ap(
+					author$project$Advanced$FreeRotateOnDrop$itemStyles,
+					_Utils_ap(
+						author$project$Advanced$FreeRotateOnDrop$draggedItemStyles,
+						author$project$Advanced$FreeRotateOnDrop$system.ct(draggable))),
+				_List_fromArray(
+					[
+						elm$html$Html$text(item)
+					]));
+		} else {
+			return elm$html$Html$text('');
+		}
+	});
+var author$project$Advanced$FreeRotateOnDrop$affectedItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#136169')
+	]);
+var author$project$Advanced$FreeRotateOnDrop$overedItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#63bdc7')
+	]);
+var author$project$Advanced$FreeRotateOnDrop$placeholderItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', 'dimgray')
+	]);
+var author$project$Advanced$FreeRotateOnDrop$itemView = F5(
+	function (affected, maybeDragIndex, maybeDropIndex, index, _n0) {
+		var key = _n0.a;
+		var item = _n0.b;
+		var _n1 = _Utils_Tuple2(maybeDragIndex, maybeDropIndex);
+		_n1$2:
+		while (true) {
+			if (_n1.a.$ === 1) {
+				if (_n1.b.$ === 1) {
+					var _n2 = _n1.a;
+					var _n3 = _n1.b;
+					var styles = _Utils_ap(
+						author$project$Advanced$FreeRotateOnDrop$itemStyles,
+						A2(elm$core$List$member, index, affected) ? author$project$Advanced$FreeRotateOnDrop$affectedItemStyles : _List_Nil);
+					var itemId = 'id-' + item;
+					return _Utils_Tuple2(
+						key,
+						A2(
+							elm$html$Html$div,
+							A2(
+								elm$core$List$cons,
+								elm$html$Html$Attributes$id(itemId),
+								_Utils_ap(
+									styles,
+									A2(author$project$Advanced$FreeRotateOnDrop$system.cs, index, itemId))),
+							_List_fromArray(
+								[
+									elm$html$Html$text(item)
+								])));
+				} else {
+					break _n1$2;
+				}
+			} else {
+				if (!_n1.b.$) {
+					var dragIndex = _n1.a.a;
+					var dropIndex = _n1.b.a;
+					return ((!_Utils_eq(dragIndex, index)) && (!_Utils_eq(dropIndex, index))) ? _Utils_Tuple2(
+						key,
+						A2(
+							elm$html$Html$div,
+							_Utils_ap(
+								author$project$Advanced$FreeRotateOnDrop$itemStyles,
+								author$project$Advanced$FreeRotateOnDrop$system.cu(index)),
+							_List_fromArray(
+								[
+									elm$html$Html$text(item)
+								]))) : (((!_Utils_eq(dragIndex, index)) && _Utils_eq(dropIndex, index)) ? _Utils_Tuple2(
+						key,
+						A2(
+							elm$html$Html$div,
+							_Utils_ap(
+								author$project$Advanced$FreeRotateOnDrop$itemStyles,
+								_Utils_ap(
+									author$project$Advanced$FreeRotateOnDrop$overedItemStyles,
+									author$project$Advanced$FreeRotateOnDrop$system.cu(index))),
+							_List_fromArray(
+								[
+									elm$html$Html$text(item)
+								]))) : _Utils_Tuple2(
+						key,
+						A2(
+							elm$html$Html$div,
+							_Utils_ap(author$project$Advanced$FreeRotateOnDrop$itemStyles, author$project$Advanced$FreeRotateOnDrop$placeholderItemStyles),
+							_List_Nil)));
+				} else {
+					break _n1$2;
+				}
+			}
+		}
+		return _Utils_Tuple2(
+			'',
+			elm$html$Html$text(''));
+	});
+var author$project$Advanced$FreeRotateOnDrop$view = function (model) {
+	var maybeDropIndex = author$project$Advanced$FreeRotateOnDrop$system.cv(model.v);
+	var maybeDragIndex = author$project$Advanced$FreeRotateOnDrop$system.aQ(model.v);
+	return A2(
+		elm$html$Html$section,
+		_List_fromArray(
+			[
+				A2(elm$html$Html$Attributes$style, 'margin', '6em 0')
+			]),
+		_List_fromArray(
+			[
+				A3(
+				elm$html$Html$Keyed$node,
+				'div',
+				author$project$Advanced$FreeRotateOnDrop$containerStyles,
+				A2(
+					elm$core$List$indexedMap,
+					A3(author$project$Advanced$FreeRotateOnDrop$itemView, model.A, maybeDragIndex, maybeDropIndex),
+					model.ad)),
+				A2(author$project$Advanced$FreeRotateOnDrop$draggedItemView, model.v, model.ad)
+			]));
+};
+var author$project$Advanced$FreeSwapOnDrag$source = '\nmodule FreeSwapOnDrag exposing (main)\n\nimport Browser\nimport Browser.Events\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Events\nimport Html.Keyed\nimport Json.Decode\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias KeyedItem =\n    ( String, String )\n\n\ndata : List KeyedItem\ndata =\n    List.range 1 9\n        |> List.map (\\i -> ( "key-" ++ String.fromInt i, String.fromInt i ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Swap DnDList.OnDrag\n    }\n\n\nsystem : DnDList.System Msg KeyedItem\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List KeyedItem\n    , affected : List Int\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    , affected = []\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ system.subscriptions model.draggable\n        , if model.affected == [] then\n            Sub.none\n\n          else\n            Browser.Events.onMouseDown\n                (Json.Decode.succeed ClearAffected)\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n    | ClearAffected\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n\n                ( maybeDragIndex, maybeDropIndex ) =\n                    ( system.dragIndex draggable, system.dropIndex draggable )\n\n                affected : List Int\n                affected =\n                    case ( maybeDragIndex, maybeDropIndex ) of\n                        ( Just dragIndex, Just dropIndex ) ->\n                            if dragIndex /= dropIndex then\n                                dragIndex :: dropIndex :: []\n\n                            else\n                                model.affected\n\n                        _ ->\n                            model.affected\n            in\n            ( { model | draggable = draggable, items = items, affected = affected }\n            , system.commands model.draggable\n            )\n\n        ClearAffected ->\n            ( { model | affected = [] }, Cmd.none )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.items\n            |> List.indexedMap (itemView model.affected maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.items\n        ]\n\n\nitemView : List Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )\nitemView affected maybeDragIndex index ( key, item ) =\n    let\n        styles : List (Html.Attribute Msg)\n        styles =\n            itemStyles\n                ++ (if List.member index affected then\n                        affectedItemStyles\n\n                    else\n                        []\n                   )\n    in\n    case maybeDragIndex of\n        Nothing ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ item\n            in\n            ( key\n            , Html.div\n                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)\n                [ Html.text item ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    (styles ++ system.dropEvents index)\n                    [ Html.text item ]\n                )\n\n            else\n                ( key\n                , Html.div (itemStyles ++ placeholderItemStyles) []\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe KeyedItem\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just ( _, item ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.text item ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "grid"\n    , Html.Attributes.style "grid-template-columns" "5em 5em 5em"\n    , Html.Attributes.style "grid-template-rows" "5em 5em 5em"\n    , Html.Attributes.style "grid-gap" "5em"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "background" "#aa1e9d"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "color" "white"\n    , Html.Attributes.style "cursor" "pointer"\n    , Html.Attributes.style "font-size" "1.2em"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#1e9daa" ]\n\n\nplaceholderItemStyles : List (Html.Attribute msg)\nplaceholderItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\naffectedItemStyles : List (Html.Attribute msg)\naffectedItemStyles =\n    [ Html.Attributes.style "background" "#691361" ]\n    ';
+var author$project$Advanced$FreeSwapOnDrag$containerStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'display', 'grid'),
+		A2(elm$html$Html$Attributes$style, 'grid-template-columns', '5em 5em 5em'),
+		A2(elm$html$Html$Attributes$style, 'grid-template-rows', '5em 5em 5em'),
+		A2(elm$html$Html$Attributes$style, 'grid-gap', '5em'),
+		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
+	]);
+var author$project$Advanced$FreeSwapOnDrag$draggedItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#1e9daa')
+	]);
+var author$project$Advanced$FreeSwapOnDrag$itemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#aa1e9d'),
+		A2(elm$html$Html$Attributes$style, 'border-radius', '8px'),
+		A2(elm$html$Html$Attributes$style, 'color', 'white'),
+		A2(elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+		A2(elm$html$Html$Attributes$style, 'font-size', '1.2em'),
+		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
+		A2(elm$html$Html$Attributes$style, 'align-items', 'center'),
+		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
+	]);
+var author$project$Advanced$FreeSwapOnDrag$draggedItemView = F2(
+	function (draggable, items) {
+		var maybeDraggedItem = A2(
+			elm$core$Maybe$andThen,
+			function (index) {
+				return elm$core$List$head(
+					A2(elm$core$List$drop, index, items));
+			},
+			author$project$Advanced$FreeSwapOnDrag$system.aQ(draggable));
+		if (!maybeDraggedItem.$) {
+			var _n1 = maybeDraggedItem.a;
+			var item = _n1.b;
+			return A2(
+				elm$html$Html$div,
+				_Utils_ap(
+					author$project$Advanced$FreeSwapOnDrag$itemStyles,
+					_Utils_ap(
+						author$project$Advanced$FreeSwapOnDrag$draggedItemStyles,
+						author$project$Advanced$FreeSwapOnDrag$system.ct(draggable))),
+				_List_fromArray(
+					[
+						elm$html$Html$text(item)
+					]));
+		} else {
+			return elm$html$Html$text('');
+		}
+	});
+var author$project$Advanced$FreeSwapOnDrag$affectedItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#691361')
+	]);
+var author$project$Advanced$FreeSwapOnDrag$placeholderItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', 'dimgray')
+	]);
+var author$project$Advanced$FreeSwapOnDrag$itemView = F4(
+	function (affected, maybeDragIndex, index, _n0) {
+		var key = _n0.a;
+		var item = _n0.b;
+		var styles = _Utils_ap(
+			author$project$Advanced$FreeSwapOnDrag$itemStyles,
+			A2(elm$core$List$member, index, affected) ? author$project$Advanced$FreeSwapOnDrag$affectedItemStyles : _List_Nil);
+		if (maybeDragIndex.$ === 1) {
+			var itemId = 'id-' + item;
+			return _Utils_Tuple2(
+				key,
+				A2(
+					elm$html$Html$div,
+					A2(
+						elm$core$List$cons,
+						elm$html$Html$Attributes$id(itemId),
+						_Utils_ap(
+							styles,
+							A2(author$project$Advanced$FreeSwapOnDrag$system.cs, index, itemId))),
+					_List_fromArray(
+						[
+							elm$html$Html$text(item)
+						])));
+		} else {
+			var dragIndex = maybeDragIndex.a;
+			return (!_Utils_eq(dragIndex, index)) ? _Utils_Tuple2(
+				key,
+				A2(
+					elm$html$Html$div,
+					_Utils_ap(
+						styles,
+						author$project$Advanced$FreeSwapOnDrag$system.cu(index)),
+					_List_fromArray(
+						[
+							elm$html$Html$text(item)
+						]))) : _Utils_Tuple2(
+				key,
+				A2(
+					elm$html$Html$div,
+					_Utils_ap(author$project$Advanced$FreeSwapOnDrag$itemStyles, author$project$Advanced$FreeSwapOnDrag$placeholderItemStyles),
+					_List_Nil));
+		}
+	});
+var author$project$Advanced$FreeSwapOnDrag$view = function (model) {
+	var maybeDragIndex = author$project$Advanced$FreeSwapOnDrag$system.aQ(model.v);
+	return A2(
+		elm$html$Html$section,
+		_List_fromArray(
+			[
+				A2(elm$html$Html$Attributes$style, 'margin', '6em 0')
+			]),
+		_List_fromArray(
+			[
+				A3(
+				elm$html$Html$Keyed$node,
+				'div',
+				author$project$Advanced$FreeSwapOnDrag$containerStyles,
+				A2(
+					elm$core$List$indexedMap,
+					A2(author$project$Advanced$FreeSwapOnDrag$itemView, model.A, maybeDragIndex),
+					model.ad)),
+				A2(author$project$Advanced$FreeSwapOnDrag$draggedItemView, model.v, model.ad)
+			]));
+};
+var author$project$Advanced$FreeSwapOnDrop$source = '\nmodule FreeSwapOnDrop exposing (main)\n\nimport Browser\nimport Browser.Events\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Events\nimport Html.Keyed\nimport Json.Decode\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias KeyedItem =\n    ( String, String )\n\n\ndata : List KeyedItem\ndata =\n    List.range 1 9\n        |> List.map (\\i -> ( "key-" ++ String.fromInt i, String.fromInt i ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Swap DnDList.OnDrop\n    }\n\n\nsystem : DnDList.System Msg KeyedItem\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List KeyedItem\n    , affected : List Int\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    , affected = []\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ system.subscriptions model.draggable\n        , if model.affected == [] then\n            Sub.none\n\n          else\n            Browser.Events.onMouseDown\n                (Json.Decode.succeed ClearAffected)\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n    | ClearAffected\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n\n                ( maybeDragIndex, maybeDropIndex ) =\n                    ( system.dragIndex draggable, system.dropIndex draggable )\n\n                affected : List Int\n                affected =\n                    case ( maybeDragIndex, maybeDropIndex ) of\n                        ( Just dragIndex, Just dropIndex ) ->\n                            if dragIndex /= dropIndex then\n                                dragIndex :: dropIndex :: []\n\n                            else\n                                []\n\n                        _ ->\n                            model.affected\n            in\n            ( { model | draggable = draggable, items = items, affected = affected }\n            , system.commands model.draggable\n            )\n\n        ClearAffected ->\n            ( { model | affected = [] }, Cmd.none )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n\n        maybeDropIndex : Maybe Int\n        maybeDropIndex =\n            system.dropIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.items\n            |> List.indexedMap (itemView model.affected maybeDragIndex maybeDropIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.items\n        ]\n\n\nitemView : List Int -> Maybe Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )\nitemView affected maybeDragIndex maybeDropIndex index ( key, item ) =\n    case ( maybeDragIndex, maybeDropIndex ) of\n        ( Nothing, Nothing ) ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ item\n\n                styles : List (Html.Attribute Msg)\n                styles =\n                    itemStyles\n                        ++ (if List.member index affected then\n                                affectedItemStyles\n\n                            else\n                                []\n                           )\n            in\n            ( key\n            , Html.div\n                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)\n                [ Html.text item ]\n            )\n\n        ( Just dragIndex, Just dropIndex ) ->\n            if dragIndex /= index && dropIndex /= index then\n                ( key\n                , Html.div\n                    (itemStyles ++ system.dropEvents index)\n                    [ Html.text item ]\n                )\n\n            else if dragIndex /= index && dropIndex == index then\n                ( key\n                , Html.div\n                    (itemStyles ++ overedItemStyles ++ system.dropEvents index)\n                    [ Html.text item ]\n                )\n\n            else\n                ( key\n                , Html.div (itemStyles ++ placeholderItemStyles) []\n                )\n\n        _ ->\n            ( "", Html.text "" )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe KeyedItem\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just ( _, item ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.text item ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "grid"\n    , Html.Attributes.style "grid-template-columns" "7em 7em 7em"\n    , Html.Attributes.style "grid-template-rows" "7em 7em 7em"\n    , Html.Attributes.style "grid-gap" "2em"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "background" "#aa1e9d"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "color" "white"\n    , Html.Attributes.style "cursor" "pointer"\n    , Html.Attributes.style "font-size" "1.2em"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#1e9daa" ]\n\n\nplaceholderItemStyles : List (Html.Attribute msg)\nplaceholderItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "#c763bd" ]\n\n\naffectedItemStyles : List (Html.Attribute msg)\naffectedItemStyles =\n    [ Html.Attributes.style "background" "#691361" ]\n    ';
+var author$project$Advanced$FreeSwapOnDrop$containerStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'display', 'grid'),
+		A2(elm$html$Html$Attributes$style, 'grid-template-columns', '7em 7em 7em'),
+		A2(elm$html$Html$Attributes$style, 'grid-template-rows', '7em 7em 7em'),
+		A2(elm$html$Html$Attributes$style, 'grid-gap', '2em'),
+		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
+	]);
+var author$project$Advanced$FreeSwapOnDrop$draggedItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#1e9daa')
+	]);
+var author$project$Advanced$FreeSwapOnDrop$itemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#aa1e9d'),
+		A2(elm$html$Html$Attributes$style, 'border-radius', '8px'),
+		A2(elm$html$Html$Attributes$style, 'color', 'white'),
+		A2(elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+		A2(elm$html$Html$Attributes$style, 'font-size', '1.2em'),
+		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
+		A2(elm$html$Html$Attributes$style, 'align-items', 'center'),
+		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
+	]);
+var author$project$Advanced$FreeSwapOnDrop$draggedItemView = F2(
+	function (draggable, items) {
+		var maybeDraggedItem = A2(
+			elm$core$Maybe$andThen,
+			function (index) {
+				return elm$core$List$head(
+					A2(elm$core$List$drop, index, items));
+			},
+			author$project$Advanced$FreeSwapOnDrop$system.aQ(draggable));
+		if (!maybeDraggedItem.$) {
+			var _n1 = maybeDraggedItem.a;
+			var item = _n1.b;
+			return A2(
+				elm$html$Html$div,
+				_Utils_ap(
+					author$project$Advanced$FreeSwapOnDrop$itemStyles,
+					_Utils_ap(
+						author$project$Advanced$FreeSwapOnDrop$draggedItemStyles,
+						author$project$Advanced$FreeSwapOnDrop$system.ct(draggable))),
+				_List_fromArray(
+					[
+						elm$html$Html$text(item)
+					]));
+		} else {
+			return elm$html$Html$text('');
+		}
+	});
+var author$project$Advanced$FreeSwapOnDrop$affectedItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#691361')
+	]);
+var author$project$Advanced$FreeSwapOnDrop$overedItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#c763bd')
+	]);
+var author$project$Advanced$FreeSwapOnDrop$placeholderItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', 'dimgray')
+	]);
+var author$project$Advanced$FreeSwapOnDrop$itemView = F5(
+	function (affected, maybeDragIndex, maybeDropIndex, index, _n0) {
+		var key = _n0.a;
+		var item = _n0.b;
+		var _n1 = _Utils_Tuple2(maybeDragIndex, maybeDropIndex);
+		_n1$2:
+		while (true) {
+			if (_n1.a.$ === 1) {
+				if (_n1.b.$ === 1) {
+					var _n2 = _n1.a;
+					var _n3 = _n1.b;
+					var styles = _Utils_ap(
+						author$project$Advanced$FreeSwapOnDrop$itemStyles,
+						A2(elm$core$List$member, index, affected) ? author$project$Advanced$FreeSwapOnDrop$affectedItemStyles : _List_Nil);
+					var itemId = 'id-' + item;
+					return _Utils_Tuple2(
+						key,
+						A2(
+							elm$html$Html$div,
+							A2(
+								elm$core$List$cons,
+								elm$html$Html$Attributes$id(itemId),
+								_Utils_ap(
+									styles,
+									A2(author$project$Advanced$FreeSwapOnDrop$system.cs, index, itemId))),
+							_List_fromArray(
+								[
+									elm$html$Html$text(item)
+								])));
+				} else {
+					break _n1$2;
+				}
+			} else {
+				if (!_n1.b.$) {
+					var dragIndex = _n1.a.a;
+					var dropIndex = _n1.b.a;
+					return ((!_Utils_eq(dragIndex, index)) && (!_Utils_eq(dropIndex, index))) ? _Utils_Tuple2(
+						key,
+						A2(
+							elm$html$Html$div,
+							_Utils_ap(
+								author$project$Advanced$FreeSwapOnDrop$itemStyles,
+								author$project$Advanced$FreeSwapOnDrop$system.cu(index)),
+							_List_fromArray(
+								[
+									elm$html$Html$text(item)
+								]))) : (((!_Utils_eq(dragIndex, index)) && _Utils_eq(dropIndex, index)) ? _Utils_Tuple2(
+						key,
+						A2(
+							elm$html$Html$div,
+							_Utils_ap(
+								author$project$Advanced$FreeSwapOnDrop$itemStyles,
+								_Utils_ap(
+									author$project$Advanced$FreeSwapOnDrop$overedItemStyles,
+									author$project$Advanced$FreeSwapOnDrop$system.cu(index))),
+							_List_fromArray(
+								[
+									elm$html$Html$text(item)
+								]))) : _Utils_Tuple2(
+						key,
+						A2(
+							elm$html$Html$div,
+							_Utils_ap(author$project$Advanced$FreeSwapOnDrop$itemStyles, author$project$Advanced$FreeSwapOnDrop$placeholderItemStyles),
+							_List_Nil)));
+				} else {
+					break _n1$2;
+				}
+			}
+		}
+		return _Utils_Tuple2(
+			'',
+			elm$html$Html$text(''));
+	});
+var author$project$Advanced$FreeSwapOnDrop$view = function (model) {
+	var maybeDropIndex = author$project$Advanced$FreeSwapOnDrop$system.cv(model.v);
+	var maybeDragIndex = author$project$Advanced$FreeSwapOnDrop$system.aQ(model.v);
+	return A2(
+		elm$html$Html$section,
+		_List_fromArray(
+			[
+				A2(elm$html$Html$Attributes$style, 'margin', '6em 0')
+			]),
+		_List_fromArray(
+			[
+				A3(
+				elm$html$Html$Keyed$node,
+				'div',
+				author$project$Advanced$FreeSwapOnDrop$containerStyles,
+				A2(
+					elm$core$List$indexedMap,
+					A3(author$project$Advanced$FreeSwapOnDrop$itemView, model.A, maybeDragIndex, maybeDropIndex),
+					model.ad)),
+				A2(author$project$Advanced$FreeSwapOnDrop$draggedItemView, model.v, model.ad)
+			]));
+};
+var author$project$Basic$Basic$source = '\nmodule Basic exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ndata : List Fruit\ndata =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag\n    }\n\n\nsystem : DnDList.System Msg Fruit\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List Fruit\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    system.subscriptions model.draggable\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n            in\n            ( { model | draggable = draggable, items = items }\n            , system.commands model.draggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0"\n        , Html.Attributes.style "text-align" "center"\n        ]\n        [ model.items\n            |> List.indexedMap (itemView maybeDragIndex)\n            |> Html.div []\n        , draggedItemView model.draggable model.items\n        ]\n\n\nitemView : Maybe Int -> Int -> Fruit -> Html.Html Msg\nitemView maybeDragIndex index item =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ item\n            in\n            Html.p\n                (Html.Attributes.id itemId :: system.dragEvents index itemId)\n                [ Html.text item ]\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                Html.p\n                    (system.dropEvents index)\n                    [ Html.text item ]\n\n            else\n                Html.p [] [ Html.text "[---------]" ]\n\n\ndraggedItemView : DnDList.Draggable -> List Fruit -> Html.Html Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe Fruit\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just item ->\n            Html.div\n                (system.draggedStyles draggable)\n                [ Html.text item ]\n\n        Nothing ->\n            Html.text ""\n    ';
+var author$project$Basic$Basic$draggedItemView = F2(
+	function (draggable, items) {
+		var maybeDraggedItem = A2(
+			elm$core$Maybe$andThen,
+			function (index) {
+				return elm$core$List$head(
+					A2(elm$core$List$drop, index, items));
+			},
+			author$project$Basic$Basic$system.aQ(draggable));
+		if (!maybeDraggedItem.$) {
+			var item = maybeDraggedItem.a;
+			return A2(
+				elm$html$Html$div,
+				author$project$Basic$Basic$system.ct(draggable),
+				_List_fromArray(
+					[
+						elm$html$Html$text(item)
+					]));
+		} else {
+			return elm$html$Html$text('');
+		}
+	});
+var author$project$Basic$Basic$itemView = F3(
 	function (maybeDragIndex, index, item) {
 		if (maybeDragIndex.$ === 1) {
 			var itemId = 'id-' + item;
@@ -6902,7 +7854,7 @@ var author$project$Example$Basic$itemView = F3(
 				A2(
 					elm$core$List$cons,
 					elm$html$Html$Attributes$id(itemId),
-					A2(author$project$Example$Basic$system.bd, index, itemId)),
+					A2(author$project$Basic$Basic$system.cs, index, itemId)),
 				_List_fromArray(
 					[
 						elm$html$Html$text(item)
@@ -6911,7 +7863,7 @@ var author$project$Example$Basic$itemView = F3(
 			var dragIndex = maybeDragIndex.a;
 			return (!_Utils_eq(dragIndex, index)) ? A2(
 				elm$html$Html$p,
-				author$project$Example$Basic$system.bh(index),
+				author$project$Basic$Basic$system.cu(index),
 				_List_fromArray(
 					[
 						elm$html$Html$text(item)
@@ -6924,9 +7876,8 @@ var author$project$Example$Basic$itemView = F3(
 					]));
 		}
 	});
-var elm$html$Html$section = _VirtualDom_node('section');
-var author$project$Example$Basic$view = function (model) {
-	var maybeDragIndex = author$project$Example$Basic$system.be(model.bf);
+var author$project$Basic$Basic$view = function (model) {
+	var maybeDragIndex = author$project$Basic$Basic$system.aQ(model.v);
 	return A2(
 		elm$html$Html$section,
 		_List_fromArray(
@@ -6941,12 +7892,12 @@ var author$project$Example$Basic$view = function (model) {
 				_List_Nil,
 				A2(
 					elm$core$List$indexedMap,
-					author$project$Example$Basic$itemView(maybeDragIndex),
-					model.ab)),
-				A2(author$project$Example$Basic$draggedItemView, model.bf, model.ab)
+					author$project$Basic$Basic$itemView(maybeDragIndex),
+					model.ad)),
+				A2(author$project$Basic$Basic$draggedItemView, model.v, model.ad)
 			]));
 };
-var author$project$Example$BasicElmUI$source = '\nmodule BasicElmUI exposing (main)\n\nimport Browser\nimport DnDList\nimport Element\nimport Html\nimport Html.Attributes\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ndata : List Fruit\ndata =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Rotate\n    }\n\n\nsystem : DnDList.System Msg Fruit\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List Fruit\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    system.subscriptions model.draggable\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n            in\n            ( { model | draggable = draggable, items = items }\n            , system.commands model.draggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Element.layout\n        [ Element.width Element.fill\n        , Element.height Element.fill\n        , Element.inFront (draggedItemView model.draggable model.items)\n        ]\n        (Element.column\n            [ Element.centerX, Element.centerY, Element.padding 10, Element.spacing 10 ]\n            (model.items |> List.indexedMap (itemView maybeDragIndex))\n        )\n\n\nitemView : Maybe Int -> Int -> Fruit -> Element.Element Msg\nitemView maybeDragIndex index item =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ item\n            in\n            Element.el\n                (Element.htmlAttribute (Html.Attributes.id itemId)\n                    :: List.map Element.htmlAttribute (system.dragEvents index itemId)\n                )\n                (Element.text item)\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                Element.el\n                    (List.map Element.htmlAttribute (system.dropEvents index))\n                    (Element.text item)\n\n            else\n                Element.el [] (Element.text "[---------]")\n\n\ndraggedItemView : DnDList.Draggable -> List Fruit -> Element.Element Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe Fruit\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just item ->\n            Element.el\n                (List.map Element.htmlAttribute (system.draggedStyles draggable))\n                (Element.text item)\n\n        Nothing ->\n            Element.none\n    ';
+var author$project$Basic$BasicElmUI$source = '\nmodule BasicElmUI exposing (main)\n\nimport Browser\nimport DnDList\nimport Element\nimport Html\nimport Html.Attributes\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ndata : List Fruit\ndata =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag\n    }\n\n\nsystem : DnDList.System Msg Fruit\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List Fruit\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    system.subscriptions model.draggable\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n            in\n            ( { model | draggable = draggable, items = items }\n            , system.commands model.draggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Element.layout\n        [ Element.width Element.fill\n        , Element.height Element.fill\n        , Element.inFront (draggedItemView model.draggable model.items)\n        ]\n        (Element.column\n            [ Element.centerX, Element.centerY, Element.padding 10, Element.spacing 10 ]\n            (model.items |> List.indexedMap (itemView maybeDragIndex))\n        )\n\n\nitemView : Maybe Int -> Int -> Fruit -> Element.Element Msg\nitemView maybeDragIndex index item =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ item\n            in\n            Element.el\n                (Element.htmlAttribute (Html.Attributes.id itemId)\n                    :: List.map Element.htmlAttribute (system.dragEvents index itemId)\n                )\n                (Element.text item)\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                Element.el\n                    (List.map Element.htmlAttribute (system.dropEvents index))\n                    (Element.text item)\n\n            else\n                Element.el [] (Element.text "[---------]")\n\n\ndraggedItemView : DnDList.Draggable -> List Fruit -> Element.Element Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe Fruit\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just item ->\n            Element.el\n                (List.map Element.htmlAttribute (system.draggedStyles draggable))\n                (Element.text item)\n\n        Nothing ->\n            Element.none\n    ';
 var mdgriffith$elm_ui$Internal$Model$Height = function (a) {
 	return {$: 8, a: a};
 };
@@ -6970,13 +7921,13 @@ var mdgriffith$elm_ui$Internal$Flag$Field = F2(
 	});
 var mdgriffith$elm_ui$Internal$Flag$none = A2(mdgriffith$elm_ui$Internal$Flag$Field, 0, 0);
 var mdgriffith$elm_ui$Internal$Model$NoNearbyChildren = {$: 0};
-var mdgriffith$elm_ui$Internal$Style$classes = {b$: 'a', aK: 'atv', b1: 'ab', b2: 'cx', b3: 'cy', b4: 'acb', b5: 'accx', b6: 'accy', b7: 'acr', a5: 'al', a6: 'ar', b8: 'at', aL: 'ah', aM: 'av', ca: 's', ce: 'bh', cf: 'b', ch: 'w7', cj: 'bd', ck: 'bdt', at: 'bn', cl: 'bs', au: 'cpe', cq: 'cp', cr: 'cpx', cs: 'cpy', B: 'c', aw: 'ctr', ax: 'cb', ay: 'ccx', C: 'ccy', al: 'cl', az: 'cr', cu: 'ct', cv: 'cptr', cw: 'ctxt', cC: 'fcs', cD: 'fs', cE: 'g', aR: 'hbh', aC: 'hc', aT: 'hf', bo: 'hfp', cG: 'hv', cI: 'ic', cK: 'fr', cM: 'iml', cN: 'it', cO: 'i', ac: 'nb', bx: 'notxt', cS: 'ol', cU: 'or', U: 'oq', cY: 'oh', bB: 'pg', bC: 'p', cZ: 'ppe', c$: 'ui', p: 'r', c1: 'sb', c2: 'sbx', c3: 'sby', c4: 'sbt', c6: 'e', c7: 'cap', c8: 'sev', de: 'sk', m: 't', dg: 'tc', dh: 'w8', di: 'w2', dj: 'w9', dk: 'tj', aJ: 'tja', dl: 'tl', dm: 'w3', dn: 'w5', $7: 'w4', dp: 'tr', dq: 'w6', dr: 'w1', ds: 'tun', bT: 'ts', W: 'clr', dx: 'u', a1: 'wc', bY: 'we', a2: 'wf', bZ: 'wfp', a3: 'wrp'};
-var mdgriffith$elm_ui$Internal$Model$columnClass = mdgriffith$elm_ui$Internal$Style$classes.ca + (' ' + mdgriffith$elm_ui$Internal$Style$classes.B);
-var mdgriffith$elm_ui$Internal$Model$gridClass = mdgriffith$elm_ui$Internal$Style$classes.ca + (' ' + mdgriffith$elm_ui$Internal$Style$classes.cE);
-var mdgriffith$elm_ui$Internal$Model$pageClass = mdgriffith$elm_ui$Internal$Style$classes.ca + (' ' + mdgriffith$elm_ui$Internal$Style$classes.bB);
-var mdgriffith$elm_ui$Internal$Model$paragraphClass = mdgriffith$elm_ui$Internal$Style$classes.ca + (' ' + mdgriffith$elm_ui$Internal$Style$classes.bC);
-var mdgriffith$elm_ui$Internal$Model$rowClass = mdgriffith$elm_ui$Internal$Style$classes.ca + (' ' + mdgriffith$elm_ui$Internal$Style$classes.p);
-var mdgriffith$elm_ui$Internal$Model$singleClass = mdgriffith$elm_ui$Internal$Style$classes.ca + (' ' + mdgriffith$elm_ui$Internal$Style$classes.c6);
+var mdgriffith$elm_ui$Internal$Style$classes = {bU: 'a', aL: 'atv', bW: 'ab', bX: 'cx', bY: 'cy', bZ: 'acb', b_: 'accx', b$: 'accy', b0: 'acr', a7: 'al', a8: 'ar', b1: 'at', aM: 'ah', aN: 'av', b3: 's', b7: 'bh', b8: 'b', ca: 'w7', cc: 'bd', cd: 'bdt', av: 'bn', ce: 'bs', aw: 'cpe', cj: 'cp', ck: 'cpx', cl: 'cpy', C: 'c', ay: 'ctr', az: 'cb', aA: 'ccx', D: 'ccy', an: 'cl', aB: 'cr', co: 'ct', cp: 'cptr', cq: 'ctxt', cz: 'fcs', cA: 'fs', cB: 'g', aT: 'hbh', aD: 'hc', aV: 'hf', bj: 'hfp', cD: 'hv', cF: 'ic', cH: 'fr', cJ: 'iml', cK: 'it', cL: 'i', ae: 'nb', bq: 'notxt', cR: 'ol', cT: 'or', V: 'oq', cX: 'oh', bu: 'pg', bv: 'p', cY: 'ppe', c_: 'ui', s: 'r', c0: 'sb', c1: 'sbx', c2: 'sby', c3: 'sbt', c5: 'e', c6: 'cap', c7: 'sev', dd: 'sk', q: 't', df: 'tc', dg: 'w8', dh: 'w2', di: 'w9', dj: 'tj', aK: 'tja', dk: 'tl', dl: 'w3', dm: 'w5', dn: 'w4', $7: 'tr', dp: 'w6', dq: 'w1', dr: 'tun', bM: 'ts', X: 'clr', dv: 'u', a3: 'wc', bR: 'we', a4: 'wf', bS: 'wfp', a5: 'wrp'};
+var mdgriffith$elm_ui$Internal$Model$columnClass = mdgriffith$elm_ui$Internal$Style$classes.b3 + (' ' + mdgriffith$elm_ui$Internal$Style$classes.C);
+var mdgriffith$elm_ui$Internal$Model$gridClass = mdgriffith$elm_ui$Internal$Style$classes.b3 + (' ' + mdgriffith$elm_ui$Internal$Style$classes.cB);
+var mdgriffith$elm_ui$Internal$Model$pageClass = mdgriffith$elm_ui$Internal$Style$classes.b3 + (' ' + mdgriffith$elm_ui$Internal$Style$classes.bu);
+var mdgriffith$elm_ui$Internal$Model$paragraphClass = mdgriffith$elm_ui$Internal$Style$classes.b3 + (' ' + mdgriffith$elm_ui$Internal$Style$classes.bv);
+var mdgriffith$elm_ui$Internal$Model$rowClass = mdgriffith$elm_ui$Internal$Style$classes.b3 + (' ' + mdgriffith$elm_ui$Internal$Style$classes.s);
+var mdgriffith$elm_ui$Internal$Model$singleClass = mdgriffith$elm_ui$Internal$Style$classes.b3 + (' ' + mdgriffith$elm_ui$Internal$Style$classes.c5);
 var mdgriffith$elm_ui$Internal$Model$contextClasses = function (context) {
 	switch (context) {
 		case 0:
@@ -7080,10 +8031,6 @@ var elm$core$Basics$not = _Basics_not;
 var elm$html$Html$s = _VirtualDom_node('s');
 var elm$html$Html$u = _VirtualDom_node('u');
 var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
-var elm$virtual_dom$VirtualDom$keyedNode = function (tag) {
-	return _VirtualDom_keyedNode(
-		_VirtualDom_noScript(tag));
-};
 var elm$virtual_dom$VirtualDom$node = function (tag) {
 	return _VirtualDom_node(
 		_VirtualDom_noScript(tag));
@@ -7285,13 +8232,13 @@ var mdgriffith$elm_ui$Internal$Model$getStyleName = function (style) {
 			return 'grid-rows-' + (A2(
 				elm$core$String$join,
 				'-',
-				A2(elm$core$List$map, mdgriffith$elm_ui$Internal$Model$lengthClassName, template.c0)) + ('-cols-' + (A2(
+				A2(elm$core$List$map, mdgriffith$elm_ui$Internal$Model$lengthClassName, template.c$)) + ('-cols-' + (A2(
 				elm$core$String$join,
 				'-',
-				A2(elm$core$List$map, mdgriffith$elm_ui$Internal$Model$lengthClassName, template.r)) + ('-space-x-' + (mdgriffith$elm_ui$Internal$Model$lengthClassName(template.c9.a) + ('-space-y-' + mdgriffith$elm_ui$Internal$Model$lengthClassName(template.c9.b)))))));
+				A2(elm$core$List$map, mdgriffith$elm_ui$Internal$Model$lengthClassName, template.u)) + ('-space-x-' + (mdgriffith$elm_ui$Internal$Model$lengthClassName(template.c8.a) + ('-space-y-' + mdgriffith$elm_ui$Internal$Model$lengthClassName(template.c8.b)))))));
 		case 9:
 			var pos = style.a;
-			return 'gp grid-pos-' + (elm$core$String$fromInt(pos.p) + ('-' + (elm$core$String$fromInt(pos.ct) + ('-' + (elm$core$String$fromInt(pos.a0) + ('-' + elm$core$String$fromInt(pos.aS)))))));
+			return 'gp grid-pos-' + (elm$core$String$fromInt(pos.s) + ('-' + (elm$core$String$fromInt(pos.cm) + ('-' + (elm$core$String$fromInt(pos.a2) + ('-' + elm$core$String$fromInt(pos.aU)))))));
 		case 11:
 			var selector = style.a;
 			var subStyle = style.b;
@@ -7381,17 +8328,17 @@ var mdgriffith$elm_ui$Internal$Model$formatBoxShadow = function (shadow) {
 			elm$core$Basics$identity,
 			_List_fromArray(
 				[
-					shadow.br ? elm$core$Maybe$Just('inset') : elm$core$Maybe$Nothing,
+					shadow.bm ? elm$core$Maybe$Just('inset') : elm$core$Maybe$Nothing,
 					elm$core$Maybe$Just(
-					elm$core$String$fromFloat(shadow.by.a) + 'px'),
+					elm$core$String$fromFloat(shadow.br.a) + 'px'),
 					elm$core$Maybe$Just(
-					elm$core$String$fromFloat(shadow.by.b) + 'px'),
+					elm$core$String$fromFloat(shadow.br.b) + 'px'),
 					elm$core$Maybe$Just(
-					elm$core$String$fromFloat(shadow.Y) + 'px'),
+					elm$core$String$fromFloat(shadow.Z) + 'px'),
 					elm$core$Maybe$Just(
-					elm$core$String$fromFloat(shadow.ag) + 'px'),
+					elm$core$String$fromFloat(shadow.ai) + 'px'),
 					elm$core$Maybe$Just(
-					mdgriffith$elm_ui$Internal$Model$formatColor(shadow.Z))
+					mdgriffith$elm_ui$Internal$Model$formatColor(shadow._))
 				])));
 };
 var mdgriffith$elm_ui$Internal$Style$dot = function (c) {
@@ -7400,7 +8347,7 @@ var mdgriffith$elm_ui$Internal$Style$dot = function (c) {
 var mdgriffith$elm_ui$Internal$Model$renderFocusStyle = function (focus) {
 	return A2(
 		mdgriffith$elm_ui$Internal$Model$Style,
-		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca) + (':focus .focusable, ' + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca) + '.focusable:focus')),
+		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3) + (':focus .focusable, ' + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3) + '.focusable:focus')),
 		A2(
 			elm$core$List$filterMap,
 			elm$core$Basics$identity,
@@ -7414,7 +8361,7 @@ var mdgriffith$elm_ui$Internal$Model$renderFocusStyle = function (focus) {
 							'border-color',
 							mdgriffith$elm_ui$Internal$Model$formatColor(color));
 					},
-					focus.ci),
+					focus.cb),
 					A2(
 					elm$core$Maybe$map,
 					function (color) {
@@ -7423,7 +8370,7 @@ var mdgriffith$elm_ui$Internal$Model$renderFocusStyle = function (focus) {
 							'background-color',
 							mdgriffith$elm_ui$Internal$Model$formatColor(color));
 					},
-					focus.cc),
+					focus.b5),
 					A2(
 					elm$core$Maybe$map,
 					function (shadow) {
@@ -7432,17 +8379,17 @@ var mdgriffith$elm_ui$Internal$Model$renderFocusStyle = function (focus) {
 							'box-shadow',
 							mdgriffith$elm_ui$Internal$Model$formatBoxShadow(
 								{
-									Y: shadow.Y,
 									Z: shadow.Z,
-									br: false,
-									by: A2(
+									_: shadow._,
+									bm: false,
+									br: A2(
 										elm$core$Tuple$mapSecond,
 										elm$core$Basics$toFloat,
-										A2(elm$core$Tuple$mapFirst, elm$core$Basics$toFloat, shadow.by)),
-									ag: shadow.ag
+										A2(elm$core$Tuple$mapFirst, elm$core$Basics$toFloat, shadow.br)),
+									ai: shadow.ai
 								}));
 					},
-					focus.c5),
+					focus.c4),
 					elm$core$Maybe$Just(
 					A2(mdgriffith$elm_ui$Internal$Model$Property, 'outline', 'none'))
 				])));
@@ -7489,44 +8436,44 @@ var mdgriffith$elm_ui$Internal$Style$contentName = function (desc) {
 	switch (desc) {
 		case 0:
 			var _n1 = desc;
-			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cu);
+			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.co);
 		case 1:
 			var _n2 = desc;
-			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ax);
+			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.az);
 		case 2:
 			var _n3 = desc;
-			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.az);
+			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aB);
 		case 3:
 			var _n4 = desc;
-			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.al);
+			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.an);
 		case 4:
 			var _n5 = desc;
-			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ay);
+			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aA);
 		default:
 			var _n6 = desc;
-			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.C);
+			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.D);
 	}
 };
 var mdgriffith$elm_ui$Internal$Style$selfName = function (desc) {
 	switch (desc) {
 		case 0:
 			var _n1 = desc;
-			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b8);
+			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b1);
 		case 1:
 			var _n2 = desc;
-			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b1);
+			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bW);
 		case 2:
 			var _n3 = desc;
-			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a6);
+			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a8);
 		case 3:
 			var _n4 = desc;
-			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a5);
+			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a7);
 		case 4:
 			var _n5 = desc;
-			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b2);
+			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bX);
 		default:
 			var _n6 = desc;
-			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3);
+			return mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bY);
 	}
 };
 var mdgriffith$elm_ui$Internal$Style$describeAlignment = function (values) {
@@ -7542,7 +8489,7 @@ var mdgriffith$elm_ui$Internal$Style$describeAlignment = function (values) {
 				content),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Child,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3),
 				_List_fromArray(
 					[
 						A2(
@@ -7562,13 +8509,13 @@ var mdgriffith$elm_ui$Internal$Style$elDescription = _List_fromArray(
 		A2(mdgriffith$elm_ui$Internal$Style$Prop, 'white-space', 'pre'),
 		A2(
 		mdgriffith$elm_ui$Internal$Style$Descriptor,
-		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aR),
+		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aT),
 		_List_fromArray(
 			[
 				A2(mdgriffith$elm_ui$Internal$Style$Prop, 'z-index', '0'),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Child,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ce),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b7),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'z-index', '-1')
@@ -7576,24 +8523,24 @@ var mdgriffith$elm_ui$Internal$Style$elDescription = _List_fromArray(
 			])),
 		A2(
 		mdgriffith$elm_ui$Internal$Style$Descriptor,
-		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c4),
+		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c3),
 		_List_fromArray(
 			[
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Child,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.m),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.q),
 				_List_fromArray(
 					[
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Descriptor,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aT),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aV),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '0')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Descriptor,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a2),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a4),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'align-self', 'auto !important')
@@ -7602,28 +8549,28 @@ var mdgriffith$elm_ui$Internal$Style$elDescription = _List_fromArray(
 			])),
 		A2(
 		mdgriffith$elm_ui$Internal$Style$Child,
-		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aC),
+		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aD),
 		_List_fromArray(
 			[
 				A2(mdgriffith$elm_ui$Internal$Style$Prop, 'height', 'auto')
 			])),
 		A2(
 		mdgriffith$elm_ui$Internal$Style$Child,
-		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aT),
+		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aV),
 		_List_fromArray(
 			[
 				A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '100000')
 			])),
 		A2(
 		mdgriffith$elm_ui$Internal$Style$Child,
-		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a2),
+		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a4),
 		_List_fromArray(
 			[
 				A2(mdgriffith$elm_ui$Internal$Style$Prop, 'width', '100%')
 			])),
 		A2(
 		mdgriffith$elm_ui$Internal$Style$Child,
-		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a1),
+		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a3),
 		_List_fromArray(
 			[
 				A2(mdgriffith$elm_ui$Internal$Style$Prop, 'align-self', 'flex-start')
@@ -7689,7 +8636,7 @@ var mdgriffith$elm_ui$Internal$Style$elDescription = _List_fromArray(
 							[
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Child,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'margin-top', 'auto'),
@@ -7710,7 +8657,7 @@ var mdgriffith$elm_ui$Internal$Style$gridAlignments = function (values) {
 			[
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Child,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3),
 				_List_fromArray(
 					[
 						A2(
@@ -7764,24 +8711,24 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 		A2(
 		mdgriffith$elm_ui$Internal$Style$Class,
 		_Utils_ap(
-			mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca),
+			mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3),
 			_Utils_ap(
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c6),
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cI))),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c5),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cF))),
 		_List_fromArray(
 			[
 				A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'block')
 			])),
 		A2(
 		mdgriffith$elm_ui$Internal$Style$Class,
-		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca) + ':focus',
+		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3) + ':focus',
 		_List_fromArray(
 			[
 				A2(mdgriffith$elm_ui$Internal$Style$Prop, 'outline', 'none')
 			])),
 		A2(
 		mdgriffith$elm_ui$Internal$Style$Class,
-		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c$),
+		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c_),
 		_List_fromArray(
 			[
 				A2(mdgriffith$elm_ui$Internal$Style$Prop, 'width', '100%'),
@@ -7791,14 +8738,14 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
 				_Utils_ap(
-					mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca),
-					mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aT)),
+					mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3),
+					mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aV)),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'height', '100%'),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aT),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aV),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'height', '100%')
@@ -7806,12 +8753,12 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Child,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cK),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cH),
 				_List_fromArray(
 					[
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Descriptor,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ac),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ae),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'position', 'fixed')
@@ -7820,7 +8767,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 			])),
 		A2(
 		mdgriffith$elm_ui$Internal$Style$Class,
-		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ac),
+		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ae),
 		_List_fromArray(
 			[
 				A2(mdgriffith$elm_ui$Internal$Style$Prop, 'position', 'relative'),
@@ -7830,7 +8777,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 				A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-basis', 'auto'),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c6),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c5),
 				mdgriffith$elm_ui$Internal$Style$elDescription),
 				mdgriffith$elm_ui$Internal$Style$Batch(
 				function (fn) {
@@ -7841,7 +8788,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							case 0:
 								return A2(
 									mdgriffith$elm_ui$Internal$Style$Descriptor,
-									mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b$),
+									mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bU),
 									_List_fromArray(
 										[
 											A2(mdgriffith$elm_ui$Internal$Style$Prop, 'position', 'absolute'),
@@ -7852,14 +8799,14 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 											A2(mdgriffith$elm_ui$Internal$Style$Prop, 'margin', '0 !important'),
 											A2(
 											mdgriffith$elm_ui$Internal$Style$Child,
-											mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aT),
+											mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aV),
 											_List_fromArray(
 												[
 													A2(mdgriffith$elm_ui$Internal$Style$Prop, 'height', 'auto')
 												])),
 											A2(
 											mdgriffith$elm_ui$Internal$Style$Child,
-											mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a2),
+											mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a4),
 											_List_fromArray(
 												[
 													A2(mdgriffith$elm_ui$Internal$Style$Prop, 'width', '100%')
@@ -7876,7 +8823,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							case 1:
 								return A2(
 									mdgriffith$elm_ui$Internal$Style$Descriptor,
-									mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cf),
+									mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b8),
 									_List_fromArray(
 										[
 											A2(mdgriffith$elm_ui$Internal$Style$Prop, 'position', 'absolute'),
@@ -7896,7 +8843,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 												])),
 											A2(
 											mdgriffith$elm_ui$Internal$Style$Child,
-											mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aT),
+											mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aV),
 											_List_fromArray(
 												[
 													A2(mdgriffith$elm_ui$Internal$Style$Prop, 'height', 'auto')
@@ -7905,7 +8852,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							case 2:
 								return A2(
 									mdgriffith$elm_ui$Internal$Style$Descriptor,
-									mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cU),
+									mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cT),
 									_List_fromArray(
 										[
 											A2(mdgriffith$elm_ui$Internal$Style$Prop, 'position', 'absolute'),
@@ -7926,7 +8873,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							case 3:
 								return A2(
 									mdgriffith$elm_ui$Internal$Style$Descriptor,
-									mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cS),
+									mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cR),
 									_List_fromArray(
 										[
 											A2(mdgriffith$elm_ui$Internal$Style$Prop, 'position', 'absolute'),
@@ -7947,7 +8894,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							case 4:
 								return A2(
 									mdgriffith$elm_ui$Internal$Style$Descriptor,
-									mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cK),
+									mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cH),
 									_List_fromArray(
 										[
 											A2(mdgriffith$elm_ui$Internal$Style$Prop, 'position', 'absolute'),
@@ -7968,7 +8915,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							default:
 								return A2(
 									mdgriffith$elm_ui$Internal$Style$Descriptor,
-									mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ce),
+									mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b7),
 									_List_fromArray(
 										[
 											A2(mdgriffith$elm_ui$Internal$Style$Prop, 'position', 'absolute'),
@@ -7992,7 +8939,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 			])),
 		A2(
 		mdgriffith$elm_ui$Internal$Style$Class,
-		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca),
+		mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3),
 		_List_fromArray(
 			[
 				A2(mdgriffith$elm_ui$Internal$Style$Prop, 'position', 'relative'),
@@ -8017,14 +8964,14 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 				A2(mdgriffith$elm_ui$Internal$Style$Prop, 'font-style', 'inherit'),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a3),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a5),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-wrap', 'wrap')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bx),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bq),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, '-moz-user-select', 'none'),
@@ -8034,42 +8981,42 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cv),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cp),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'cursor', 'pointer')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cw),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cq),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'cursor', 'text')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cZ),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cY),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'pointer-events', 'none !important')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.au),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aw),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'pointer-events', 'auto !important')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.W),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.X),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'opacity', '0')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.U),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.V),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'opacity', '1')
@@ -8077,7 +9024,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
 				mdgriffith$elm_ui$Internal$Style$dot(
-					_Utils_ap(mdgriffith$elm_ui$Internal$Style$classes.cG, mdgriffith$elm_ui$Internal$Style$classes.W)) + ':hover',
+					_Utils_ap(mdgriffith$elm_ui$Internal$Style$classes.cD, mdgriffith$elm_ui$Internal$Style$classes.X)) + ':hover',
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'opacity', '0')
@@ -8085,7 +9032,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
 				mdgriffith$elm_ui$Internal$Style$dot(
-					_Utils_ap(mdgriffith$elm_ui$Internal$Style$classes.cG, mdgriffith$elm_ui$Internal$Style$classes.U)) + ':hover',
+					_Utils_ap(mdgriffith$elm_ui$Internal$Style$classes.cD, mdgriffith$elm_ui$Internal$Style$classes.V)) + ':hover',
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'opacity', '1')
@@ -8093,7 +9040,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
 				mdgriffith$elm_ui$Internal$Style$dot(
-					_Utils_ap(mdgriffith$elm_ui$Internal$Style$classes.cC, mdgriffith$elm_ui$Internal$Style$classes.W)) + ':focus',
+					_Utils_ap(mdgriffith$elm_ui$Internal$Style$classes.cz, mdgriffith$elm_ui$Internal$Style$classes.X)) + ':focus',
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'opacity', '0')
@@ -8101,7 +9048,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
 				mdgriffith$elm_ui$Internal$Style$dot(
-					_Utils_ap(mdgriffith$elm_ui$Internal$Style$classes.cC, mdgriffith$elm_ui$Internal$Style$classes.U)) + ':focus',
+					_Utils_ap(mdgriffith$elm_ui$Internal$Style$classes.cz, mdgriffith$elm_ui$Internal$Style$classes.V)) + ':focus',
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'opacity', '1')
@@ -8109,7 +9056,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
 				mdgriffith$elm_ui$Internal$Style$dot(
-					_Utils_ap(mdgriffith$elm_ui$Internal$Style$classes.aK, mdgriffith$elm_ui$Internal$Style$classes.W)) + ':active',
+					_Utils_ap(mdgriffith$elm_ui$Internal$Style$classes.aL, mdgriffith$elm_ui$Internal$Style$classes.X)) + ':active',
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'opacity', '0')
@@ -8117,14 +9064,14 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
 				mdgriffith$elm_ui$Internal$Style$dot(
-					_Utils_ap(mdgriffith$elm_ui$Internal$Style$classes.aK, mdgriffith$elm_ui$Internal$Style$classes.U)) + ':active',
+					_Utils_ap(mdgriffith$elm_ui$Internal$Style$classes.aL, mdgriffith$elm_ui$Internal$Style$classes.V)) + ':active',
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'opacity', '1')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bT),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bM),
 				_List_fromArray(
 					[
 						A2(
@@ -8143,7 +9090,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c1),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c0),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'overflow', 'auto'),
@@ -8151,13 +9098,13 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c2),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c1),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'overflow-x', 'auto'),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Descriptor,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.p),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.s),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-shrink', '1')
@@ -8165,20 +9112,20 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c3),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c2),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'overflow-y', 'auto'),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Descriptor,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.B),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.C),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-shrink', '1')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Descriptor,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c6),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c5),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-shrink', '1')
@@ -8186,63 +9133,63 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cq),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cj),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'overflow', 'hidden')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cr),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ck),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'overflow-x', 'hidden')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cs),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cl),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'overflow-y', 'hidden')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a1),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a3),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'width', 'auto')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.at),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.av),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'border-width', '0')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cj),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cc),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'border-style', 'dashed')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ck),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cd),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'border-style', 'dotted')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cl),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ce),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'border-style', 'solid')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.m),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.q),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'white-space', 'pre'),
@@ -8250,31 +9197,31 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cN),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cK),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'line-height', '1.05')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c6),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c5),
 				mdgriffith$elm_ui$Internal$Style$elDescription),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.p),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.s),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'flex'),
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-direction', 'row'),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-basis', '0%'),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Descriptor,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bY),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bR),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-basis', 'auto')
@@ -8282,28 +9229,28 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aT),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aV),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'align-self', 'stretch !important')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bo),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bj),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'align-self', 'stretch !important')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a2),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a4),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '100000')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aw),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ay),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '0'),
@@ -8312,20 +9259,20 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						'u:first-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b7,
+						'u:first-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b0,
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '1')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						's:first-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b5,
+						's:first-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b_,
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '1'),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Child,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b2),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bX),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'margin-left', 'auto !important')
@@ -8333,13 +9280,13 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						's:last-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b5,
+						's:last-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b_,
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '1'),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Child,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b2),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bX),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'margin-right', 'auto !important')
@@ -8347,13 +9294,13 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						's:only-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b5,
+						's:only-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b_,
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '1'),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Child,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bY),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'margin-top', 'auto !important'),
@@ -8362,14 +9309,14 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						's:last-of-type.' + (mdgriffith$elm_ui$Internal$Style$classes.b5 + ' ~ u'),
+						's:last-of-type.' + (mdgriffith$elm_ui$Internal$Style$classes.b_ + ' ~ u'),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '0')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						'u:first-of-type.' + (mdgriffith$elm_ui$Internal$Style$classes.b7 + (' ~ s.' + mdgriffith$elm_ui$Internal$Style$classes.b5)),
+						'u:first-of-type.' + (mdgriffith$elm_ui$Internal$Style$classes.b0 + (' ~ s.' + mdgriffith$elm_ui$Internal$Style$classes.b_)),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '0')
@@ -8432,7 +9379,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 						}),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Descriptor,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c8),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c7),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'justify-content', 'space-between')
@@ -8440,55 +9387,55 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.B),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.C),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'flex'),
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-direction', 'column'),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aT),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aV),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '100000')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a2),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a4),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'width', '100%')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bZ),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bS),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'width', '100%')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a1),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.a3),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'align-self', 'flex-start')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						'u:first-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b4,
+						'u:first-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.bZ,
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '1')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						's:first-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b6,
+						's:first-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b$,
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '1'),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Child,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bY),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'margin-top', 'auto !important'),
@@ -8497,13 +9444,13 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						's:last-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b6,
+						's:last-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b$,
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '1'),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Child,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bY),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'margin-bottom', 'auto !important'),
@@ -8512,13 +9459,13 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						's:only-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b6,
+						's:only-of-type.' + mdgriffith$elm_ui$Internal$Style$classes.b$,
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '1'),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Child,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bY),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'margin-top', 'auto !important'),
@@ -8527,14 +9474,14 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						's:last-of-type.' + (mdgriffith$elm_ui$Internal$Style$classes.b6 + ' ~ u'),
+						's:last-of-type.' + (mdgriffith$elm_ui$Internal$Style$classes.b$ + ' ~ u'),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '0')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						'u:first-of-type.' + (mdgriffith$elm_ui$Internal$Style$classes.b4 + (' ~ s.' + mdgriffith$elm_ui$Internal$Style$classes.b6)),
+						'u:first-of-type.' + (mdgriffith$elm_ui$Internal$Style$classes.bZ + (' ~ s.' + mdgriffith$elm_ui$Internal$Style$classes.b$)),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '0')
@@ -8603,7 +9550,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 						}),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aw),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ay),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'flex-grow', '0'),
@@ -8613,7 +9560,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Descriptor,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c8),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c7),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'justify-content', 'space-between')
@@ -8621,7 +9568,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cE),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cB),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', '-ms-grid'),
@@ -8632,7 +9579,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							[
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Child,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'width', '100%')
@@ -8683,13 +9630,13 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bB),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bu),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'block'),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca + ':first-child'),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3 + ':first-child'),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'margin', '0 !important')
@@ -8697,7 +9644,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
 						mdgriffith$elm_ui$Internal$Style$dot(
-							mdgriffith$elm_ui$Internal$Style$classes.ca + (mdgriffith$elm_ui$Internal$Style$selfName(3) + (':first-child + .' + mdgriffith$elm_ui$Internal$Style$classes.ca))),
+							mdgriffith$elm_ui$Internal$Style$classes.b3 + (mdgriffith$elm_ui$Internal$Style$selfName(3) + (':first-child + .' + mdgriffith$elm_ui$Internal$Style$classes.b3))),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'margin', '0 !important')
@@ -8705,7 +9652,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
 						mdgriffith$elm_ui$Internal$Style$dot(
-							mdgriffith$elm_ui$Internal$Style$classes.ca + (mdgriffith$elm_ui$Internal$Style$selfName(2) + (':first-child + .' + mdgriffith$elm_ui$Internal$Style$classes.ca))),
+							mdgriffith$elm_ui$Internal$Style$classes.b3 + (mdgriffith$elm_ui$Internal$Style$selfName(2) + (':first-child + .' + mdgriffith$elm_ui$Internal$Style$classes.b3))),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'margin', '0 !important')
@@ -8758,27 +9705,27 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cM),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cJ),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'white-space', 'pre-wrap')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bC),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bv),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'block'),
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'white-space', 'normal'),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Descriptor,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aR),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aT),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'z-index', '0'),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Child,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ce),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b7),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'z-index', '-1')
@@ -8786,7 +9733,7 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.m),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.q),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'inline'),
@@ -8794,56 +9741,56 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c6),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.c5),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'inline'),
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'white-space', 'normal'),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Descriptor,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cK),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cH),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'flex')
 									])),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Descriptor,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ce),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b7),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'flex')
 									])),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Descriptor,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b$),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.bU),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'flex')
 									])),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Descriptor,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cf),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b8),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'flex')
 									])),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Descriptor,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cU),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cT),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'flex')
 									])),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Descriptor,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cS),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cR),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'flex')
 									])),
 								A2(
 								mdgriffith$elm_ui$Internal$Style$Child,
-								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.m),
+								mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.q),
 								_List_fromArray(
 									[
 										A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'inline'),
@@ -8852,21 +9799,21 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.p),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.s),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'inline-flex')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.B),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.C),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'inline-flex')
 							])),
 						A2(
 						mdgriffith$elm_ui$Internal$Style$Child,
-						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cE),
+						mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cB),
 						_List_fromArray(
 							[
 								A2(mdgriffith$elm_ui$Internal$Style$Prop, 'display', 'inline-grid')
@@ -8908,84 +9855,84 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dr),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dq),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'font-weight', '100')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.di),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dh),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'font-weight', '200')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dm),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dl),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'font-weight', '300')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.$7),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dn),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'font-weight', '400')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dn),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dm),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'font-weight', '500')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dq),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dp),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'font-weight', '600')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ch),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'font-weight', '700')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dh),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dg),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'font-weight', '800')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dj),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.di),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'font-weight', '900')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cO),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.cL),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'font-style', 'italic')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.de),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dd),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'text-decoration', 'line-through')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dx),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dv),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'text-decoration', 'underline'),
@@ -8995,8 +9942,8 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
 				_Utils_ap(
-					mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dx),
-					mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.de)),
+					mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dv),
+					mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dd)),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'text-decoration', 'line-through underline'),
@@ -9005,42 +9952,42 @@ var mdgriffith$elm_ui$Internal$Style$baseSheet = _List_fromArray(
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ds),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dr),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'font-style', 'normal')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dk),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dj),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'text-align', 'justify')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aJ),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aK),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'text-align', 'justify-all')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dg),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.df),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'text-align', 'center')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dp),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.$7),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'text-align', 'right')
 					])),
 				A2(
 				mdgriffith$elm_ui$Internal$Style$Descriptor,
-				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dl),
+				mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.dk),
 				_List_fromArray(
 					[
 						A2(mdgriffith$elm_ui$Internal$Style$Prop, 'text-align', 'left')
@@ -9152,16 +10099,16 @@ var mdgriffith$elm_ui$Internal$Style$commonValues = elm$core$List$concat(
 			mdgriffith$elm_ui$Internal$Style$fontVariant('afrc'),
 			mdgriffith$elm_ui$Internal$Style$fontVariant('frac')
 		]));
-var mdgriffith$elm_ui$Internal$Style$explainer = '\n.explain {\n    border: 6px solid rgb(174, 121, 15) !important;\n}\n.explain > .' + (mdgriffith$elm_ui$Internal$Style$classes.ca + (' {\n    border: 4px dashed rgb(0, 151, 167) !important;\n}\n\n.ctr {\n    border: none !important;\n}\n.explain > .ctr > .' + (mdgriffith$elm_ui$Internal$Style$classes.ca + ' {\n    border: 4px dashed rgb(0, 151, 167) !important;\n}\n\n')));
+var mdgriffith$elm_ui$Internal$Style$explainer = '\n.explain {\n    border: 6px solid rgb(174, 121, 15) !important;\n}\n.explain > .' + (mdgriffith$elm_ui$Internal$Style$classes.b3 + (' {\n    border: 4px dashed rgb(0, 151, 167) !important;\n}\n\n.ctr {\n    border: none !important;\n}\n.explain > .ctr > .' + (mdgriffith$elm_ui$Internal$Style$classes.b3 + ' {\n    border: 4px dashed rgb(0, 151, 167) !important;\n}\n\n')));
 var mdgriffith$elm_ui$Internal$Style$sliderOverrides = '\n\n/* General Input Reset */\ninput[type=range] {\n  -webkit-appearance: none; /* Hides the slider so that custom slider can be made */\n  /* width: 100%;  Specific width is required for Firefox. */\n  background: transparent; /* Otherwise white in Chrome */\n  position:absolute;\n  left:0;\n  top:0;\n  z-index:10;\n  width: 100%;\n  outline: dashed 1px;\n  height: 100%;\n  opacity: 0;\n}\n\n/* Hide all syling for track */\ninput[type=range]::-moz-range-track {\n    background: transparent;\n    cursor: pointer;\n}\ninput[type=range]::-ms-track {\n    background: transparent;\n    cursor: pointer;\n}\ninput[type=range]::-webkit-slider-runnable-track {\n    background: transparent;\n    cursor: pointer;\n}\n\n/* Thumbs */\ninput[type=range]::-webkit-slider-thumb {\n    -webkit-appearance: none;\n    opacity: 0.5;\n    width: 80px;\n    height: 80px;\n    background-color: black;\n    border:none;\n    border-radius: 5px;\n}\ninput[type=range]::-moz-range-thumb {\n    opacity: 0.5;\n    width: 80px;\n    height: 80px;\n    background-color: black;\n    border:none;\n    border-radius: 5px;\n}\ninput[type=range]::-ms-thumb {\n    opacity: 0.5;\n    width: 80px;\n    height: 80px;\n    background-color: black;\n    border:none;\n    border-radius: 5px;\n}\ninput[type=range][orient=vertical]{\n    writing-mode: bt-lr; /* IE */\n    -webkit-appearance: slider-vertical;  /* WebKit */\n}\n';
-var mdgriffith$elm_ui$Internal$Style$overrides = '@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {' + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca) + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.p) + (' > ' + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca) + (' { flex-basis: auto !important; } ' + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca) + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.p) + (' > ' + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ca) + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.aw) + (' { flex-basis: auto !important; }}' + (mdgriffith$elm_ui$Internal$Style$sliderOverrides + mdgriffith$elm_ui$Internal$Style$explainer))))))))))));
+var mdgriffith$elm_ui$Internal$Style$overrides = '@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {' + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3) + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.s) + (' > ' + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3) + (' { flex-basis: auto !important; } ' + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3) + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.s) + (' > ' + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.b3) + (mdgriffith$elm_ui$Internal$Style$dot(mdgriffith$elm_ui$Internal$Style$classes.ay) + (' { flex-basis: auto !important; }}' + (mdgriffith$elm_ui$Internal$Style$sliderOverrides + mdgriffith$elm_ui$Internal$Style$explainer))))))))))));
 var elm$core$String$concat = function (strings) {
 	return A2(elm$core$String$join, '', strings);
 };
 var mdgriffith$elm_ui$Internal$Style$Intermediate = elm$core$Basics$identity;
 var mdgriffith$elm_ui$Internal$Style$emptyIntermediate = F2(
 	function (selector, closing) {
-		return {av: closing, g: _List_Nil, I: _List_Nil, x: selector};
+		return {ax: closing, g: _List_Nil, J: _List_Nil, y: selector};
 	});
 var mdgriffith$elm_ui$Internal$Style$renderRules = F2(
 	function (_n0, rulesToRender) {
@@ -9175,10 +10122,10 @@ var mdgriffith$elm_ui$Internal$Style$renderRules = F2(
 						return _Utils_update(
 							rendered,
 							{
-								I: A2(
+								J: A2(
 									elm$core$List$cons,
 									_Utils_Tuple2(name, val),
-									rendered.I)
+									rendered.J)
 							});
 					case 2:
 						var _n2 = rule.a;
@@ -9190,7 +10137,7 @@ var mdgriffith$elm_ui$Internal$Style$renderRules = F2(
 							{
 								g: A2(
 									elm$core$List$cons,
-									{av: '\n}', g: _List_Nil, I: props, x: '@supports (' + (prop + (':' + (value + (') {' + parent.x))))},
+									{ax: '\n}', g: _List_Nil, J: props, y: '@supports (' + (prop + (':' + (value + (') {' + parent.y))))},
 									rendered.g)
 							});
 					case 4:
@@ -9203,7 +10150,7 @@ var mdgriffith$elm_ui$Internal$Style$renderRules = F2(
 									elm$core$List$cons,
 									A2(
 										mdgriffith$elm_ui$Internal$Style$renderRules,
-										A2(mdgriffith$elm_ui$Internal$Style$emptyIntermediate, parent.x + (' + ' + selector), ''),
+										A2(mdgriffith$elm_ui$Internal$Style$emptyIntermediate, parent.y + (' + ' + selector), ''),
 										adjRules),
 									rendered.g)
 							});
@@ -9217,7 +10164,7 @@ var mdgriffith$elm_ui$Internal$Style$renderRules = F2(
 									elm$core$List$cons,
 									A2(
 										mdgriffith$elm_ui$Internal$Style$renderRules,
-										A2(mdgriffith$elm_ui$Internal$Style$emptyIntermediate, parent.x + (' > ' + child), ''),
+										A2(mdgriffith$elm_ui$Internal$Style$emptyIntermediate, parent.y + (' > ' + child), ''),
 										childRules),
 									rendered.g)
 							});
@@ -9233,7 +10180,7 @@ var mdgriffith$elm_ui$Internal$Style$renderRules = F2(
 										mdgriffith$elm_ui$Internal$Style$renderRules,
 										A2(
 											mdgriffith$elm_ui$Internal$Style$emptyIntermediate,
-											_Utils_ap(parent.x, descriptor),
+											_Utils_ap(parent.y, descriptor),
 											''),
 										descriptorRules),
 									rendered.g)
@@ -9247,7 +10194,7 @@ var mdgriffith$elm_ui$Internal$Style$renderRules = F2(
 									elm$core$List$cons,
 									A2(
 										mdgriffith$elm_ui$Internal$Style$renderRules,
-										A2(mdgriffith$elm_ui$Internal$Style$emptyIntermediate, parent.x, ''),
+										A2(mdgriffith$elm_ui$Internal$Style$emptyIntermediate, parent.y, ''),
 										batched),
 									rendered.g)
 							});
@@ -9268,11 +10215,11 @@ var mdgriffith$elm_ui$Internal$Style$renderCompact = function (styleClasses) {
 				values));
 	};
 	var renderClass = function (rule) {
-		var _n2 = rule.I;
+		var _n2 = rule.J;
 		if (!_n2.b) {
 			return '';
 		} else {
-			return rule.x + ('{' + (renderValues(rule.I) + (rule.av + '}')));
+			return rule.y + ('{' + (renderValues(rule.J) + (rule.ax + '}')));
 		}
 	};
 	var renderIntermediate = function (_n0) {
@@ -9322,27 +10269,6 @@ var elm$core$Basics$min = F2(
 var elm$core$Basics$negate = function (n) {
 	return -n;
 };
-var elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
 var mdgriffith$elm_ui$Internal$Model$fontName = function (font) {
 	switch (font.$) {
 		case 0:
@@ -9359,7 +10285,7 @@ var mdgriffith$elm_ui$Internal$Model$fontName = function (font) {
 			var url = font.b;
 			return '\"' + (name + '\"');
 		default:
-			var name = font.a.cR;
+			var name = font.a.cQ;
 			return '\"' + (name + '\"');
 	}
 };
@@ -9380,7 +10306,7 @@ var mdgriffith$elm_ui$Internal$Model$isSmallCaps = function (_var) {
 var mdgriffith$elm_ui$Internal$Model$hasSmallCaps = function (typeface) {
 	if (typeface.$ === 5) {
 		var font = typeface.a;
-		return A2(elm$core$List$any, mdgriffith$elm_ui$Internal$Model$isSmallCaps, font.bV);
+		return A2(elm$core$List$any, mdgriffith$elm_ui$Internal$Model$isSmallCaps, font.bO);
 	} else {
 		return false;
 	}
@@ -9410,7 +10336,7 @@ var mdgriffith$elm_ui$Internal$Model$fontRule = F3(
 		return _List_fromArray(
 			[
 				A2(mdgriffith$elm_ui$Internal$Model$bracket, '.' + (name + ('.' + (modifier + (', ' + ('.' + (name + (' .' + modifier))))))), parentAdj),
-				A2(mdgriffith$elm_ui$Internal$Model$bracket, '.' + (name + ('.' + (modifier + ('> .' + (mdgriffith$elm_ui$Internal$Style$classes.m + (', .' + (name + (' .' + (modifier + (' > .' + mdgriffith$elm_ui$Internal$Style$classes.m)))))))))), textAdjustment)
+				A2(mdgriffith$elm_ui$Internal$Model$bracket, '.' + (name + ('.' + (modifier + ('> .' + (mdgriffith$elm_ui$Internal$Style$classes.q + (', .' + (name + (' .' + (modifier + (' > .' + mdgriffith$elm_ui$Internal$Style$classes.q)))))))))), textAdjustment)
 			]);
 	});
 var mdgriffith$elm_ui$Internal$Model$renderFontAdjustmentRule = F3(
@@ -9422,8 +10348,8 @@ var mdgriffith$elm_ui$Internal$Model$renderFontAdjustmentRule = F3(
 			elm$core$String$join,
 			' ',
 			_Utils_ap(
-				A3(mdgriffith$elm_ui$Internal$Model$fontRule, name, mdgriffith$elm_ui$Internal$Style$classes.c7, capital),
-				A3(mdgriffith$elm_ui$Internal$Model$fontRule, name, mdgriffith$elm_ui$Internal$Style$classes.cD, full)));
+				A3(mdgriffith$elm_ui$Internal$Model$fontRule, name, mdgriffith$elm_ui$Internal$Style$classes.c6, capital),
+				A3(mdgriffith$elm_ui$Internal$Model$fontRule, name, mdgriffith$elm_ui$Internal$Style$classes.cA, full)));
 	});
 var mdgriffith$elm_ui$Internal$Model$renderNullAdjustmentRule = F2(
 	function (fontToAdjust, otherFontName) {
@@ -9435,14 +10361,14 @@ var mdgriffith$elm_ui$Internal$Model$renderNullAdjustmentRule = F2(
 				[
 					A2(
 					mdgriffith$elm_ui$Internal$Model$bracket,
-					'.' + (name + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.c7 + (', ' + ('.' + (name + (' .' + mdgriffith$elm_ui$Internal$Style$classes.c7))))))),
+					'.' + (name + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.c6 + (', ' + ('.' + (name + (' .' + mdgriffith$elm_ui$Internal$Style$classes.c6))))))),
 					_List_fromArray(
 						[
 							_Utils_Tuple2('line-height', '1')
 						])),
 					A2(
 					mdgriffith$elm_ui$Internal$Model$bracket,
-					'.' + (name + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.c7 + ('> .' + (mdgriffith$elm_ui$Internal$Style$classes.m + (', .' + (name + (' .' + (mdgriffith$elm_ui$Internal$Style$classes.c7 + (' > .' + mdgriffith$elm_ui$Internal$Style$classes.m)))))))))),
+					'.' + (name + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.c6 + ('> .' + (mdgriffith$elm_ui$Internal$Style$classes.q + (', .' + (name + (' .' + (mdgriffith$elm_ui$Internal$Style$classes.c6 + (' > .' + mdgriffith$elm_ui$Internal$Style$classes.q)))))))))),
 					_List_fromArray(
 						[
 							_Utils_Tuple2('vertical-align', '0'),
@@ -9483,21 +10409,21 @@ var elm$core$List$minimum = function (list) {
 };
 var mdgriffith$elm_ui$Internal$Model$adjust = F3(
 	function (size, height, vertical) {
-		return {aS: height / size, ag: size, bW: vertical};
+		return {aU: height / size, ai: size, bP: vertical};
 	});
 var mdgriffith$elm_ui$Internal$Model$convertAdjustment = function (adjustment) {
 	var lines = _List_fromArray(
-		[adjustment.co, adjustment.cd, adjustment.cx, adjustment.cP]);
+		[adjustment.ch, adjustment.b6, adjustment.cr, adjustment.cM]);
 	var lineHeight = 1.5;
 	var normalDescender = (lineHeight - 1) / 2;
 	var oldMiddle = lineHeight / 2;
 	var descender = A2(
 		elm$core$Maybe$withDefault,
-		adjustment.cx,
+		adjustment.cr,
 		elm$core$List$minimum(lines));
 	var newBaseline = A2(
 		elm$core$Maybe$withDefault,
-		adjustment.cd,
+		adjustment.b6,
 		elm$core$List$minimum(
 			A2(
 				elm$core$List$filter,
@@ -9508,7 +10434,7 @@ var mdgriffith$elm_ui$Internal$Model$convertAdjustment = function (adjustment) {
 	var base = lineHeight;
 	var ascender = A2(
 		elm$core$Maybe$withDefault,
-		adjustment.co,
+		adjustment.ch,
 		elm$core$List$maximum(lines));
 	var capitalSize = 1 / (ascender - newBaseline);
 	var capitalVertical = 1 - ascender;
@@ -9517,8 +10443,8 @@ var mdgriffith$elm_ui$Internal$Model$convertAdjustment = function (adjustment) {
 	var newCapitalMiddle = ((ascender - newBaseline) / 2) + newBaseline;
 	var newFullMiddle = ((ascender - descender) / 2) + descender;
 	return {
-		co: A3(mdgriffith$elm_ui$Internal$Model$adjust, capitalSize, ascender - newBaseline, capitalVertical),
-		bm: A3(mdgriffith$elm_ui$Internal$Model$adjust, fullSize, ascender - descender, fullVertical)
+		ch: A3(mdgriffith$elm_ui$Internal$Model$adjust, capitalSize, ascender - newBaseline, capitalVertical),
+		bh: A3(mdgriffith$elm_ui$Internal$Model$adjust, fullSize, ascender - descender, fullVertical)
 	};
 };
 var mdgriffith$elm_ui$Internal$Model$fontAdjustmentRules = function (converted) {
@@ -9532,13 +10458,13 @@ var mdgriffith$elm_ui$Internal$Model$fontAdjustmentRules = function (converted) 
 				_Utils_Tuple2('display', 'inline-block'),
 				_Utils_Tuple2(
 				'line-height',
-				elm$core$String$fromFloat(converted.aS)),
+				elm$core$String$fromFloat(converted.aU)),
 				_Utils_Tuple2(
 				'vertical-align',
-				elm$core$String$fromFloat(converted.bW) + 'em'),
+				elm$core$String$fromFloat(converted.bP) + 'em'),
 				_Utils_Tuple2(
 				'font-size',
-				elm$core$String$fromFloat(converted.ag) + 'em')
+				elm$core$String$fromFloat(converted.ai) + 'em')
 			]));
 };
 var mdgriffith$elm_ui$Internal$Model$typefaceAdjustment = function (typefaces) {
@@ -9549,7 +10475,7 @@ var mdgriffith$elm_ui$Internal$Model$typefaceAdjustment = function (typefaces) {
 				if (found.$ === 1) {
 					if (face.$ === 5) {
 						var _with = face.a;
-						var _n2 = _with.b0;
+						var _n2 = _with.bV;
 						if (_n2.$ === 1) {
 							return found;
 						} else {
@@ -9558,12 +10484,12 @@ var mdgriffith$elm_ui$Internal$Model$typefaceAdjustment = function (typefaces) {
 								_Utils_Tuple2(
 									mdgriffith$elm_ui$Internal$Model$fontAdjustmentRules(
 										function ($) {
-											return $.bm;
+											return $.bh;
 										}(
 											mdgriffith$elm_ui$Internal$Model$convertAdjustment(adjustment))),
 									mdgriffith$elm_ui$Internal$Model$fontAdjustmentRules(
 										function ($) {
-											return $.co;
+											return $.ch;
 										}(
 											mdgriffith$elm_ui$Internal$Model$convertAdjustment(adjustment)))));
 						}
@@ -9650,7 +10576,7 @@ var mdgriffith$elm_ui$Internal$Model$renderVariants = function (typeface) {
 			A2(
 				elm$core$String$join,
 				', ',
-				A2(elm$core$List$map, mdgriffith$elm_ui$Internal$Model$renderVariant, font.bV)));
+				A2(elm$core$List$map, mdgriffith$elm_ui$Internal$Model$renderVariant, font.bO)));
 	} else {
 		return elm$core$Maybe$Nothing;
 	}
@@ -9710,7 +10636,7 @@ var mdgriffith$elm_ui$Internal$Model$toStyleSheetString = F2(
 					var pseudo = maybePseudo.a;
 					switch (pseudo) {
 						case 1:
-							var _n17 = options.cG;
+							var _n17 = options.cD;
 							switch (_n17) {
 								case 0:
 									return '';
@@ -9737,7 +10663,7 @@ var mdgriffith$elm_ui$Internal$Model$toStyleSheetString = F2(
 								elm$core$String$join,
 								'\n',
 								_List_fromArray(
-									[selector + ('-fs:focus {' + (renderedProps + '\n}')), '.' + (mdgriffith$elm_ui$Internal$Style$classes.ca + (':focus ~ ' + (selector + ('-fs:not(.focus)  {' + (renderedProps + '\n}'))))), '.' + (mdgriffith$elm_ui$Internal$Style$classes.ca + (':focus ' + (selector + ('-fs  {' + (renderedProps + '\n}'))))), '.focusable-parent:focus ~ ' + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.ca + (' ' + (selector + ('-fs {' + (renderedProps + '\n}'))))))]));
+									[selector + ('-fs:focus {' + (renderedProps + '\n}')), '.' + (mdgriffith$elm_ui$Internal$Style$classes.b3 + (':focus ~ ' + (selector + ('-fs:not(.focus)  {' + (renderedProps + '\n}'))))), '.' + (mdgriffith$elm_ui$Internal$Style$classes.b3 + (':focus ' + (selector + ('-fs  {' + (renderedProps + '\n}'))))), '.focusable-parent:focus ~ ' + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.b3 + (' ' + (selector + ('-fs {' + (renderedProps + '\n}'))))))]));
 						default:
 							return selector + ('-act:active {' + (A3(
 								elm$core$List$foldl,
@@ -9858,18 +10784,18 @@ var mdgriffith$elm_ui$Internal$Model$toStyleSheetString = F2(
 						var y = rule.c;
 						var yPx = elm$core$String$fromInt(y) + 'px';
 						var xPx = elm$core$String$fromInt(x) + 'px';
-						var single = '.' + mdgriffith$elm_ui$Internal$Style$classes.c6;
-						var row = '.' + mdgriffith$elm_ui$Internal$Style$classes.p;
-						var wrappedRow = '.' + (mdgriffith$elm_ui$Internal$Style$classes.a3 + row);
-						var right = '.' + mdgriffith$elm_ui$Internal$Style$classes.a6;
-						var paragraph = '.' + mdgriffith$elm_ui$Internal$Style$classes.bC;
-						var page = '.' + mdgriffith$elm_ui$Internal$Style$classes.bB;
-						var left = '.' + mdgriffith$elm_ui$Internal$Style$classes.a5;
+						var single = '.' + mdgriffith$elm_ui$Internal$Style$classes.c5;
+						var row = '.' + mdgriffith$elm_ui$Internal$Style$classes.s;
+						var wrappedRow = '.' + (mdgriffith$elm_ui$Internal$Style$classes.a5 + row);
+						var right = '.' + mdgriffith$elm_ui$Internal$Style$classes.a8;
+						var paragraph = '.' + mdgriffith$elm_ui$Internal$Style$classes.bv;
+						var page = '.' + mdgriffith$elm_ui$Internal$Style$classes.bu;
+						var left = '.' + mdgriffith$elm_ui$Internal$Style$classes.a7;
 						var halfY = elm$core$String$fromFloat(y / 2) + 'px';
 						var halfX = elm$core$String$fromFloat(x / 2) + 'px';
-						var column = '.' + mdgriffith$elm_ui$Internal$Style$classes.B;
+						var column = '.' + mdgriffith$elm_ui$Internal$Style$classes.C;
 						var _class = '.' + cls;
-						var any = '.' + mdgriffith$elm_ui$Internal$Style$classes.ca;
+						var any = '.' + mdgriffith$elm_ui$Internal$Style$classes.b3;
 						return elm$core$String$concat(
 							_List_fromArray(
 								[
@@ -10109,45 +11035,45 @@ var mdgriffith$elm_ui$Internal$Model$toStyleSheetString = F2(
 						var toGridLength = function (x) {
 							return A3(toGridLengthHelper, elm$core$Maybe$Nothing, elm$core$Maybe$Nothing, x);
 						};
-						var xSpacing = toGridLength(template.c9.a);
-						var ySpacing = toGridLength(template.c9.b);
+						var xSpacing = toGridLength(template.c8.a);
+						var ySpacing = toGridLength(template.c8.b);
 						var rows = function (x) {
 							return 'grid-template-rows: ' + (x + ';');
 						}(
 							A2(
 								elm$core$String$join,
 								' ',
-								A2(elm$core$List$map, toGridLength, template.c0)));
+								A2(elm$core$List$map, toGridLength, template.c$)));
 						var msRows = function (x) {
 							return '-ms-grid-rows: ' + (x + ';');
 						}(
 							A2(
 								elm$core$String$join,
 								ySpacing,
-								A2(elm$core$List$map, toGridLength, template.r)));
+								A2(elm$core$List$map, toGridLength, template.u)));
 						var msColumns = function (x) {
 							return '-ms-grid-columns: ' + (x + ';');
 						}(
 							A2(
 								elm$core$String$join,
 								ySpacing,
-								A2(elm$core$List$map, toGridLength, template.r)));
-						var gapY = 'grid-row-gap:' + (toGridLength(template.c9.b) + ';');
-						var gapX = 'grid-column-gap:' + (toGridLength(template.c9.a) + ';');
+								A2(elm$core$List$map, toGridLength, template.u)));
+						var gapY = 'grid-row-gap:' + (toGridLength(template.c8.b) + ';');
+						var gapX = 'grid-column-gap:' + (toGridLength(template.c8.a) + ';');
 						var columns = function (x) {
 							return 'grid-template-columns: ' + (x + ';');
 						}(
 							A2(
 								elm$core$String$join,
 								' ',
-								A2(elm$core$List$map, toGridLength, template.r)));
+								A2(elm$core$List$map, toGridLength, template.u)));
 						var _class = '.grid-rows-' + (A2(
 							elm$core$String$join,
 							'-',
-							A2(elm$core$List$map, mdgriffith$elm_ui$Internal$Model$lengthClassName, template.c0)) + ('-cols-' + (A2(
+							A2(elm$core$List$map, mdgriffith$elm_ui$Internal$Model$lengthClassName, template.c$)) + ('-cols-' + (A2(
 							elm$core$String$join,
 							'-',
-							A2(elm$core$List$map, mdgriffith$elm_ui$Internal$Model$lengthClassName, template.r)) + ('-space-x-' + (mdgriffith$elm_ui$Internal$Model$lengthClassName(template.c9.a) + ('-space-y-' + mdgriffith$elm_ui$Internal$Model$lengthClassName(template.c9.b)))))));
+							A2(elm$core$List$map, mdgriffith$elm_ui$Internal$Model$lengthClassName, template.u)) + ('-space-x-' + (mdgriffith$elm_ui$Internal$Model$lengthClassName(template.c8.a) + ('-space-y-' + mdgriffith$elm_ui$Internal$Model$lengthClassName(template.c8.b)))))));
 						var modernGrid = _class + ('{' + (columns + (rows + (gapX + (gapY + '}')))));
 						var supports = '@supports (display:grid) {' + (modernGrid + '}');
 						var base = _class + ('{' + (msColumns + (msRows + '}')));
@@ -10159,20 +11085,20 @@ var mdgriffith$elm_ui$Internal$Model$toStyleSheetString = F2(
 							' ',
 							_List_fromArray(
 								[
-									'-ms-grid-row: ' + (elm$core$String$fromInt(position.p) + ';'),
-									'-ms-grid-row-span: ' + (elm$core$String$fromInt(position.aS) + ';'),
-									'-ms-grid-column: ' + (elm$core$String$fromInt(position.ct) + ';'),
-									'-ms-grid-column-span: ' + (elm$core$String$fromInt(position.a0) + ';')
+									'-ms-grid-row: ' + (elm$core$String$fromInt(position.s) + ';'),
+									'-ms-grid-row-span: ' + (elm$core$String$fromInt(position.aU) + ';'),
+									'-ms-grid-column: ' + (elm$core$String$fromInt(position.cm) + ';'),
+									'-ms-grid-column-span: ' + (elm$core$String$fromInt(position.a2) + ';')
 								]));
 						var modernPosition = A2(
 							elm$core$String$join,
 							' ',
 							_List_fromArray(
 								[
-									'grid-row: ' + (elm$core$String$fromInt(position.p) + (' / ' + (elm$core$String$fromInt(position.p + position.aS) + ';'))),
-									'grid-column: ' + (elm$core$String$fromInt(position.ct) + (' / ' + (elm$core$String$fromInt(position.ct + position.a0) + ';')))
+									'grid-row: ' + (elm$core$String$fromInt(position.s) + (' / ' + (elm$core$String$fromInt(position.s + position.aU) + ';'))),
+									'grid-column: ' + (elm$core$String$fromInt(position.cm) + (' / ' + (elm$core$String$fromInt(position.cm + position.a2) + ';')))
 								]));
-						var _class = '.grid-pos-' + (elm$core$String$fromInt(position.p) + ('-' + (elm$core$String$fromInt(position.ct) + ('-' + (elm$core$String$fromInt(position.a0) + ('-' + elm$core$String$fromInt(position.aS)))))));
+						var _class = '.grid-pos-' + (elm$core$String$fromInt(position.s) + ('-' + (elm$core$String$fromInt(position.cm) + ('-' + (elm$core$String$fromInt(position.a2) + ('-' + elm$core$String$fromInt(position.aU)))))));
 						var modernGrid = _class + ('{' + (modernPosition + '}'));
 						var supports = '@supports (display:grid) {' + (modernGrid + '}');
 						var base = _class + ('{' + (msPosition + '}'));
@@ -10214,16 +11140,16 @@ var mdgriffith$elm_ui$Internal$Model$toStyleSheetString = F2(
 		var combine = F2(
 			function (style, rendered) {
 				return {
-					aI: _Utils_ap(
-						rendered.aI,
+					aJ: _Utils_ap(
+						rendered.aJ,
 						A2(renderStyleRule, style, elm$core$Maybe$Nothing)),
-					aq: function () {
+					as: function () {
 						var _n14 = mdgriffith$elm_ui$Internal$Model$topLevelValue(style);
 						if (_n14.$ === 1) {
-							return rendered.aq;
+							return rendered.as;
 						} else {
 							var topLevel = _n14.a;
-							return A2(elm$core$List$cons, topLevel, rendered.aq);
+							return A2(elm$core$List$cons, topLevel, rendered.as);
 						}
 					}()
 				};
@@ -10231,10 +11157,10 @@ var mdgriffith$elm_ui$Internal$Model$toStyleSheetString = F2(
 		var _n13 = A3(
 			elm$core$List$foldl,
 			combine,
-			{aI: '', aq: _List_Nil},
+			{aJ: '', as: _List_Nil},
 			stylesheet);
-		var topLevel = _n13.aq;
-		var rules = _n13.aI;
+		var topLevel = _n13.as;
+		var rules = _n13.aJ;
 		return _Utils_ap(
 			mdgriffith$elm_ui$Internal$Model$renderTopLevelValues(topLevel),
 			rules);
@@ -10270,7 +11196,7 @@ var mdgriffith$elm_ui$Internal$Model$embedKeyed = F4(
 								elm$core$Set$empty,
 								_List_fromArray(
 									[
-										mdgriffith$elm_ui$Internal$Model$renderFocusStyle(opts.cC)
+										mdgriffith$elm_ui$Internal$Model$renderFocusStyle(opts.cz)
 									])),
 							styles).b)),
 				children)) : A2(
@@ -10287,7 +11213,7 @@ var mdgriffith$elm_ui$Internal$Model$embedKeyed = F4(
 							elm$core$Set$empty,
 							_List_fromArray(
 								[
-									mdgriffith$elm_ui$Internal$Model$renderFocusStyle(opts.cC)
+									mdgriffith$elm_ui$Internal$Model$renderFocusStyle(opts.cz)
 								])),
 						styles).b)),
 			children);
@@ -10309,7 +11235,7 @@ var mdgriffith$elm_ui$Internal$Model$embedWith = F4(
 							elm$core$Set$empty,
 							_List_fromArray(
 								[
-									mdgriffith$elm_ui$Internal$Model$renderFocusStyle(opts.cC)
+									mdgriffith$elm_ui$Internal$Model$renderFocusStyle(opts.cz)
 								])),
 						styles).b),
 				children)) : A2(
@@ -10324,7 +11250,7 @@ var mdgriffith$elm_ui$Internal$Model$embedWith = F4(
 						elm$core$Set$empty,
 						_List_fromArray(
 							[
-								mdgriffith$elm_ui$Internal$Model$renderFocusStyle(opts.cC)
+								mdgriffith$elm_ui$Internal$Model$renderFocusStyle(opts.cz)
 							])),
 					styles).b),
 			children);
@@ -10404,7 +11330,7 @@ var mdgriffith$elm_ui$Internal$Model$finalizeNode = F6(
 								internal,
 								_List_fromArray(
 									[
-										elm$html$Html$Attributes$class(mdgriffith$elm_ui$Internal$Style$classes.ca + (' ' + mdgriffith$elm_ui$Internal$Style$classes.c6))
+										elm$html$Html$Attributes$class(mdgriffith$elm_ui$Internal$Style$classes.b3 + (' ' + mdgriffith$elm_ui$Internal$Style$classes.c5))
 									]))
 							]));
 			}
@@ -10420,7 +11346,7 @@ var mdgriffith$elm_ui$Internal$Model$finalizeNode = F6(
 								elm$core$String$join,
 								' ',
 								_List_fromArray(
-									[mdgriffith$elm_ui$Internal$Style$classes.ca, mdgriffith$elm_ui$Internal$Style$classes.c6, mdgriffith$elm_ui$Internal$Style$classes.aw, mdgriffith$elm_ui$Internal$Style$classes.C, mdgriffith$elm_ui$Internal$Style$classes.b7])))
+									[mdgriffith$elm_ui$Internal$Style$classes.b3, mdgriffith$elm_ui$Internal$Style$classes.c5, mdgriffith$elm_ui$Internal$Style$classes.ay, mdgriffith$elm_ui$Internal$Style$classes.D, mdgriffith$elm_ui$Internal$Style$classes.b0])))
 						]),
 					_List_fromArray(
 						[html])) : (A2(mdgriffith$elm_ui$Internal$Flag$present, mdgriffith$elm_ui$Internal$Flag$centerX, has) ? A2(
@@ -10432,7 +11358,7 @@ var mdgriffith$elm_ui$Internal$Model$finalizeNode = F6(
 								elm$core$String$join,
 								' ',
 								_List_fromArray(
-									[mdgriffith$elm_ui$Internal$Style$classes.ca, mdgriffith$elm_ui$Internal$Style$classes.c6, mdgriffith$elm_ui$Internal$Style$classes.aw, mdgriffith$elm_ui$Internal$Style$classes.C, mdgriffith$elm_ui$Internal$Style$classes.b5])))
+									[mdgriffith$elm_ui$Internal$Style$classes.b3, mdgriffith$elm_ui$Internal$Style$classes.c5, mdgriffith$elm_ui$Internal$Style$classes.ay, mdgriffith$elm_ui$Internal$Style$classes.D, mdgriffith$elm_ui$Internal$Style$classes.b_])))
 						]),
 					_List_fromArray(
 						[html])) : html));
@@ -10446,7 +11372,7 @@ var mdgriffith$elm_ui$Internal$Model$finalizeNode = F6(
 								elm$core$String$join,
 								' ',
 								_List_fromArray(
-									[mdgriffith$elm_ui$Internal$Style$classes.ca, mdgriffith$elm_ui$Internal$Style$classes.c6, mdgriffith$elm_ui$Internal$Style$classes.aw, mdgriffith$elm_ui$Internal$Style$classes.b6])))
+									[mdgriffith$elm_ui$Internal$Style$classes.b3, mdgriffith$elm_ui$Internal$Style$classes.c5, mdgriffith$elm_ui$Internal$Style$classes.ay, mdgriffith$elm_ui$Internal$Style$classes.b$])))
 						]),
 					_List_fromArray(
 						[html])) : (A2(mdgriffith$elm_ui$Internal$Flag$present, mdgriffith$elm_ui$Internal$Flag$alignBottom, has) ? A2(
@@ -10458,7 +11384,7 @@ var mdgriffith$elm_ui$Internal$Model$finalizeNode = F6(
 								elm$core$String$join,
 								' ',
 								_List_fromArray(
-									[mdgriffith$elm_ui$Internal$Style$classes.ca, mdgriffith$elm_ui$Internal$Style$classes.c6, mdgriffith$elm_ui$Internal$Style$classes.aw, mdgriffith$elm_ui$Internal$Style$classes.b4])))
+									[mdgriffith$elm_ui$Internal$Style$classes.b3, mdgriffith$elm_ui$Internal$Style$classes.c5, mdgriffith$elm_ui$Internal$Style$classes.ay, mdgriffith$elm_ui$Internal$Style$classes.bZ])))
 						]),
 					_List_fromArray(
 						[html])) : html));
@@ -10476,7 +11402,7 @@ var mdgriffith$elm_ui$Internal$Model$textElement = function (str) {
 					elm$core$String$join,
 					' ',
 					_List_fromArray(
-						[mdgriffith$elm_ui$Internal$Style$classes.ca, mdgriffith$elm_ui$Internal$Style$classes.m, mdgriffith$elm_ui$Internal$Style$classes.a1, mdgriffith$elm_ui$Internal$Style$classes.aC])))
+						[mdgriffith$elm_ui$Internal$Style$classes.b3, mdgriffith$elm_ui$Internal$Style$classes.q, mdgriffith$elm_ui$Internal$Style$classes.a3, mdgriffith$elm_ui$Internal$Style$classes.aD])))
 			]),
 		_List_fromArray(
 			[
@@ -10494,7 +11420,7 @@ var mdgriffith$elm_ui$Internal$Model$textElementFill = function (str) {
 					elm$core$String$join,
 					' ',
 					_List_fromArray(
-						[mdgriffith$elm_ui$Internal$Style$classes.ca, mdgriffith$elm_ui$Internal$Style$classes.m, mdgriffith$elm_ui$Internal$Style$classes.a2, mdgriffith$elm_ui$Internal$Style$classes.aT])))
+						[mdgriffith$elm_ui$Internal$Style$classes.b3, mdgriffith$elm_ui$Internal$Style$classes.q, mdgriffith$elm_ui$Internal$Style$classes.a4, mdgriffith$elm_ui$Internal$Style$classes.aV])))
 			]),
 		_List_fromArray(
 			[
@@ -10534,16 +11460,16 @@ var mdgriffith$elm_ui$Internal$Model$createElement = F3(
 								elm$core$List$cons,
 								_Utils_Tuple2(
 									key,
-									A2(styled.cH, mdgriffith$elm_ui$Internal$Model$NoStyleSheet, context)),
+									A2(styled.cE, mdgriffith$elm_ui$Internal$Model$NoStyleSheet, context)),
 								htmls),
-							elm$core$List$isEmpty(existingStyles) ? styled.df : _Utils_ap(styled.df, existingStyles)) : _Utils_Tuple2(
+							elm$core$List$isEmpty(existingStyles) ? styled.de : _Utils_ap(styled.de, existingStyles)) : _Utils_Tuple2(
 							A2(
 								elm$core$List$cons,
 								_Utils_Tuple2(
 									key,
-									A2(styled.cH, mdgriffith$elm_ui$Internal$Model$NoStyleSheet, context)),
+									A2(styled.cE, mdgriffith$elm_ui$Internal$Model$NoStyleSheet, context)),
 								htmls),
-							elm$core$List$isEmpty(existingStyles) ? styled.df : _Utils_ap(styled.df, existingStyles));
+							elm$core$List$isEmpty(existingStyles) ? styled.de : _Utils_ap(styled.de, existingStyles));
 					case 2:
 						var str = child.a;
 						return _Utils_Tuple2(
@@ -10581,14 +11507,14 @@ var mdgriffith$elm_ui$Internal$Model$createElement = F3(
 						return _Utils_eq(context, mdgriffith$elm_ui$Internal$Model$asParagraph) ? _Utils_Tuple2(
 							A2(
 								elm$core$List$cons,
-								A2(styled.cH, mdgriffith$elm_ui$Internal$Model$NoStyleSheet, context),
+								A2(styled.cE, mdgriffith$elm_ui$Internal$Model$NoStyleSheet, context),
 								htmls),
-							elm$core$List$isEmpty(existingStyles) ? styled.df : _Utils_ap(styled.df, existingStyles)) : _Utils_Tuple2(
+							elm$core$List$isEmpty(existingStyles) ? styled.de : _Utils_ap(styled.de, existingStyles)) : _Utils_Tuple2(
 							A2(
 								elm$core$List$cons,
-								A2(styled.cH, mdgriffith$elm_ui$Internal$Model$NoStyleSheet, context),
+								A2(styled.cE, mdgriffith$elm_ui$Internal$Model$NoStyleSheet, context),
 								htmls),
-							elm$core$List$isEmpty(existingStyles) ? styled.df : _Utils_ap(styled.df, existingStyles));
+							elm$core$List$isEmpty(existingStyles) ? styled.de : _Utils_ap(styled.de, existingStyles));
 					case 2:
 						var str = child.a;
 						return _Utils_Tuple2(
@@ -10610,29 +11536,29 @@ var mdgriffith$elm_ui$Internal$Model$createElement = F3(
 				keyedChildren);
 			var keyed = _n1.a;
 			var styles = _n1.b;
-			var newStyles = elm$core$List$isEmpty(styles) ? rendered.df : _Utils_ap(rendered.df, styles);
+			var newStyles = elm$core$List$isEmpty(styles) ? rendered.de : _Utils_ap(rendered.de, styles);
 			if (!newStyles.b) {
 				return mdgriffith$elm_ui$Internal$Model$Unstyled(
 					A5(
 						mdgriffith$elm_ui$Internal$Model$finalizeNode,
-						rendered.R,
-						rendered.T,
-						rendered.M,
+						rendered.S,
+						rendered.U,
+						rendered.N,
 						mdgriffith$elm_ui$Internal$Model$Keyed(
-							A3(mdgriffith$elm_ui$Internal$Model$addKeyedChildren, 'nearby-element-pls', keyed, rendered.N)),
+							A3(mdgriffith$elm_ui$Internal$Model$addKeyedChildren, 'nearby-element-pls', keyed, rendered.O)),
 						mdgriffith$elm_ui$Internal$Model$NoStyleSheet));
 			} else {
 				var allStyles = newStyles;
 				return mdgriffith$elm_ui$Internal$Model$Styled(
 					{
-						cH: A4(
+						cE: A4(
 							mdgriffith$elm_ui$Internal$Model$finalizeNode,
-							rendered.R,
-							rendered.T,
-							rendered.M,
+							rendered.S,
+							rendered.U,
+							rendered.N,
 							mdgriffith$elm_ui$Internal$Model$Keyed(
-								A3(mdgriffith$elm_ui$Internal$Model$addKeyedChildren, 'nearby-element-pls', keyed, rendered.N))),
-						df: allStyles
+								A3(mdgriffith$elm_ui$Internal$Model$addKeyedChildren, 'nearby-element-pls', keyed, rendered.O))),
+						de: allStyles
 					});
 			}
 		} else {
@@ -10644,29 +11570,29 @@ var mdgriffith$elm_ui$Internal$Model$createElement = F3(
 				unkeyedChildren);
 			var unkeyed = _n3.a;
 			var styles = _n3.b;
-			var newStyles = elm$core$List$isEmpty(styles) ? rendered.df : _Utils_ap(rendered.df, styles);
+			var newStyles = elm$core$List$isEmpty(styles) ? rendered.de : _Utils_ap(rendered.de, styles);
 			if (!newStyles.b) {
 				return mdgriffith$elm_ui$Internal$Model$Unstyled(
 					A5(
 						mdgriffith$elm_ui$Internal$Model$finalizeNode,
-						rendered.R,
-						rendered.T,
-						rendered.M,
+						rendered.S,
+						rendered.U,
+						rendered.N,
 						mdgriffith$elm_ui$Internal$Model$Unkeyed(
-							A2(mdgriffith$elm_ui$Internal$Model$addChildren, unkeyed, rendered.N)),
+							A2(mdgriffith$elm_ui$Internal$Model$addChildren, unkeyed, rendered.O)),
 						mdgriffith$elm_ui$Internal$Model$NoStyleSheet));
 			} else {
 				var allStyles = newStyles;
 				return mdgriffith$elm_ui$Internal$Model$Styled(
 					{
-						cH: A4(
+						cE: A4(
 							mdgriffith$elm_ui$Internal$Model$finalizeNode,
-							rendered.R,
-							rendered.T,
-							rendered.M,
+							rendered.S,
+							rendered.U,
+							rendered.N,
 							mdgriffith$elm_ui$Internal$Model$Unkeyed(
-								A2(mdgriffith$elm_ui$Internal$Model$addChildren, unkeyed, rendered.N))),
-						df: allStyles
+								A2(mdgriffith$elm_ui$Internal$Model$addChildren, unkeyed, rendered.O))),
+						de: allStyles
 					});
 			}
 		}
@@ -10743,37 +11669,37 @@ var mdgriffith$elm_ui$Internal$Model$nearbyElement = F2(
 									elm$core$String$join,
 									' ',
 									_List_fromArray(
-										[mdgriffith$elm_ui$Internal$Style$classes.ac, mdgriffith$elm_ui$Internal$Style$classes.c6, mdgriffith$elm_ui$Internal$Style$classes.b$]));
+										[mdgriffith$elm_ui$Internal$Style$classes.ae, mdgriffith$elm_ui$Internal$Style$classes.c5, mdgriffith$elm_ui$Internal$Style$classes.bU]));
 							case 1:
 								return A2(
 									elm$core$String$join,
 									' ',
 									_List_fromArray(
-										[mdgriffith$elm_ui$Internal$Style$classes.ac, mdgriffith$elm_ui$Internal$Style$classes.c6, mdgriffith$elm_ui$Internal$Style$classes.cf]));
+										[mdgriffith$elm_ui$Internal$Style$classes.ae, mdgriffith$elm_ui$Internal$Style$classes.c5, mdgriffith$elm_ui$Internal$Style$classes.b8]));
 							case 2:
 								return A2(
 									elm$core$String$join,
 									' ',
 									_List_fromArray(
-										[mdgriffith$elm_ui$Internal$Style$classes.ac, mdgriffith$elm_ui$Internal$Style$classes.c6, mdgriffith$elm_ui$Internal$Style$classes.cU]));
+										[mdgriffith$elm_ui$Internal$Style$classes.ae, mdgriffith$elm_ui$Internal$Style$classes.c5, mdgriffith$elm_ui$Internal$Style$classes.cT]));
 							case 3:
 								return A2(
 									elm$core$String$join,
 									' ',
 									_List_fromArray(
-										[mdgriffith$elm_ui$Internal$Style$classes.ac, mdgriffith$elm_ui$Internal$Style$classes.c6, mdgriffith$elm_ui$Internal$Style$classes.cS]));
+										[mdgriffith$elm_ui$Internal$Style$classes.ae, mdgriffith$elm_ui$Internal$Style$classes.c5, mdgriffith$elm_ui$Internal$Style$classes.cR]));
 							case 4:
 								return A2(
 									elm$core$String$join,
 									' ',
 									_List_fromArray(
-										[mdgriffith$elm_ui$Internal$Style$classes.ac, mdgriffith$elm_ui$Internal$Style$classes.c6, mdgriffith$elm_ui$Internal$Style$classes.cK]));
+										[mdgriffith$elm_ui$Internal$Style$classes.ae, mdgriffith$elm_ui$Internal$Style$classes.c5, mdgriffith$elm_ui$Internal$Style$classes.cH]));
 							default:
 								return A2(
 									elm$core$String$join,
 									' ',
 									_List_fromArray(
-										[mdgriffith$elm_ui$Internal$Style$classes.ac, mdgriffith$elm_ui$Internal$Style$classes.c6, mdgriffith$elm_ui$Internal$Style$classes.ce]));
+										[mdgriffith$elm_ui$Internal$Style$classes.ae, mdgriffith$elm_ui$Internal$Style$classes.c5, mdgriffith$elm_ui$Internal$Style$classes.b7]));
 						}
 					}())
 				]),
@@ -10791,7 +11717,7 @@ var mdgriffith$elm_ui$Internal$Model$nearbyElement = F2(
 							return html(mdgriffith$elm_ui$Internal$Model$asEl);
 						default:
 							var styled = elem.a;
-							return A2(styled.cH, mdgriffith$elm_ui$Internal$Model$NoStyleSheet, mdgriffith$elm_ui$Internal$Model$asEl);
+							return A2(styled.cE, mdgriffith$elm_ui$Internal$Model$NoStyleSheet, mdgriffith$elm_ui$Internal$Model$asEl);
 					}
 				}()
 				]));
@@ -10867,21 +11793,21 @@ var mdgriffith$elm_ui$Internal$Model$addNodeName = F2(
 var mdgriffith$elm_ui$Internal$Model$alignXName = function (align) {
 	switch (align) {
 		case 0:
-			return mdgriffith$elm_ui$Internal$Style$classes.aL + (' ' + mdgriffith$elm_ui$Internal$Style$classes.a5);
+			return mdgriffith$elm_ui$Internal$Style$classes.aM + (' ' + mdgriffith$elm_ui$Internal$Style$classes.a7);
 		case 2:
-			return mdgriffith$elm_ui$Internal$Style$classes.aL + (' ' + mdgriffith$elm_ui$Internal$Style$classes.a6);
+			return mdgriffith$elm_ui$Internal$Style$classes.aM + (' ' + mdgriffith$elm_ui$Internal$Style$classes.a8);
 		default:
-			return mdgriffith$elm_ui$Internal$Style$classes.aL + (' ' + mdgriffith$elm_ui$Internal$Style$classes.b2);
+			return mdgriffith$elm_ui$Internal$Style$classes.aM + (' ' + mdgriffith$elm_ui$Internal$Style$classes.bX);
 	}
 };
 var mdgriffith$elm_ui$Internal$Model$alignYName = function (align) {
 	switch (align) {
 		case 0:
-			return mdgriffith$elm_ui$Internal$Style$classes.aM + (' ' + mdgriffith$elm_ui$Internal$Style$classes.b8);
+			return mdgriffith$elm_ui$Internal$Style$classes.aN + (' ' + mdgriffith$elm_ui$Internal$Style$classes.b1);
 		case 2:
-			return mdgriffith$elm_ui$Internal$Style$classes.aM + (' ' + mdgriffith$elm_ui$Internal$Style$classes.b1);
+			return mdgriffith$elm_ui$Internal$Style$classes.aN + (' ' + mdgriffith$elm_ui$Internal$Style$classes.bW);
 		default:
-			return mdgriffith$elm_ui$Internal$Style$classes.aM + (' ' + mdgriffith$elm_ui$Internal$Style$classes.b3);
+			return mdgriffith$elm_ui$Internal$Style$classes.aN + (' ' + mdgriffith$elm_ui$Internal$Style$classes.bY);
 	}
 };
 var mdgriffith$elm_ui$Internal$Model$FullTransform = F4(
@@ -11030,21 +11956,21 @@ var mdgriffith$elm_ui$Internal$Model$renderHeight = function (h) {
 		case 1:
 			return _Utils_Tuple3(
 				A2(mdgriffith$elm_ui$Internal$Flag$add, mdgriffith$elm_ui$Internal$Flag$heightContent, mdgriffith$elm_ui$Internal$Flag$none),
-				mdgriffith$elm_ui$Internal$Style$classes.aC,
+				mdgriffith$elm_ui$Internal$Style$classes.aD,
 				_List_Nil);
 		case 2:
 			var portion = h.a;
 			return (portion === 1) ? _Utils_Tuple3(
 				A2(mdgriffith$elm_ui$Internal$Flag$add, mdgriffith$elm_ui$Internal$Flag$heightFill, mdgriffith$elm_ui$Internal$Flag$none),
-				mdgriffith$elm_ui$Internal$Style$classes.aT,
+				mdgriffith$elm_ui$Internal$Style$classes.aV,
 				_List_Nil) : _Utils_Tuple3(
 				A2(mdgriffith$elm_ui$Internal$Flag$add, mdgriffith$elm_ui$Internal$Flag$heightFill, mdgriffith$elm_ui$Internal$Flag$none),
-				mdgriffith$elm_ui$Internal$Style$classes.bo + (' height-fill-' + elm$core$String$fromInt(portion)),
+				mdgriffith$elm_ui$Internal$Style$classes.bj + (' height-fill-' + elm$core$String$fromInt(portion)),
 				_List_fromArray(
 					[
 						A3(
 						mdgriffith$elm_ui$Internal$Model$Single,
-						mdgriffith$elm_ui$Internal$Style$classes.ca + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.p + (' > ' + mdgriffith$elm_ui$Internal$Style$dot(
+						mdgriffith$elm_ui$Internal$Style$classes.b3 + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.s + (' > ' + mdgriffith$elm_ui$Internal$Style$dot(
 							'height-fill-' + elm$core$String$fromInt(portion))))),
 						'flex-grow',
 						elm$core$String$fromInt(portion * 100000))
@@ -11091,7 +12017,7 @@ var mdgriffith$elm_ui$Internal$Model$renderWidth = function (w) {
 			var px = w.a;
 			return _Utils_Tuple3(
 				mdgriffith$elm_ui$Internal$Flag$none,
-				mdgriffith$elm_ui$Internal$Style$classes.bY + (' width-px-' + elm$core$String$fromInt(px)),
+				mdgriffith$elm_ui$Internal$Style$classes.bR + (' width-px-' + elm$core$String$fromInt(px)),
 				_List_fromArray(
 					[
 						A3(
@@ -11103,21 +12029,21 @@ var mdgriffith$elm_ui$Internal$Model$renderWidth = function (w) {
 		case 1:
 			return _Utils_Tuple3(
 				A2(mdgriffith$elm_ui$Internal$Flag$add, mdgriffith$elm_ui$Internal$Flag$widthContent, mdgriffith$elm_ui$Internal$Flag$none),
-				mdgriffith$elm_ui$Internal$Style$classes.a1,
+				mdgriffith$elm_ui$Internal$Style$classes.a3,
 				_List_Nil);
 		case 2:
 			var portion = w.a;
 			return (portion === 1) ? _Utils_Tuple3(
 				A2(mdgriffith$elm_ui$Internal$Flag$add, mdgriffith$elm_ui$Internal$Flag$widthFill, mdgriffith$elm_ui$Internal$Flag$none),
-				mdgriffith$elm_ui$Internal$Style$classes.a2,
+				mdgriffith$elm_ui$Internal$Style$classes.a4,
 				_List_Nil) : _Utils_Tuple3(
 				A2(mdgriffith$elm_ui$Internal$Flag$add, mdgriffith$elm_ui$Internal$Flag$widthFill, mdgriffith$elm_ui$Internal$Flag$none),
-				mdgriffith$elm_ui$Internal$Style$classes.bZ + (' width-fill-' + elm$core$String$fromInt(portion)),
+				mdgriffith$elm_ui$Internal$Style$classes.bS + (' width-fill-' + elm$core$String$fromInt(portion)),
 				_List_fromArray(
 					[
 						A3(
 						mdgriffith$elm_ui$Internal$Model$Single,
-						mdgriffith$elm_ui$Internal$Style$classes.ca + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.p + (' > ' + mdgriffith$elm_ui$Internal$Style$dot(
+						mdgriffith$elm_ui$Internal$Style$classes.b3 + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.s + (' > ' + mdgriffith$elm_ui$Internal$Style$dot(
 							'width-fill-' + elm$core$String$fromInt(portion))))),
 						'flex-grow',
 						elm$core$String$fromInt(portion * 100000))
@@ -11211,26 +12137,26 @@ var mdgriffith$elm_ui$Internal$Model$gatherAttrRecursive = F8(
 				var _n1 = mdgriffith$elm_ui$Internal$Model$transformClass(transform);
 				if (_n1.$ === 1) {
 					return {
-						M: A2(
+						N: A2(
 							elm$core$List$cons,
 							elm$html$Html$Attributes$class(classes),
 							attrs),
-						N: children,
-						R: has,
-						T: node,
-						df: styles
+						O: children,
+						S: has,
+						U: node,
+						de: styles
 					};
 				} else {
 					var _class = _n1.a;
 					return {
-						M: A2(
+						N: A2(
 							elm$core$List$cons,
 							elm$html$Html$Attributes$class(classes + (' ' + _class)),
 							attrs),
-						N: children,
-						R: has,
-						T: node,
-						df: A2(
+						O: children,
+						S: has,
+						U: node,
+						de: A2(
 							elm$core$List$cons,
 							mdgriffith$elm_ui$Internal$Model$Transform(transform),
 							styles)
@@ -11421,7 +12347,7 @@ var mdgriffith$elm_ui$Internal$Model$gatherAttrRecursive = F8(
 							switch (width.$) {
 								case 0:
 									var px = width.a;
-									var $temp$classes = (mdgriffith$elm_ui$Internal$Style$classes.bY + (' width-px-' + elm$core$String$fromInt(px))) + (' ' + classes),
+									var $temp$classes = (mdgriffith$elm_ui$Internal$Style$classes.bR + (' width-px-' + elm$core$String$fromInt(px))) + (' ' + classes),
 										$temp$node = node,
 										$temp$has = A2(mdgriffith$elm_ui$Internal$Flag$add, mdgriffith$elm_ui$Internal$Flag$width, has),
 										$temp$transform = transform,
@@ -11446,7 +12372,7 @@ var mdgriffith$elm_ui$Internal$Model$gatherAttrRecursive = F8(
 									elementAttrs = $temp$elementAttrs;
 									continue gatherAttrRecursive;
 								case 1:
-									var $temp$classes = classes + (' ' + mdgriffith$elm_ui$Internal$Style$classes.a1),
+									var $temp$classes = classes + (' ' + mdgriffith$elm_ui$Internal$Style$classes.a3),
 										$temp$node = node,
 										$temp$has = A2(
 										mdgriffith$elm_ui$Internal$Flag$add,
@@ -11469,7 +12395,7 @@ var mdgriffith$elm_ui$Internal$Model$gatherAttrRecursive = F8(
 								case 2:
 									var portion = width.a;
 									if (portion === 1) {
-										var $temp$classes = classes + (' ' + mdgriffith$elm_ui$Internal$Style$classes.a2),
+										var $temp$classes = classes + (' ' + mdgriffith$elm_ui$Internal$Style$classes.a4),
 											$temp$node = node,
 											$temp$has = A2(
 											mdgriffith$elm_ui$Internal$Flag$add,
@@ -11490,7 +12416,7 @@ var mdgriffith$elm_ui$Internal$Model$gatherAttrRecursive = F8(
 										elementAttrs = $temp$elementAttrs;
 										continue gatherAttrRecursive;
 									} else {
-										var $temp$classes = classes + (' ' + (mdgriffith$elm_ui$Internal$Style$classes.bZ + (' width-fill-' + elm$core$String$fromInt(portion)))),
+										var $temp$classes = classes + (' ' + (mdgriffith$elm_ui$Internal$Style$classes.bS + (' width-fill-' + elm$core$String$fromInt(portion)))),
 											$temp$node = node,
 											$temp$has = A2(
 											mdgriffith$elm_ui$Internal$Flag$add,
@@ -11501,7 +12427,7 @@ var mdgriffith$elm_ui$Internal$Model$gatherAttrRecursive = F8(
 											elm$core$List$cons,
 											A3(
 												mdgriffith$elm_ui$Internal$Model$Single,
-												mdgriffith$elm_ui$Internal$Style$classes.ca + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.p + (' > ' + mdgriffith$elm_ui$Internal$Style$dot(
+												mdgriffith$elm_ui$Internal$Style$classes.b3 + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.s + (' > ' + mdgriffith$elm_ui$Internal$Style$dot(
 													'width-fill-' + elm$core$String$fromInt(portion))))),
 												'flex-grow',
 												elm$core$String$fromInt(portion * 100000)),
@@ -11590,7 +12516,7 @@ var mdgriffith$elm_ui$Internal$Model$gatherAttrRecursive = F8(
 									elementAttrs = $temp$elementAttrs;
 									continue gatherAttrRecursive;
 								case 1:
-									var $temp$classes = mdgriffith$elm_ui$Internal$Style$classes.aC + (' ' + classes),
+									var $temp$classes = mdgriffith$elm_ui$Internal$Style$classes.aD + (' ' + classes),
 										$temp$node = node,
 										$temp$has = A2(
 										mdgriffith$elm_ui$Internal$Flag$add,
@@ -11613,7 +12539,7 @@ var mdgriffith$elm_ui$Internal$Model$gatherAttrRecursive = F8(
 								case 2:
 									var portion = height.a;
 									if (portion === 1) {
-										var $temp$classes = mdgriffith$elm_ui$Internal$Style$classes.aT + (' ' + classes),
+										var $temp$classes = mdgriffith$elm_ui$Internal$Style$classes.aV + (' ' + classes),
 											$temp$node = node,
 											$temp$has = A2(
 											mdgriffith$elm_ui$Internal$Flag$add,
@@ -11634,7 +12560,7 @@ var mdgriffith$elm_ui$Internal$Model$gatherAttrRecursive = F8(
 										elementAttrs = $temp$elementAttrs;
 										continue gatherAttrRecursive;
 									} else {
-										var $temp$classes = classes + (' ' + (mdgriffith$elm_ui$Internal$Style$classes.bo + (' height-fill-' + elm$core$String$fromInt(portion)))),
+										var $temp$classes = classes + (' ' + (mdgriffith$elm_ui$Internal$Style$classes.bj + (' height-fill-' + elm$core$String$fromInt(portion)))),
 											$temp$node = node,
 											$temp$has = A2(
 											mdgriffith$elm_ui$Internal$Flag$add,
@@ -11645,7 +12571,7 @@ var mdgriffith$elm_ui$Internal$Model$gatherAttrRecursive = F8(
 											elm$core$List$cons,
 											A3(
 												mdgriffith$elm_ui$Internal$Model$Single,
-												mdgriffith$elm_ui$Internal$Style$classes.ca + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.B + (' > ' + mdgriffith$elm_ui$Internal$Style$dot(
+												mdgriffith$elm_ui$Internal$Style$classes.b3 + ('.' + (mdgriffith$elm_ui$Internal$Style$classes.C + (' > ' + mdgriffith$elm_ui$Internal$Style$dot(
 													'height-fill-' + elm$core$String$fromInt(portion))))),
 												'flex-grow',
 												elm$core$String$fromInt(portion * 100000)),
@@ -11956,7 +12882,7 @@ var mdgriffith$elm_ui$Internal$Model$gatherAttrRecursive = F8(
 									return styles;
 								default:
 									var styled = elem.a;
-									return _Utils_ap(styles, styled.df);
+									return _Utils_ap(styles, styled.de);
 							}
 						}();
 						var $temp$classes = classes,
@@ -12126,7 +13052,7 @@ var mdgriffith$elm_ui$Internal$Model$Text = function (a) {
 var mdgriffith$elm_ui$Element$text = function (content) {
 	return mdgriffith$elm_ui$Internal$Model$Text(content);
 };
-var author$project$Example$BasicElmUI$draggedItemView = F2(
+var author$project$Basic$BasicElmUI$draggedItemView = F2(
 	function (draggable, items) {
 		var maybeDraggedItem = A2(
 			elm$core$Maybe$andThen,
@@ -12134,7 +13060,7 @@ var author$project$Example$BasicElmUI$draggedItemView = F2(
 				return elm$core$List$head(
 					A2(elm$core$List$drop, index, items));
 			},
-			author$project$Example$BasicElmUI$system.be(draggable));
+			author$project$Basic$BasicElmUI$system.aQ(draggable));
 		if (!maybeDraggedItem.$) {
 			var item = maybeDraggedItem.a;
 			return A2(
@@ -12142,13 +13068,13 @@ var author$project$Example$BasicElmUI$draggedItemView = F2(
 				A2(
 					elm$core$List$map,
 					mdgriffith$elm_ui$Element$htmlAttribute,
-					author$project$Example$BasicElmUI$system.bg(draggable)),
+					author$project$Basic$BasicElmUI$system.ct(draggable)),
 				mdgriffith$elm_ui$Element$text(item));
 		} else {
 			return mdgriffith$elm_ui$Element$none;
 		}
 	});
-var author$project$Example$BasicElmUI$itemView = F3(
+var author$project$Basic$BasicElmUI$itemView = F3(
 	function (maybeDragIndex, index, item) {
 		if (maybeDragIndex.$ === 1) {
 			var itemId = 'id-' + item;
@@ -12161,7 +13087,7 @@ var author$project$Example$BasicElmUI$itemView = F3(
 					A2(
 						elm$core$List$map,
 						mdgriffith$elm_ui$Element$htmlAttribute,
-						A2(author$project$Example$BasicElmUI$system.bd, index, itemId))),
+						A2(author$project$Basic$BasicElmUI$system.cs, index, itemId))),
 				mdgriffith$elm_ui$Element$text(item));
 		} else {
 			var dragIndex = maybeDragIndex.a;
@@ -12170,7 +13096,7 @@ var author$project$Example$BasicElmUI$itemView = F3(
 				A2(
 					elm$core$List$map,
 					mdgriffith$elm_ui$Element$htmlAttribute,
-					author$project$Example$BasicElmUI$system.bh(index)),
+					author$project$Basic$BasicElmUI$system.cu(index)),
 				mdgriffith$elm_ui$Element$text(item)) : A2(
 				mdgriffith$elm_ui$Element$el,
 				_List_Nil,
@@ -12201,7 +13127,7 @@ var mdgriffith$elm_ui$Element$column = F2(
 			mdgriffith$elm_ui$Internal$Model$div,
 			A2(
 				elm$core$List$cons,
-				mdgriffith$elm_ui$Internal$Model$htmlClass(mdgriffith$elm_ui$Internal$Style$classes.cu + (' ' + mdgriffith$elm_ui$Internal$Style$classes.al)),
+				mdgriffith$elm_ui$Internal$Model$htmlClass(mdgriffith$elm_ui$Internal$Style$classes.co + (' ' + mdgriffith$elm_ui$Internal$Style$classes.an)),
 				A2(
 					elm$core$List$cons,
 					mdgriffith$elm_ui$Element$height(mdgriffith$elm_ui$Element$shrink),
@@ -12238,14 +13164,14 @@ var mdgriffith$elm_ui$Internal$Model$Rgba = F4(
 		return {$: 0, a: a, b: b, c: c, d: d};
 	});
 var mdgriffith$elm_ui$Internal$Model$focusDefaultStyle = {
-	cc: elm$core$Maybe$Nothing,
-	ci: elm$core$Maybe$Nothing,
-	c5: elm$core$Maybe$Just(
+	b5: elm$core$Maybe$Nothing,
+	cb: elm$core$Maybe$Nothing,
+	c4: elm$core$Maybe$Just(
 		{
-			Y: 3,
-			Z: A4(mdgriffith$elm_ui$Internal$Model$Rgba, 155 / 255, 203 / 255, 1, 1),
-			by: _Utils_Tuple2(0, 0),
-			ag: 3
+			Z: 3,
+			_: A4(mdgriffith$elm_ui$Internal$Model$Rgba, 155 / 255, 203 / 255, 1, 1),
+			br: _Utils_Tuple2(0, 0),
+			ai: 3
 		})
 };
 var mdgriffith$elm_ui$Internal$Model$optionsToRecord = function (options) {
@@ -12254,36 +13180,36 @@ var mdgriffith$elm_ui$Internal$Model$optionsToRecord = function (options) {
 			switch (opt.$) {
 				case 0:
 					var hoverable = opt.a;
-					var _n4 = record.cG;
+					var _n4 = record.cD;
 					if (_n4.$ === 1) {
 						return _Utils_update(
 							record,
 							{
-								cG: elm$core$Maybe$Just(hoverable)
+								cD: elm$core$Maybe$Just(hoverable)
 							});
 					} else {
 						return record;
 					}
 				case 1:
 					var focusStyle = opt.a;
-					var _n5 = record.cC;
+					var _n5 = record.cz;
 					if (_n5.$ === 1) {
 						return _Utils_update(
 							record,
 							{
-								cC: elm$core$Maybe$Just(focusStyle)
+								cz: elm$core$Maybe$Just(focusStyle)
 							});
 					} else {
 						return record;
 					}
 				default:
 					var renderMode = opt.a;
-					var _n6 = record.cQ;
+					var _n6 = record.cO;
 					if (_n6.$ === 1) {
 						return _Utils_update(
 							record,
 							{
-								cQ: elm$core$Maybe$Just(renderMode)
+								cO: elm$core$Maybe$Just(renderMode)
 							});
 					} else {
 						return record;
@@ -12292,8 +13218,8 @@ var mdgriffith$elm_ui$Internal$Model$optionsToRecord = function (options) {
 		});
 	var andFinally = function (record) {
 		return {
-			cC: function () {
-				var _n0 = record.cC;
+			cz: function () {
+				var _n0 = record.cz;
 				if (_n0.$ === 1) {
 					return mdgriffith$elm_ui$Internal$Model$focusDefaultStyle;
 				} else {
@@ -12301,8 +13227,8 @@ var mdgriffith$elm_ui$Internal$Model$optionsToRecord = function (options) {
 					return focusable;
 				}
 			}(),
-			cG: function () {
-				var _n1 = record.cG;
+			cD: function () {
+				var _n1 = record.cD;
 				if (_n1.$ === 1) {
 					return 1;
 				} else {
@@ -12310,8 +13236,8 @@ var mdgriffith$elm_ui$Internal$Model$optionsToRecord = function (options) {
 					return hoverable;
 				}
 			}(),
-			cQ: function () {
-				var _n2 = record.cQ;
+			cO: function () {
+				var _n2 = record.cO;
 				if (_n2.$ === 1) {
 					return 1;
 				} else {
@@ -12325,7 +13251,7 @@ var mdgriffith$elm_ui$Internal$Model$optionsToRecord = function (options) {
 		A3(
 			elm$core$List$foldr,
 			combine,
-			{cC: elm$core$Maybe$Nothing, cG: elm$core$Maybe$Nothing, cQ: elm$core$Maybe$Nothing},
+			{cz: elm$core$Maybe$Nothing, cD: elm$core$Maybe$Nothing, cO: elm$core$Maybe$Nothing},
 			options));
 };
 var mdgriffith$elm_ui$Internal$Model$toHtml = F2(
@@ -12335,8 +13261,8 @@ var mdgriffith$elm_ui$Internal$Model$toHtml = F2(
 				var html = el.a;
 				return html(mdgriffith$elm_ui$Internal$Model$asEl);
 			case 1:
-				var styles = el.a.df;
-				var html = el.a.cH;
+				var styles = el.a.de;
+				var html = el.a.cE;
 				return A2(
 					html,
 					mode(styles),
@@ -12352,7 +13278,7 @@ var mdgriffith$elm_ui$Internal$Model$renderRoot = F3(
 	function (optionList, attributes, child) {
 		var options = mdgriffith$elm_ui$Internal$Model$optionsToRecord(optionList);
 		var embedStyle = function () {
-			var _n0 = options.cQ;
+			var _n0 = options.cO;
 			if (_n0 === 2) {
 				return mdgriffith$elm_ui$Internal$Model$OnlyDynamic(options);
 			} else {
@@ -12431,7 +13357,7 @@ var mdgriffith$elm_ui$Internal$Model$renderFontClassName = F2(
 							elm$core$String$words(
 								elm$core$String$toLower(name)));
 					default:
-						var name = font.a.cR;
+						var name = font.a.cQ;
 						return A2(
 							elm$core$String$join,
 							'-',
@@ -12483,7 +13409,7 @@ var mdgriffith$elm_ui$Internal$Model$rootStyle = function () {
 }();
 var mdgriffith$elm_ui$Element$layoutWith = F3(
 	function (_n0, attrs, child) {
-		var options = _n0.bz;
+		var options = _n0.bs;
 		return A3(
 			mdgriffith$elm_ui$Internal$Model$renderRoot,
 			options,
@@ -12494,12 +13420,12 @@ var mdgriffith$elm_ui$Element$layoutWith = F3(
 						elm$core$String$join,
 						' ',
 						_List_fromArray(
-							[mdgriffith$elm_ui$Internal$Style$classes.c$, mdgriffith$elm_ui$Internal$Style$classes.ca, mdgriffith$elm_ui$Internal$Style$classes.c6]))),
+							[mdgriffith$elm_ui$Internal$Style$classes.c_, mdgriffith$elm_ui$Internal$Style$classes.b3, mdgriffith$elm_ui$Internal$Style$classes.c5]))),
 				_Utils_ap(mdgriffith$elm_ui$Internal$Model$rootStyle, attrs)),
 			child);
 	});
 var mdgriffith$elm_ui$Element$layout = mdgriffith$elm_ui$Element$layoutWith(
-	{bz: _List_Nil});
+	{bs: _List_Nil});
 var mdgriffith$elm_ui$Internal$Flag$padding = mdgriffith$elm_ui$Internal$Flag$flag(2);
 var mdgriffith$elm_ui$Internal$Model$PaddingStyle = F5(
 	function (a, b, c, d, e) {
@@ -12536,8 +13462,8 @@ var mdgriffith$elm_ui$Element$spacing = function (x) {
 			x,
 			x));
 };
-var author$project$Example$BasicElmUI$view = function (model) {
-	var maybeDragIndex = author$project$Example$BasicElmUI$system.be(model.bf);
+var author$project$Basic$BasicElmUI$view = function (model) {
+	var maybeDragIndex = author$project$Basic$BasicElmUI$system.aQ(model.v);
 	return A2(
 		mdgriffith$elm_ui$Element$layout,
 		_List_fromArray(
@@ -12545,7 +13471,7 @@ var author$project$Example$BasicElmUI$view = function (model) {
 				mdgriffith$elm_ui$Element$width(mdgriffith$elm_ui$Element$fill),
 				mdgriffith$elm_ui$Element$height(mdgriffith$elm_ui$Element$fill),
 				mdgriffith$elm_ui$Element$inFront(
-				A2(author$project$Example$BasicElmUI$draggedItemView, model.bf, model.ab))
+				A2(author$project$Basic$BasicElmUI$draggedItemView, model.v, model.ad))
 			]),
 		A2(
 			mdgriffith$elm_ui$Element$column,
@@ -12558,281 +13484,27 @@ var author$project$Example$BasicElmUI$view = function (model) {
 				]),
 			A2(
 				elm$core$List$indexedMap,
-				author$project$Example$BasicElmUI$itemView(maybeDragIndex),
-				model.ab)));
+				author$project$Basic$BasicElmUI$itemView(maybeDragIndex),
+				model.ad)));
 };
-var author$project$Example$FreeRotate$source = '\nmodule FreeRotate exposing (main)\n\nimport Browser\nimport Browser.Events\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\nimport Json.Decode\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias KeyedItem =\n    ( String, String )\n\n\ndata : List KeyedItem\ndata =\n    List.range 1 9\n        |> List.map (\\i -> ( "key-" ++ String.fromInt i, String.fromInt i ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Rotate\n    }\n\n\nsystem : DnDList.System Msg KeyedItem\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List KeyedItem\n    , affected : List Int\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    , affected = []\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ system.subscriptions model.draggable\n        , if model.affected == [] then\n            Sub.none\n\n          else\n            Browser.Events.onMouseDown\n                (Json.Decode.succeed ClearAffected)\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n    | ClearAffected\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n\n                ( maybeDragIndex, maybeDropIndex ) =\n                    ( system.dragIndex draggable, system.dropIndex draggable )\n\n                affected : List Int\n                affected =\n                    case ( maybeDragIndex, maybeDropIndex ) of\n                        ( Just dragIndex, Just dropIndex ) ->\n                            if dragIndex < dropIndex then\n                                List.range dragIndex dropIndex\n\n                            else if dragIndex > dropIndex then\n                                List.range dropIndex dragIndex\n\n                            else\n                                model.affected\n\n                        _ ->\n                            model.affected\n            in\n            ( { model | draggable = draggable, items = items, affected = affected }\n            , system.commands model.draggable\n            )\n\n        ClearAffected ->\n            ( { model | affected = [] }, Cmd.none )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.items\n            |> List.indexedMap (itemView model.affected maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.items\n        ]\n\n\nitemView : List Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )\nitemView affected maybeDragIndex index ( key, item ) =\n    let\n        styles : List (Html.Attribute Msg)\n        styles =\n            itemStyles\n                ++ (if List.member index affected then\n                        affectedItemStyles\n\n                    else\n                        []\n                   )\n    in\n    case maybeDragIndex of\n        Nothing ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ item\n            in\n            ( key\n            , Html.div\n                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)\n                [ Html.text item ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    (styles ++ system.dropEvents index)\n                    [ Html.text item ]\n                )\n\n            else\n                ( key\n                , Html.div (itemStyles ++ overedItemStyles) []\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe KeyedItem\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just ( _, item ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.text item ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "grid"\n    , Html.Attributes.style "grid-template-columns" "5em 5em 5em"\n    , Html.Attributes.style "grid-template-rows" "5em 5em 5em"\n    , Html.Attributes.style "grid-gap" "5em"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "background" "#1e9daa"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "color" "white"\n    , Html.Attributes.style "cursor" "pointer"\n    , Html.Attributes.style "font-size" "large"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#aa1e9d" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\naffectedItemStyles : List (Html.Attribute msg)\naffectedItemStyles =\n    [ Html.Attributes.style "background" "#136169" ]\n    ';
-var author$project$Example$FreeRotate$containerStyles = _List_fromArray(
+var author$project$Basic$Free$source = '\nmodule Free exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ntype alias KeyedFruit =\n    ( String, Fruit )\n\n\ndata : List KeyedFruit\ndata =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n        |> List.map (\\v -> ( "key-" ++ v, v ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Swap DnDList.OnDrag\n    }\n\n\nsystem : DnDList.System Msg KeyedFruit\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , fruits : List KeyedFruit\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , fruits = data\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    system.subscriptions model.draggable\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, fruits ) =\n                    system.update message model.draggable model.fruits\n            in\n            ( { model | draggable = draggable, fruits = fruits }\n            , system.commands model.draggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.fruits\n            |> List.indexedMap (itemView maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.fruits\n        ]\n\n\nitemView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )\nitemView maybeDragIndex index ( key, fruit ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                fruitId : String\n                fruitId =\n                    "id-" ++ fruit\n            in\n            ( key\n            , Html.div\n                (Html.Attributes.id fruitId :: itemStyles)\n                [ Html.div (handleStyles ++ system.dragEvents index fruitId) []\n                , Html.text fruit\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    (itemStyles ++ system.dropEvents index)\n                    [ Html.div handleStyles []\n                    , Html.text fruit\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div (itemStyles ++ placeholderItemStyles) []\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg\ndraggedItemView draggable fruits =\n    let\n        maybeDraggedFruit : Maybe KeyedFruit\n        maybeDraggedFruit =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)\n    in\n    case maybeDraggedFruit of\n        Just ( _, fruit ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.text fruit\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "grid"\n    , Html.Attributes.style "grid-template-columns" "180px 180px"\n    , Html.Attributes.style "grid-template-rows" "100px 100px"\n    , Html.Attributes.style "grid-gap" "5em 10em"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "background" "#cddc39"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#dc9a39" ]\n\n\nplaceholderItemStyles : List (Html.Attribute msg)\nplaceholderItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\nhandleStyles : List (Html.Attribute msg)\nhandleStyles =\n    [ Html.Attributes.style "width" "50px"\n    , Html.Attributes.style "height" "50px"\n    , Html.Attributes.style "background" "#afb42b"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "margin" "20px"\n    , Html.Attributes.style "cursor" "pointer"\n    ]\n\n\ndraggedHandleStyles : List (Html.Attribute msg)\ndraggedHandleStyles =\n    [ Html.Attributes.style "background" "#b4752b" ]\n    ';
+var author$project$Basic$Free$containerStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'grid'),
-		A2(elm$html$Html$Attributes$style, 'grid-template-columns', '5em 5em 5em'),
-		A2(elm$html$Html$Attributes$style, 'grid-template-rows', '5em 5em 5em'),
-		A2(elm$html$Html$Attributes$style, 'grid-gap', '5em'),
+		A2(elm$html$Html$Attributes$style, 'grid-template-columns', '180px 180px'),
+		A2(elm$html$Html$Attributes$style, 'grid-template-rows', '100px 100px'),
+		A2(elm$html$Html$Attributes$style, 'grid-gap', '5em 10em'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
 	]);
-var author$project$Example$FreeRotate$draggedItemStyles = _List_fromArray(
-	[
-		A2(elm$html$Html$Attributes$style, 'background', '#aa1e9d')
-	]);
-var author$project$Example$FreeRotate$itemStyles = _List_fromArray(
-	[
-		A2(elm$html$Html$Attributes$style, 'background', '#1e9daa'),
-		A2(elm$html$Html$Attributes$style, 'border-radius', '8px'),
-		A2(elm$html$Html$Attributes$style, 'color', 'white'),
-		A2(elm$html$Html$Attributes$style, 'cursor', 'pointer'),
-		A2(elm$html$Html$Attributes$style, 'font-size', 'large'),
-		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
-		A2(elm$html$Html$Attributes$style, 'align-items', 'center'),
-		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
-	]);
-var author$project$Example$FreeRotate$draggedItemView = F2(
-	function (draggable, items) {
-		var maybeDraggedItem = A2(
-			elm$core$Maybe$andThen,
-			function (index) {
-				return elm$core$List$head(
-					A2(elm$core$List$drop, index, items));
-			},
-			author$project$Example$FreeRotate$system.be(draggable));
-		if (!maybeDraggedItem.$) {
-			var _n1 = maybeDraggedItem.a;
-			var item = _n1.b;
-			return A2(
-				elm$html$Html$div,
-				_Utils_ap(
-					author$project$Example$FreeRotate$itemStyles,
-					_Utils_ap(
-						author$project$Example$FreeRotate$draggedItemStyles,
-						author$project$Example$FreeRotate$system.bg(draggable))),
-				_List_fromArray(
-					[
-						elm$html$Html$text(item)
-					]));
-		} else {
-			return elm$html$Html$text('');
-		}
-	});
-var author$project$Example$FreeRotate$affectedItemStyles = _List_fromArray(
-	[
-		A2(elm$html$Html$Attributes$style, 'background', '#136169')
-	]);
-var author$project$Example$FreeRotate$overedItemStyles = _List_fromArray(
-	[
-		A2(elm$html$Html$Attributes$style, 'background', 'dimgray')
-	]);
-var elm$core$List$member = F2(
-	function (x, xs) {
-		return A2(
-			elm$core$List$any,
-			function (a) {
-				return _Utils_eq(a, x);
-			},
-			xs);
-	});
-var author$project$Example$FreeRotate$itemView = F4(
-	function (affected, maybeDragIndex, index, _n0) {
-		var key = _n0.a;
-		var item = _n0.b;
-		var styles = _Utils_ap(
-			author$project$Example$FreeRotate$itemStyles,
-			A2(elm$core$List$member, index, affected) ? author$project$Example$FreeRotate$affectedItemStyles : _List_Nil);
-		if (maybeDragIndex.$ === 1) {
-			var itemId = 'id-' + item;
-			return _Utils_Tuple2(
-				key,
-				A2(
-					elm$html$Html$div,
-					A2(
-						elm$core$List$cons,
-						elm$html$Html$Attributes$id(itemId),
-						_Utils_ap(
-							styles,
-							A2(author$project$Example$FreeRotate$system.bd, index, itemId))),
-					_List_fromArray(
-						[
-							elm$html$Html$text(item)
-						])));
-		} else {
-			var dragIndex = maybeDragIndex.a;
-			return (!_Utils_eq(dragIndex, index)) ? _Utils_Tuple2(
-				key,
-				A2(
-					elm$html$Html$div,
-					_Utils_ap(
-						styles,
-						author$project$Example$FreeRotate$system.bh(index)),
-					_List_fromArray(
-						[
-							elm$html$Html$text(item)
-						]))) : _Utils_Tuple2(
-				key,
-				A2(
-					elm$html$Html$div,
-					_Utils_ap(author$project$Example$FreeRotate$itemStyles, author$project$Example$FreeRotate$overedItemStyles),
-					_List_Nil));
-		}
-	});
-var elm$html$Html$Keyed$node = elm$virtual_dom$VirtualDom$keyedNode;
-var author$project$Example$FreeRotate$view = function (model) {
-	var maybeDragIndex = author$project$Example$FreeRotate$system.be(model.bf);
-	return A2(
-		elm$html$Html$section,
-		_List_fromArray(
-			[
-				A2(elm$html$Html$Attributes$style, 'margin', '6em 0')
-			]),
-		_List_fromArray(
-			[
-				A3(
-				elm$html$Html$Keyed$node,
-				'div',
-				author$project$Example$FreeRotate$containerStyles,
-				A2(
-					elm$core$List$indexedMap,
-					A2(author$project$Example$FreeRotate$itemView, model.z, maybeDragIndex),
-					model.ab)),
-				A2(author$project$Example$FreeRotate$draggedItemView, model.bf, model.ab)
-			]));
-};
-var author$project$Example$FreeSwap$source = '\nmodule FreeSwap exposing (main)\n\nimport Browser\nimport Browser.Events\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\nimport Json.Decode\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias KeyedItem =\n    ( String, String )\n\n\ndata : List KeyedItem\ndata =\n    List.range 1 9\n        |> List.map (\\i -> ( "key-" ++ String.fromInt i, String.fromInt i ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Free DnDList.Swap\n    }\n\n\nsystem : DnDList.System Msg KeyedItem\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , items : List KeyedItem\n    , affected : List Int\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , items = data\n    , affected = []\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ system.subscriptions model.draggable\n        , if model.affected == [] then\n            Sub.none\n\n          else\n            Browser.Events.onMouseDown\n                (Json.Decode.succeed ClearAffected)\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n    | ClearAffected\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, items ) =\n                    system.update message model.draggable model.items\n\n                ( maybeDragIndex, maybeDropIndex ) =\n                    ( system.dragIndex draggable, system.dropIndex draggable )\n\n                affected : List Int\n                affected =\n                    case ( maybeDragIndex, maybeDropIndex ) of\n                        ( Just dragIndex, Just dropIndex ) ->\n                            if dragIndex /= dropIndex then\n                                dragIndex :: dropIndex :: []\n\n                            else\n                                model.affected\n\n                        _ ->\n                            model.affected\n            in\n            ( { model | draggable = draggable, items = items, affected = affected }\n            , system.commands model.draggable\n            )\n\n        ClearAffected ->\n            ( { model | affected = [] }, Cmd.none )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.items\n            |> List.indexedMap (itemView model.affected maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.items\n        ]\n\n\nitemView : List Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )\nitemView affected maybeDragIndex index ( key, item ) =\n    let\n        styles : List (Html.Attribute Msg)\n        styles =\n            itemStyles\n                ++ (if List.member index affected then\n                        affectedItemStyles\n\n                    else\n                        []\n                   )\n    in\n    case maybeDragIndex of\n        Nothing ->\n            let\n                itemId : String\n                itemId =\n                    "id-" ++ item\n            in\n            ( key\n            , Html.div\n                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)\n                [ Html.text item ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    (styles ++ system.dropEvents index)\n                    [ Html.text item ]\n                )\n\n            else\n                ( key\n                , Html.div (itemStyles ++ overedItemStyles) []\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg\ndraggedItemView draggable items =\n    let\n        maybeDraggedItem : Maybe KeyedItem\n        maybeDraggedItem =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> items |> List.drop index |> List.head)\n    in\n    case maybeDraggedItem of\n        Just ( _, item ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.text item ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "grid"\n    , Html.Attributes.style "grid-template-columns" "5em 5em 5em"\n    , Html.Attributes.style "grid-template-rows" "5em 5em 5em"\n    , Html.Attributes.style "grid-gap" "5em"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "background" "#aa1e9d"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "color" "white"\n    , Html.Attributes.style "cursor" "pointer"\n    , Html.Attributes.style "font-size" "large"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#1e9daa" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\naffectedItemStyles : List (Html.Attribute msg)\naffectedItemStyles =\n    [ Html.Attributes.style "background" "#691361" ]\n    ';
-var author$project$Example$FreeSwap$containerStyles = _List_fromArray(
-	[
-		A2(elm$html$Html$Attributes$style, 'display', 'grid'),
-		A2(elm$html$Html$Attributes$style, 'grid-template-columns', '5em 5em 5em'),
-		A2(elm$html$Html$Attributes$style, 'grid-template-rows', '5em 5em 5em'),
-		A2(elm$html$Html$Attributes$style, 'grid-gap', '5em'),
-		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
-	]);
-var author$project$Example$FreeSwap$draggedItemStyles = _List_fromArray(
-	[
-		A2(elm$html$Html$Attributes$style, 'background', '#1e9daa')
-	]);
-var author$project$Example$FreeSwap$itemStyles = _List_fromArray(
-	[
-		A2(elm$html$Html$Attributes$style, 'background', '#aa1e9d'),
-		A2(elm$html$Html$Attributes$style, 'border-radius', '8px'),
-		A2(elm$html$Html$Attributes$style, 'color', 'white'),
-		A2(elm$html$Html$Attributes$style, 'cursor', 'pointer'),
-		A2(elm$html$Html$Attributes$style, 'font-size', 'large'),
-		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
-		A2(elm$html$Html$Attributes$style, 'align-items', 'center'),
-		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
-	]);
-var author$project$Example$FreeSwap$draggedItemView = F2(
-	function (draggable, items) {
-		var maybeDraggedItem = A2(
-			elm$core$Maybe$andThen,
-			function (index) {
-				return elm$core$List$head(
-					A2(elm$core$List$drop, index, items));
-			},
-			author$project$Example$FreeSwap$system.be(draggable));
-		if (!maybeDraggedItem.$) {
-			var _n1 = maybeDraggedItem.a;
-			var item = _n1.b;
-			return A2(
-				elm$html$Html$div,
-				_Utils_ap(
-					author$project$Example$FreeSwap$itemStyles,
-					_Utils_ap(
-						author$project$Example$FreeSwap$draggedItemStyles,
-						author$project$Example$FreeSwap$system.bg(draggable))),
-				_List_fromArray(
-					[
-						elm$html$Html$text(item)
-					]));
-		} else {
-			return elm$html$Html$text('');
-		}
-	});
-var author$project$Example$FreeSwap$affectedItemStyles = _List_fromArray(
-	[
-		A2(elm$html$Html$Attributes$style, 'background', '#691361')
-	]);
-var author$project$Example$FreeSwap$overedItemStyles = _List_fromArray(
-	[
-		A2(elm$html$Html$Attributes$style, 'background', 'dimgray')
-	]);
-var author$project$Example$FreeSwap$itemView = F4(
-	function (affected, maybeDragIndex, index, _n0) {
-		var key = _n0.a;
-		var item = _n0.b;
-		var styles = _Utils_ap(
-			author$project$Example$FreeSwap$itemStyles,
-			A2(elm$core$List$member, index, affected) ? author$project$Example$FreeSwap$affectedItemStyles : _List_Nil);
-		if (maybeDragIndex.$ === 1) {
-			var itemId = 'id-' + item;
-			return _Utils_Tuple2(
-				key,
-				A2(
-					elm$html$Html$div,
-					A2(
-						elm$core$List$cons,
-						elm$html$Html$Attributes$id(itemId),
-						_Utils_ap(
-							styles,
-							A2(author$project$Example$FreeSwap$system.bd, index, itemId))),
-					_List_fromArray(
-						[
-							elm$html$Html$text(item)
-						])));
-		} else {
-			var dragIndex = maybeDragIndex.a;
-			return (!_Utils_eq(dragIndex, index)) ? _Utils_Tuple2(
-				key,
-				A2(
-					elm$html$Html$div,
-					_Utils_ap(
-						styles,
-						author$project$Example$FreeSwap$system.bh(index)),
-					_List_fromArray(
-						[
-							elm$html$Html$text(item)
-						]))) : _Utils_Tuple2(
-				key,
-				A2(
-					elm$html$Html$div,
-					_Utils_ap(author$project$Example$FreeSwap$itemStyles, author$project$Example$FreeSwap$overedItemStyles),
-					_List_Nil));
-		}
-	});
-var author$project$Example$FreeSwap$view = function (model) {
-	var maybeDragIndex = author$project$Example$FreeSwap$system.be(model.bf);
-	return A2(
-		elm$html$Html$section,
-		_List_fromArray(
-			[
-				A2(elm$html$Html$Attributes$style, 'margin', '6em 0')
-			]),
-		_List_fromArray(
-			[
-				A3(
-				elm$html$Html$Keyed$node,
-				'div',
-				author$project$Example$FreeSwap$containerStyles,
-				A2(
-					elm$core$List$indexedMap,
-					A2(author$project$Example$FreeSwap$itemView, model.z, maybeDragIndex),
-					model.ab)),
-				A2(author$project$Example$FreeSwap$draggedItemView, model.bf, model.ab)
-			]));
-};
-var author$project$Example$Horizontal$source = '\nmodule Horizontal exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ntype alias KeyedFruit =\n    ( String, Fruit )\n\n\ndata : List KeyedFruit\ndata =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n        |> List.map (\\v -> ( "key-" ++ v, v ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Horizontal\n    }\n\n\nsystem : DnDList.System Msg KeyedFruit\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , fruits : List KeyedFruit\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , fruits = data\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    system.subscriptions model.draggable\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, fruits ) =\n                    system.update message model.draggable model.fruits\n            in\n            ( { model | draggable = draggable, fruits = fruits }\n            , system.commands model.draggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.fruits\n            |> List.indexedMap (itemView maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.fruits\n        ]\n\n\nitemView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )\nitemView maybeDragIndex index ( key, fruit ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                fruitId : String\n                fruitId =\n                    "id-" ++ fruit\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin" "0 2em" ]\n                [ Html.div\n                    (Html.Attributes.id fruitId :: itemStyles)\n                    [ Html.div (handleStyles ++ system.dragEvents index fruitId) []\n                    , Html.text fruit\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em" ]\n                    [ Html.div\n                        (itemStyles ++ system.dropEvents index)\n                        [ Html.div handleStyles []\n                        , Html.text fruit\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em" ]\n                    [ Html.div (itemStyles ++ overedItemStyles) [] ]\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg\ndraggedItemView draggable fruits =\n    let\n        maybeDraggedFruit : Maybe KeyedFruit\n        maybeDraggedFruit =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)\n    in\n    case maybeDraggedFruit of\n        Just ( _, fruit ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.text fruit\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "width" "180px"\n    , Html.Attributes.style "height" "100px"\n    , Html.Attributes.style "background" "#cddc39"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#dc9a39" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\nhandleStyles : List (Html.Attribute msg)\nhandleStyles =\n    [ Html.Attributes.style "width" "50px"\n    , Html.Attributes.style "height" "50px"\n    , Html.Attributes.style "background" "#afb42b"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "margin" "20px"\n    , Html.Attributes.style "cursor" "pointer"\n    ]\n\n\ndraggedHandleStyles : List (Html.Attribute msg)\ndraggedHandleStyles =\n    [ Html.Attributes.style "background" "#b4752b" ]\n    ';
-var author$project$Example$Horizontal$containerStyles = _List_fromArray(
-	[
-		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
-		A2(elm$html$Html$Attributes$style, 'align-items', 'center'),
-		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
-	]);
-var author$project$Example$Horizontal$draggedHandleStyles = _List_fromArray(
+var author$project$Basic$Free$draggedHandleStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background', '#b4752b')
 	]);
-var author$project$Example$Horizontal$draggedItemStyles = _List_fromArray(
+var author$project$Basic$Free$draggedItemStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background', '#dc9a39')
 	]);
-var author$project$Example$Horizontal$handleStyles = _List_fromArray(
+var author$project$Basic$Free$handleStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'width', '50px'),
 		A2(elm$html$Html$Attributes$style, 'height', '50px'),
@@ -12841,7 +13513,139 @@ var author$project$Example$Horizontal$handleStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'margin', '20px'),
 		A2(elm$html$Html$Attributes$style, 'cursor', 'pointer')
 	]);
-var author$project$Example$Horizontal$itemStyles = _List_fromArray(
+var author$project$Basic$Free$itemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#cddc39'),
+		A2(elm$html$Html$Attributes$style, 'border-radius', '8px'),
+		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
+		A2(elm$html$Html$Attributes$style, 'align-items', 'center')
+	]);
+var author$project$Basic$Free$draggedItemView = F2(
+	function (draggable, fruits) {
+		var maybeDraggedFruit = A2(
+			elm$core$Maybe$andThen,
+			function (index) {
+				return elm$core$List$head(
+					A2(elm$core$List$drop, index, fruits));
+			},
+			author$project$Basic$Free$system.aQ(draggable));
+		if (!maybeDraggedFruit.$) {
+			var _n1 = maybeDraggedFruit.a;
+			var fruit = _n1.b;
+			return A2(
+				elm$html$Html$div,
+				_Utils_ap(
+					author$project$Basic$Free$itemStyles,
+					_Utils_ap(
+						author$project$Basic$Free$draggedItemStyles,
+						author$project$Basic$Free$system.ct(draggable))),
+				_List_fromArray(
+					[
+						A2(
+						elm$html$Html$div,
+						_Utils_ap(author$project$Basic$Free$handleStyles, author$project$Basic$Free$draggedHandleStyles),
+						_List_Nil),
+						elm$html$Html$text(fruit)
+					]));
+		} else {
+			return elm$html$Html$text('');
+		}
+	});
+var author$project$Basic$Free$placeholderItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', 'dimgray')
+	]);
+var author$project$Basic$Free$itemView = F3(
+	function (maybeDragIndex, index, _n0) {
+		var key = _n0.a;
+		var fruit = _n0.b;
+		if (maybeDragIndex.$ === 1) {
+			var fruitId = 'id-' + fruit;
+			return _Utils_Tuple2(
+				key,
+				A2(
+					elm$html$Html$div,
+					A2(
+						elm$core$List$cons,
+						elm$html$Html$Attributes$id(fruitId),
+						author$project$Basic$Free$itemStyles),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$div,
+							_Utils_ap(
+								author$project$Basic$Free$handleStyles,
+								A2(author$project$Basic$Free$system.cs, index, fruitId)),
+							_List_Nil),
+							elm$html$Html$text(fruit)
+						])));
+		} else {
+			var dragIndex = maybeDragIndex.a;
+			return (!_Utils_eq(dragIndex, index)) ? _Utils_Tuple2(
+				key,
+				A2(
+					elm$html$Html$div,
+					_Utils_ap(
+						author$project$Basic$Free$itemStyles,
+						author$project$Basic$Free$system.cu(index)),
+					_List_fromArray(
+						[
+							A2(elm$html$Html$div, author$project$Basic$Free$handleStyles, _List_Nil),
+							elm$html$Html$text(fruit)
+						]))) : _Utils_Tuple2(
+				key,
+				A2(
+					elm$html$Html$div,
+					_Utils_ap(author$project$Basic$Free$itemStyles, author$project$Basic$Free$placeholderItemStyles),
+					_List_Nil));
+		}
+	});
+var author$project$Basic$Free$view = function (model) {
+	var maybeDragIndex = author$project$Basic$Free$system.aQ(model.v);
+	return A2(
+		elm$html$Html$section,
+		_List_fromArray(
+			[
+				A2(elm$html$Html$Attributes$style, 'margin', '6em 0')
+			]),
+		_List_fromArray(
+			[
+				A3(
+				elm$html$Html$Keyed$node,
+				'div',
+				author$project$Basic$Free$containerStyles,
+				A2(
+					elm$core$List$indexedMap,
+					author$project$Basic$Free$itemView(maybeDragIndex),
+					model.ac)),
+				A2(author$project$Basic$Free$draggedItemView, model.v, model.ac)
+			]));
+};
+var author$project$Basic$Horizontal$source = '\nmodule Horizontal exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ntype alias KeyedFruit =\n    ( String, Fruit )\n\n\ndata : List KeyedFruit\ndata =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n        |> List.map (\\v -> ( "key-" ++ v, v ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Horizontal\n    }\n\n\nsystem : DnDList.System Msg KeyedFruit\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , fruits : List KeyedFruit\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , fruits = data\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    system.subscriptions model.draggable\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, fruits ) =\n                    system.update message model.draggable model.fruits\n            in\n            ( { model | draggable = draggable, fruits = fruits }\n            , system.commands model.draggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.fruits\n            |> List.indexedMap (itemView maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.fruits\n        ]\n\n\nitemView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )\nitemView maybeDragIndex index ( key, fruit ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                fruitId : String\n                fruitId =\n                    "id-" ++ fruit\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin" "0 2em" ]\n                [ Html.div\n                    (Html.Attributes.id fruitId :: itemStyles)\n                    [ Html.div (handleStyles ++ system.dragEvents index fruitId) []\n                    , Html.text fruit\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em" ]\n                    [ Html.div\n                        (itemStyles ++ system.dropEvents index)\n                        [ Html.div handleStyles []\n                        , Html.text fruit\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em" ]\n                    [ Html.div (itemStyles ++ placeholderItemStyles) [] ]\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg\ndraggedItemView draggable fruits =\n    let\n        maybeDraggedFruit : Maybe KeyedFruit\n        maybeDraggedFruit =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)\n    in\n    case maybeDraggedFruit of\n        Just ( _, fruit ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.text fruit\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "width" "180px"\n    , Html.Attributes.style "height" "100px"\n    , Html.Attributes.style "background" "#cddc39"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#dc9a39" ]\n\n\nplaceholderItemStyles : List (Html.Attribute msg)\nplaceholderItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\nhandleStyles : List (Html.Attribute msg)\nhandleStyles =\n    [ Html.Attributes.style "width" "50px"\n    , Html.Attributes.style "height" "50px"\n    , Html.Attributes.style "background" "#afb42b"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "margin" "20px"\n    , Html.Attributes.style "cursor" "pointer"\n    ]\n\n\ndraggedHandleStyles : List (Html.Attribute msg)\ndraggedHandleStyles =\n    [ Html.Attributes.style "background" "#b4752b" ]\n    ';
+var author$project$Basic$Horizontal$containerStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
+		A2(elm$html$Html$Attributes$style, 'align-items', 'center'),
+		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
+	]);
+var author$project$Basic$Horizontal$draggedHandleStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#b4752b')
+	]);
+var author$project$Basic$Horizontal$draggedItemStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'background', '#dc9a39')
+	]);
+var author$project$Basic$Horizontal$handleStyles = _List_fromArray(
+	[
+		A2(elm$html$Html$Attributes$style, 'width', '50px'),
+		A2(elm$html$Html$Attributes$style, 'height', '50px'),
+		A2(elm$html$Html$Attributes$style, 'background', '#afb42b'),
+		A2(elm$html$Html$Attributes$style, 'border-radius', '8px'),
+		A2(elm$html$Html$Attributes$style, 'margin', '20px'),
+		A2(elm$html$Html$Attributes$style, 'cursor', 'pointer')
+	]);
+var author$project$Basic$Horizontal$itemStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'width', '180px'),
 		A2(elm$html$Html$Attributes$style, 'height', '100px'),
@@ -12850,7 +13654,7 @@ var author$project$Example$Horizontal$itemStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'align-items', 'center')
 	]);
-var author$project$Example$Horizontal$draggedItemView = F2(
+var author$project$Basic$Horizontal$draggedItemView = F2(
 	function (draggable, fruits) {
 		var maybeDraggedFruit = A2(
 			elm$core$Maybe$andThen,
@@ -12858,22 +13662,22 @@ var author$project$Example$Horizontal$draggedItemView = F2(
 				return elm$core$List$head(
 					A2(elm$core$List$drop, index, fruits));
 			},
-			author$project$Example$Horizontal$system.be(draggable));
+			author$project$Basic$Horizontal$system.aQ(draggable));
 		if (!maybeDraggedFruit.$) {
 			var _n1 = maybeDraggedFruit.a;
 			var fruit = _n1.b;
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Example$Horizontal$itemStyles,
+					author$project$Basic$Horizontal$itemStyles,
 					_Utils_ap(
-						author$project$Example$Horizontal$draggedItemStyles,
-						author$project$Example$Horizontal$system.bg(draggable))),
+						author$project$Basic$Horizontal$draggedItemStyles,
+						author$project$Basic$Horizontal$system.ct(draggable))),
 				_List_fromArray(
 					[
 						A2(
 						elm$html$Html$div,
-						_Utils_ap(author$project$Example$Horizontal$handleStyles, author$project$Example$Horizontal$draggedHandleStyles),
+						_Utils_ap(author$project$Basic$Horizontal$handleStyles, author$project$Basic$Horizontal$draggedHandleStyles),
 						_List_Nil),
 						elm$html$Html$text(fruit)
 					]));
@@ -12881,11 +13685,11 @@ var author$project$Example$Horizontal$draggedItemView = F2(
 			return elm$html$Html$text('');
 		}
 	});
-var author$project$Example$Horizontal$overedItemStyles = _List_fromArray(
+var author$project$Basic$Horizontal$placeholderItemStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background', 'dimgray')
 	]);
-var author$project$Example$Horizontal$itemView = F3(
+var author$project$Basic$Horizontal$itemView = F3(
 	function (maybeDragIndex, index, _n0) {
 		var key = _n0.a;
 		var fruit = _n0.b;
@@ -12906,14 +13710,14 @@ var author$project$Example$Horizontal$itemView = F3(
 							A2(
 								elm$core$List$cons,
 								elm$html$Html$Attributes$id(fruitId),
-								author$project$Example$Horizontal$itemStyles),
+								author$project$Basic$Horizontal$itemStyles),
 							_List_fromArray(
 								[
 									A2(
 									elm$html$Html$div,
 									_Utils_ap(
-										author$project$Example$Horizontal$handleStyles,
-										A2(author$project$Example$Horizontal$system.bd, index, fruitId)),
+										author$project$Basic$Horizontal$handleStyles,
+										A2(author$project$Basic$Horizontal$system.cs, index, fruitId)),
 									_List_Nil),
 									elm$html$Html$text(fruit)
 								]))
@@ -12933,11 +13737,11 @@ var author$project$Example$Horizontal$itemView = F3(
 							A2(
 							elm$html$Html$div,
 							_Utils_ap(
-								author$project$Example$Horizontal$itemStyles,
-								author$project$Example$Horizontal$system.bh(index)),
+								author$project$Basic$Horizontal$itemStyles,
+								author$project$Basic$Horizontal$system.cu(index)),
 							_List_fromArray(
 								[
-									A2(elm$html$Html$div, author$project$Example$Horizontal$handleStyles, _List_Nil),
+									A2(elm$html$Html$div, author$project$Basic$Horizontal$handleStyles, _List_Nil),
 									elm$html$Html$text(fruit)
 								]))
 						]))) : _Utils_Tuple2(
@@ -12952,13 +13756,13 @@ var author$project$Example$Horizontal$itemView = F3(
 						[
 							A2(
 							elm$html$Html$div,
-							_Utils_ap(author$project$Example$Horizontal$itemStyles, author$project$Example$Horizontal$overedItemStyles),
+							_Utils_ap(author$project$Basic$Horizontal$itemStyles, author$project$Basic$Horizontal$placeholderItemStyles),
 							_List_Nil)
 						])));
 		}
 	});
-var author$project$Example$Horizontal$view = function (model) {
-	var maybeDragIndex = author$project$Example$Horizontal$system.be(model.bf);
+var author$project$Basic$Horizontal$view = function (model) {
+	var maybeDragIndex = author$project$Basic$Horizontal$system.aQ(model.v);
 	return A2(
 		elm$html$Html$section,
 		_List_fromArray(
@@ -12970,31 +13774,31 @@ var author$project$Example$Horizontal$view = function (model) {
 				A3(
 				elm$html$Html$Keyed$node,
 				'div',
-				author$project$Example$Horizontal$containerStyles,
+				author$project$Basic$Horizontal$containerStyles,
 				A2(
 					elm$core$List$indexedMap,
-					author$project$Example$Horizontal$itemView(maybeDragIndex),
-					model.aa)),
-				A2(author$project$Example$Horizontal$draggedItemView, model.bf, model.aa)
+					author$project$Basic$Horizontal$itemView(maybeDragIndex),
+					model.ac)),
+				A2(author$project$Basic$Horizontal$draggedItemView, model.v, model.ac)
 			]));
 };
-var author$project$Example$Vertical$source = '\nmodule Vertical exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ntype alias KeyedFruit =\n    ( String, Fruit )\n\n\ndata : List KeyedFruit\ndata =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n        |> List.map (\\v -> ( "key-" ++ v, v ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Vertical\n    }\n\n\nsystem : DnDList.System Msg KeyedFruit\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , fruits : List KeyedFruit\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , fruits = data\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    system.subscriptions model.draggable\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, fruits ) =\n                    system.update message model.draggable model.fruits\n            in\n            ( { model | draggable = draggable, fruits = fruits }\n            , system.commands model.draggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0 3em 0" ]\n        [ model.fruits\n            |> List.indexedMap (itemView maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.fruits\n        ]\n\n\nitemView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )\nitemView maybeDragIndex index ( key, fruit ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                fruitId : String\n                fruitId =\n                    "id-" ++ fruit\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin-bottom" "3em" ]\n                [ Html.div\n                    (Html.Attributes.id fruitId :: itemStyles)\n                    [ Html.div (handleStyles ++ system.dragEvents index fruitId) []\n                    , Html.text fruit\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin-bottom" "3em" ]\n                    [ Html.div\n                        (itemStyles ++ system.dropEvents index)\n                        [ Html.div handleStyles []\n                        , Html.text fruit\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin-bottom" "3em" ]\n                    [ Html.div (itemStyles ++ overedItemStyles) [] ]\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg\ndraggedItemView draggable fruits =\n    let\n        maybeDraggedFruit : Maybe KeyedFruit\n        maybeDraggedFruit =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)\n    in\n    case maybeDraggedFruit of\n        Just ( _, fruit ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.text fruit\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "flex-direction" "column"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "width" "180px"\n    , Html.Attributes.style "height" "100px"\n    , Html.Attributes.style "background" "#cddc39"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#dc9a39" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\nhandleStyles : List (Html.Attribute msg)\nhandleStyles =\n    [ Html.Attributes.style "width" "50px"\n    , Html.Attributes.style "height" "50px"\n    , Html.Attributes.style "background" "#afb42b"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "margin" "20px"\n    , Html.Attributes.style "cursor" "pointer"\n    ]\n\n\ndraggedHandleStyles : List (Html.Attribute msg)\ndraggedHandleStyles =\n    [ Html.Attributes.style "background" "#b4752b" ]\n    ';
-var author$project$Example$Vertical$containerStyles = _List_fromArray(
+var author$project$Basic$Vertical$source = '\nmodule Vertical exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ntype alias KeyedFruit =\n    ( String, Fruit )\n\n\ndata : List KeyedFruit\ndata =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n        |> List.map (\\v -> ( "key-" ++ v, v ))\n\n\n\n-- SYSTEM\n\n\nconfig : DnDList.Config Msg\nconfig =\n    { message = MyMsg\n    , movement = DnDList.Vertical\n    }\n\n\nsystem : DnDList.System Msg KeyedFruit\nsystem =\n    DnDList.create config\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { draggable : DnDList.Draggable\n    , fruits : List KeyedFruit\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { draggable = system.draggable\n    , fruits = data\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    system.subscriptions model.draggable\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = MyMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        MyMsg message ->\n            let\n                ( draggable, fruits ) =\n                    system.update message model.draggable model.fruits\n            in\n            ( { model | draggable = draggable, fruits = fruits }\n            , system.commands model.draggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeDragIndex : Maybe Int\n        maybeDragIndex =\n            system.dragIndex model.draggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0 3em 0" ]\n        [ model.fruits\n            |> List.indexedMap (itemView maybeDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedItemView model.draggable model.fruits\n        ]\n\n\nitemView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )\nitemView maybeDragIndex index ( key, fruit ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                fruitId : String\n                fruitId =\n                    "id-" ++ fruit\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin-bottom" "3em" ]\n                [ Html.div\n                    (Html.Attributes.id fruitId :: itemStyles)\n                    [ Html.div (handleStyles ++ system.dragEvents index fruitId) []\n                    , Html.text fruit\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin-bottom" "3em" ]\n                    [ Html.div\n                        (itemStyles ++ system.dropEvents index)\n                        [ Html.div handleStyles []\n                        , Html.text fruit\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin-bottom" "3em" ]\n                    [ Html.div (itemStyles ++ placeholderItemStyles) [] ]\n                )\n\n\ndraggedItemView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg\ndraggedItemView draggable fruits =\n    let\n        maybeDraggedFruit : Maybe KeyedFruit\n        maybeDraggedFruit =\n            system.dragIndex draggable\n                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)\n    in\n    case maybeDraggedFruit of\n        Just ( _, fruit ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.text fruit\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "flex-direction" "column"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "center"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "width" "180px"\n    , Html.Attributes.style "height" "100px"\n    , Html.Attributes.style "background" "#cddc39"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#dc9a39" ]\n\n\nplaceholderItemStyles : List (Html.Attribute msg)\nplaceholderItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\nhandleStyles : List (Html.Attribute msg)\nhandleStyles =\n    [ Html.Attributes.style "width" "50px"\n    , Html.Attributes.style "height" "50px"\n    , Html.Attributes.style "background" "#afb42b"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "margin" "20px"\n    , Html.Attributes.style "cursor" "pointer"\n    ]\n\n\ndraggedHandleStyles : List (Html.Attribute msg)\ndraggedHandleStyles =\n    [ Html.Attributes.style "background" "#b4752b" ]\n    ';
+var author$project$Basic$Vertical$containerStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'flex-direction', 'column'),
 		A2(elm$html$Html$Attributes$style, 'align-items', 'center'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
 	]);
-var author$project$Example$Vertical$draggedHandleStyles = _List_fromArray(
+var author$project$Basic$Vertical$draggedHandleStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background', '#b4752b')
 	]);
-var author$project$Example$Vertical$draggedItemStyles = _List_fromArray(
+var author$project$Basic$Vertical$draggedItemStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background', '#dc9a39')
 	]);
-var author$project$Example$Vertical$handleStyles = _List_fromArray(
+var author$project$Basic$Vertical$handleStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'width', '50px'),
 		A2(elm$html$Html$Attributes$style, 'height', '50px'),
@@ -13003,7 +13807,7 @@ var author$project$Example$Vertical$handleStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'margin', '20px'),
 		A2(elm$html$Html$Attributes$style, 'cursor', 'pointer')
 	]);
-var author$project$Example$Vertical$itemStyles = _List_fromArray(
+var author$project$Basic$Vertical$itemStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'width', '180px'),
 		A2(elm$html$Html$Attributes$style, 'height', '100px'),
@@ -13012,7 +13816,7 @@ var author$project$Example$Vertical$itemStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'align-items', 'center')
 	]);
-var author$project$Example$Vertical$draggedItemView = F2(
+var author$project$Basic$Vertical$draggedItemView = F2(
 	function (draggable, fruits) {
 		var maybeDraggedFruit = A2(
 			elm$core$Maybe$andThen,
@@ -13020,22 +13824,22 @@ var author$project$Example$Vertical$draggedItemView = F2(
 				return elm$core$List$head(
 					A2(elm$core$List$drop, index, fruits));
 			},
-			author$project$Example$Vertical$system.be(draggable));
+			author$project$Basic$Vertical$system.aQ(draggable));
 		if (!maybeDraggedFruit.$) {
 			var _n1 = maybeDraggedFruit.a;
 			var fruit = _n1.b;
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Example$Vertical$itemStyles,
+					author$project$Basic$Vertical$itemStyles,
 					_Utils_ap(
-						author$project$Example$Vertical$draggedItemStyles,
-						author$project$Example$Vertical$system.bg(draggable))),
+						author$project$Basic$Vertical$draggedItemStyles,
+						author$project$Basic$Vertical$system.ct(draggable))),
 				_List_fromArray(
 					[
 						A2(
 						elm$html$Html$div,
-						_Utils_ap(author$project$Example$Vertical$handleStyles, author$project$Example$Vertical$draggedHandleStyles),
+						_Utils_ap(author$project$Basic$Vertical$handleStyles, author$project$Basic$Vertical$draggedHandleStyles),
 						_List_Nil),
 						elm$html$Html$text(fruit)
 					]));
@@ -13043,11 +13847,11 @@ var author$project$Example$Vertical$draggedItemView = F2(
 			return elm$html$Html$text('');
 		}
 	});
-var author$project$Example$Vertical$overedItemStyles = _List_fromArray(
+var author$project$Basic$Vertical$placeholderItemStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background', 'dimgray')
 	]);
-var author$project$Example$Vertical$itemView = F3(
+var author$project$Basic$Vertical$itemView = F3(
 	function (maybeDragIndex, index, _n0) {
 		var key = _n0.a;
 		var fruit = _n0.b;
@@ -13068,14 +13872,14 @@ var author$project$Example$Vertical$itemView = F3(
 							A2(
 								elm$core$List$cons,
 								elm$html$Html$Attributes$id(fruitId),
-								author$project$Example$Vertical$itemStyles),
+								author$project$Basic$Vertical$itemStyles),
 							_List_fromArray(
 								[
 									A2(
 									elm$html$Html$div,
 									_Utils_ap(
-										author$project$Example$Vertical$handleStyles,
-										A2(author$project$Example$Vertical$system.bd, index, fruitId)),
+										author$project$Basic$Vertical$handleStyles,
+										A2(author$project$Basic$Vertical$system.cs, index, fruitId)),
 									_List_Nil),
 									elm$html$Html$text(fruit)
 								]))
@@ -13095,11 +13899,11 @@ var author$project$Example$Vertical$itemView = F3(
 							A2(
 							elm$html$Html$div,
 							_Utils_ap(
-								author$project$Example$Vertical$itemStyles,
-								author$project$Example$Vertical$system.bh(index)),
+								author$project$Basic$Vertical$itemStyles,
+								author$project$Basic$Vertical$system.cu(index)),
 							_List_fromArray(
 								[
-									A2(elm$html$Html$div, author$project$Example$Vertical$handleStyles, _List_Nil),
+									A2(elm$html$Html$div, author$project$Basic$Vertical$handleStyles, _List_Nil),
 									elm$html$Html$text(fruit)
 								]))
 						]))) : _Utils_Tuple2(
@@ -13114,13 +13918,13 @@ var author$project$Example$Vertical$itemView = F3(
 						[
 							A2(
 							elm$html$Html$div,
-							_Utils_ap(author$project$Example$Vertical$itemStyles, author$project$Example$Vertical$overedItemStyles),
+							_Utils_ap(author$project$Basic$Vertical$itemStyles, author$project$Basic$Vertical$placeholderItemStyles),
 							_List_Nil)
 						])));
 		}
 	});
-var author$project$Example$Vertical$view = function (model) {
-	var maybeDragIndex = author$project$Example$Vertical$system.be(model.bf);
+var author$project$Basic$Vertical$view = function (model) {
+	var maybeDragIndex = author$project$Basic$Vertical$system.aQ(model.v);
 	return A2(
 		elm$html$Html$section,
 		_List_fromArray(
@@ -13132,31 +13936,31 @@ var author$project$Example$Vertical$view = function (model) {
 				A3(
 				elm$html$Html$Keyed$node,
 				'div',
-				author$project$Example$Vertical$containerStyles,
+				author$project$Basic$Vertical$containerStyles,
 				A2(
 					elm$core$List$indexedMap,
-					author$project$Example$Vertical$itemView(maybeDragIndex),
-					model.aa)),
-				A2(author$project$Example$Vertical$draggedItemView, model.bf, model.aa)
+					author$project$Basic$Vertical$itemView(maybeDragIndex),
+					model.ac)),
+				A2(author$project$Basic$Vertical$draggedItemView, model.v, model.ac)
 			]));
 };
-var author$project$Example$WithTwoLists$source = '\nmodule WithTwoLists exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ntype alias KeyedFruit =\n    ( String, Fruit )\n\n\ntype alias KeyedNumber =\n    ( String, Int )\n\n\ndata1 : List KeyedFruit\ndata1 =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n        |> List.map (\\v -> ( "key-fruit-" ++ v, v ))\n\n\ndata2 : List KeyedNumber\ndata2 =\n    List.range 1 6\n        |> List.map (\\i -> ( "key-number-" ++ String.fromInt i, i ))\n\n\n\n-- SYSTEM\n\n\nfruitConfig : DnDList.Config Msg\nfruitConfig =\n    { message = FruitMsg\n    , movement = DnDList.Free DnDList.Rotate\n    }\n\n\nfruitSystem : DnDList.System Msg KeyedFruit\nfruitSystem =\n    DnDList.create fruitConfig\n\n\nnumberConfig : DnDList.Config Msg\nnumberConfig =\n    { message = NumberMsg\n    , movement = DnDList.Free DnDList.Rotate\n    }\n\n\nnumberSystem : DnDList.System Msg KeyedNumber\nnumberSystem =\n    DnDList.create numberConfig\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { fruitDraggable : DnDList.Draggable\n    , numberDraggable : DnDList.Draggable\n    , fruits : List KeyedFruit\n    , numbers : List KeyedNumber\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { fruitDraggable = fruitSystem.draggable\n    , numberDraggable = numberSystem.draggable\n    , fruits = data1\n    , numbers = data2\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ fruitSystem.subscriptions model.fruitDraggable\n        , numberSystem.subscriptions model.numberDraggable\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = FruitMsg DnDList.Msg\n    | NumberMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        FruitMsg message ->\n            let\n                ( fruitDraggable, fruits ) =\n                    fruitSystem.update message model.fruitDraggable model.fruits\n            in\n            ( { model\n                | fruitDraggable = fruitDraggable\n                , fruits = fruits\n              }\n            , fruitSystem.commands model.fruitDraggable\n            )\n\n        NumberMsg message ->\n            let\n                ( numberDraggable, numbers ) =\n                    numberSystem.update message model.numberDraggable model.numbers\n            in\n            ( { model\n                | numberDraggable = numberDraggable\n                , numbers = numbers\n              }\n            , numberSystem.commands model.numberDraggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeFruitDragIndex : Maybe Int\n        maybeFruitDragIndex =\n            fruitSystem.dragIndex model.fruitDraggable\n\n        maybeNumberDragIndex : Maybe Int\n        maybeNumberDragIndex =\n            numberSystem.dragIndex model.numberDraggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.fruits\n            |> List.indexedMap (fruitView maybeFruitDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , model.numbers\n            |> List.indexedMap (numberView maybeNumberDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedFruitView model.fruitDraggable model.fruits\n        , draggedNumberView model.numberDraggable model.numbers\n        ]\n\n\nfruitView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )\nfruitView maybeDragIndex index ( key, fruit ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                fruitId : String\n                fruitId =\n                    "id-" ++ fruit\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin" "0 2em 2em 0" ]\n                [ Html.div\n                    (Html.Attributes.id fruitId :: itemStyles ++ fruitStyles)\n                    [ Html.div (handleStyles ++ fruitHandleStyles ++ fruitSystem.dragEvents index fruitId) []\n                    , Html.text fruit\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em 2em 0" ]\n                    [ Html.div\n                        (itemStyles\n                            ++ fruitStyles\n                            ++ fruitSystem.dropEvents index\n                        )\n                        [ Html.div (handleStyles ++ fruitHandleStyles) []\n                        , Html.text fruit\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em 2em 0" ]\n                    [ Html.div (itemStyles ++ overedItemStyles) [] ]\n                )\n\n\ndraggedFruitView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg\ndraggedFruitView fruitDraggable fruits =\n    let\n        maybeDraggedFruit : Maybe KeyedFruit\n        maybeDraggedFruit =\n            fruitSystem.dragIndex fruitDraggable\n                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)\n    in\n    case maybeDraggedFruit of\n        Just ( _, fruit ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ fruitSystem.draggedStyles fruitDraggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.text fruit\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\nnumberView : Maybe Int -> Int -> KeyedNumber -> ( String, Html.Html Msg )\nnumberView maybeDragIndex index ( key, number ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                numberId : String\n                numberId =\n                    "id-" ++ String.fromInt number\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin" "2em 2em 0 0" ]\n                [ Html.div\n                    (Html.Attributes.id numberId :: itemStyles ++ numberStyles)\n                    [ Html.div (handleStyles ++ numberHandleStyles ++ numberSystem.dragEvents index numberId) []\n                    , Html.text (String.fromInt number)\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "2em 2em 0 0" ]\n                    [ Html.div\n                        (itemStyles\n                            ++ numberStyles\n                            ++ numberSystem.dropEvents index\n                        )\n                        [ Html.div (handleStyles ++ numberHandleStyles) []\n                        , Html.text (String.fromInt number)\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "2em 2em 0 0" ]\n                    [ Html.div (itemStyles ++ overedItemStyles) [] ]\n                )\n\n\ndraggedNumberView : DnDList.Draggable -> List KeyedNumber -> Html.Html Msg\ndraggedNumberView numberDraggable numbers =\n    let\n        maybeDraggedNumber : Maybe KeyedNumber\n        maybeDraggedNumber =\n            numberSystem.dragIndex numberDraggable\n                |> Maybe.andThen (\\index -> numbers |> List.drop index |> List.head)\n    in\n    case maybeDraggedNumber of\n        Just ( _, number ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ numberSystem.draggedStyles numberDraggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.text (String.fromInt number)\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "flex-wrap" "wrap"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "flex-start"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "width" "180px"\n    , Html.Attributes.style "height" "100px"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    ]\n\n\nfruitStyles : List (Html.Attribute msg)\nfruitStyles =\n    [ Html.Attributes.style "background" "#cddc39" ]\n\n\nnumberStyles : List (Html.Attribute msg)\nnumberStyles =\n    [ Html.Attributes.style "background" "#7cdc39" ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#dc9a39" ]\n\n\noveredItemStyles : List (Html.Attribute msg)\noveredItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\nhandleStyles : List (Html.Attribute msg)\nhandleStyles =\n    [ Html.Attributes.style "width" "50px"\n    , Html.Attributes.style "height" "50px"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "margin" "20px"\n    , Html.Attributes.style "cursor" "pointer"\n    ]\n\n\nfruitHandleStyles : List (Html.Attribute msg)\nfruitHandleStyles =\n    [ Html.Attributes.style "background" "#afb42b" ]\n\n\nnumberHandleStyles : List (Html.Attribute msg)\nnumberHandleStyles =\n    [ Html.Attributes.style "background" "#6bb42b" ]\n\n\ndraggedHandleStyles : List (Html.Attribute msg)\ndraggedHandleStyles =\n    [ Html.Attributes.style "background" "#b4752b" ]\n    ';
-var author$project$Example$WithTwoLists$containerStyles = _List_fromArray(
+var author$project$Basic$WithTwoLists$source = '\nmodule WithTwoLists exposing (main)\n\nimport Browser\nimport DnDList\nimport Html\nimport Html.Attributes\nimport Html.Keyed\n\n\n\n-- MAIN\n\n\nmain : Program () Model Msg\nmain =\n    Browser.element\n        { init = init\n        , view = view\n        , update = update\n        , subscriptions = subscriptions\n        }\n\n\n\n-- DATA\n\n\ntype alias Fruit =\n    String\n\n\ntype alias KeyedFruit =\n    ( String, Fruit )\n\n\ntype alias KeyedNumber =\n    ( String, Int )\n\n\ndata1 : List KeyedFruit\ndata1 =\n    [ "Apples", "Bananas", "Cherries", "Dates" ]\n        |> List.map (\\v -> ( "key-fruit-" ++ v, v ))\n\n\ndata2 : List KeyedNumber\ndata2 =\n    List.range 1 6\n        |> List.map (\\i -> ( "key-number-" ++ String.fromInt i, i ))\n\n\n\n-- SYSTEM\n\n\nfruitConfig : DnDList.Config Msg\nfruitConfig =\n    { message = FruitMsg\n    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag\n    }\n\n\nfruitSystem : DnDList.System Msg KeyedFruit\nfruitSystem =\n    DnDList.create fruitConfig\n\n\nnumberConfig : DnDList.Config Msg\nnumberConfig =\n    { message = NumberMsg\n    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag\n    }\n\n\nnumberSystem : DnDList.System Msg KeyedNumber\nnumberSystem =\n    DnDList.create numberConfig\n\n\n\n-- MODEL\n\n\ntype alias Model =\n    { fruitDraggable : DnDList.Draggable\n    , numberDraggable : DnDList.Draggable\n    , fruits : List KeyedFruit\n    , numbers : List KeyedNumber\n    }\n\n\ninitialModel : Model\ninitialModel =\n    { fruitDraggable = fruitSystem.draggable\n    , numberDraggable = numberSystem.draggable\n    , fruits = data1\n    , numbers = data2\n    }\n\n\ninit : () -> ( Model, Cmd Msg )\ninit _ =\n    ( initialModel, Cmd.none )\n\n\n\n-- SUBSCRIPTIONS\n\n\nsubscriptions : Model -> Sub Msg\nsubscriptions model =\n    Sub.batch\n        [ fruitSystem.subscriptions model.fruitDraggable\n        , numberSystem.subscriptions model.numberDraggable\n        ]\n\n\n\n-- UPDATE\n\n\ntype Msg\n    = FruitMsg DnDList.Msg\n    | NumberMsg DnDList.Msg\n\n\nupdate : Msg -> Model -> ( Model, Cmd Msg )\nupdate msg model =\n    case msg of\n        FruitMsg message ->\n            let\n                ( fruitDraggable, fruits ) =\n                    fruitSystem.update message model.fruitDraggable model.fruits\n            in\n            ( { model\n                | fruitDraggable = fruitDraggable\n                , fruits = fruits\n              }\n            , fruitSystem.commands model.fruitDraggable\n            )\n\n        NumberMsg message ->\n            let\n                ( numberDraggable, numbers ) =\n                    numberSystem.update message model.numberDraggable model.numbers\n            in\n            ( { model\n                | numberDraggable = numberDraggable\n                , numbers = numbers\n              }\n            , numberSystem.commands model.numberDraggable\n            )\n\n\n\n-- VIEW\n\n\nview : Model -> Html.Html Msg\nview model =\n    let\n        maybeFruitDragIndex : Maybe Int\n        maybeFruitDragIndex =\n            fruitSystem.dragIndex model.fruitDraggable\n\n        maybeNumberDragIndex : Maybe Int\n        maybeNumberDragIndex =\n            numberSystem.dragIndex model.numberDraggable\n    in\n    Html.section\n        [ Html.Attributes.style "margin" "6em 0" ]\n        [ model.fruits\n            |> List.indexedMap (fruitView maybeFruitDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , model.numbers\n            |> List.indexedMap (numberView maybeNumberDragIndex)\n            |> Html.Keyed.node "div" containerStyles\n        , draggedFruitView model.fruitDraggable model.fruits\n        , draggedNumberView model.numberDraggable model.numbers\n        ]\n\n\nfruitView : Maybe Int -> Int -> KeyedFruit -> ( String, Html.Html Msg )\nfruitView maybeDragIndex index ( key, fruit ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                fruitId : String\n                fruitId =\n                    "id-" ++ fruit\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin" "0 2em 2em 0" ]\n                [ Html.div\n                    (Html.Attributes.id fruitId :: itemStyles ++ fruitStyles)\n                    [ Html.div (handleStyles ++ fruitHandleStyles ++ fruitSystem.dragEvents index fruitId) []\n                    , Html.text fruit\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em 2em 0" ]\n                    [ Html.div\n                        (itemStyles\n                            ++ fruitStyles\n                            ++ fruitSystem.dropEvents index\n                        )\n                        [ Html.div (handleStyles ++ fruitHandleStyles) []\n                        , Html.text fruit\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "0 2em 2em 0" ]\n                    [ Html.div (itemStyles ++ placeholderItemStyles) [] ]\n                )\n\n\ndraggedFruitView : DnDList.Draggable -> List KeyedFruit -> Html.Html Msg\ndraggedFruitView fruitDraggable fruits =\n    let\n        maybeDraggedFruit : Maybe KeyedFruit\n        maybeDraggedFruit =\n            fruitSystem.dragIndex fruitDraggable\n                |> Maybe.andThen (\\index -> fruits |> List.drop index |> List.head)\n    in\n    case maybeDraggedFruit of\n        Just ( _, fruit ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ fruitSystem.draggedStyles fruitDraggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.text fruit\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\nnumberView : Maybe Int -> Int -> KeyedNumber -> ( String, Html.Html Msg )\nnumberView maybeDragIndex index ( key, number ) =\n    case maybeDragIndex of\n        Nothing ->\n            let\n                numberId : String\n                numberId =\n                    "id-" ++ String.fromInt number\n            in\n            ( key\n            , Html.div\n                [ Html.Attributes.style "margin" "2em 2em 0 0" ]\n                [ Html.div\n                    (Html.Attributes.id numberId :: itemStyles ++ numberStyles)\n                    [ Html.div (handleStyles ++ numberHandleStyles ++ numberSystem.dragEvents index numberId) []\n                    , Html.text (String.fromInt number)\n                    ]\n                ]\n            )\n\n        Just dragIndex ->\n            if dragIndex /= index then\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "2em 2em 0 0" ]\n                    [ Html.div\n                        (itemStyles\n                            ++ numberStyles\n                            ++ numberSystem.dropEvents index\n                        )\n                        [ Html.div (handleStyles ++ numberHandleStyles) []\n                        , Html.text (String.fromInt number)\n                        ]\n                    ]\n                )\n\n            else\n                ( key\n                , Html.div\n                    [ Html.Attributes.style "margin" "2em 2em 0 0" ]\n                    [ Html.div (itemStyles ++ placeholderItemStyles) [] ]\n                )\n\n\ndraggedNumberView : DnDList.Draggable -> List KeyedNumber -> Html.Html Msg\ndraggedNumberView numberDraggable numbers =\n    let\n        maybeDraggedNumber : Maybe KeyedNumber\n        maybeDraggedNumber =\n            numberSystem.dragIndex numberDraggable\n                |> Maybe.andThen (\\index -> numbers |> List.drop index |> List.head)\n    in\n    case maybeDraggedNumber of\n        Just ( _, number ) ->\n            Html.div\n                (itemStyles ++ draggedItemStyles ++ numberSystem.draggedStyles numberDraggable)\n                [ Html.div (handleStyles ++ draggedHandleStyles) []\n                , Html.text (String.fromInt number)\n                ]\n\n        Nothing ->\n            Html.text ""\n\n\n\n-- STYLES\n\n\ncontainerStyles : List (Html.Attribute msg)\ncontainerStyles =\n    [ Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "flex-wrap" "wrap"\n    , Html.Attributes.style "align-items" "center"\n    , Html.Attributes.style "justify-content" "flex-start"\n    ]\n\n\nitemStyles : List (Html.Attribute msg)\nitemStyles =\n    [ Html.Attributes.style "width" "180px"\n    , Html.Attributes.style "height" "100px"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "display" "flex"\n    , Html.Attributes.style "align-items" "center"\n    ]\n\n\nfruitStyles : List (Html.Attribute msg)\nfruitStyles =\n    [ Html.Attributes.style "background" "#cddc39" ]\n\n\nnumberStyles : List (Html.Attribute msg)\nnumberStyles =\n    [ Html.Attributes.style "background" "#7cdc39" ]\n\n\ndraggedItemStyles : List (Html.Attribute msg)\ndraggedItemStyles =\n    [ Html.Attributes.style "background" "#dc9a39" ]\n\n\nplaceholderItemStyles : List (Html.Attribute msg)\nplaceholderItemStyles =\n    [ Html.Attributes.style "background" "dimgray" ]\n\n\nhandleStyles : List (Html.Attribute msg)\nhandleStyles =\n    [ Html.Attributes.style "width" "50px"\n    , Html.Attributes.style "height" "50px"\n    , Html.Attributes.style "border-radius" "8px"\n    , Html.Attributes.style "margin" "20px"\n    , Html.Attributes.style "cursor" "pointer"\n    ]\n\n\nfruitHandleStyles : List (Html.Attribute msg)\nfruitHandleStyles =\n    [ Html.Attributes.style "background" "#afb42b" ]\n\n\nnumberHandleStyles : List (Html.Attribute msg)\nnumberHandleStyles =\n    [ Html.Attributes.style "background" "#6bb42b" ]\n\n\ndraggedHandleStyles : List (Html.Attribute msg)\ndraggedHandleStyles =\n    [ Html.Attributes.style "background" "#b4752b" ]\n    ';
+var author$project$Basic$WithTwoLists$containerStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'flex-wrap', 'wrap'),
 		A2(elm$html$Html$Attributes$style, 'align-items', 'center'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'flex-start')
 	]);
-var author$project$Example$WithTwoLists$draggedHandleStyles = _List_fromArray(
+var author$project$Basic$WithTwoLists$draggedHandleStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background', '#b4752b')
 	]);
-var author$project$Example$WithTwoLists$draggedItemStyles = _List_fromArray(
+var author$project$Basic$WithTwoLists$draggedItemStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background', '#dc9a39')
 	]);
-var author$project$Example$WithTwoLists$handleStyles = _List_fromArray(
+var author$project$Basic$WithTwoLists$handleStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'width', '50px'),
 		A2(elm$html$Html$Attributes$style, 'height', '50px'),
@@ -13164,7 +13968,7 @@ var author$project$Example$WithTwoLists$handleStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'margin', '20px'),
 		A2(elm$html$Html$Attributes$style, 'cursor', 'pointer')
 	]);
-var author$project$Example$WithTwoLists$itemStyles = _List_fromArray(
+var author$project$Basic$WithTwoLists$itemStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'width', '180px'),
 		A2(elm$html$Html$Attributes$style, 'height', '100px'),
@@ -13172,7 +13976,7 @@ var author$project$Example$WithTwoLists$itemStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'align-items', 'center')
 	]);
-var author$project$Example$WithTwoLists$draggedFruitView = F2(
+var author$project$Basic$WithTwoLists$draggedFruitView = F2(
 	function (fruitDraggable, fruits) {
 		var maybeDraggedFruit = A2(
 			elm$core$Maybe$andThen,
@@ -13180,22 +13984,22 @@ var author$project$Example$WithTwoLists$draggedFruitView = F2(
 				return elm$core$List$head(
 					A2(elm$core$List$drop, index, fruits));
 			},
-			author$project$Example$WithTwoLists$fruitSystem.be(fruitDraggable));
+			author$project$Basic$WithTwoLists$fruitSystem.aQ(fruitDraggable));
 		if (!maybeDraggedFruit.$) {
 			var _n1 = maybeDraggedFruit.a;
 			var fruit = _n1.b;
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Example$WithTwoLists$itemStyles,
+					author$project$Basic$WithTwoLists$itemStyles,
 					_Utils_ap(
-						author$project$Example$WithTwoLists$draggedItemStyles,
-						author$project$Example$WithTwoLists$fruitSystem.bg(fruitDraggable))),
+						author$project$Basic$WithTwoLists$draggedItemStyles,
+						author$project$Basic$WithTwoLists$fruitSystem.ct(fruitDraggable))),
 				_List_fromArray(
 					[
 						A2(
 						elm$html$Html$div,
-						_Utils_ap(author$project$Example$WithTwoLists$handleStyles, author$project$Example$WithTwoLists$draggedHandleStyles),
+						_Utils_ap(author$project$Basic$WithTwoLists$handleStyles, author$project$Basic$WithTwoLists$draggedHandleStyles),
 						_List_Nil),
 						elm$html$Html$text(fruit)
 					]));
@@ -13203,7 +14007,7 @@ var author$project$Example$WithTwoLists$draggedFruitView = F2(
 			return elm$html$Html$text('');
 		}
 	});
-var author$project$Example$WithTwoLists$draggedNumberView = F2(
+var author$project$Basic$WithTwoLists$draggedNumberView = F2(
 	function (numberDraggable, numbers) {
 		var maybeDraggedNumber = A2(
 			elm$core$Maybe$andThen,
@@ -13211,22 +14015,22 @@ var author$project$Example$WithTwoLists$draggedNumberView = F2(
 				return elm$core$List$head(
 					A2(elm$core$List$drop, index, numbers));
 			},
-			author$project$Example$WithTwoLists$numberSystem.be(numberDraggable));
+			author$project$Basic$WithTwoLists$numberSystem.aQ(numberDraggable));
 		if (!maybeDraggedNumber.$) {
 			var _n1 = maybeDraggedNumber.a;
 			var number = _n1.b;
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Example$WithTwoLists$itemStyles,
+					author$project$Basic$WithTwoLists$itemStyles,
 					_Utils_ap(
-						author$project$Example$WithTwoLists$draggedItemStyles,
-						author$project$Example$WithTwoLists$numberSystem.bg(numberDraggable))),
+						author$project$Basic$WithTwoLists$draggedItemStyles,
+						author$project$Basic$WithTwoLists$numberSystem.ct(numberDraggable))),
 				_List_fromArray(
 					[
 						A2(
 						elm$html$Html$div,
-						_Utils_ap(author$project$Example$WithTwoLists$handleStyles, author$project$Example$WithTwoLists$draggedHandleStyles),
+						_Utils_ap(author$project$Basic$WithTwoLists$handleStyles, author$project$Basic$WithTwoLists$draggedHandleStyles),
 						_List_Nil),
 						elm$html$Html$text(
 						elm$core$String$fromInt(number))
@@ -13235,19 +14039,19 @@ var author$project$Example$WithTwoLists$draggedNumberView = F2(
 			return elm$html$Html$text('');
 		}
 	});
-var author$project$Example$WithTwoLists$fruitHandleStyles = _List_fromArray(
+var author$project$Basic$WithTwoLists$fruitHandleStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background', '#afb42b')
 	]);
-var author$project$Example$WithTwoLists$fruitStyles = _List_fromArray(
+var author$project$Basic$WithTwoLists$fruitStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background', '#cddc39')
 	]);
-var author$project$Example$WithTwoLists$overedItemStyles = _List_fromArray(
+var author$project$Basic$WithTwoLists$placeholderItemStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background', 'dimgray')
 	]);
-var author$project$Example$WithTwoLists$fruitView = F3(
+var author$project$Basic$WithTwoLists$fruitView = F3(
 	function (maybeDragIndex, index, _n0) {
 		var key = _n0.a;
 		var fruit = _n0.b;
@@ -13268,16 +14072,16 @@ var author$project$Example$WithTwoLists$fruitView = F3(
 							A2(
 								elm$core$List$cons,
 								elm$html$Html$Attributes$id(fruitId),
-								_Utils_ap(author$project$Example$WithTwoLists$itemStyles, author$project$Example$WithTwoLists$fruitStyles)),
+								_Utils_ap(author$project$Basic$WithTwoLists$itemStyles, author$project$Basic$WithTwoLists$fruitStyles)),
 							_List_fromArray(
 								[
 									A2(
 									elm$html$Html$div,
 									_Utils_ap(
-										author$project$Example$WithTwoLists$handleStyles,
+										author$project$Basic$WithTwoLists$handleStyles,
 										_Utils_ap(
-											author$project$Example$WithTwoLists$fruitHandleStyles,
-											A2(author$project$Example$WithTwoLists$fruitSystem.bd, index, fruitId))),
+											author$project$Basic$WithTwoLists$fruitHandleStyles,
+											A2(author$project$Basic$WithTwoLists$fruitSystem.cs, index, fruitId))),
 									_List_Nil),
 									elm$html$Html$text(fruit)
 								]))
@@ -13297,15 +14101,15 @@ var author$project$Example$WithTwoLists$fruitView = F3(
 							A2(
 							elm$html$Html$div,
 							_Utils_ap(
-								author$project$Example$WithTwoLists$itemStyles,
+								author$project$Basic$WithTwoLists$itemStyles,
 								_Utils_ap(
-									author$project$Example$WithTwoLists$fruitStyles,
-									author$project$Example$WithTwoLists$fruitSystem.bh(index))),
+									author$project$Basic$WithTwoLists$fruitStyles,
+									author$project$Basic$WithTwoLists$fruitSystem.cu(index))),
 							_List_fromArray(
 								[
 									A2(
 									elm$html$Html$div,
-									_Utils_ap(author$project$Example$WithTwoLists$handleStyles, author$project$Example$WithTwoLists$fruitHandleStyles),
+									_Utils_ap(author$project$Basic$WithTwoLists$handleStyles, author$project$Basic$WithTwoLists$fruitHandleStyles),
 									_List_Nil),
 									elm$html$Html$text(fruit)
 								]))
@@ -13321,20 +14125,20 @@ var author$project$Example$WithTwoLists$fruitView = F3(
 						[
 							A2(
 							elm$html$Html$div,
-							_Utils_ap(author$project$Example$WithTwoLists$itemStyles, author$project$Example$WithTwoLists$overedItemStyles),
+							_Utils_ap(author$project$Basic$WithTwoLists$itemStyles, author$project$Basic$WithTwoLists$placeholderItemStyles),
 							_List_Nil)
 						])));
 		}
 	});
-var author$project$Example$WithTwoLists$numberHandleStyles = _List_fromArray(
+var author$project$Basic$WithTwoLists$numberHandleStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background', '#6bb42b')
 	]);
-var author$project$Example$WithTwoLists$numberStyles = _List_fromArray(
+var author$project$Basic$WithTwoLists$numberStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background', '#7cdc39')
 	]);
-var author$project$Example$WithTwoLists$numberView = F3(
+var author$project$Basic$WithTwoLists$numberView = F3(
 	function (maybeDragIndex, index, _n0) {
 		var key = _n0.a;
 		var number = _n0.b;
@@ -13355,16 +14159,16 @@ var author$project$Example$WithTwoLists$numberView = F3(
 							A2(
 								elm$core$List$cons,
 								elm$html$Html$Attributes$id(numberId),
-								_Utils_ap(author$project$Example$WithTwoLists$itemStyles, author$project$Example$WithTwoLists$numberStyles)),
+								_Utils_ap(author$project$Basic$WithTwoLists$itemStyles, author$project$Basic$WithTwoLists$numberStyles)),
 							_List_fromArray(
 								[
 									A2(
 									elm$html$Html$div,
 									_Utils_ap(
-										author$project$Example$WithTwoLists$handleStyles,
+										author$project$Basic$WithTwoLists$handleStyles,
 										_Utils_ap(
-											author$project$Example$WithTwoLists$numberHandleStyles,
-											A2(author$project$Example$WithTwoLists$numberSystem.bd, index, numberId))),
+											author$project$Basic$WithTwoLists$numberHandleStyles,
+											A2(author$project$Basic$WithTwoLists$numberSystem.cs, index, numberId))),
 									_List_Nil),
 									elm$html$Html$text(
 									elm$core$String$fromInt(number))
@@ -13385,15 +14189,15 @@ var author$project$Example$WithTwoLists$numberView = F3(
 							A2(
 							elm$html$Html$div,
 							_Utils_ap(
-								author$project$Example$WithTwoLists$itemStyles,
+								author$project$Basic$WithTwoLists$itemStyles,
 								_Utils_ap(
-									author$project$Example$WithTwoLists$numberStyles,
-									author$project$Example$WithTwoLists$numberSystem.bh(index))),
+									author$project$Basic$WithTwoLists$numberStyles,
+									author$project$Basic$WithTwoLists$numberSystem.cu(index))),
 							_List_fromArray(
 								[
 									A2(
 									elm$html$Html$div,
-									_Utils_ap(author$project$Example$WithTwoLists$handleStyles, author$project$Example$WithTwoLists$numberHandleStyles),
+									_Utils_ap(author$project$Basic$WithTwoLists$handleStyles, author$project$Basic$WithTwoLists$numberHandleStyles),
 									_List_Nil),
 									elm$html$Html$text(
 									elm$core$String$fromInt(number))
@@ -13410,14 +14214,14 @@ var author$project$Example$WithTwoLists$numberView = F3(
 						[
 							A2(
 							elm$html$Html$div,
-							_Utils_ap(author$project$Example$WithTwoLists$itemStyles, author$project$Example$WithTwoLists$overedItemStyles),
+							_Utils_ap(author$project$Basic$WithTwoLists$itemStyles, author$project$Basic$WithTwoLists$placeholderItemStyles),
 							_List_Nil)
 						])));
 		}
 	});
-var author$project$Example$WithTwoLists$view = function (model) {
-	var maybeNumberDragIndex = author$project$Example$WithTwoLists$numberSystem.be(model.G);
-	var maybeFruitDragIndex = author$project$Example$WithTwoLists$fruitSystem.be(model.E);
+var author$project$Basic$WithTwoLists$view = function (model) {
+	var maybeNumberDragIndex = author$project$Basic$WithTwoLists$numberSystem.aQ(model.H);
+	var maybeFruitDragIndex = author$project$Basic$WithTwoLists$fruitSystem.aQ(model.F);
 	return A2(
 		elm$html$Html$section,
 		_List_fromArray(
@@ -13429,28 +14233,28 @@ var author$project$Example$WithTwoLists$view = function (model) {
 				A3(
 				elm$html$Html$Keyed$node,
 				'div',
-				author$project$Example$WithTwoLists$containerStyles,
+				author$project$Basic$WithTwoLists$containerStyles,
 				A2(
 					elm$core$List$indexedMap,
-					author$project$Example$WithTwoLists$fruitView(maybeFruitDragIndex),
-					model.aa)),
+					author$project$Basic$WithTwoLists$fruitView(maybeFruitDragIndex),
+					model.ac)),
 				A3(
 				elm$html$Html$Keyed$node,
 				'div',
-				author$project$Example$WithTwoLists$containerStyles,
+				author$project$Basic$WithTwoLists$containerStyles,
 				A2(
 					elm$core$List$indexedMap,
-					author$project$Example$WithTwoLists$numberView(maybeNumberDragIndex),
-					model.ad)),
-				A2(author$project$Example$WithTwoLists$draggedFruitView, model.E, model.aa),
-				A2(author$project$Example$WithTwoLists$draggedNumberView, model.G, model.ad)
+					author$project$Basic$WithTwoLists$numberView(maybeNumberDragIndex),
+					model.af)),
+				A2(author$project$Basic$WithTwoLists$draggedFruitView, model.F, model.ac),
+				A2(author$project$Basic$WithTwoLists$draggedNumberView, model.H, model.af)
 			]));
 };
 var elm$html$Html$h2 = _VirtualDom_node('h2');
 var elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var elm$html$Html$map = elm$virtual_dom$VirtualDom$map;
 var author$project$Main$demoView = F4(
-	function (h2, h3, toMsg, demo) {
+	function (subtitle, description, toMsg, demo) {
 		return A2(
 			elm$html$Html$div,
 			_List_fromArray(
@@ -13464,34 +14268,40 @@ var author$project$Main$demoView = F4(
 					_List_Nil,
 					_List_fromArray(
 						[
-							elm$html$Html$text(h2)
+							elm$html$Html$text(subtitle)
 						])),
 					A2(
 					elm$html$Html$p,
 					_List_Nil,
 					_List_fromArray(
 						[
-							elm$html$Html$text(h3)
+							elm$html$Html$text(description)
 						])),
 					A2(elm$html$Html$map, toMsg, demo)
 				]));
 	});
-var author$project$Main$heading = function (example) {
+var author$project$Main$info = function (example) {
 	switch (example.$) {
 		case 0:
-			return {t: 'Basic', u: 'Basic example', v: 'Sortable list'};
+			return {l: 'Sortable list', n: 'Basic example', j: 'Basic'};
 		case 1:
-			return {t: 'Basic + Elm UI', u: 'Basic example', v: 'Designed with mdgriffith/elm-ui'};
+			return {l: 'Designed with mdgriffith/elm-ui', n: 'Basic example', j: 'Basic + Elm UI'};
 		case 2:
-			return {t: 'Free Rotate', u: 'Free drag movement - Rotate', v: 'The items between the dragged and the drop target elements are rotated'};
+			return {l: 'Example with keyed nodes', n: 'Free drag movement', j: 'Free'};
 		case 3:
-			return {t: 'Free Swap', u: 'Free drag movement - Swap', v: 'The dragged and the drop target elements are swapped'};
+			return {l: 'Example with keyed nodes', n: 'Horizontal drag only', j: 'Horizontal'};
 		case 4:
-			return {t: 'Horizontal', u: 'Horizontal drag only', v: 'Example with keyed nodes'};
+			return {l: 'Example with keyed nodes', n: 'Vertical drag only', j: 'Vertical'};
 		case 5:
-			return {t: 'Vertical', u: 'Vertical drag only', v: 'Example with keyed nodes'};
+			return {l: 'Without thinking: duplicate everything', n: 'Two independent lists', j: 'Two lists'};
+		case 6:
+			return {l: 'The items between the dragged and the drop target elements are rotated, and the list is updated each time when dragging over a drop target.', n: 'Free drag movement - Rotate OnDrag', j: 'Free Rotate OnDrag'};
+		case 7:
+			return {l: 'The items between the dragged and the drop target elements are rotated, and the list is updated only once when the dragged item was dropped on the drop target.', n: 'Free drag movement - Rotate OnDrop', j: 'Free Rotate OnDrop'};
+		case 8:
+			return {l: 'The dragged and the drop target elements are swapped, and the list is updated each time when dragging over a drop target.', n: 'Free drag movement - Swap OnDrag', j: 'Free Swap OnDrag'};
 		default:
-			return {t: 'Two lists', u: 'Two independent lists', v: 'Without thinking: duplicate everything'};
+			return {l: 'The dragged and the drop target elements are swapped, and the list is updated only once when the dragged item was dropped on the drop target.', n: 'Free drag movement - Swap OnDrop', j: 'Free Swap OnDrop'};
 	}
 };
 var elm$virtual_dom$VirtualDom$property = F2(
@@ -13544,147 +14354,140 @@ var elm$core$Basics$composeR = F3(
 		return g(
 			f(x));
 	});
-var elm$html$Html$main_ = _VirtualDom_node('main');
 var author$project$Main$mainView = function (example) {
-	var h3 = A2(
+	var subtitle = A2(
 		elm$core$Basics$composeR,
-		author$project$Main$heading,
+		author$project$Main$info,
 		function ($) {
-			return $.v;
+			return $.n;
 		})(example);
-	var h2 = A2(
+	var description = A2(
 		elm$core$Basics$composeR,
-		author$project$Main$heading,
+		author$project$Main$info,
 		function ($) {
-			return $.u;
+			return $.l;
 		})(example);
 	switch (example.$) {
 		case 0:
 			var basic = example.a;
-			return A2(
-				elm$html$Html$main_,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$id('main')
-					]),
-				_List_fromArray(
-					[
-						A4(
-						author$project$Main$demoView,
-						h2,
-						h3,
-						author$project$Main$BasicMsg,
-						author$project$Example$Basic$view(basic)),
-						author$project$Main$sourceView(author$project$Example$Basic$source)
-					]));
+			return _List_fromArray(
+				[
+					A4(
+					author$project$Main$demoView,
+					subtitle,
+					description,
+					author$project$Main$BasicMsg,
+					author$project$Basic$Basic$view(basic)),
+					author$project$Main$sourceView(author$project$Basic$Basic$source)
+				]);
 		case 1:
 			var basicElmUI = example.a;
-			return A2(
-				elm$html$Html$main_,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$id('main')
-					]),
-				_List_fromArray(
-					[
-						A4(
-						author$project$Main$demoView,
-						h2,
-						h3,
-						author$project$Main$BasicElmUIMsg,
-						author$project$Example$BasicElmUI$view(basicElmUI)),
-						author$project$Main$sourceView(author$project$Example$BasicElmUI$source)
-					]));
+			return _List_fromArray(
+				[
+					A4(
+					author$project$Main$demoView,
+					subtitle,
+					description,
+					author$project$Main$BasicElmUIMsg,
+					author$project$Basic$BasicElmUI$view(basicElmUI)),
+					author$project$Main$sourceView(author$project$Basic$BasicElmUI$source)
+				]);
 		case 2:
-			var freeRotate = example.a;
-			return A2(
-				elm$html$Html$main_,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$id('main')
-					]),
-				_List_fromArray(
-					[
-						A4(
-						author$project$Main$demoView,
-						h2,
-						h3,
-						author$project$Main$FreeRotateMsg,
-						author$project$Example$FreeRotate$view(freeRotate)),
-						author$project$Main$sourceView(author$project$Example$FreeRotate$source)
-					]));
+			var free = example.a;
+			return _List_fromArray(
+				[
+					A4(
+					author$project$Main$demoView,
+					subtitle,
+					description,
+					author$project$Main$FreeMsg,
+					author$project$Basic$Free$view(free)),
+					author$project$Main$sourceView(author$project$Basic$Free$source)
+				]);
 		case 3:
-			var freeSwap = example.a;
-			return A2(
-				elm$html$Html$main_,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$id('main')
-					]),
-				_List_fromArray(
-					[
-						A4(
-						author$project$Main$demoView,
-						h2,
-						h3,
-						author$project$Main$FreeSwapMsg,
-						author$project$Example$FreeSwap$view(freeSwap)),
-						author$project$Main$sourceView(author$project$Example$FreeSwap$source)
-					]));
-		case 4:
 			var horizontal = example.a;
-			return A2(
-				elm$html$Html$main_,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$id('main')
-					]),
-				_List_fromArray(
-					[
-						A4(
-						author$project$Main$demoView,
-						h2,
-						h3,
-						author$project$Main$HorizontalMsg,
-						author$project$Example$Horizontal$view(horizontal)),
-						author$project$Main$sourceView(author$project$Example$Horizontal$source)
-					]));
-		case 5:
+			return _List_fromArray(
+				[
+					A4(
+					author$project$Main$demoView,
+					subtitle,
+					description,
+					author$project$Main$HorizontalMsg,
+					author$project$Basic$Horizontal$view(horizontal)),
+					author$project$Main$sourceView(author$project$Basic$Horizontal$source)
+				]);
+		case 4:
 			var vertical = example.a;
-			return A2(
-				elm$html$Html$main_,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$id('main')
-					]),
-				_List_fromArray(
-					[
-						A4(
-						author$project$Main$demoView,
-						h2,
-						h3,
-						author$project$Main$VerticalMsg,
-						author$project$Example$Vertical$view(vertical)),
-						author$project$Main$sourceView(author$project$Example$Vertical$source)
-					]));
-		default:
+			return _List_fromArray(
+				[
+					A4(
+					author$project$Main$demoView,
+					subtitle,
+					description,
+					author$project$Main$VerticalMsg,
+					author$project$Basic$Vertical$view(vertical)),
+					author$project$Main$sourceView(author$project$Basic$Vertical$source)
+				]);
+		case 5:
 			var withTwoLists = example.a;
-			return A2(
-				elm$html$Html$main_,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$id('main')
-					]),
-				_List_fromArray(
-					[
-						A4(
-						author$project$Main$demoView,
-						h2,
-						h3,
-						author$project$Main$WithTwoListsMsg,
-						author$project$Example$WithTwoLists$view(withTwoLists)),
-						author$project$Main$sourceView(author$project$Example$WithTwoLists$source)
-					]));
+			return _List_fromArray(
+				[
+					A4(
+					author$project$Main$demoView,
+					subtitle,
+					description,
+					author$project$Main$WithTwoListsMsg,
+					author$project$Basic$WithTwoLists$view(withTwoLists)),
+					author$project$Main$sourceView(author$project$Basic$WithTwoLists$source)
+				]);
+		case 6:
+			var freeRotateOnDrag = example.a;
+			return _List_fromArray(
+				[
+					A4(
+					author$project$Main$demoView,
+					subtitle,
+					description,
+					author$project$Main$FreeRotateOnDragMsg,
+					author$project$Advanced$FreeRotateOnDrag$view(freeRotateOnDrag)),
+					author$project$Main$sourceView(author$project$Advanced$FreeRotateOnDrag$source)
+				]);
+		case 7:
+			var freeRotateOnDrop = example.a;
+			return _List_fromArray(
+				[
+					A4(
+					author$project$Main$demoView,
+					subtitle,
+					description,
+					author$project$Main$FreeRotateOnDropMsg,
+					author$project$Advanced$FreeRotateOnDrop$view(freeRotateOnDrop)),
+					author$project$Main$sourceView(author$project$Advanced$FreeRotateOnDrop$source)
+				]);
+		case 8:
+			var freeSwapOnDrag = example.a;
+			return _List_fromArray(
+				[
+					A4(
+					author$project$Main$demoView,
+					subtitle,
+					description,
+					author$project$Main$FreeSwapOnDragMsg,
+					author$project$Advanced$FreeSwapOnDrag$view(freeSwapOnDrag)),
+					author$project$Main$sourceView(author$project$Advanced$FreeSwapOnDrag$source)
+				]);
+		default:
+			var freeSwapOnDrop = example.a;
+			return _List_fromArray(
+				[
+					A4(
+					author$project$Main$demoView,
+					subtitle,
+					description,
+					author$project$Main$FreeSwapOnDropMsg,
+					author$project$Advanced$FreeSwapOnDrop$view(freeSwapOnDrop)),
+					author$project$Main$sourceView(author$project$Advanced$FreeSwapOnDrop$source)
+				]);
 	}
 };
 var author$project$Main$LinkClicked = F2(
@@ -13709,8 +14512,8 @@ var elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		elm$json$Json$Decode$succeed(msg));
 };
-var author$project$Main$navigationView = F2(
-	function (currentKey, list) {
+var author$project$Main$navigationView = F3(
+	function (currentKey, basic, advanced) {
 		var linkView = F2(
 			function (key, example) {
 				return A2(
@@ -13732,9 +14535,9 @@ var author$project$Main$navigationView = F2(
 							elm$html$Html$text(
 							A2(
 								elm$core$Basics$composeR,
-								author$project$Main$heading,
+								author$project$Main$info,
 								function ($) {
-									return $.t;
+									return $.j;
 								})(example))
 						]));
 			});
@@ -13748,18 +14551,36 @@ var author$project$Main$navigationView = F2(
 					_List_Nil,
 					_List_fromArray(
 						[
-							elm$html$Html$text('Examples')
+							elm$html$Html$text('Basic Examples')
 						])),
 					A2(
 					elm$html$Html$ul,
 					_List_Nil,
-					A2(elm$core$List$indexedMap, linkView, list))
+					A2(elm$core$List$indexedMap, linkView, basic)),
+					A2(
+					elm$html$Html$h2,
+					_List_Nil,
+					_List_fromArray(
+						[
+							elm$html$Html$text('Advanced Examples')
+						])),
+					A2(
+					elm$html$Html$ul,
+					_List_Nil,
+					A2(
+						elm$core$List$indexedMap,
+						function (i) {
+							return linkView(
+								i + elm$core$List$length(basic));
+						},
+						advanced))
 				]));
 	});
+var elm$html$Html$main_ = _VirtualDom_node('main');
 var elm$html$Html$nav = _VirtualDom_node('nav');
 var author$project$Main$view = function (model) {
 	return {
-		cg: _List_fromArray(
+		b9: _List_fromArray(
 			[
 				A2(
 				elm$html$Html$nav,
@@ -13767,27 +14588,39 @@ var author$project$Main$view = function (model) {
 				_List_fromArray(
 					[
 						author$project$Main$cardView,
-						A2(
+						A3(
 						author$project$Main$navigationView,
-						model.aD,
+						model.aE,
 						_List_fromArray(
 							[
-								author$project$Main$Basic(author$project$Example$Basic$initialModel),
-								author$project$Main$BasicElmUI(author$project$Example$BasicElmUI$initialModel),
-								author$project$Main$FreeRotate(author$project$Example$FreeRotate$initialModel),
-								author$project$Main$FreeSwap(author$project$Example$FreeSwap$initialModel),
-								author$project$Main$Horizontal(author$project$Example$Horizontal$initialModel),
-								author$project$Main$Vertical(author$project$Example$Vertical$initialModel),
-								author$project$Main$WithTwoLists(author$project$Example$WithTwoLists$initialModel)
+								author$project$Main$Basic(author$project$Basic$Basic$initialModel),
+								author$project$Main$BasicElmUI(author$project$Basic$BasicElmUI$initialModel),
+								author$project$Main$Free(author$project$Basic$Free$initialModel),
+								author$project$Main$Horizontal(author$project$Basic$Horizontal$initialModel),
+								author$project$Main$Vertical(author$project$Basic$Vertical$initialModel),
+								author$project$Main$WithTwoLists(author$project$Basic$WithTwoLists$initialModel)
+							]),
+						_List_fromArray(
+							[
+								author$project$Main$FreeRotateOnDrag(author$project$Advanced$FreeRotateOnDrag$initialModel),
+								author$project$Main$FreeRotateOnDrop(author$project$Advanced$FreeRotateOnDrop$initialModel),
+								author$project$Main$FreeSwapOnDrag(author$project$Advanced$FreeSwapOnDrag$initialModel),
+								author$project$Main$FreeSwapOnDrop(author$project$Advanced$FreeSwapOnDrop$initialModel)
 							]))
 					])),
-				author$project$Main$mainView(model.a)
+				A2(
+				elm$html$Html$main_,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$id('main')
+					]),
+				author$project$Main$mainView(model.a))
 			]),
-		du: 'annaghi | dnd-list'
+		j: 'annaghi | dnd-list'
 	};
 };
 var elm$browser$Browser$document = _Browser_document;
 var author$project$Main$main = elm$browser$Browser$document(
-	{cL: author$project$Main$init, bQ: author$project$Main$subscriptions, bU: author$project$Main$update, dz: author$project$Main$view});
+	{cI: author$project$Main$init, bJ: author$project$Main$subscriptions, bN: author$project$Main$update, dx: author$project$Main$view});
 _Platform_export({'Main':{'init':author$project$Main$main(
 	elm$json$Json$Decode$succeed(0))(0)}});}(this));

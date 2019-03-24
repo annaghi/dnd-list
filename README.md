@@ -71,7 +71,7 @@ data =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Free DnDList.Rotate
+    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag
     }
 
 

@@ -1,8 +1,7 @@
-module Example.BasicElmUI exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
+module Basic.Basic exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
 
 import Browser
 import DnDList
-import Element
 import Html
 import Html.Attributes
 
@@ -41,7 +40,7 @@ data =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Free DnDList.Rotate
+    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag
     }
 
 
@@ -113,18 +112,18 @@ view model =
         maybeDragIndex =
             system.dragIndex model.draggable
     in
-    Element.layout
-        [ Element.width Element.fill
-        , Element.height Element.fill
-        , Element.inFront (draggedItemView model.draggable model.items)
+    Html.section
+        [ Html.Attributes.style "margin" "6em 0"
+        , Html.Attributes.style "text-align" "center"
         ]
-        (Element.column
-            [ Element.centerX, Element.centerY, Element.padding 10, Element.spacing 10 ]
-            (model.items |> List.indexedMap (itemView maybeDragIndex))
-        )
+        [ model.items
+            |> List.indexedMap (itemView maybeDragIndex)
+            |> Html.div []
+        , draggedItemView model.draggable model.items
+        ]
 
 
-itemView : Maybe Int -> Int -> Fruit -> Element.Element Msg
+itemView : Maybe Int -> Int -> Fruit -> Html.Html Msg
 itemView maybeDragIndex index item =
     case maybeDragIndex of
         Nothing ->
@@ -133,23 +132,21 @@ itemView maybeDragIndex index item =
                 itemId =
                     "id-" ++ item
             in
-            Element.el
-                (Element.htmlAttribute (Html.Attributes.id itemId)
-                    :: List.map Element.htmlAttribute (system.dragEvents index itemId)
-                )
-                (Element.text item)
+            Html.p
+                (Html.Attributes.id itemId :: system.dragEvents index itemId)
+                [ Html.text item ]
 
         Just dragIndex ->
             if dragIndex /= index then
-                Element.el
-                    (List.map Element.htmlAttribute (system.dropEvents index))
-                    (Element.text item)
+                Html.p
+                    (system.dropEvents index)
+                    [ Html.text item ]
 
             else
-                Element.el [] (Element.text "[---------]")
+                Html.p [] [ Html.text "[---------]" ]
 
 
-draggedItemView : DnDList.Draggable -> List Fruit -> Element.Element Msg
+draggedItemView : DnDList.Draggable -> List Fruit -> Html.Html Msg
 draggedItemView draggable items =
     let
         maybeDraggedItem : Maybe Fruit
@@ -159,12 +156,12 @@ draggedItemView draggable items =
     in
     case maybeDraggedItem of
         Just item ->
-            Element.el
-                (List.map Element.htmlAttribute (system.draggedStyles draggable))
-                (Element.text item)
+            Html.div
+                (system.draggedStyles draggable)
+                [ Html.text item ]
 
         Nothing ->
-            Element.none
+            Html.text ""
 
 
 
@@ -174,11 +171,10 @@ draggedItemView draggable items =
 source : String
 source =
     """
-module BasicElmUI exposing (main)
+module Basic exposing (main)
 
 import Browser
 import DnDList
-import Element
 import Html
 import Html.Attributes
 
@@ -217,7 +213,7 @@ data =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Free DnDList.Rotate
+    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag
     }
 
 
@@ -289,18 +285,18 @@ view model =
         maybeDragIndex =
             system.dragIndex model.draggable
     in
-    Element.layout
-        [ Element.width Element.fill
-        , Element.height Element.fill
-        , Element.inFront (draggedItemView model.draggable model.items)
+    Html.section
+        [ Html.Attributes.style "margin" "6em 0"
+        , Html.Attributes.style "text-align" "center"
         ]
-        (Element.column
-            [ Element.centerX, Element.centerY, Element.padding 10, Element.spacing 10 ]
-            (model.items |> List.indexedMap (itemView maybeDragIndex))
-        )
+        [ model.items
+            |> List.indexedMap (itemView maybeDragIndex)
+            |> Html.div []
+        , draggedItemView model.draggable model.items
+        ]
 
 
-itemView : Maybe Int -> Int -> Fruit -> Element.Element Msg
+itemView : Maybe Int -> Int -> Fruit -> Html.Html Msg
 itemView maybeDragIndex index item =
     case maybeDragIndex of
         Nothing ->
@@ -309,23 +305,21 @@ itemView maybeDragIndex index item =
                 itemId =
                     "id-" ++ item
             in
-            Element.el
-                (Element.htmlAttribute (Html.Attributes.id itemId)
-                    :: List.map Element.htmlAttribute (system.dragEvents index itemId)
-                )
-                (Element.text item)
+            Html.p
+                (Html.Attributes.id itemId :: system.dragEvents index itemId)
+                [ Html.text item ]
 
         Just dragIndex ->
             if dragIndex /= index then
-                Element.el
-                    (List.map Element.htmlAttribute (system.dropEvents index))
-                    (Element.text item)
+                Html.p
+                    (system.dropEvents index)
+                    [ Html.text item ]
 
             else
-                Element.el [] (Element.text "[---------]")
+                Html.p [] [ Html.text "[---------]" ]
 
 
-draggedItemView : DnDList.Draggable -> List Fruit -> Element.Element Msg
+draggedItemView : DnDList.Draggable -> List Fruit -> Html.Html Msg
 draggedItemView draggable items =
     let
         maybeDraggedItem : Maybe Fruit
@@ -335,10 +329,10 @@ draggedItemView draggable items =
     in
     case maybeDraggedItem of
         Just item ->
-            Element.el
-                (List.map Element.htmlAttribute (system.draggedStyles draggable))
-                (Element.text item)
+            Html.div
+                (system.draggedStyles draggable)
+                [ Html.text item ]
 
         Nothing ->
-            Element.none
+            Html.text ""
     """

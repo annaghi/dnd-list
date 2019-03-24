@@ -1,7 +1,7 @@
 module DnDList exposing
     ( System, create, Config
     , Msg
-    , Movement(..), Operation(..)
+    , Movement(..), Operation(..), Trigger(..)
     , Draggable
     )
 
@@ -10,7 +10,9 @@ module DnDList exposing
 First you need to create a `System` object which holds the information and functions related to the drag operation.
 
 Using this object you can wire up the internal model, subscriptions, commands, and update into your model, subscriptions, commands, and update respectively.
-Also you can get access to the drag and drop events as well as the dragged position styles in your `view` functions.
+
+You have access to the drag and drop events as well as the position styles of the dragged element in your `view` functions.
+Also you have access to the drag and drop index which allows you to style or track the affected elements.
 
 
 # System
@@ -25,7 +27,7 @@ Also you can get access to the drag and drop events as well as the dragged posit
 
 # Movement
 
-@docs Movement, Operation
+@docs Movement, Operation, Trigger
 
 
 # System Fields
@@ -230,16 +232,16 @@ create { message, movement } =
 
 {-| Represents the `System` configuration.
 
-  - `message`: your message wrapper.
+  - `message`: Your message wrapper.
 
-  - `movement`: the kind of the `Movement`. It can be Free, Horizontal, or Vertical.
+  - `movement`: The kind of the `Movement`. It can be Free, Horizontal, or Vertical.
 
 Example configuration:
 
     config : DnDList.Config Msg
     config =
         { message = MyMsg
-        , movement = DnDList.Free DnDList.Rotate
+        , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag
         }
 
 -}
@@ -253,21 +255,33 @@ type alias Config msg =
 Dragging can be restricted to vertical or horizontal axis only, or it can be free.
 -}
 type Movement
-    = Free Operation
+    = Free Operation Trigger
     | Horizontal
     | Vertical
 
 
-{-| Represents the type of the list reordering operation.
+{-| Represents the list reordering operation.
 
-  - `Rotate`: the items between the dragged and the drop target elements will be circularly shifted.
+  - `Rotate`: The items between the dragged and the drop target elements will be circularly shifted.
 
-  - `Swap`: the dragged and the drop target elements will be swapped, and no other items will be affected.
+  - `Swap`: The dragged and the drop target elements will be swapped, and no other item will be moved.
 
 -}
 type Operation
     = Rotate
     | Swap
+
+
+{-| Represents the event when the list will be reordered.
+
+  - `OnDrag`: Triggers the list update when the dragged element is dragging over a drop target element.
+
+  - `OnDrop`: Triggers the list update when the dragged element is dropped on a drop target element.
+
+-}
+type Trigger
+    = OnDrag
+    | OnDrop
 
 
 type alias Position =
@@ -319,6 +333,7 @@ type Msg
     | Drag Position
     | DragOver Int
     | DragEnter Int
+    | DragLeave
     | DragEnd
     | GotDragged (Result Browser.Dom.Error Browser.Dom.Element)
 
@@ -354,19 +369,57 @@ update movement msg (Draggable model) list =
             )
 
         DragEnter dropIdx ->
-            ( model
-                |> Maybe.map (\m -> { m | dragIdx = dropIdx })
-                |> Draggable
-            , case movement of
-                Free Swap ->
-                    swapReorder model dropIdx list
+            case movement of
+                Free Rotate OnDrag ->
+                    ( model
+                        |> Maybe.map (\m -> { m | dragIdx = dropIdx })
+                        |> Draggable
+                    , rotateReorder model dropIdx list
+                    )
+
+                Free Swap OnDrag ->
+                    ( model
+                        |> Maybe.map (\m -> { m | dragIdx = dropIdx })
+                        |> Draggable
+                    , swapReorder model dropIdx list
+                    )
+
+                Free _ OnDrop ->
+                    ( Draggable model, list )
 
                 _ ->
-                    rotateReorder model dropIdx list
+                    ( model
+                        |> Maybe.map (\m -> { m | dragIdx = dropIdx })
+                        |> Draggable
+                    , swapReorder model dropIdx list
+                    )
+
+        DragLeave ->
+            ( model
+                |> Maybe.map (\m -> { m | dropIdx = m.dragIdx })
+                |> Draggable
+            , list
             )
 
         DragEnd ->
-            ( Draggable Nothing, list )
+            let
+                dropIdx : Maybe Int
+                dropIdx =
+                    Maybe.map (\m -> m.dropIdx) model
+            in
+            case ( movement, dropIdx ) of
+                ( Free Rotate OnDrop, Just index ) ->
+                    ( Draggable Nothing
+                    , rotateReorder model index list
+                    )
+
+                ( Free Swap OnDrop, Just index ) ->
+                    ( Draggable Nothing
+                    , swapReorder model index list
+                    )
+
+                _ ->
+                    ( Draggable Nothing, list )
 
         GotDragged (Err _) ->
             ( Draggable model, list )
@@ -493,6 +546,7 @@ dropEvents : (Msg -> msg) -> Int -> List (Html.Attribute msg)
 dropEvents wrap dropIdx =
     [ Html.Events.onMouseOver (wrap (DragOver dropIdx))
     , Html.Events.onMouseEnter (wrap (DragEnter dropIdx))
+    , Html.Events.onMouseLeave (wrap DragLeave)
     ]
 
 
@@ -562,7 +616,7 @@ draggedStyles movement (Draggable model) =
                             , Html.Attributes.style "pointer-events" "none"
                             ]
 
-                        Free _ ->
+                        Free _ _ ->
                             [ Html.Attributes.style "position" "absolute"
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "top" "0"

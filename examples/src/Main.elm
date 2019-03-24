@@ -1,14 +1,17 @@
 module Main exposing (main)
 
+import Advanced.FreeRotateOnDrag
+import Advanced.FreeRotateOnDrop
+import Advanced.FreeSwapOnDrag
+import Advanced.FreeSwapOnDrop
+import Basic.Basic
+import Basic.BasicElmUI
+import Basic.Free
+import Basic.Horizontal
+import Basic.Vertical
+import Basic.WithTwoLists
 import Browser
 import Browser.Dom
-import Example.Basic
-import Example.BasicElmUI
-import Example.FreeRotate
-import Example.FreeSwap
-import Example.Horizontal
-import Example.Vertical
-import Example.WithTwoLists
 import Html
 import Html.Attributes
 import Html.Events
@@ -41,19 +44,23 @@ type alias Model =
 
 
 type Example
-    = Basic Example.Basic.Model
-    | BasicElmUI Example.BasicElmUI.Model
-    | FreeRotate Example.FreeRotate.Model
-    | FreeSwap Example.FreeSwap.Model
-    | Horizontal Example.Horizontal.Model
-    | Vertical Example.Vertical.Model
-    | WithTwoLists Example.WithTwoLists.Model
+    = Basic Basic.Basic.Model
+    | BasicElmUI Basic.BasicElmUI.Model
+    | Free Basic.Free.Model
+    | Horizontal Basic.Horizontal.Model
+    | Vertical Basic.Vertical.Model
+    | WithTwoLists Basic.WithTwoLists.Model
+      -- Advanced
+    | FreeRotateOnDrag Advanced.FreeRotateOnDrag.Model
+    | FreeRotateOnDrop Advanced.FreeRotateOnDrop.Model
+    | FreeSwapOnDrag Advanced.FreeSwapOnDrag.Model
+    | FreeSwapOnDrop Advanced.FreeSwapOnDrop.Model
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { key = 2
-      , example = FreeRotate Example.FreeRotate.initialModel
+      , example = Free Basic.Free.initialModel
       }
     , Cmd.none
     )
@@ -66,13 +73,17 @@ init _ =
 type Msg
     = NoOp
     | LinkClicked Int Example
-    | BasicMsg Example.Basic.Msg
-    | BasicElmUIMsg Example.BasicElmUI.Msg
-    | FreeRotateMsg Example.FreeRotate.Msg
-    | FreeSwapMsg Example.FreeSwap.Msg
-    | HorizontalMsg Example.Horizontal.Msg
-    | VerticalMsg Example.Vertical.Msg
-    | WithTwoListsMsg Example.WithTwoLists.Msg
+    | BasicMsg Basic.Basic.Msg
+    | BasicElmUIMsg Basic.BasicElmUI.Msg
+    | FreeMsg Basic.Free.Msg
+    | HorizontalMsg Basic.Horizontal.Msg
+    | VerticalMsg Basic.Vertical.Msg
+    | WithTwoListsMsg Basic.WithTwoLists.Msg
+      -- Advanced
+    | FreeRotateOnDragMsg Advanced.FreeRotateOnDrag.Msg
+    | FreeRotateOnDropMsg Advanced.FreeRotateOnDrop.Msg
+    | FreeSwapOnDragMsg Advanced.FreeSwapOnDrag.Msg
+    | FreeSwapOnDropMsg Advanced.FreeSwapOnDrop.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -89,7 +100,7 @@ update message model =
         BasicMsg msg ->
             case model.example of
                 Basic basic ->
-                    stepBasic model (Example.Basic.update msg basic)
+                    stepBasic model (Basic.Basic.update msg basic)
 
                 _ ->
                     ( model, Cmd.none )
@@ -97,23 +108,15 @@ update message model =
         BasicElmUIMsg msg ->
             case model.example of
                 BasicElmUI basicElmUI ->
-                    stepBasicElmUI model (Example.BasicElmUI.update msg basicElmUI)
+                    stepBasicElmUI model (Basic.BasicElmUI.update msg basicElmUI)
 
                 _ ->
                     ( model, Cmd.none )
 
-        FreeRotateMsg msg ->
+        FreeMsg msg ->
             case model.example of
-                FreeRotate freeRotate ->
-                    stepFreeRotate model (Example.FreeRotate.update msg freeRotate)
-
-                _ ->
-                    ( model, Cmd.none )
-
-        FreeSwapMsg msg ->
-            case model.example of
-                FreeSwap freeSwap ->
-                    stepFreeSwap model (Example.FreeSwap.update msg freeSwap)
+                Free free ->
+                    stepFree model (Basic.Free.update msg free)
 
                 _ ->
                     ( model, Cmd.none )
@@ -121,7 +124,7 @@ update message model =
         HorizontalMsg msg ->
             case model.example of
                 Horizontal horizontal ->
-                    stepHorizontal model (Example.Horizontal.update msg horizontal)
+                    stepHorizontal model (Basic.Horizontal.update msg horizontal)
 
                 _ ->
                     ( model, Cmd.none )
@@ -129,7 +132,7 @@ update message model =
         VerticalMsg msg ->
             case model.example of
                 Vertical vertical ->
-                    stepVertical model (Example.Vertical.update msg vertical)
+                    stepVertical model (Basic.Vertical.update msg vertical)
 
                 _ ->
                     ( model, Cmd.none )
@@ -137,58 +140,116 @@ update message model =
         WithTwoListsMsg msg ->
             case model.example of
                 WithTwoLists withTwoLists ->
-                    stepWithTwoLists model (Example.WithTwoLists.update msg withTwoLists)
+                    stepWithTwoLists model (Basic.WithTwoLists.update msg withTwoLists)
+
+                _ ->
+                    ( model, Cmd.none )
+
+        -- Advanced
+        FreeRotateOnDragMsg msg ->
+            case model.example of
+                FreeRotateOnDrag freeRotateOnDrag ->
+                    stepFreeRotateOnDrag model (Advanced.FreeRotateOnDrag.update msg freeRotateOnDrag)
+
+                _ ->
+                    ( model, Cmd.none )
+
+        FreeRotateOnDropMsg msg ->
+            case model.example of
+                FreeRotateOnDrop freeRotateOnDrop ->
+                    stepFreeRotateOnDrop model (Advanced.FreeRotateOnDrop.update msg freeRotateOnDrop)
+
+                _ ->
+                    ( model, Cmd.none )
+
+        FreeSwapOnDragMsg msg ->
+            case model.example of
+                FreeSwapOnDrag freeSwapOnDrag ->
+                    stepFreeSwapOnDrag model (Advanced.FreeSwapOnDrag.update msg freeSwapOnDrag)
+
+                _ ->
+                    ( model, Cmd.none )
+
+        FreeSwapOnDropMsg msg ->
+            case model.example of
+                FreeSwapOnDrop freeSwapOnDrop ->
+                    stepFreeSwapOnDrop model (Advanced.FreeSwapOnDrop.update msg freeSwapOnDrop)
 
                 _ ->
                     ( model, Cmd.none )
 
 
-stepBasic : Model -> ( Example.Basic.Model, Cmd Example.Basic.Msg ) -> ( Model, Cmd Msg )
+stepBasic : Model -> ( Basic.Basic.Model, Cmd Basic.Basic.Msg ) -> ( Model, Cmd Msg )
 stepBasic model ( basic, cmds ) =
     ( { model | example = Basic basic }
     , Cmd.map BasicMsg cmds
     )
 
 
-stepBasicElmUI : Model -> ( Example.BasicElmUI.Model, Cmd Example.BasicElmUI.Msg ) -> ( Model, Cmd Msg )
+stepBasicElmUI : Model -> ( Basic.BasicElmUI.Model, Cmd Basic.BasicElmUI.Msg ) -> ( Model, Cmd Msg )
 stepBasicElmUI model ( basicElmUI, cmds ) =
     ( { model | example = BasicElmUI basicElmUI }
     , Cmd.map BasicElmUIMsg cmds
     )
 
 
-stepFreeRotate : Model -> ( Example.FreeRotate.Model, Cmd Example.FreeRotate.Msg ) -> ( Model, Cmd Msg )
-stepFreeRotate model ( freeRotate, cmds ) =
-    ( { model | example = FreeRotate freeRotate }
-    , Cmd.map FreeRotateMsg cmds
+stepFree : Model -> ( Basic.Free.Model, Cmd Basic.Free.Msg ) -> ( Model, Cmd Msg )
+stepFree model ( free, cmds ) =
+    ( { model | example = Free free }
+    , Cmd.map FreeMsg cmds
     )
 
 
-stepFreeSwap : Model -> ( Example.FreeSwap.Model, Cmd Example.FreeSwap.Msg ) -> ( Model, Cmd Msg )
-stepFreeSwap model ( freeSwap, cmds ) =
-    ( { model | example = FreeSwap freeSwap }
-    , Cmd.map FreeSwapMsg cmds
-    )
-
-
-stepHorizontal : Model -> ( Example.Horizontal.Model, Cmd Example.Horizontal.Msg ) -> ( Model, Cmd Msg )
+stepHorizontal : Model -> ( Basic.Horizontal.Model, Cmd Basic.Horizontal.Msg ) -> ( Model, Cmd Msg )
 stepHorizontal model ( horizontal, cmds ) =
     ( { model | example = Horizontal horizontal }
     , Cmd.map HorizontalMsg cmds
     )
 
 
-stepVertical : Model -> ( Example.Vertical.Model, Cmd Example.Vertical.Msg ) -> ( Model, Cmd Msg )
+stepVertical : Model -> ( Basic.Vertical.Model, Cmd Basic.Vertical.Msg ) -> ( Model, Cmd Msg )
 stepVertical model ( vertical, cmds ) =
     ( { model | example = Vertical vertical }
     , Cmd.map VerticalMsg cmds
     )
 
 
-stepWithTwoLists : Model -> ( Example.WithTwoLists.Model, Cmd Example.WithTwoLists.Msg ) -> ( Model, Cmd Msg )
+stepWithTwoLists : Model -> ( Basic.WithTwoLists.Model, Cmd Basic.WithTwoLists.Msg ) -> ( Model, Cmd Msg )
 stepWithTwoLists model ( withTwoLists, cmds ) =
     ( { model | example = WithTwoLists withTwoLists }
     , Cmd.map WithTwoListsMsg cmds
+    )
+
+
+
+-- Advanced
+
+
+stepFreeRotateOnDrag : Model -> ( Advanced.FreeRotateOnDrag.Model, Cmd Advanced.FreeRotateOnDrag.Msg ) -> ( Model, Cmd Msg )
+stepFreeRotateOnDrag model ( freeRotateOnDrag, cmds ) =
+    ( { model | example = FreeRotateOnDrag freeRotateOnDrag }
+    , Cmd.map FreeRotateOnDragMsg cmds
+    )
+
+
+stepFreeRotateOnDrop : Model -> ( Advanced.FreeRotateOnDrop.Model, Cmd Advanced.FreeRotateOnDrop.Msg ) -> ( Model, Cmd Msg )
+stepFreeRotateOnDrop model ( freeRotateOnDrop, cmds ) =
+    ( { model | example = FreeRotateOnDrop freeRotateOnDrop }
+    , Cmd.map FreeRotateOnDropMsg cmds
+    )
+
+
+stepFreeSwapOnDrag : Model -> ( Advanced.FreeSwapOnDrag.Model, Cmd Advanced.FreeSwapOnDrag.Msg ) -> ( Model, Cmd Msg )
+stepFreeSwapOnDrag model ( freeSwapOnDrag, cmds ) =
+    ( { model | example = FreeSwapOnDrag freeSwapOnDrag }
+    , Cmd.map FreeSwapOnDragMsg cmds
+    )
+
+
+stepFreeSwapOnDrop : Model -> ( Advanced.FreeSwapOnDrop.Model, Cmd Advanced.FreeSwapOnDrop.Msg ) -> ( Model, Cmd Msg )
+stepFreeSwapOnDrop model ( freeSwapOnDrop, cmds ) =
+    ( { model | example = FreeSwapOnDrop freeSwapOnDrop }
+    , Cmd.map FreeSwapOnDropMsg cmds
     )
 
 
@@ -211,25 +272,35 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     case model.example of
         Basic basic ->
-            exampleSubscriptions BasicMsg (Example.Basic.subscriptions basic)
+            exampleSubscriptions BasicMsg (Basic.Basic.subscriptions basic)
 
         BasicElmUI basicElmUI ->
-            exampleSubscriptions BasicElmUIMsg (Example.BasicElmUI.subscriptions basicElmUI)
+            exampleSubscriptions BasicElmUIMsg (Basic.BasicElmUI.subscriptions basicElmUI)
 
-        FreeRotate freeRotate ->
-            exampleSubscriptions FreeRotateMsg (Example.FreeRotate.subscriptions freeRotate)
-
-        FreeSwap freeSwap ->
-            exampleSubscriptions FreeSwapMsg (Example.FreeSwap.subscriptions freeSwap)
+        Free free ->
+            exampleSubscriptions FreeMsg (Basic.Free.subscriptions free)
 
         Horizontal horizontal ->
-            exampleSubscriptions HorizontalMsg (Example.Horizontal.subscriptions horizontal)
+            exampleSubscriptions HorizontalMsg (Basic.Horizontal.subscriptions horizontal)
 
         Vertical vertical ->
-            exampleSubscriptions VerticalMsg (Example.Vertical.subscriptions vertical)
+            exampleSubscriptions VerticalMsg (Basic.Vertical.subscriptions vertical)
 
         WithTwoLists withTwoLists ->
-            exampleSubscriptions WithTwoListsMsg (Example.WithTwoLists.subscriptions withTwoLists)
+            exampleSubscriptions WithTwoListsMsg (Basic.WithTwoLists.subscriptions withTwoLists)
+
+        -- Advanced
+        FreeRotateOnDrag freeRotateOnDrag ->
+            exampleSubscriptions FreeRotateOnDragMsg (Advanced.FreeRotateOnDrag.subscriptions freeRotateOnDrag)
+
+        FreeRotateOnDrop freeRotateOnDrop ->
+            exampleSubscriptions FreeRotateOnDropMsg (Advanced.FreeRotateOnDrop.subscriptions freeRotateOnDrop)
+
+        FreeSwapOnDrag freeSwapOnDrag ->
+            exampleSubscriptions FreeSwapOnDragMsg (Advanced.FreeSwapOnDrag.subscriptions freeSwapOnDrag)
+
+        FreeSwapOnDrop freeSwapOnDrop ->
+            exampleSubscriptions FreeSwapOnDropMsg (Advanced.FreeSwapOnDrop.subscriptions freeSwapOnDrop)
 
 
 exampleSubscriptions : (a -> msg) -> Sub a -> Sub msg
@@ -249,16 +320,22 @@ view model =
             [ cardView
             , navigationView
                 model.key
-                [ Basic Example.Basic.initialModel
-                , BasicElmUI Example.BasicElmUI.initialModel
-                , FreeRotate Example.FreeRotate.initialModel
-                , FreeSwap Example.FreeSwap.initialModel
-                , Horizontal Example.Horizontal.initialModel
-                , Vertical Example.Vertical.initialModel
-                , WithTwoLists Example.WithTwoLists.initialModel
+                [ Basic Basic.Basic.initialModel
+                , BasicElmUI Basic.BasicElmUI.initialModel
+                , Free Basic.Free.initialModel
+                , Horizontal Basic.Horizontal.initialModel
+                , Vertical Basic.Vertical.initialModel
+                , WithTwoLists Basic.WithTwoLists.initialModel
+                ]
+                [ FreeRotateOnDrag Advanced.FreeRotateOnDrag.initialModel
+                , FreeRotateOnDrop Advanced.FreeRotateOnDrop.initialModel
+                , FreeSwapOnDrag Advanced.FreeSwapOnDrag.initialModel
+                , FreeSwapOnDrop Advanced.FreeSwapOnDrop.initialModel
                 ]
             ]
-        , mainView model.example
+        , Html.main_
+            [ Html.Attributes.id "main" ]
+            (mainView model.example)
         ]
     }
 
@@ -280,8 +357,8 @@ cardView =
         ]
 
 
-navigationView : Int -> List Example -> Html.Html Msg
-navigationView currentKey list =
+navigationView : Int -> List Example -> List Example -> Html.Html Msg
+navigationView currentKey basic advanced =
     let
         linkView : Int -> Example -> Html.Html Msg
         linkView key example =
@@ -289,77 +366,90 @@ navigationView currentKey list =
                 [ Html.Events.onClick (LinkClicked key example)
                 , Html.Attributes.classList [ ( "is-active", key == currentKey ) ]
                 ]
-                [ Html.text ((heading >> .h1) example) ]
+                [ Html.text ((info >> .title) example) ]
     in
     Html.div []
-        [ Html.h2 [] [ Html.text "Examples" ]
-        , list
+        [ Html.h2 [] [ Html.text "Basic Examples" ]
+        , basic
             |> List.indexedMap linkView
+            |> Html.ul []
+        , Html.h2 [] [ Html.text "Advanced Examples" ]
+        , advanced
+            |> List.indexedMap (\i -> linkView (i + List.length basic))
             |> Html.ul []
         ]
 
 
-mainView : Example -> Html.Html Msg
+mainView : Example -> List (Html.Html Msg)
 mainView example =
     let
-        h2 : String
-        h2 =
-            (heading >> .h2) example
+        subtitle : String
+        subtitle =
+            (info >> .subtitle) example
 
-        h3 : String
-        h3 =
-            (heading >> .h3) example
+        description : String
+        description =
+            (info >> .description) example
     in
     case example of
         Basic basic ->
-            Html.main_ [ Html.Attributes.id "main" ]
-                [ demoView h2 h3 BasicMsg (Example.Basic.view basic)
-                , sourceView Example.Basic.source
-                ]
+            [ demoView subtitle description BasicMsg (Basic.Basic.view basic)
+            , sourceView Basic.Basic.source
+            ]
 
         BasicElmUI basicElmUI ->
-            Html.main_ [ Html.Attributes.id "main" ]
-                [ demoView h2 h3 BasicElmUIMsg (Example.BasicElmUI.view basicElmUI)
-                , sourceView Example.BasicElmUI.source
-                ]
+            [ demoView subtitle description BasicElmUIMsg (Basic.BasicElmUI.view basicElmUI)
+            , sourceView Basic.BasicElmUI.source
+            ]
 
-        FreeRotate freeRotate ->
-            Html.main_ [ Html.Attributes.id "main" ]
-                [ demoView h2 h3 FreeRotateMsg (Example.FreeRotate.view freeRotate)
-                , sourceView Example.FreeRotate.source
-                ]
-
-        FreeSwap freeSwap ->
-            Html.main_ [ Html.Attributes.id "main" ]
-                [ demoView h2 h3 FreeSwapMsg (Example.FreeSwap.view freeSwap)
-                , sourceView Example.FreeSwap.source
-                ]
+        Free free ->
+            [ demoView subtitle description FreeMsg (Basic.Free.view free)
+            , sourceView Basic.Free.source
+            ]
 
         Horizontal horizontal ->
-            Html.main_ [ Html.Attributes.id "main" ]
-                [ demoView h2 h3 HorizontalMsg (Example.Horizontal.view horizontal)
-                , sourceView Example.Horizontal.source
-                ]
+            [ demoView subtitle description HorizontalMsg (Basic.Horizontal.view horizontal)
+            , sourceView Basic.Horizontal.source
+            ]
 
         Vertical vertical ->
-            Html.main_ [ Html.Attributes.id "main" ]
-                [ demoView h2 h3 VerticalMsg (Example.Vertical.view vertical)
-                , sourceView Example.Vertical.source
-                ]
+            [ demoView subtitle description VerticalMsg (Basic.Vertical.view vertical)
+            , sourceView Basic.Vertical.source
+            ]
 
         WithTwoLists withTwoLists ->
-            Html.main_ [ Html.Attributes.id "main" ]
-                [ demoView h2 h3 WithTwoListsMsg (Example.WithTwoLists.view withTwoLists)
-                , sourceView Example.WithTwoLists.source
-                ]
+            [ demoView subtitle description WithTwoListsMsg (Basic.WithTwoLists.view withTwoLists)
+            , sourceView Basic.WithTwoLists.source
+            ]
+
+        -- Advanced
+        FreeRotateOnDrag freeRotateOnDrag ->
+            [ demoView subtitle description FreeRotateOnDragMsg (Advanced.FreeRotateOnDrag.view freeRotateOnDrag)
+            , sourceView Advanced.FreeRotateOnDrag.source
+            ]
+
+        FreeRotateOnDrop freeRotateOnDrop ->
+            [ demoView subtitle description FreeRotateOnDropMsg (Advanced.FreeRotateOnDrop.view freeRotateOnDrop)
+            , sourceView Advanced.FreeRotateOnDrop.source
+            ]
+
+        FreeSwapOnDrag freeSwapOnDrag ->
+            [ demoView subtitle description FreeSwapOnDragMsg (Advanced.FreeSwapOnDrag.view freeSwapOnDrag)
+            , sourceView Advanced.FreeSwapOnDrag.source
+            ]
+
+        FreeSwapOnDrop freeSwapOnDrop ->
+            [ demoView subtitle description FreeSwapOnDropMsg (Advanced.FreeSwapOnDrop.view freeSwapOnDrop)
+            , sourceView Advanced.FreeSwapOnDrop.source
+            ]
 
 
 demoView : String -> String -> (a -> msg) -> Html.Html a -> Html.Html msg
-demoView h2 h3 toMsg demo =
+demoView subtitle description toMsg demo =
     Html.div
         [ Html.Attributes.class "elm-demo" ]
-        [ Html.h2 [] [ Html.text h2 ]
-        , Html.p [] [ Html.text h3 ]
+        [ Html.h2 [] [ Html.text subtitle ]
+        , Html.p [] [ Html.text description ]
         , Html.map toMsg demo
         ]
 
@@ -388,57 +478,76 @@ code string =
 
 
 
--- HELPERS
+-- EXAMPLE INFO
 
 
-type alias Heading =
-    { h1 : String
-    , h2 : String
-    , h3 : String
+type alias Info =
+    { title : String
+    , subtitle : String
+    , description : String
     }
 
 
-heading : Example -> Heading
-heading example =
+info : Example -> Info
+info example =
     case example of
         Basic _ ->
-            { h1 = "Basic"
-            , h2 = "Basic example"
-            , h3 = "Sortable list"
+            { title = "Basic"
+            , subtitle = "Basic example"
+            , description = "Sortable list"
             }
 
         BasicElmUI _ ->
-            { h1 = "Basic + Elm UI"
-            , h2 = "Basic example"
-            , h3 = "Designed with mdgriffith/elm-ui"
+            { title = "Basic + Elm UI"
+            , subtitle = "Basic example"
+            , description = "Designed with mdgriffith/elm-ui"
             }
 
-        FreeRotate _ ->
-            { h1 = "Free Rotate"
-            , h2 = "Free drag movement - Rotate"
-            , h3 = "The items between the dragged and the drop target elements are rotated"
-            }
-
-        FreeSwap _ ->
-            { h1 = "Free Swap"
-            , h2 = "Free drag movement - Swap"
-            , h3 = "The dragged and the drop target elements are swapped"
+        Free _ ->
+            { title = "Free"
+            , subtitle = "Free drag movement"
+            , description = "Example with keyed nodes"
             }
 
         Horizontal _ ->
-            { h1 = "Horizontal"
-            , h2 = "Horizontal drag only"
-            , h3 = "Example with keyed nodes"
+            { title = "Horizontal"
+            , subtitle = "Horizontal drag only"
+            , description = "Example with keyed nodes"
             }
 
         Vertical _ ->
-            { h1 = "Vertical"
-            , h2 = "Vertical drag only"
-            , h3 = "Example with keyed nodes"
+            { title = "Vertical"
+            , subtitle = "Vertical drag only"
+            , description = "Example with keyed nodes"
             }
 
         WithTwoLists _ ->
-            { h1 = "Two lists"
-            , h2 = "Two independent lists"
-            , h3 = "Without thinking: duplicate everything"
+            { title = "Two lists"
+            , subtitle = "Two independent lists"
+            , description = "Without thinking: duplicate everything"
+            }
+
+        -- Advanced
+        FreeRotateOnDrag _ ->
+            { title = "Free Rotate OnDrag"
+            , subtitle = "Free drag movement - Rotate OnDrag"
+            , description = "The items between the dragged and the drop target elements are rotated, and the list is updated each time when dragging over a drop target."
+            }
+
+        FreeRotateOnDrop _ ->
+            { title = "Free Rotate OnDrop"
+            , subtitle = "Free drag movement - Rotate OnDrop"
+            , description = "The items between the dragged and the drop target elements are rotated, and the list is updated only once when the dragged item was dropped on the drop target."
+            }
+
+        FreeSwapOnDrag _ ->
+            { title = "Free Swap OnDrag"
+            , subtitle = "Free drag movement - Swap OnDrag"
+            , description = "The dragged and the drop target elements are swapped, and the list is updated each time when dragging over a drop target."
+            }
+
+        FreeSwapOnDrop _ ->
+            { title = "Free Swap OnDrop"
+            , subtitle = "Free drag movement - Swap OnDrop"
+            , description = "The dragged and the drop target elements are swapped, and the list is updated only once when the dragged item was dropped on the drop target."
             }

@@ -9,3 +9,6 @@ docs.json
 
 # VS Code settings
 .vscode
+
+# elm-make generated files
+examples/**/main.js

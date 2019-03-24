@@ -1,4 +1,4 @@
-module Example.Vertical exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
+module Basic.Vertical exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
 
 import Browser
 import DnDList
@@ -164,7 +164,7 @@ itemView maybeDragIndex index ( key, fruit ) =
                 ( key
                 , Html.div
                     [ Html.Attributes.style "margin-bottom" "3em" ]
-                    [ Html.div (itemStyles ++ overedItemStyles) [] ]
+                    [ Html.div (itemStyles ++ placeholderItemStyles) [] ]
                 )
 
 
@@ -217,8 +217,8 @@ draggedItemStyles =
     [ Html.Attributes.style "background" "#dc9a39" ]
 
 
-overedItemStyles : List (Html.Attribute msg)
-overedItemStyles =
+placeholderItemStyles : List (Html.Attribute msg)
+placeholderItemStyles =
     [ Html.Attributes.style "background" "dimgray" ]
 
 
@@ -411,7 +411,7 @@ itemView maybeDragIndex index ( key, fruit ) =
                 ( key
                 , Html.div
                     [ Html.Attributes.style "margin-bottom" "3em" ]
-                    [ Html.div (itemStyles ++ overedItemStyles) [] ]
+                    [ Html.div (itemStyles ++ placeholderItemStyles) [] ]
                 )
 
 
@@ -464,8 +464,8 @@ draggedItemStyles =
     [ Html.Attributes.style "background" "#dc9a39" ]
 
 
-overedItemStyles : List (Html.Attribute msg)
-overedItemStyles =
+placeholderItemStyles : List (Html.Attribute msg)
+placeholderItemStyles =
     [ Html.Attributes.style "background" "dimgray" ]
 
 

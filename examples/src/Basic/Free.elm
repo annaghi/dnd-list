@@ -1,4 +1,4 @@
-module Example.Horizontal exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
+module Basic.Free exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
 
 import Browser
 import DnDList
@@ -46,7 +46,7 @@ data =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Horizontal
+    , movement = DnDList.Free DnDList.Swap DnDList.OnDrag
     }
 
 
@@ -138,12 +138,9 @@ itemView maybeDragIndex index ( key, fruit ) =
             in
             ( key
             , Html.div
-                [ Html.Attributes.style "margin" "0 2em" ]
-                [ Html.div
-                    (Html.Attributes.id fruitId :: itemStyles)
-                    [ Html.div (handleStyles ++ system.dragEvents index fruitId) []
-                    , Html.text fruit
-                    ]
+                (Html.Attributes.id fruitId :: itemStyles)
+                [ Html.div (handleStyles ++ system.dragEvents index fruitId) []
+                , Html.text fruit
                 ]
             )
 
@@ -151,20 +148,15 @@ itemView maybeDragIndex index ( key, fruit ) =
             if dragIndex /= index then
                 ( key
                 , Html.div
-                    [ Html.Attributes.style "margin" "0 2em" ]
-                    [ Html.div
-                        (itemStyles ++ system.dropEvents index)
-                        [ Html.div handleStyles []
-                        , Html.text fruit
-                        ]
+                    (itemStyles ++ system.dropEvents index)
+                    [ Html.div handleStyles []
+                    , Html.text fruit
                     ]
                 )
 
             else
                 ( key
-                , Html.div
-                    [ Html.Attributes.style "margin" "0 2em" ]
-                    [ Html.div (itemStyles ++ overedItemStyles) [] ]
+                , Html.div (itemStyles ++ placeholderItemStyles) []
                 )
 
 
@@ -194,17 +186,17 @@ draggedItemView draggable fruits =
 
 containerStyles : List (Html.Attribute msg)
 containerStyles =
-    [ Html.Attributes.style "display" "flex"
-    , Html.Attributes.style "align-items" "center"
+    [ Html.Attributes.style "display" "grid"
+    , Html.Attributes.style "grid-template-columns" "180px 180px"
+    , Html.Attributes.style "grid-template-rows" "100px 100px"
+    , Html.Attributes.style "grid-gap" "5em 10em"
     , Html.Attributes.style "justify-content" "center"
     ]
 
 
 itemStyles : List (Html.Attribute msg)
 itemStyles =
-    [ Html.Attributes.style "width" "180px"
-    , Html.Attributes.style "height" "100px"
-    , Html.Attributes.style "background" "#cddc39"
+    [ Html.Attributes.style "background" "#cddc39"
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
@@ -216,8 +208,8 @@ draggedItemStyles =
     [ Html.Attributes.style "background" "#dc9a39" ]
 
 
-overedItemStyles : List (Html.Attribute msg)
-overedItemStyles =
+placeholderItemStyles : List (Html.Attribute msg)
+placeholderItemStyles =
     [ Html.Attributes.style "background" "dimgray" ]
 
 
@@ -244,7 +236,7 @@ draggedHandleStyles =
 source : String
 source =
     """
-module Horizontal exposing (main)
+module Free exposing (main)
 
 import Browser
 import DnDList
@@ -292,7 +284,7 @@ data =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Horizontal
+    , movement = DnDList.Free DnDList.Swap DnDList.OnDrag
     }
 
 
@@ -384,12 +376,9 @@ itemView maybeDragIndex index ( key, fruit ) =
             in
             ( key
             , Html.div
-                [ Html.Attributes.style "margin" "0 2em" ]
-                [ Html.div
-                    (Html.Attributes.id fruitId :: itemStyles)
-                    [ Html.div (handleStyles ++ system.dragEvents index fruitId) []
-                    , Html.text fruit
-                    ]
+                (Html.Attributes.id fruitId :: itemStyles)
+                [ Html.div (handleStyles ++ system.dragEvents index fruitId) []
+                , Html.text fruit
                 ]
             )
 
@@ -397,20 +386,15 @@ itemView maybeDragIndex index ( key, fruit ) =
             if dragIndex /= index then
                 ( key
                 , Html.div
-                    [ Html.Attributes.style "margin" "0 2em" ]
-                    [ Html.div
-                        (itemStyles ++ system.dropEvents index)
-                        [ Html.div handleStyles []
-                        , Html.text fruit
-                        ]
+                    (itemStyles ++ system.dropEvents index)
+                    [ Html.div handleStyles []
+                    , Html.text fruit
                     ]
                 )
 
             else
                 ( key
-                , Html.div
-                    [ Html.Attributes.style "margin" "0 2em" ]
-                    [ Html.div (itemStyles ++ overedItemStyles) [] ]
+                , Html.div (itemStyles ++ placeholderItemStyles) []
                 )
 
 
@@ -440,17 +424,17 @@ draggedItemView draggable fruits =
 
 containerStyles : List (Html.Attribute msg)
 containerStyles =
-    [ Html.Attributes.style "display" "flex"
-    , Html.Attributes.style "align-items" "center"
+    [ Html.Attributes.style "display" "grid"
+    , Html.Attributes.style "grid-template-columns" "180px 180px"
+    , Html.Attributes.style "grid-template-rows" "100px 100px"
+    , Html.Attributes.style "grid-gap" "5em 10em"
     , Html.Attributes.style "justify-content" "center"
     ]
 
 
 itemStyles : List (Html.Attribute msg)
 itemStyles =
-    [ Html.Attributes.style "width" "180px"
-    , Html.Attributes.style "height" "100px"
-    , Html.Attributes.style "background" "#cddc39"
+    [ Html.Attributes.style "background" "#cddc39"
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
@@ -462,8 +446,8 @@ draggedItemStyles =
     [ Html.Attributes.style "background" "#dc9a39" ]
 
 
-overedItemStyles : List (Html.Attribute msg)
-overedItemStyles =
+placeholderItemStyles : List (Html.Attribute msg)
+placeholderItemStyles =
     [ Html.Attributes.style "background" "dimgray" ]
 
 

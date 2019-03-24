@@ -1,4 +1,4 @@
-module Example.WithTwoLists exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
+module Basic.WithTwoLists exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
 
 import Browser
 import DnDList
@@ -56,7 +56,7 @@ data2 =
 fruitConfig : DnDList.Config Msg
 fruitConfig =
     { message = FruitMsg
-    , movement = DnDList.Free DnDList.Rotate
+    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag
     }
 
 
@@ -68,7 +68,7 @@ fruitSystem =
 numberConfig : DnDList.Config Msg
 numberConfig =
     { message = NumberMsg
-    , movement = DnDList.Free DnDList.Rotate
+    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag
     }
 
 
@@ -220,7 +220,7 @@ fruitView maybeDragIndex index ( key, fruit ) =
                 ( key
                 , Html.div
                     [ Html.Attributes.style "margin" "0 2em 2em 0" ]
-                    [ Html.div (itemStyles ++ overedItemStyles) [] ]
+                    [ Html.div (itemStyles ++ placeholderItemStyles) [] ]
                 )
 
 
@@ -284,7 +284,7 @@ numberView maybeDragIndex index ( key, number ) =
                 ( key
                 , Html.div
                     [ Html.Attributes.style "margin" "2em 2em 0 0" ]
-                    [ Html.div (itemStyles ++ overedItemStyles) [] ]
+                    [ Html.div (itemStyles ++ placeholderItemStyles) [] ]
                 )
 
 
@@ -346,8 +346,8 @@ draggedItemStyles =
     [ Html.Attributes.style "background" "#dc9a39" ]
 
 
-overedItemStyles : List (Html.Attribute msg)
-overedItemStyles =
+placeholderItemStyles : List (Html.Attribute msg)
+placeholderItemStyles =
     [ Html.Attributes.style "background" "dimgray" ]
 
 
@@ -441,7 +441,7 @@ data2 =
 fruitConfig : DnDList.Config Msg
 fruitConfig =
     { message = FruitMsg
-    , movement = DnDList.Free DnDList.Rotate
+    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag
     }
 
 
@@ -453,7 +453,7 @@ fruitSystem =
 numberConfig : DnDList.Config Msg
 numberConfig =
     { message = NumberMsg
-    , movement = DnDList.Free DnDList.Rotate
+    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag
     }
 
 
@@ -605,7 +605,7 @@ fruitView maybeDragIndex index ( key, fruit ) =
                 ( key
                 , Html.div
                     [ Html.Attributes.style "margin" "0 2em 2em 0" ]
-                    [ Html.div (itemStyles ++ overedItemStyles) [] ]
+                    [ Html.div (itemStyles ++ placeholderItemStyles) [] ]
                 )
 
 
@@ -669,7 +669,7 @@ numberView maybeDragIndex index ( key, number ) =
                 ( key
                 , Html.div
                     [ Html.Attributes.style "margin" "2em 2em 0 0" ]
-                    [ Html.div (itemStyles ++ overedItemStyles) [] ]
+                    [ Html.div (itemStyles ++ placeholderItemStyles) [] ]
                 )
 
 
@@ -731,8 +731,8 @@ draggedItemStyles =
     [ Html.Attributes.style "background" "#dc9a39" ]
 
 
-overedItemStyles : List (Html.Attribute msg)
-overedItemStyles =
+placeholderItemStyles : List (Html.Attribute msg)
+placeholderItemStyles =
     [ Html.Attributes.style "background" "dimgray" ]
 
 
