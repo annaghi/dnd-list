@@ -57,12 +57,18 @@ type Example
     | FreeSwapOnDrop Advanced.FreeSwapOnDrop.Model
 
 
+initialPair : { key : Int, example : Example, command : Cmd Msg }
+initialPair =
+    { key = 2
+    , example = Free Basic.Free.initialModel
+    , command = Cmd.map FreeMsg Basic.Free.commands
+    }
+
+
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { key = 2
-      , example = Free Basic.Free.initialModel
-      }
-    , Cmd.none
+    ( Model initialPair.key initialPair.example
+    , initialPair.command
     )
 
 
@@ -94,7 +100,11 @@ update message model =
 
         LinkClicked key example ->
             ( { model | key = key, example = example }
-            , jumpToTop "main"
+            , if key == initialPair.key then
+                Cmd.batch [ jumpToTop "main", initialPair.command ]
+
+              else
+                jumpToTop "main"
             )
 
         BasicMsg msg ->
@@ -506,7 +516,7 @@ info example =
         Free _ ->
             { title = "Free"
             , subtitle = "Free drag movement"
-            , description = "Example with keyed nodes"
+            , description = "Sortable horizontal masonry"
             }
 
         Horizontal _ ->
