@@ -220,6 +220,7 @@ containerStyles =
 itemStyles : Color -> Width -> List (Html.Attribute msg)
 itemStyles color width =
     [ Html.Attributes.style "background" color
+    , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "flex" "1 0 auto"
     , Html.Attributes.style "height" "5em"
     , Html.Attributes.style "margin" "0 1.5em 1.5em 0"
@@ -466,6 +467,7 @@ containerStyles =
 itemStyles : Color -> Width -> List (Html.Attribute msg)
 itemStyles color width =
     [ Html.Attributes.style "background" color
+    , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "flex" "1 0 auto"
     , Html.Attributes.style "height" "5em"
     , Html.Attributes.style "margin" "0 1.5em 1.5em 0"
