@@ -1,12 +1,26 @@
-module Example.FreeRotate exposing (Model, Msg, initialModel, source, subscriptions, update, view)
+module Example.FreeSwap exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
 
+import Browser
 import Browser.Events
 import DnDList
 import Html
 import Html.Attributes
-import Html.Events
 import Html.Keyed
 import Json.Decode
+
+
+
+-- MAIN
+
+
+main : Program () Model Msg
+main =
+    Browser.element
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
 
 
 
@@ -30,7 +44,7 @@ data =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Free DnDList.Rotate
+    , movement = DnDList.Free DnDList.Swap
     }
 
 
@@ -104,11 +118,8 @@ update msg model =
                 affected =
                     case ( maybeDragIndex, maybeDropIndex ) of
                         ( Just dragIndex, Just dropIndex ) ->
-                            if dragIndex < dropIndex then
-                                List.range dragIndex dropIndex
-
-                            else if dragIndex > dropIndex then
-                                List.range dropIndex dragIndex
+                            if dragIndex /= dropIndex then
+                                dragIndex :: dropIndex :: []
 
                             else
                                 model.affected
@@ -218,7 +229,7 @@ containerStyles =
 
 itemStyles : List (Html.Attribute msg)
 itemStyles =
-    [ Html.Attributes.style "background" "#1a8994"
+    [ Html.Attributes.style "background" "#aa1e9d"
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
@@ -231,7 +242,7 @@ itemStyles =
 
 draggedItemStyles : List (Html.Attribute msg)
 draggedItemStyles =
-    [ Html.Attributes.style "background" "#941a89" ]
+    [ Html.Attributes.style "background" "#1e9daa" ]
 
 
 overedItemStyles : List (Html.Attribute msg)
@@ -241,7 +252,7 @@ overedItemStyles =
 
 affectedItemStyles : List (Html.Attribute msg)
 affectedItemStyles =
-    [ Html.Attributes.style "background" "#0f4d53" ]
+    [ Html.Attributes.style "background" "#691361" ]
 
 
 
@@ -251,7 +262,7 @@ affectedItemStyles =
 source : String
 source =
     """
-module FreeRotate exposing (main)
+module FreeSwap exposing (main)
 
 import Browser
 import Browser.Events
@@ -297,7 +308,7 @@ data =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Free DnDList.Rotate
+    , movement = DnDList.Free DnDList.Swap
     }
 
 
@@ -371,11 +382,8 @@ update msg model =
                 affected =
                     case ( maybeDragIndex, maybeDropIndex ) of
                         ( Just dragIndex, Just dropIndex ) ->
-                            if dragIndex < dropIndex then
-                                List.range dragIndex dropIndex
-
-                            else if dragIndex > dropIndex then
-                                List.range dropIndex dragIndex
+                            if dragIndex /= dropIndex then
+                                dragIndex :: dropIndex :: []
 
                             else
                                 model.affected
@@ -485,7 +493,7 @@ containerStyles =
 
 itemStyles : List (Html.Attribute msg)
 itemStyles =
-    [ Html.Attributes.style "background" "#1a8994"
+    [ Html.Attributes.style "background" "#aa1e9d"
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
@@ -498,7 +506,7 @@ itemStyles =
 
 draggedItemStyles : List (Html.Attribute msg)
 draggedItemStyles =
-    [ Html.Attributes.style "background" "#941a89" ]
+    [ Html.Attributes.style "background" "#1e9daa" ]
 
 
 overedItemStyles : List (Html.Attribute msg)
@@ -508,5 +516,5 @@ overedItemStyles =
 
 affectedItemStyles : List (Html.Attribute msg)
 affectedItemStyles =
-    [ Html.Attributes.style "background" "#0f4d53" ]
+    [ Html.Attributes.style "background" "#691361" ]
     """

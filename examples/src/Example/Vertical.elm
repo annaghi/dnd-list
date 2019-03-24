@@ -1,9 +1,24 @@
-module Example.Vertical exposing (Model, Msg, initialModel, source, subscriptions, update, view)
+module Example.Vertical exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
 
+import Browser
 import DnDList
 import Html
 import Html.Attributes
 import Html.Keyed
+
+
+
+-- MAIN
+
+
+main : Program () Model Msg
+main =
+    Browser.element
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
 
 
 
@@ -21,7 +36,7 @@ type alias KeyedFruit =
 data : List KeyedFruit
 data =
     [ "Apples", "Bananas", "Cherries", "Dates" ]
-        |> List.indexedMap (\k v -> ( "key-" ++ String.fromInt k, v ))
+        |> List.map (\v -> ( "key-" ++ v, v ))
 
 
 
@@ -268,7 +283,7 @@ type alias KeyedFruit =
 data : List KeyedFruit
 data =
     [ "Apples", "Bananas", "Cherries", "Dates" ]
-        |> List.indexedMap (\\k v -> ( "key-" ++ String.fromInt k, v ))
+        |> List.map (\\v -> ( "key-" ++ v, v ))
 
 
 
