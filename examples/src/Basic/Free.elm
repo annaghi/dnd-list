@@ -96,7 +96,7 @@ subscriptions model =
 
 commands : Cmd Msg
 commands =
-    Random.generate NewMasonry (Random.list (List.length colors) (Random.int 1 200))
+    Random.generate NewMasonry (Random.list (List.length colors) (Random.int 50 200))
 
 
 
@@ -115,7 +115,7 @@ update msg model =
             ( { model
                 | items =
                     List.map2
-                        (\color width -> Item color (width + 50))
+                        (\color width -> Item color width)
                         colors
                         widths
               }
@@ -342,7 +342,7 @@ subscriptions model =
 
 commands : Cmd Msg
 commands =
-    Random.generate NewMasonry (Random.list (List.length colors) (Random.int 1 200))
+    Random.generate NewMasonry (Random.list (List.length colors) (Random.int 50 200))
 
 
 
@@ -361,7 +361,7 @@ update msg model =
             ( { model
                 | items =
                     List.map2
-                        (\\color width -> Item color (width + 50))
+                        (\\color width -> Item color width)
                         colors
                         widths
               }
