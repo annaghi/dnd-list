@@ -163,28 +163,6 @@ view model =
 itemView : List Int -> Maybe Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )
 itemView affected maybeDragIndex maybeDropIndex index ( key, item ) =
     case ( maybeDragIndex, maybeDropIndex ) of
-        ( Nothing, Nothing ) ->
-            let
-                itemId : String
-                itemId =
-                    "id-" ++ item
-
-                styles : List (Html.Attribute Msg)
-                styles =
-                    itemStyles
-                        ++ (if List.member index affected then
-                                affectedItemStyles
-
-                            else
-                                []
-                           )
-            in
-            ( key
-            , Html.div
-                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)
-                [ Html.text item ]
-            )
-
         ( Just dragIndex, Just dropIndex ) ->
             if dragIndex /= index && dropIndex /= index then
                 ( key
@@ -206,7 +184,26 @@ itemView affected maybeDragIndex maybeDropIndex index ( key, item ) =
                 )
 
         _ ->
-            ( "", Html.text "" )
+            let
+                itemId : String
+                itemId =
+                    "id-" ++ item
+
+                styles : List (Html.Attribute Msg)
+                styles =
+                    itemStyles
+                        ++ (if List.member index affected then
+                                affectedItemStyles
+
+                            else
+                                []
+                           )
+            in
+            ( key
+            , Html.div
+                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)
+                [ Html.text item ]
+            )
 
 
 draggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg
@@ -446,28 +443,6 @@ view model =
 itemView : List Int -> Maybe Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )
 itemView affected maybeDragIndex maybeDropIndex index ( key, item ) =
     case ( maybeDragIndex, maybeDropIndex ) of
-        ( Nothing, Nothing ) ->
-            let
-                itemId : String
-                itemId =
-                    "id-" ++ item
-
-                styles : List (Html.Attribute Msg)
-                styles =
-                    itemStyles
-                        ++ (if List.member index affected then
-                                affectedItemStyles
-
-                            else
-                                []
-                           )
-            in
-            ( key
-            , Html.div
-                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)
-                [ Html.text item ]
-            )
-
         ( Just dragIndex, Just dropIndex ) ->
             if dragIndex /= index && dropIndex /= index then
                 ( key
@@ -489,7 +464,26 @@ itemView affected maybeDragIndex maybeDropIndex index ( key, item ) =
                 )
 
         _ ->
-            ( "", Html.text "" )
+            let
+                itemId : String
+                itemId =
+                    "id-" ++ item
+
+                styles : List (Html.Attribute Msg)
+                styles =
+                    itemStyles
+                        ++ (if List.member index affected then
+                                affectedItemStyles
+
+                            else
+                                []
+                           )
+            in
+            ( key
+            , Html.div
+                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)
+                [ Html.text item ]
+            )
 
 
 draggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg
