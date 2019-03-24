@@ -1,10 +1,11 @@
-module Example.FreeRotate exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
+module Advanced.FreeRotateOnDrop exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
 
 import Browser
 import Browser.Events
 import DnDList
 import Html
 import Html.Attributes
+import Html.Events
 import Html.Keyed
 import Json.Decode
 
@@ -44,7 +45,7 @@ data =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Free DnDList.Rotate
+    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrop
     }
 
 
@@ -125,7 +126,7 @@ update msg model =
                                 List.range dropIndex dragIndex
 
                             else
-                                model.affected
+                                []
 
                         _ ->
                             model.affected
@@ -148,35 +149,38 @@ view model =
         maybeDragIndex : Maybe Int
         maybeDragIndex =
             system.dragIndex model.draggable
+
+        maybeDropIndex : Maybe Int
+        maybeDropIndex =
+            system.dropIndex model.draggable
     in
     Html.section
         [ Html.Attributes.style "margin" "6em 0" ]
         [ model.items
-            |> List.indexedMap (itemView model.affected maybeDragIndex)
+            |> List.indexedMap (itemView model.affected maybeDragIndex maybeDropIndex)
             |> Html.Keyed.node "div" containerStyles
         , draggedItemView model.draggable model.items
         ]
 
 
-itemView : List Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )
-itemView affected maybeDragIndex index ( key, item ) =
-    let
-        styles : List (Html.Attribute Msg)
-        styles =
-            itemStyles
-                ++ (if List.member index affected then
-                        affectedItemStyles
-
-                    else
-                        []
-                   )
-    in
-    case maybeDragIndex of
-        Nothing ->
+itemView : List Int -> Maybe Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )
+itemView affected maybeDragIndex maybeDropIndex index ( key, item ) =
+    case ( maybeDragIndex, maybeDropIndex ) of
+        ( Nothing, Nothing ) ->
             let
                 itemId : String
                 itemId =
                     "id-" ++ item
+
+                styles : List (Html.Attribute Msg)
+                styles =
+                    itemStyles
+                        ++ (if List.member index affected then
+                                affectedItemStyles
+
+                            else
+                                []
+                           )
             in
             ( key
             , Html.div
@@ -184,18 +188,28 @@ itemView affected maybeDragIndex index ( key, item ) =
                 [ Html.text item ]
             )
 
-        Just dragIndex ->
-            if dragIndex /= index then
+        ( Just dragIndex, Just dropIndex ) ->
+            if dragIndex /= index && dropIndex /= index then
                 ( key
                 , Html.div
-                    (styles ++ system.dropEvents index)
+                    (itemStyles ++ system.dropEvents index)
+                    [ Html.text item ]
+                )
+
+            else if dragIndex /= index && dropIndex == index then
+                ( key
+                , Html.div
+                    (itemStyles ++ overedItemStyles ++ system.dropEvents index)
                     [ Html.text item ]
                 )
 
             else
                 ( key
-                , Html.div (itemStyles ++ overedItemStyles) []
+                , Html.div (itemStyles ++ placeholderItemStyles) []
                 )
+
+        _ ->
+            ( "", Html.text "" )
 
 
 draggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg
@@ -223,9 +237,9 @@ draggedItemView draggable items =
 containerStyles : List (Html.Attribute msg)
 containerStyles =
     [ Html.Attributes.style "display" "grid"
-    , Html.Attributes.style "grid-template-columns" "5em 5em 5em"
-    , Html.Attributes.style "grid-template-rows" "5em 5em 5em"
-    , Html.Attributes.style "grid-gap" "5em"
+    , Html.Attributes.style "grid-template-columns" "7em 7em 7em"
+    , Html.Attributes.style "grid-template-rows" "7em 7em 7em"
+    , Html.Attributes.style "grid-gap" "2em"
     , Html.Attributes.style "justify-content" "center"
     ]
 
@@ -236,7 +250,7 @@ itemStyles =
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
-    , Html.Attributes.style "font-size" "large"
+    , Html.Attributes.style "font-size" "1.2em"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
@@ -248,9 +262,14 @@ draggedItemStyles =
     [ Html.Attributes.style "background" "#aa1e9d" ]
 
 
+placeholderItemStyles : List (Html.Attribute msg)
+placeholderItemStyles =
+    [ Html.Attributes.style "background" "dimgray" ]
+
+
 overedItemStyles : List (Html.Attribute msg)
 overedItemStyles =
-    [ Html.Attributes.style "background" "dimgray" ]
+    [ Html.Attributes.style "background" "#63bdc7" ]
 
 
 affectedItemStyles : List (Html.Attribute msg)
@@ -265,13 +284,14 @@ affectedItemStyles =
 source : String
 source =
     """
-module FreeRotate exposing (main)
+module FreeRotateOnDrop exposing (main)
 
 import Browser
 import Browser.Events
 import DnDList
 import Html
 import Html.Attributes
+import Html.Events
 import Html.Keyed
 import Json.Decode
 
@@ -311,7 +331,7 @@ data =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Free DnDList.Rotate
+    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrop
     }
 
 
@@ -392,7 +412,7 @@ update msg model =
                                 List.range dropIndex dragIndex
 
                             else
-                                model.affected
+                                []
 
                         _ ->
                             model.affected
@@ -415,35 +435,38 @@ view model =
         maybeDragIndex : Maybe Int
         maybeDragIndex =
             system.dragIndex model.draggable
+
+        maybeDropIndex : Maybe Int
+        maybeDropIndex =
+            system.dropIndex model.draggable
     in
     Html.section
         [ Html.Attributes.style "margin" "6em 0" ]
         [ model.items
-            |> List.indexedMap (itemView model.affected maybeDragIndex)
+            |> List.indexedMap (itemView model.affected maybeDragIndex maybeDropIndex)
             |> Html.Keyed.node "div" containerStyles
         , draggedItemView model.draggable model.items
         ]
 
 
-itemView : List Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )
-itemView affected maybeDragIndex index ( key, item ) =
-    let
-        styles : List (Html.Attribute Msg)
-        styles =
-            itemStyles
-                ++ (if List.member index affected then
-                        affectedItemStyles
-
-                    else
-                        []
-                   )
-    in
-    case maybeDragIndex of
-        Nothing ->
+itemView : List Int -> Maybe Int -> Maybe Int -> Int -> KeyedItem -> ( String, Html.Html Msg )
+itemView affected maybeDragIndex maybeDropIndex index ( key, item ) =
+    case ( maybeDragIndex, maybeDropIndex ) of
+        ( Nothing, Nothing ) ->
             let
                 itemId : String
                 itemId =
                     "id-" ++ item
+
+                styles : List (Html.Attribute Msg)
+                styles =
+                    itemStyles
+                        ++ (if List.member index affected then
+                                affectedItemStyles
+
+                            else
+                                []
+                           )
             in
             ( key
             , Html.div
@@ -451,18 +474,28 @@ itemView affected maybeDragIndex index ( key, item ) =
                 [ Html.text item ]
             )
 
-        Just dragIndex ->
-            if dragIndex /= index then
+        ( Just dragIndex, Just dropIndex ) ->
+            if dragIndex /= index && dropIndex /= index then
                 ( key
                 , Html.div
-                    (styles ++ system.dropEvents index)
+                    (itemStyles ++ system.dropEvents index)
+                    [ Html.text item ]
+                )
+
+            else if dragIndex /= index && dropIndex == index then
+                ( key
+                , Html.div
+                    (itemStyles ++ overedItemStyles ++ system.dropEvents index)
                     [ Html.text item ]
                 )
 
             else
                 ( key
-                , Html.div (itemStyles ++ overedItemStyles) []
+                , Html.div (itemStyles ++ placeholderItemStyles) []
                 )
+
+        _ ->
+            ( "", Html.text "" )
 
 
 draggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg
@@ -490,9 +523,9 @@ draggedItemView draggable items =
 containerStyles : List (Html.Attribute msg)
 containerStyles =
     [ Html.Attributes.style "display" "grid"
-    , Html.Attributes.style "grid-template-columns" "5em 5em 5em"
-    , Html.Attributes.style "grid-template-rows" "5em 5em 5em"
-    , Html.Attributes.style "grid-gap" "5em"
+    , Html.Attributes.style "grid-template-columns" "7em 7em 7em"
+    , Html.Attributes.style "grid-template-rows" "7em 7em 7em"
+    , Html.Attributes.style "grid-gap" "2em"
     , Html.Attributes.style "justify-content" "center"
     ]
 
@@ -503,7 +536,7 @@ itemStyles =
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
-    , Html.Attributes.style "font-size" "large"
+    , Html.Attributes.style "font-size" "1.2em"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
@@ -515,9 +548,14 @@ draggedItemStyles =
     [ Html.Attributes.style "background" "#aa1e9d" ]
 
 
+placeholderItemStyles : List (Html.Attribute msg)
+placeholderItemStyles =
+    [ Html.Attributes.style "background" "dimgray" ]
+
+
 overedItemStyles : List (Html.Attribute msg)
 overedItemStyles =
-    [ Html.Attributes.style "background" "dimgray" ]
+    [ Html.Attributes.style "background" "#63bdc7" ]
 
 
 affectedItemStyles : List (Html.Attribute msg)
