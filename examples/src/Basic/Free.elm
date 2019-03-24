@@ -78,9 +78,7 @@ initialModel =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initialModel
-    , Cmd.none
-    )
+    ( initialModel, commands )
 
 
 
@@ -326,9 +324,7 @@ initialModel =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initialModel
-    , Cmd.none
-    )
+    ( initialModel, commands )
 
 
 
