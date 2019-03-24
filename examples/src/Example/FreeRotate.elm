@@ -1,12 +1,26 @@
-module Example.FreeRotate exposing (Model, Msg, initialModel, source, subscriptions, update, view)
+module Example.FreeRotate exposing (Model, Msg, initialModel, main, source, subscriptions, update, view)
 
+import Browser
 import Browser.Events
 import DnDList
 import Html
 import Html.Attributes
-import Html.Events
 import Html.Keyed
 import Json.Decode
+
+
+
+-- MAIN
+
+
+main : Program () Model Msg
+main =
+    Browser.element
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
 
 
 
