@@ -173,18 +173,6 @@ itemView affected maybeDragIndex index ( key, item ) =
                    )
     in
     case maybeDragIndex of
-        Nothing ->
-            let
-                itemId : String
-                itemId =
-                    "id-" ++ item
-            in
-            ( key
-            , Html.div
-                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)
-                [ Html.text item ]
-            )
-
         Just dragIndex ->
             if dragIndex /= index then
                 ( key
@@ -197,6 +185,18 @@ itemView affected maybeDragIndex index ( key, item ) =
                 ( key
                 , Html.div (itemStyles ++ placeholderItemStyles) []
                 )
+
+        Nothing ->
+            let
+                itemId : String
+                itemId =
+                    "id-" ++ item
+            in
+            ( key
+            , Html.div
+                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)
+                [ Html.text item ]
+            )
 
 
 draggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg
@@ -441,18 +441,6 @@ itemView affected maybeDragIndex index ( key, item ) =
                    )
     in
     case maybeDragIndex of
-        Nothing ->
-            let
-                itemId : String
-                itemId =
-                    "id-" ++ item
-            in
-            ( key
-            , Html.div
-                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)
-                [ Html.text item ]
-            )
-
         Just dragIndex ->
             if dragIndex /= index then
                 ( key
@@ -465,6 +453,18 @@ itemView affected maybeDragIndex index ( key, item ) =
                 ( key
                 , Html.div (itemStyles ++ placeholderItemStyles) []
                 )
+
+        Nothing ->
+            let
+                itemId : String
+                itemId =
+                    "id-" ++ item
+            in
+            ( key
+            , Html.div
+                (Html.Attributes.id itemId :: styles ++ system.dragEvents index itemId)
+                [ Html.text item ]
+            )
 
 
 draggedItemView : DnDList.Draggable -> List KeyedItem -> Html.Html Msg
