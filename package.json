@@ -1,0 +1,10 @@
+{
+    "scripts": {
+      "watch": "cd examples && elm-live src/Main.elm --port=8081 --open -- --output=assets/main.js --debug",
+      "doc": "npm run format && elm make --docs=docs.json && (elm diff || true)",
+      "build": "npm run format && rm -rf docs && mkdir docs && npm run optimize && cp -a examples/assets examples/index.html docs",
+      "format": "elm-format --validate .",
+      "optimize": "cd examples && elm make src/Main.elm --optimize --output=assets/main.js"
+    }
+  }
+  
