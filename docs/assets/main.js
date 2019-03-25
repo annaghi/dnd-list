@@ -6289,26 +6289,21 @@ var author$project$DnDList$rotate = F3(
 				end));
 	});
 var author$project$DnDList$rotateReorder = F3(
-	function (model, dropIdx, list) {
-		if (!model.$) {
-			var m = model.a;
-			if (_Utils_cmp(m.h, dropIdx) < 0) {
-				return A3(author$project$DnDList$rotate, m.h, dropIdx, list);
-			} else {
-				if (_Utils_cmp(m.h, dropIdx) > 0) {
-					var n = elm$core$List$length(list) - 1;
-					return elm$core$List$reverse(
-						A3(
-							author$project$DnDList$rotate,
-							n - m.h,
-							n - dropIdx,
-							elm$core$List$reverse(list)));
-				} else {
-					return list;
-				}
-			}
+	function (m, dropIdx, list) {
+		if (_Utils_cmp(m.h, dropIdx) < 0) {
+			return A3(author$project$DnDList$rotate, m.h, dropIdx, list);
 		} else {
-			return list;
+			if (_Utils_cmp(m.h, dropIdx) > 0) {
+				var n = elm$core$List$length(list) - 1;
+				return elm$core$List$reverse(
+					A3(
+						author$project$DnDList$rotate,
+						n - m.h,
+						n - dropIdx,
+						elm$core$List$reverse(list)));
+			} else {
+				return list;
+			}
 		}
 	});
 var elm$core$List$append = F2(
@@ -6344,13 +6339,8 @@ var author$project$DnDList$swap = F3(
 	});
 var elm$core$Basics$neq = _Utils_notEqual;
 var author$project$DnDList$swapReorder = F3(
-	function (model, dropIdx, list) {
-		if (!model.$) {
-			var m = model.a;
-			return (!_Utils_eq(m.h, dropIdx)) ? A3(author$project$DnDList$swap, m.h, dropIdx, list) : list;
-		} else {
-			return list;
-		}
+	function (m, dropIdx, list) {
+		return (!_Utils_eq(m.h, dropIdx)) ? A3(author$project$DnDList$swap, m.h, dropIdx, list) : list;
 	});
 var author$project$DnDList$update = F4(
 	function (movement, msg, _n0, list) {
@@ -6403,7 +6393,7 @@ var author$project$DnDList$update = F4(
 											_Utils_update(
 												m,
 												{v: 0, h: dropIdx})),
-										A3(author$project$DnDList$rotateReorder, model, dropIdx, list));
+										A3(author$project$DnDList$rotateReorder, m, dropIdx, list));
 								} else {
 									var _n6 = movement.a;
 									var _n7 = movement.b;
@@ -6412,7 +6402,7 @@ var author$project$DnDList$update = F4(
 											_Utils_update(
 												m,
 												{v: 0, h: dropIdx})),
-										A3(author$project$DnDList$swapReorder, model, dropIdx, list));
+										A3(author$project$DnDList$swapReorder, m, dropIdx, list));
 								}
 							} else {
 								var _n8 = movement.b;
@@ -6429,7 +6419,7 @@ var author$project$DnDList$update = F4(
 									_Utils_update(
 										m,
 										{v: 0, h: dropIdx})),
-								A3(author$project$DnDList$swapReorder, model, dropIdx, list));
+								A3(author$project$DnDList$swapReorder, m, dropIdx, list));
 						}
 					} else {
 						return _Utils_Tuple2(model, list);
@@ -6460,7 +6450,7 @@ var author$project$DnDList$update = F4(
 									var _n12 = movement.b;
 									return _Utils_Tuple2(
 										elm$core$Maybe$Nothing,
-										A3(author$project$DnDList$rotateReorder, model, m.S, list));
+										A3(author$project$DnDList$rotateReorder, m, m.S, list));
 								} else {
 									break _n10$2;
 								}
@@ -6470,7 +6460,7 @@ var author$project$DnDList$update = F4(
 									var _n14 = movement.b;
 									return _Utils_Tuple2(
 										elm$core$Maybe$Nothing,
-										A3(author$project$DnDList$swapReorder, model, m.S, list));
+										A3(author$project$DnDList$swapReorder, m, m.S, list));
 								} else {
 									break _n10$2;
 								}
