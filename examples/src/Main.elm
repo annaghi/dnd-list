@@ -57,8 +57,8 @@ type Example
     | FreeSwapOnDrop Advanced.FreeSwapOnDrop.Model
 
 
-initialPair : { key : Int, example : Example, command : Cmd Msg }
-initialPair =
+initialExample : { key : Int, example : Example, command : Cmd Msg }
+initialExample =
     { key = 2
     , example = Masonry Basic.Masonry.initialModel
     , command = Cmd.map MasonryMsg Basic.Masonry.commands
@@ -67,8 +67,8 @@ initialPair =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model initialPair.key initialPair.example
-    , initialPair.command
+    ( Model initialExample.key initialExample.example
+    , initialExample.command
     )
 
 
@@ -100,8 +100,8 @@ update message model =
 
         LinkClicked key example ->
             ( { model | key = key, example = example }
-            , if key == initialPair.key then
-                Cmd.batch [ jumpToTop "main", initialPair.command ]
+            , if key == initialExample.key then
+                Cmd.batch [ jumpToTop "main", initialExample.command ]
 
               else
                 jumpToTop "main"
