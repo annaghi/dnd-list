@@ -385,7 +385,6 @@ update movement msg (Draggable model) list =
                                 , swapReorder m dropIdx list
                                 )
 
-                            -- We do not use dragCounter on DragEnd, so reset it here
                             Free _ OnDrop ->
                                 ( Draggable (Just { m | dragCounter = 0 })
                                 , list
@@ -414,14 +413,10 @@ update movement msg (Draggable model) list =
                 Just m ->
                     case movement of
                         Free Rotate OnDrop ->
-                            ( Draggable Nothing
-                            , rotateReorder m m.dropIdx list
-                            )
+                            ( Draggable Nothing, rotateReorder m m.dropIdx list )
 
                         Free Swap OnDrop ->
-                            ( Draggable Nothing
-                            , swapReorder m m.dropIdx list
-                            )
+                            ( Draggable Nothing, swapReorder m m.dropIdx list )
 
                         _ ->
                             ( Draggable Nothing, list )
