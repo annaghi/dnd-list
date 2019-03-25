@@ -1,10 +1,9 @@
-module Basic.Free exposing (Model, Msg, commands, initialModel, main, source, subscriptions, update, view)
+module Basic.Masonry exposing (Model, Msg, commands, initialModel, main, source, subscriptions, update, view)
 
 import Browser
 import DnDList
 import Html
 import Html.Attributes
-import Html.Keyed
 import Random
 
 
@@ -114,10 +113,7 @@ update msg model =
         NewMasonry widths ->
             ( { model
                 | items =
-                    List.map2
-                        (\color width -> Item color width)
-                        colors
-                        widths
+                    List.map2 (\color width -> Item color width) colors widths
               }
             , Cmd.none
             )
@@ -245,13 +241,12 @@ overedItemStyles =
 source : String
 source =
     """
-module Free exposing (main)
+module Masonry exposing (main)
 
 import Browser
 import DnDList
 import Html
 import Html.Attributes
-import Html.Keyed
 import Random
 
 
@@ -361,10 +356,7 @@ update msg model =
         NewMasonry widths ->
             ( { model
                 | items =
-                    List.map2
-                        (\\color width -> Item color width)
-                        colors
-                        widths
+                    List.map2 (\\color width -> Item color width) colors widths
               }
             , Cmd.none
             )
