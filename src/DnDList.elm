@@ -377,12 +377,12 @@ update movement msg (Draggable model) list =
                         case movement of
                             Free Rotate OnDrag ->
                                 ( Draggable (Just { m | dragIdx = dropIdx, dragCounter = 0 })
-                                , rotateReorder model dropIdx list
+                                , rotateReorder m dropIdx list
                                 )
 
                             Free Swap OnDrag ->
                                 ( Draggable (Just { m | dragIdx = dropIdx, dragCounter = 0 })
-                                , swapReorder model dropIdx list
+                                , swapReorder m dropIdx list
                                 )
 
                             -- We do not use dragCounter on DragEnd, so reset it here
@@ -393,7 +393,7 @@ update movement msg (Draggable model) list =
 
                             _ ->
                                 ( Draggable (Just { m | dragIdx = dropIdx, dragCounter = 0 })
-                                , swapReorder model dropIdx list
+                                , swapReorder m dropIdx list
                                 )
 
                     else
@@ -415,12 +415,12 @@ update movement msg (Draggable model) list =
                     case movement of
                         Free Rotate OnDrop ->
                             ( Draggable Nothing
-                            , rotateReorder model m.dropIdx list
+                            , rotateReorder m m.dropIdx list
                             )
 
                         Free Swap OnDrop ->
                             ( Draggable Nothing
-                            , swapReorder model m.dropIdx list
+                            , swapReorder m m.dropIdx list
                             )
 
                         _ ->
@@ -440,18 +440,13 @@ update movement msg (Draggable model) list =
             )
 
 
-swapReorder : Maybe Model -> Int -> List a -> List a
-swapReorder model dropIdx list =
-    case model of
-        Just m ->
-            if m.dragIdx /= dropIdx then
-                swap m.dragIdx dropIdx list
+swapReorder : Model -> Int -> List a -> List a
+swapReorder m dropIdx list =
+    if m.dragIdx /= dropIdx then
+        swap m.dragIdx dropIdx list
 
-            else
-                list
-
-        Nothing ->
-            list
+    else
+        list
 
 
 swap : Int -> Int -> List a -> List a
@@ -480,26 +475,21 @@ swap i j list =
         |> List.concat
 
 
-rotateReorder : Maybe Model -> Int -> List a -> List a
-rotateReorder model dropIdx list =
-    case model of
-        Just m ->
-            if m.dragIdx < dropIdx then
-                rotate m.dragIdx dropIdx list
+rotateReorder : Model -> Int -> List a -> List a
+rotateReorder m dropIdx list =
+    if m.dragIdx < dropIdx then
+        rotate m.dragIdx dropIdx list
 
-            else if m.dragIdx > dropIdx then
-                let
-                    n : Int
-                    n =
-                        List.length list - 1
-                in
-                List.reverse (rotate (n - m.dragIdx) (n - dropIdx) (List.reverse list))
+    else if m.dragIdx > dropIdx then
+        let
+            n : Int
+            n =
+                List.length list - 1
+        in
+        List.reverse (rotate (n - m.dragIdx) (n - dropIdx) (List.reverse list))
 
-            else
-                list
-
-        Nothing ->
-            list
+    else
+        list
 
 
 rotate : Int -> Int -> List a -> List a
