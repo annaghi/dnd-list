@@ -173,6 +173,7 @@ type Draggable
 type alias Model =
     { dragIdx : Int
     , dropIdx : Int
+    , dragCounter : Int
     , startPosition : Position
     , currentPosition : Position
     , element : Maybe Browser.Dom.Element
@@ -346,6 +347,7 @@ update movement msg (Draggable model) list =
                 Just
                     { dragIdx = dragIdx
                     , dropIdx = dragIdx
+                    , dragCounter = 0
                     , startPosition = xy
                     , currentPosition = xy
                     , element = Nothing
@@ -356,7 +358,7 @@ update movement msg (Draggable model) list =
 
         Drag xy ->
             ( model
-                |> Maybe.map (\m -> { m | currentPosition = xy })
+                |> Maybe.map (\m -> { m | currentPosition = xy, dragCounter = m.dragCounter + 1 })
                 |> Draggable
             , list
             )
@@ -369,30 +371,36 @@ update movement msg (Draggable model) list =
             )
 
         DragEnter dropIdx ->
-            case movement of
-                Free Rotate OnDrag ->
-                    ( model
-                        |> Maybe.map (\m -> { m | dragIdx = dropIdx })
-                        |> Draggable
-                    , rotateReorder model dropIdx list
-                    )
+            case model of
+                Just m ->
+                    if m.dragCounter > 1 then
+                        case movement of
+                            Free Rotate OnDrag ->
+                                ( Draggable (Just { m | dragIdx = dropIdx, dragCounter = 0 })
+                                , rotateReorder model dropIdx list
+                                )
 
-                Free Swap OnDrag ->
-                    ( model
-                        |> Maybe.map (\m -> { m | dragIdx = dropIdx })
-                        |> Draggable
-                    , swapReorder model dropIdx list
-                    )
+                            Free Swap OnDrag ->
+                                ( Draggable (Just { m | dragIdx = dropIdx, dragCounter = 0 })
+                                , swapReorder model dropIdx list
+                                )
 
-                Free _ OnDrop ->
-                    ( Draggable model, list )
+                            -- We do not use dragCounter on DragEnd, so reset it here
+                            Free _ OnDrop ->
+                                ( Draggable (Just { m | dragCounter = 0 })
+                                , list
+                                )
+
+                            _ ->
+                                ( Draggable (Just { m | dragIdx = dropIdx, dragCounter = 0 })
+                                , swapReorder model dropIdx list
+                                )
+
+                    else
+                        ( Draggable model, list )
 
                 _ ->
-                    ( model
-                        |> Maybe.map (\m -> { m | dragIdx = dropIdx })
-                        |> Draggable
-                    , swapReorder model dropIdx list
-                    )
+                    ( Draggable model, list )
 
         DragLeave ->
             ( model
@@ -402,21 +410,21 @@ update movement msg (Draggable model) list =
             )
 
         DragEnd ->
-            let
-                dropIdx : Maybe Int
-                dropIdx =
-                    Maybe.map (\m -> m.dropIdx) model
-            in
-            case ( movement, dropIdx ) of
-                ( Free Rotate OnDrop, Just index ) ->
-                    ( Draggable Nothing
-                    , rotateReorder model index list
-                    )
+            case model of
+                Just m ->
+                    case movement of
+                        Free Rotate OnDrop ->
+                            ( Draggable Nothing
+                            , rotateReorder model m.dropIdx list
+                            )
 
-                ( Free Swap OnDrop, Just index ) ->
-                    ( Draggable Nothing
-                    , swapReorder model index list
-                    )
+                        Free Swap OnDrop ->
+                            ( Draggable Nothing
+                            , swapReorder model m.dropIdx list
+                            )
+
+                        _ ->
+                            ( Draggable Nothing, list )
 
                 _ ->
                     ( Draggable Nothing, list )
