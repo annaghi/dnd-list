@@ -14717,7 +14717,7 @@ var author$project$Main$navigationView = F3(
 			_List_fromArray(
 				[
 					A2(
-					elm$html$Html$h2,
+					elm$html$Html$h3,
 					_List_Nil,
 					_List_fromArray(
 						[
@@ -14728,7 +14728,7 @@ var author$project$Main$navigationView = F3(
 					_List_Nil,
 					A2(elm$core$List$indexedMap, linkView, basic)),
 					A2(
-					elm$html$Html$h2,
+					elm$html$Html$h3,
 					_List_Nil,
 					_List_fromArray(
 						[
