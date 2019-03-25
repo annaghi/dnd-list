@@ -4020,7 +4020,7 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.j) && (_VirtualDom_doc.title = title = doc.j);
+				(title !== doc.i) && (_VirtualDom_doc.title = title = doc.i);
 			});
 		}
 	);
@@ -5491,7 +5491,7 @@ var author$project$DnDList$dragIndex = function (_n0) {
 			return A2(
 				elm$core$Maybe$map,
 				function (_n1) {
-					return m.h;
+					return m.l;
 				},
 				m.F);
 		},
@@ -6289,16 +6289,16 @@ var author$project$DnDList$rotate = F3(
 				end));
 	});
 var author$project$DnDList$rotateReorder = F3(
-	function (m, dropIdx, list) {
-		if (_Utils_cmp(m.h, dropIdx) < 0) {
-			return A3(author$project$DnDList$rotate, m.h, dropIdx, list);
+	function (dragIdx, dropIdx, list) {
+		if (_Utils_cmp(dragIdx, dropIdx) < 0) {
+			return A3(author$project$DnDList$rotate, dragIdx, dropIdx, list);
 		} else {
-			if (_Utils_cmp(m.h, dropIdx) > 0) {
+			if (_Utils_cmp(dragIdx, dropIdx) > 0) {
 				var n = elm$core$List$length(list) - 1;
 				return elm$core$List$reverse(
 					A3(
 						author$project$DnDList$rotate,
-						n - m.h,
+						n - dragIdx,
 						n - dropIdx,
 						elm$core$List$reverse(list)));
 			} else {
@@ -6339,8 +6339,8 @@ var author$project$DnDList$swap = F3(
 	});
 var elm$core$Basics$neq = _Utils_notEqual;
 var author$project$DnDList$swapReorder = F3(
-	function (m, dropIdx, list) {
-		return (!_Utils_eq(m.h, dropIdx)) ? A3(author$project$DnDList$swap, m.h, dropIdx, list) : list;
+	function (dragIdx, dropIdx, list) {
+		return (!_Utils_eq(dragIdx, dropIdx)) ? A3(author$project$DnDList$swap, dragIdx, dropIdx, list) : list;
 	});
 var author$project$DnDList$update = F4(
 	function (movement, msg, _n0, list) {
@@ -6352,7 +6352,7 @@ var author$project$DnDList$update = F4(
 				var xy = msg.c;
 				return _Utils_Tuple2(
 					elm$core$Maybe$Just(
-						{Q: xy, v: 0, h: dragIdx, S: dragIdx, F: elm$core$Maybe$Nothing, aT: elementId, am: xy}),
+						{Q: xy, v: 0, l: dragIdx, S: dragIdx, F: elm$core$Maybe$Nothing, aT: elementId, am: xy}),
 					list);
 			case 1:
 				var xy = msg.a;
@@ -6392,8 +6392,8 @@ var author$project$DnDList$update = F4(
 										elm$core$Maybe$Just(
 											_Utils_update(
 												m,
-												{v: 0, h: dropIdx})),
-										A3(author$project$DnDList$rotateReorder, m, dropIdx, list));
+												{v: 0, l: dropIdx})),
+										A3(author$project$DnDList$rotateReorder, m.l, dropIdx, list));
 								} else {
 									var _n6 = movement.a;
 									var _n7 = movement.b;
@@ -6401,8 +6401,8 @@ var author$project$DnDList$update = F4(
 										elm$core$Maybe$Just(
 											_Utils_update(
 												m,
-												{v: 0, h: dropIdx})),
-										A3(author$project$DnDList$swapReorder, m, dropIdx, list));
+												{v: 0, l: dropIdx})),
+										A3(author$project$DnDList$swapReorder, m.l, dropIdx, list));
 								}
 							} else {
 								var _n8 = movement.b;
@@ -6418,8 +6418,8 @@ var author$project$DnDList$update = F4(
 								elm$core$Maybe$Just(
 									_Utils_update(
 										m,
-										{v: 0, h: dropIdx})),
-								A3(author$project$DnDList$swapReorder, m, dropIdx, list));
+										{v: 0, l: dropIdx})),
+								A3(author$project$DnDList$swapReorder, m.l, dropIdx, list));
 						}
 					} else {
 						return _Utils_Tuple2(model, list);
@@ -6434,7 +6434,7 @@ var author$project$DnDList$update = F4(
 						function (m) {
 							return _Utils_update(
 								m,
-								{S: m.h});
+								{S: m.l});
 						},
 						model),
 					list);
@@ -6450,7 +6450,7 @@ var author$project$DnDList$update = F4(
 									var _n12 = movement.b;
 									return _Utils_Tuple2(
 										elm$core$Maybe$Nothing,
-										A3(author$project$DnDList$rotateReorder, m, m.S, list));
+										A3(author$project$DnDList$rotateReorder, m.l, m.S, list));
 								} else {
 									break _n10$2;
 								}
@@ -6460,7 +6460,7 @@ var author$project$DnDList$update = F4(
 									var _n14 = movement.b;
 									return _Utils_Tuple2(
 										elm$core$Maybe$Nothing,
-										A3(author$project$DnDList$swapReorder, m, m.S, list));
+										A3(author$project$DnDList$swapReorder, m.l, m.S, list));
 								} else {
 									break _n10$2;
 								}
@@ -14453,25 +14453,25 @@ var author$project$Main$demoView = F4(
 var author$project$Main$info = function (example) {
 	switch (example.$) {
 		case 0:
-			return {l: 'Sortable list', n: 'Basic example', j: 'Basic'};
+			return {k: 'Sortable list', n: 'Basic example', i: 'Basic'};
 		case 1:
-			return {l: 'Designed with mdgriffith/elm-ui', n: 'Basic example', j: 'Basic + Elm UI'};
+			return {k: 'Designed with mdgriffith/elm-ui', n: 'Basic example', i: 'Basic + Elm UI'};
 		case 2:
-			return {l: 'Simple horizontal masonry with flexbox.', n: 'Sortable masonry', j: 'Masonry'};
+			return {k: 'Simple horizontal masonry with flexbox.', n: 'Sortable masonry', i: 'Masonry'};
 		case 3:
-			return {l: 'Example with keyed nodes.', n: 'Horizontal drag only', j: 'Horizontal'};
+			return {k: 'Example with keyed nodes.', n: 'Horizontal drag only', i: 'Horizontal'};
 		case 4:
-			return {l: 'Example with keyed nodes.', n: 'Vertical drag only', j: 'Vertical'};
+			return {k: 'Example with keyed nodes.', n: 'Vertical drag only', i: 'Vertical'};
 		case 5:
-			return {l: 'Without thinking: duplicate everything.', n: 'Two independent lists', j: 'Two lists'};
+			return {k: 'Without thinking: duplicate everything.', n: 'Two independent lists', i: 'Two lists'};
 		case 6:
-			return {l: 'The items between the dragged and the drop target elements are rotated, and the list is updated each time when dragging over a drop target.', n: 'Free drag movement - Rotate OnDrag', j: 'Free Rotate OnDrag'};
+			return {k: 'The items between the dragged and the drop target elements are rotated, and the list is updated each time when dragging over a drop target.', n: 'Free drag movement - Rotate OnDrag', i: 'Free Rotate OnDrag'};
 		case 7:
-			return {l: 'The items between the dragged and the drop target elements are rotated, and the list is updated only once when the dragged item was dropped on the drop target.', n: 'Free drag movement - Rotate OnDrop', j: 'Free Rotate OnDrop'};
+			return {k: 'The items between the dragged and the drop target elements are rotated, and the list is updated only once when the dragged item was dropped on the drop target.', n: 'Free drag movement - Rotate OnDrop', i: 'Free Rotate OnDrop'};
 		case 8:
-			return {l: 'The dragged and the drop target elements are swapped, and the list is updated each time when dragging over a drop target.', n: 'Free drag movement - Swap OnDrag', j: 'Free Swap OnDrag'};
+			return {k: 'The dragged and the drop target elements are swapped, and the list is updated each time when dragging over a drop target.', n: 'Free drag movement - Swap OnDrag', i: 'Free Swap OnDrag'};
 		default:
-			return {l: 'The dragged and the drop target elements are swapped, and the list is updated only once when the dragged item was dropped on the drop target.', n: 'Free drag movement - Swap OnDrop', j: 'Free Swap OnDrop'};
+			return {k: 'The dragged and the drop target elements are swapped, and the list is updated only once when the dragged item was dropped on the drop target.', n: 'Free drag movement - Swap OnDrop', i: 'Free Swap OnDrop'};
 	}
 };
 var elm$virtual_dom$VirtualDom$property = F2(
@@ -14535,7 +14535,7 @@ var author$project$Main$mainView = function (example) {
 		elm$core$Basics$composeR,
 		author$project$Main$info,
 		function ($) {
-			return $.l;
+			return $.k;
 		})(example);
 	switch (example.$) {
 		case 0:
@@ -14707,7 +14707,7 @@ var author$project$Main$navigationView = F3(
 								elm$core$Basics$composeR,
 								author$project$Main$info,
 								function ($) {
-									return $.j;
+									return $.i;
 								})(example))
 						]));
 			});
@@ -14786,7 +14786,7 @@ var author$project$Main$view = function (model) {
 					]),
 				author$project$Main$mainView(model.a))
 			]),
-		j: 'annaghi | dnd-list'
+		i: 'annaghi | dnd-list'
 	};
 };
 var elm$browser$Browser$document = _Browser_document;
