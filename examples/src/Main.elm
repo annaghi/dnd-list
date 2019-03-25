@@ -6,8 +6,8 @@ import Advanced.FreeSwapOnDrag
 import Advanced.FreeSwapOnDrop
 import Basic.Basic
 import Basic.BasicElmUI
-import Basic.Free
 import Basic.Horizontal
+import Basic.Masonry
 import Basic.Vertical
 import Basic.WithTwoLists
 import Browser
@@ -46,7 +46,7 @@ type alias Model =
 type Example
     = Basic Basic.Basic.Model
     | BasicElmUI Basic.BasicElmUI.Model
-    | Free Basic.Free.Model
+    | Masonry Basic.Masonry.Model
     | Horizontal Basic.Horizontal.Model
     | Vertical Basic.Vertical.Model
     | WithTwoLists Basic.WithTwoLists.Model
@@ -57,18 +57,18 @@ type Example
     | FreeSwapOnDrop Advanced.FreeSwapOnDrop.Model
 
 
-initialPair : { key : Int, example : Example, command : Cmd Msg }
-initialPair =
+initialExample : { key : Int, example : Example, command : Cmd Msg }
+initialExample =
     { key = 2
-    , example = Free Basic.Free.initialModel
-    , command = Cmd.map FreeMsg Basic.Free.commands
+    , example = Masonry Basic.Masonry.initialModel
+    , command = Cmd.map MasonryMsg Basic.Masonry.commands
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model initialPair.key initialPair.example
-    , initialPair.command
+    ( Model initialExample.key initialExample.example
+    , initialExample.command
     )
 
 
@@ -81,7 +81,7 @@ type Msg
     | LinkClicked Int Example
     | BasicMsg Basic.Basic.Msg
     | BasicElmUIMsg Basic.BasicElmUI.Msg
-    | FreeMsg Basic.Free.Msg
+    | MasonryMsg Basic.Masonry.Msg
     | HorizontalMsg Basic.Horizontal.Msg
     | VerticalMsg Basic.Vertical.Msg
     | WithTwoListsMsg Basic.WithTwoLists.Msg
@@ -100,8 +100,8 @@ update message model =
 
         LinkClicked key example ->
             ( { model | key = key, example = example }
-            , if key == initialPair.key then
-                Cmd.batch [ jumpToTop "main", initialPair.command ]
+            , if key == initialExample.key then
+                Cmd.batch [ jumpToTop "main", initialExample.command ]
 
               else
                 jumpToTop "main"
@@ -123,10 +123,10 @@ update message model =
                 _ ->
                     ( model, Cmd.none )
 
-        FreeMsg msg ->
+        MasonryMsg msg ->
             case model.example of
-                Free free ->
-                    stepFree model (Basic.Free.update msg free)
+                Masonry masonry ->
+                    stepMasonry model (Basic.Masonry.update msg masonry)
 
                 _ ->
                     ( model, Cmd.none )
@@ -203,10 +203,10 @@ stepBasicElmUI model ( basicElmUI, cmds ) =
     )
 
 
-stepFree : Model -> ( Basic.Free.Model, Cmd Basic.Free.Msg ) -> ( Model, Cmd Msg )
-stepFree model ( free, cmds ) =
-    ( { model | example = Free free }
-    , Cmd.map FreeMsg cmds
+stepMasonry : Model -> ( Basic.Masonry.Model, Cmd Basic.Masonry.Msg ) -> ( Model, Cmd Msg )
+stepMasonry model ( masonry, cmds ) =
+    ( { model | example = Masonry masonry }
+    , Cmd.map MasonryMsg cmds
     )
 
 
@@ -287,8 +287,8 @@ subscriptions model =
         BasicElmUI basicElmUI ->
             exampleSubscriptions BasicElmUIMsg (Basic.BasicElmUI.subscriptions basicElmUI)
 
-        Free free ->
-            exampleSubscriptions FreeMsg (Basic.Free.subscriptions free)
+        Masonry masonry ->
+            exampleSubscriptions MasonryMsg (Basic.Masonry.subscriptions masonry)
 
         Horizontal horizontal ->
             exampleSubscriptions HorizontalMsg (Basic.Horizontal.subscriptions horizontal)
@@ -332,7 +332,7 @@ view model =
                 model.key
                 [ Basic Basic.Basic.initialModel
                 , BasicElmUI Basic.BasicElmUI.initialModel
-                , Free Basic.Free.initialModel
+                , Masonry Basic.Masonry.initialModel
                 , Horizontal Basic.Horizontal.initialModel
                 , Vertical Basic.Vertical.initialModel
                 , WithTwoLists Basic.WithTwoLists.initialModel
@@ -412,9 +412,9 @@ mainView example =
             , sourceView Basic.BasicElmUI.source
             ]
 
-        Free free ->
-            [ demoView subtitle description FreeMsg (Basic.Free.view free)
-            , sourceView Basic.Free.source
+        Masonry masonry ->
+            [ demoView subtitle description MasonryMsg (Basic.Masonry.view masonry)
+            , sourceView Basic.Masonry.source
             ]
 
         Horizontal horizontal ->
@@ -513,28 +513,28 @@ info example =
             , description = "Designed with mdgriffith/elm-ui"
             }
 
-        Free _ ->
-            { title = "Free"
-            , subtitle = "Free drag movement"
-            , description = "Sortable horizontal masonry"
+        Masonry _ ->
+            { title = "Masonry"
+            , subtitle = "Sortable masonry"
+            , description = "Simple horizontal masonry with flexbox."
             }
 
         Horizontal _ ->
             { title = "Horizontal"
             , subtitle = "Horizontal drag only"
-            , description = "Example with keyed nodes"
+            , description = "Example with keyed nodes."
             }
 
         Vertical _ ->
             { title = "Vertical"
             , subtitle = "Vertical drag only"
-            , description = "Example with keyed nodes"
+            , description = "Example with keyed nodes."
             }
 
         WithTwoLists _ ->
             { title = "Two lists"
             , subtitle = "Two independent lists"
-            , description = "Without thinking: duplicate everything"
+            , description = "Without thinking: duplicate everything."
             }
 
         -- Advanced

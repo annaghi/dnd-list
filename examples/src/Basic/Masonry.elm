@@ -1,10 +1,9 @@
-module Basic.Free exposing (Model, Msg, commands, initialModel, main, source, subscriptions, update, view)
+module Basic.Masonry exposing (Model, Msg, commands, initialModel, main, source, subscriptions, update, view)
 
 import Browser
 import DnDList
 import Html
 import Html.Attributes
-import Html.Keyed
 import Random
 
 
@@ -78,9 +77,7 @@ initialModel =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initialModel
-    , Cmd.none
-    )
+    ( initialModel, commands )
 
 
 
@@ -98,7 +95,7 @@ subscriptions model =
 
 commands : Cmd Msg
 commands =
-    Random.generate NewMasonry (Random.list (List.length colors) (Random.int 1 200))
+    Random.generate NewMasonry (Random.list (List.length colors) (Random.int 50 200))
 
 
 
@@ -116,10 +113,7 @@ update msg model =
         NewMasonry widths ->
             ( { model
                 | items =
-                    List.map2
-                        (\color width -> Item color (width + 50))
-                        colors
-                        widths
+                    List.map2 (\color width -> Item color width) colors widths
               }
             , Cmd.none
             )
@@ -222,6 +216,7 @@ containerStyles =
 itemStyles : Color -> Width -> List (Html.Attribute msg)
 itemStyles color width =
     [ Html.Attributes.style "background" color
+    , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "flex" "1 0 auto"
     , Html.Attributes.style "height" "5em"
     , Html.Attributes.style "margin" "0 1.5em 1.5em 0"
@@ -246,13 +241,12 @@ overedItemStyles =
 source : String
 source =
     """
-module Free exposing (main)
+module Masonry exposing (main)
 
 import Browser
 import DnDList
 import Html
 import Html.Attributes
-import Html.Keyed
 import Random
 
 
@@ -326,9 +320,7 @@ initialModel =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initialModel
-    , Cmd.none
-    )
+    ( initialModel, commands )
 
 
 
@@ -346,7 +338,7 @@ subscriptions model =
 
 commands : Cmd Msg
 commands =
-    Random.generate NewMasonry (Random.list (List.length colors) (Random.int 1 200))
+    Random.generate NewMasonry (Random.list (List.length colors) (Random.int 50 200))
 
 
 
@@ -364,10 +356,7 @@ update msg model =
         NewMasonry widths ->
             ( { model
                 | items =
-                    List.map2
-                        (\\color width -> Item color (width + 50))
-                        colors
-                        widths
+                    List.map2 (\\color width -> Item color width) colors widths
               }
             , Cmd.none
             )
@@ -470,6 +459,7 @@ containerStyles =
 itemStyles : Color -> Width -> List (Html.Attribute msg)
 itemStyles color width =
     [ Html.Attributes.style "background" color
+    , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "flex" "1 0 auto"
     , Html.Attributes.style "height" "5em"
     , Html.Attributes.style "margin" "0 1.5em 1.5em 0"
