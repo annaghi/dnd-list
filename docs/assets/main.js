@@ -6531,15 +6531,15 @@ var author$project$Main$MasonryMsg = function (a) {
 	return {$: 4, a: a};
 };
 var elm$core$Platform$Cmd$map = _Platform_map;
-var author$project$Main$initialPair = {
+var author$project$Main$initialExample = {
 	aQ: A2(elm$core$Platform$Cmd$map, author$project$Main$MasonryMsg, author$project$Basic$Masonry$commands),
 	a: author$project$Main$Masonry(author$project$Basic$Masonry$initialModel),
 	ae: 2
 };
 var author$project$Main$init = function (_n0) {
 	return _Utils_Tuple2(
-		A2(author$project$Main$Model, author$project$Main$initialPair.ae, author$project$Main$initialPair.a),
-		author$project$Main$initialPair.aQ);
+		A2(author$project$Main$Model, author$project$Main$initialExample.ae, author$project$Main$initialExample.a),
+		author$project$Main$initialExample.aQ);
 };
 var author$project$Advanced$FreeRotateOnDrag$ClearAffected = {$: 1};
 var author$project$Advanced$FreeRotateOnDrag$MyMsg = function (a) {
@@ -7199,11 +7199,11 @@ var author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{a: example, ae: key}),
-					_Utils_eq(key, author$project$Main$initialPair.ae) ? elm$core$Platform$Cmd$batch(
+					_Utils_eq(key, author$project$Main$initialExample.ae) ? elm$core$Platform$Cmd$batch(
 						_List_fromArray(
 							[
 								author$project$Main$jumpToTop('main'),
-								author$project$Main$initialPair.aQ
+								author$project$Main$initialExample.aQ
 							])) : author$project$Main$jumpToTop('main'));
 			case 2:
 				var msg = message.a;
