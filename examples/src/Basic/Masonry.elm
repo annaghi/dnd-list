@@ -41,7 +41,7 @@ colors =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Free DnDList.Swap DnDList.OnDrop
+    , movement = DnDList.Free DnDList.Swap DnDList.OnDrag
     }
 
 
@@ -138,48 +138,39 @@ view model =
         maybeDragIndex : Maybe Int
         maybeDragIndex =
             system.dragIndex model.draggable
-
-        maybeDropIndex : Maybe Int
-        maybeDropIndex =
-            system.dropIndex model.draggable
     in
     Html.section
         [ Html.Attributes.style "margin" "6em 0" ]
         [ model.items
-            |> List.indexedMap (itemView maybeDragIndex maybeDropIndex)
+            |> List.indexedMap (itemView maybeDragIndex)
             |> Html.div containerStyles
         , draggedItemView model.draggable model.items
         ]
 
 
-itemView : Maybe Int -> Maybe Int -> Int -> Item -> Html.Html Msg
-itemView maybeDragIndex maybeDropIndex index (Item color width) =
-    case ( maybeDragIndex, maybeDropIndex ) of
-        ( Just dragIndex, Just dropIndex ) ->
-            if dragIndex /= index && dropIndex /= index then
+itemView : Maybe Int -> Int -> Item -> Html.Html Msg
+itemView maybeDragIndex index (Item color width) =
+    case maybeDragIndex of
+        Nothing ->
+            let
+                itemId : String
+                itemId =
+                    "id-" ++ color
+            in
+            Html.div
+                (Html.Attributes.id itemId :: itemStyles color width ++ system.dragEvents index itemId)
+                []
+
+        Just dragIndex ->
+            if dragIndex /= index then
                 Html.div
                     (itemStyles color width ++ system.dropEvents index)
-                    []
-
-            else if dragIndex /= index && dropIndex == index then
-                Html.div
-                    (itemStyles color width ++ overedItemStyles ++ system.dropEvents index)
                     []
 
             else
                 Html.div
                     (itemStyles color width ++ placeholderItemStyles)
                     []
-
-        _ ->
-            let
-                itemId : String
-                itemId =
-                    "id-" ++ String.fromInt index
-            in
-            Html.div
-                (Html.Attributes.id itemId :: itemStyles color width ++ system.dragEvents index itemId)
-                []
 
 
 draggedItemView : DnDList.Draggable -> List Item -> Html.Html Msg
@@ -227,11 +218,6 @@ itemStyles color width =
 placeholderItemStyles : List (Html.Attribute msg)
 placeholderItemStyles =
     [ Html.Attributes.style "background" "dimgray" ]
-
-
-overedItemStyles : List (Html.Attribute msg)
-overedItemStyles =
-    [ Html.Attributes.style "opacity" "0.7" ]
 
 
 
@@ -284,7 +270,7 @@ colors =
 config : DnDList.Config Msg
 config =
     { message = MyMsg
-    , movement = DnDList.Free DnDList.Swap DnDList.OnDrop
+    , movement = DnDList.Free DnDList.Swap DnDList.OnDrag
     }
 
 
@@ -381,48 +367,39 @@ view model =
         maybeDragIndex : Maybe Int
         maybeDragIndex =
             system.dragIndex model.draggable
-
-        maybeDropIndex : Maybe Int
-        maybeDropIndex =
-            system.dropIndex model.draggable
     in
     Html.section
         [ Html.Attributes.style "margin" "6em 0" ]
         [ model.items
-            |> List.indexedMap (itemView maybeDragIndex maybeDropIndex)
+            |> List.indexedMap (itemView maybeDragIndex)
             |> Html.div containerStyles
         , draggedItemView model.draggable model.items
         ]
 
 
-itemView : Maybe Int -> Maybe Int -> Int -> Item -> Html.Html Msg
-itemView maybeDragIndex maybeDropIndex index (Item color width) =
-    case ( maybeDragIndex, maybeDropIndex ) of
-        ( Just dragIndex, Just dropIndex ) ->
-            if dragIndex /= index && dropIndex /= index then
+itemView : Maybe Int -> Int -> Item -> Html.Html Msg
+itemView maybeDragIndex index (Item color width) =
+    case maybeDragIndex of
+        Nothing ->
+            let
+                itemId : String
+                itemId =
+                    "id-" ++ color
+            in
+            Html.div
+                (Html.Attributes.id itemId :: itemStyles color width ++ system.dragEvents index itemId)
+                []
+
+        Just dragIndex ->
+            if dragIndex /= index then
                 Html.div
                     (itemStyles color width ++ system.dropEvents index)
-                    []
-
-            else if dragIndex /= index && dropIndex == index then
-                Html.div
-                    (itemStyles color width ++ overedItemStyles ++ system.dropEvents index)
                     []
 
             else
                 Html.div
                     (itemStyles color width ++ placeholderItemStyles)
                     []
-
-        _ ->
-            let
-                itemId : String
-                itemId =
-                    "id-" ++ String.fromInt index
-            in
-            Html.div
-                (Html.Attributes.id itemId :: itemStyles color width ++ system.dragEvents index itemId)
-                []
 
 
 draggedItemView : DnDList.Draggable -> List Item -> Html.Html Msg
@@ -470,9 +447,4 @@ itemStyles color width =
 placeholderItemStyles : List (Html.Attribute msg)
 placeholderItemStyles =
     [ Html.Attributes.style "background" "dimgray" ]
-
-
-overedItemStyles : List (Html.Attribute msg)
-overedItemStyles =
-    [ Html.Attributes.style "opacity" "0.7" ]
     """
