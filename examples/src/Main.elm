@@ -379,11 +379,11 @@ navigationView currentKey basic advanced =
                 [ Html.text ((info >> .title) example) ]
     in
     Html.div []
-        [ Html.h2 [] [ Html.text "Basic Examples" ]
+        [ Html.h3 [] [ Html.text "Basic Examples" ]
         , basic
             |> List.indexedMap linkView
             |> Html.ul []
-        , Html.h2 [] [ Html.text "Advanced Examples" ]
+        , Html.h3 [] [ Html.text "Advanced Examples" ]
         , advanced
             |> List.indexedMap (\i -> linkView (i + List.length basic))
             |> Html.ul []
