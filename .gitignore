@@ -12,3 +12,6 @@ docs.json
 
 # elm-make generated files
 examples/**/main.js
+
+# development files
+dev*
