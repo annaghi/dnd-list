@@ -1,5 +1,5 @@
 html {
-  font-family: monospace;
+  font-family: "Open Sans", sans-serif;
   height: 100%;
 }
 body {
@@ -8,19 +8,38 @@ body {
   flex-direction: column;
 }
 main,
-nav {
+#sidebar {
   box-sizing: border-box;
 }
-nav {
+#sidebar {
   display: flex;
   flex-direction: column;
+}
+#sidebar {
+  padding: 0 3em 3em 2em;
+}
+
+a {
+  text-decoration: none;
+}
+body,
+h1,
+h2,
+h3,
+h4 {
+  font-weight: normal;
+}
+
+/* Card */
+
+#sidebar header h1 {
+  font-size: 2.4em;
 }
 
 /* Navigation panel */
 
-nav h1 {
-  font-size: 2.4em;
-  font-weight: lighter;
+nav h4 {
+  margin-bottom: 0.2em;
 }
 nav p {
   line-height: 1.5;
@@ -33,62 +52,54 @@ nav ul {
   flex-direction: row;
   flex-wrap: wrap;
 }
-nav li {
-  border-width: 1px;
-  border-style: solid;
-  border-color: transparent;
-  box-sizing: border-box;
-  cursor: pointer;
-  min-width: 200px;
-  margin-bottom: 5px;
-  margin-right: 5px;
-  padding: 7px 14px;
+nav li:after {
+  content: " •";
+  opacity: 0.5;
+  margin: 0px 0.3em;
 }
-nav li:hover {
-  border-style: solid;
-  border-color: gray;
+nav li:last-child:after {
+  content: "";
+  opacity: 1;
+  margin: 0;
 }
-nav li.is-active {
-  border-style: dashed;
-  border-color: gray;
-}
-
-nav {
-  padding: 1em 3em;
+nav a {
+  padding-left: 7px;
 }
 
 /* Main panel */
 
-main {
-  background-color: #afafaf;
-  padding-top: 2em;
+main header {
+  overflow: auto;
+  padding: 0 3em 3em 3em;
 }
-main h2 {
-  font-weight: lighter;
-  line-height: 2;
-}
-main h3 {
-  font-weight: lighter;
-}
-main p {
-  font-weight: lighter;
+main header h2 {
   margin-top: 1.5em;
 }
-.elm-demo {
+main header p {
+  margin-top: 1.8em;
+  margin-bottom: 0;
+}
+
+main > section {
+  margin: 6em auto;
   padding: 0 3em;
 }
-.elm-code h3 {
-  padding: 0 2.6em;
+section .link {
+  cursor: pointer;
+  display: table;
+  margin-right: 1em;
+  padding: 2px 14px;
 }
 
 /* Highlight.js */
 
-main .hljs {
-  padding-bottom: 5em;
-  padding-left: 3em;
+.hljs {
+  font: normal 10pt Consolas, Monaco, monospace;
+  line-height: 1.5;
+  padding: 3em 0 5em 3em;
 }
 
-main pre {
+pre {
   margin: 0;
 }
 
@@ -101,14 +112,69 @@ main pre {
     overflow: hidden;
   }
   main,
-  nav {
+  #sidebar {
     height: 100%;
     overflow-y: auto;
   }
   main {
     flex: 1 0 0px;
   }
-  nav {
+  #sidebar {
     flex: 0 0 300px;
   }
+  nav li {
+    min-width: 200px;
+  }
+  nav li:after {
+    content: none;
+  }
+  nav a {
+    display: block;
+    padding: 2px 0 2px 15px;
+  }
+}
+
+/* Colors - light */
+/* https://www.schemecolor.com */
+
+a,
+.hljs-title {
+  color: #177fd6;
+}
+nav a:hover,
+.hljs-keyword {
+  color: #a131c2;
+}
+section .link {
+  color: #61aeee;
+}
+section .link:hover {
+  color: #c678dd;
+}
+
+#sidebar {
+  color: #555;
+}
+
+#sidebar header h1 a,
+#sidebar h2,
+#sidebar h3,
+#sidebar h4 {
+  color: black;
+}
+
+main {
+  background-color: #333333;
+}
+main header {
+  background-color: #f2f2f2;
+  color: #333;
+}
+main section,
+.font-color-0-0-0-255 {
+  color: white !important;
+}
+
+.hljs {
+  background-color: #f2f2f2;
 }
