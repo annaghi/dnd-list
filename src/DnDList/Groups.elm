@@ -188,6 +188,8 @@ type alias Model =
     , currentPosition : Position
     , sourceElement : Maybe Browser.Dom.Element
     , sourceElementId : String
+    , targetElement : Maybe Browser.Dom.Element
+    , targetElementId : String
     }
 
 
@@ -202,7 +204,7 @@ type alias System a msg =
     , commands : Draggable -> Cmd msg
     , update : Msg -> Draggable -> List a -> ( Draggable, List a )
     , dragEvents : Int -> String -> List (Html.Attribute msg)
-    , dropEvents : Int -> List (Html.Attribute msg)
+    , dropEvents : Int -> String -> List (Html.Attribute msg)
     , draggedStyles : Draggable -> List (Html.Attribute msg)
     , info : Draggable -> Maybe Info
     }
@@ -213,6 +215,8 @@ type alias Info =
     , dropIndex : Int
     , sourceElement : Browser.Dom.Element
     , sourceElementId : String
+    , targetElement : Browser.Dom.Element
+    , targetElementId : String
     }
 
 
@@ -263,17 +267,18 @@ Example configuration:
 
 -}
 type alias Config a =
-    { operation : Operation
-    , movement : Movement
+    { movement : Movement
     , trigger : Trigger
+    , operation : Operation
     , beforeUpdate : Int -> Int -> List a -> List a
     , groups : Groups a
     }
 
 
 type alias Groups a =
-    { operation : Operation
-    , comparator : a -> a -> Bool
+    { comparator : a -> a -> Bool
+    , operation : Operation
+    , beforeUpdate : Int -> Int -> List a -> List a
     }
 
 
@@ -344,7 +349,15 @@ subscriptions wrap (Draggable model) =
 
 
 commands : (Msg -> msg) -> Draggable -> Cmd msg
-commands wrap (Draggable model) =
+commands wrap draggable =
+    Cmd.batch
+        [ sourceCommands wrap draggable
+        , targetCommands wrap draggable
+        ]
+
+
+sourceCommands : (Msg -> msg) -> Draggable -> Cmd msg
+sourceCommands wrap (Draggable model) =
     case model of
         Nothing ->
             Cmd.none
@@ -352,10 +365,24 @@ commands wrap (Draggable model) =
         Just m ->
             case m.sourceElement of
                 Nothing ->
-                    Task.attempt (wrap << GotDragged) (Browser.Dom.getElement m.sourceElementId)
+                    Task.attempt (wrap << GotSourceElement) (Browser.Dom.getElement m.sourceElementId)
 
                 _ ->
                     Cmd.none
+
+
+targetCommands : (Msg -> msg) -> Draggable -> Cmd msg
+targetCommands wrap (Draggable model) =
+    case model of
+        Nothing ->
+            Cmd.none
+
+        Just m ->
+            if m.dragIndex /= m.dropIndex then
+                Task.attempt (wrap << GotTargetElement) (Browser.Dom.getElement m.targetElementId)
+
+            else
+                Cmd.none
 
 
 {-| Internal message type. You should wrap it within your message constructor.
@@ -367,11 +394,12 @@ commands wrap (Draggable model) =
 type Msg
     = DragStart Int String Position
     | Drag Position
-    | DragOver Int
+    | DragOver Int String
     | DragEnter Int
     | DragLeave
     | DragEnd
-    | GotDragged (Result Browser.Dom.Error Browser.Dom.Element)
+    | GotSourceElement (Result Browser.Dom.Error Browser.Dom.Element)
+    | GotTargetElement (Result Browser.Dom.Error Browser.Dom.Element)
 
 
 update : Config a -> Msg -> Draggable -> List a -> ( Draggable, List a )
@@ -387,6 +415,8 @@ update { operation, trigger, beforeUpdate, groups } msg (Draggable model) list =
                     , currentPosition = xy
                     , sourceElement = Nothing
                     , sourceElementId = sourceElementId
+                    , targetElement = Nothing
+                    , targetElementId = sourceElementId
                     }
             , list
             )
@@ -398,9 +428,9 @@ update { operation, trigger, beforeUpdate, groups } msg (Draggable model) list =
             , list
             )
 
-        DragOver dropIndex ->
+        DragOver dropIndex targetElementId ->
             ( model
-                |> Maybe.map (\m -> { m | dropIndex = dropIndex })
+                |> Maybe.map (\m -> { m | dropIndex = dropIndex, targetElementId = targetElementId })
                 |> Draggable
             , list
             )
@@ -413,7 +443,7 @@ update { operation, trigger, beforeUpdate, groups } msg (Draggable model) list =
                             onDragUpdate dropIndex m operation beforeUpdate list
 
                         else
-                            onDragUpdate dropIndex m groups.operation beforeUpdate list
+                            onDragUpdate dropIndex m groups.operation groups.beforeUpdate list
 
                     else
                         ( Draggable model, list )
@@ -436,7 +466,7 @@ update { operation, trigger, beforeUpdate, groups } msg (Draggable model) list =
                             onDropUpdate m operation beforeUpdate list
 
                         else
-                            onDropUpdate m groups.operation beforeUpdate list
+                            onDropUpdate m groups.operation groups.beforeUpdate list
 
                     else
                         ( Draggable Nothing, list )
@@ -444,12 +474,22 @@ update { operation, trigger, beforeUpdate, groups } msg (Draggable model) list =
                 _ ->
                     ( Draggable Nothing, list )
 
-        GotDragged (Err _) ->
+        GotSourceElement (Err _) ->
             ( Draggable model, list )
 
-        GotDragged (Ok sourceElement) ->
+        GotSourceElement (Ok sourceElement) ->
             ( model
-                |> Maybe.map (\m -> { m | sourceElement = Just sourceElement })
+                |> Maybe.map (\m -> { m | sourceElement = Just sourceElement, targetElement = Just sourceElement })
+                |> Draggable
+            , list
+            )
+
+        GotTargetElement (Err _) ->
+            ( Draggable model, list )
+
+        GotTargetElement (Ok targetElement) ->
+            ( model
+                |> Maybe.map (\m -> { m | targetElement = Just targetElement })
                 |> Draggable
             , list
             )
@@ -547,18 +587,18 @@ onDropUpdate m operation beforeUpdate list =
 
 
 dragEvents : (Msg -> msg) -> Int -> String -> List (Html.Attribute msg)
-dragEvents wrap dragIndex elementId =
+dragEvents wrap dragIndex sourceElementId =
     [ Html.Events.preventDefaultOn "mousedown"
         (Json.Decode.map2 Position Utils.pageX Utils.pageY
-            |> Json.Decode.map (wrap << DragStart dragIndex elementId)
+            |> Json.Decode.map (wrap << DragStart dragIndex sourceElementId)
             |> Json.Decode.map (\msg -> ( msg, True ))
         )
     ]
 
 
-dropEvents : (Msg -> msg) -> Int -> List (Html.Attribute msg)
-dropEvents wrap dropIndex =
-    [ Html.Events.onMouseOver (wrap (DragOver dropIndex))
+dropEvents : (Msg -> msg) -> Int -> String -> List (Html.Attribute msg)
+dropEvents wrap dropIndex targetElementId =
+    [ Html.Events.onMouseOver (wrap (DragOver dropIndex targetElementId))
     , Html.Events.onMouseEnter (wrap (DragEnter dropIndex))
     , Html.Events.onMouseLeave (wrap DragLeave)
     ]
@@ -568,15 +608,18 @@ info : Draggable -> Maybe Info
 info (Draggable model) =
     Maybe.andThen
         (\m ->
-            Maybe.map
-                (\srcElement ->
+            Maybe.map2
+                (\source target ->
                     { dragIndex = m.dragIndex
                     , dropIndex = m.dropIndex
-                    , sourceElement = srcElement
+                    , sourceElement = source
                     , sourceElementId = m.sourceElementId
+                    , targetElement = target
+                    , targetElementId = m.targetElementId
                     }
                 )
                 m.sourceElement
+                m.targetElement
         )
         model
 
