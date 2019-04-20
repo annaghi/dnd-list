@@ -276,11 +276,6 @@ gray =
     "dimgray"
 
 
-transparent : String
-transparent =
-    "transparent"
-
-
 
 -- STYLES
 
