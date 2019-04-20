@@ -110,7 +110,7 @@ update message model =
                     case system.info draggable of
                         Just { dragIndex, dropIndex } ->
                             if dragIndex /= dropIndex then
-                                dragIndex :: dropIndex :: []
+                                dragIndex :: dropIndex :: model.affected
 
                             else
                                 model.affected

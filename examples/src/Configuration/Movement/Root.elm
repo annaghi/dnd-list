@@ -210,9 +210,28 @@ subscriptions model =
 
 view : Model -> Html.Html Msg
 view model =
-    model.examples
-        |> List.indexedMap (demoWrapperView model.id)
-        |> Html.section []
+    Html.div []
+        [ model.examples
+            |> List.take 2
+            |> List.indexedMap (demoWrapperView model.id)
+            |> Html.section
+                [ Html.Attributes.style "display" "flex"
+                , Html.Attributes.style "justify-content" "center"
+                ]
+        , model.examples
+            |> List.drop 2
+            |> List.take 2
+            |> List.indexedMap (demoWrapperView model.id)
+            |> Html.section []
+        , model.examples
+            |> List.drop 4
+            |> List.take 2
+            |> List.indexedMap (demoWrapperView model.id)
+            |> Html.section
+                [ Html.Attributes.style "display" "flex"
+                , Html.Attributes.style "justify-content" "center"
+                ]
+        ]
 
 
 demoWrapperView : Int -> Int -> Example -> Html.Html Msg
@@ -224,14 +243,12 @@ demoWrapperView currentId id example =
     in
     Html.div
         [ Html.Attributes.style "display" "flex"
-        , Html.Attributes.style "flex-wrap" "wrap"
         , Html.Attributes.style "justify-content" "center"
         , Html.Attributes.style "margin" "4em 0"
         ]
         [ demoView example
         , Html.div
-            [ Html.Attributes.style "flex" "0 1 100px"
-            , Html.Attributes.class "link"
+            [ Html.Attributes.class "link"
             , Html.Events.onClick (LinkClicked id)
             , Html.Attributes.classList [ ( "is-active", id == currentId ) ]
             ]

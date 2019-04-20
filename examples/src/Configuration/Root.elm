@@ -253,8 +253,8 @@ info example =
 
         Movement _ ->
             { slug = "movement"
-            , title = "Movement"
-            , description = "The behavior of the Free, Horizontal only and Vertical only drag movement."
+            , title = "Movement with Swap"
+            , description = "The behavior of the Free, Horizontal only and Vertical only drag movement with Swap list operation."
             }
 
         Groups _ ->

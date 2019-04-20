@@ -33,7 +33,7 @@ type alias Item =
 
 data : List Item
 data =
-    List.range 1 9
+    List.range 1 7
         |> List.map String.fromInt
 
 
@@ -45,7 +45,7 @@ config : DnDList.Config Item
 config =
     { movement = DnDList.Horizontal
     , trigger = DnDList.OnDrag
-    , operation = DnDList.RotateOut
+    , operation = DnDList.Swap
     , beforeUpdate = \_ _ list -> list
     }
 
@@ -110,7 +110,7 @@ update message model =
                     case system.info draggable of
                         Just { dragIndex, dropIndex } ->
                             if dragIndex /= dropIndex then
-                                dragIndex :: dropIndex :: []
+                                dragIndex :: dropIndex :: model.affected
 
                             else
                                 model.affected
