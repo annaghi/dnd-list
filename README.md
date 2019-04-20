@@ -17,7 +17,7 @@ update: DnDList.Msg -> DnDList.Draggable -> List a -> ( DnDList.Draggable, List 
 
 dragEvents : Int -> String -> List (Html.Attribute Msg)
 
-dropEvents : Int -> List (Html.Attribute Msg)
+dropEvents : Int -> String -> List (Html.Attribute Msg)
 
 draggedStyles : DnDList.Draggable -> List (Html.Attribute Msg)
 
@@ -32,16 +32,18 @@ type alias Info =
     , dropIndex : Int
     , sourceElement : Browser.Dom.Element
     , sourceElementId : String
+    , targetElement : Browser.Dom.Element
+    , targetElementId : String
     }
 ```
 
-## Configuration<sup>\*</sup>
+## Config<sup>\*</sup>
 
 ```elm
 type alias Config a =
-    { operation : InsertAfter | InsertBefore | RotateIn | RotateOut | Swap | Unmove
-    , movement : Free | Horizontal | Vertical
+    { movement : Free | Horizontal | Vertical
     , trigger : OnDrag | OnDrop
+    , operation : InsertAfter | InsertBefore | RotateIn | RotateOut | Swap | Unmove
     , beforeUpdate : DragIndex -> DropIndex -> List a -> List a
     }
 ```
@@ -92,9 +94,9 @@ data =
 
 config : DnDList.Config Fruit
 config =
-    { operation = DnDList.RotateOut
-    , movement = DnDList.Free
+    { movement = DnDList.Free
     , trigger = DnDList.OnDrag
+    , operation = DnDList.RotateOut
     , beforeUpdate = \_ _ list -> list
     }
 
@@ -182,7 +184,7 @@ itemView draggable index item =
         Just { dragIndex } ->
             if dragIndex /= index then
                 Html.p
-                    (Html.Attributes.id itemId :: system.dropEvents index)
+                    (Html.Attributes.id itemId :: system.dropEvents index itemId)
                     [ Html.text item ]
 
             else
