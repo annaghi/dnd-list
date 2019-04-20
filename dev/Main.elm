@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import DnDList
+import DnDList.Groups
 import Html
 import Html.Attributes
 
@@ -24,31 +24,88 @@ main =
 -- DATA
 
 
-type alias Fruit =
-    String
+type alias Item =
+    { group : Int
+    , color : String
+    }
 
 
-data : List Fruit
-data =
-    [ "Apples", "Bananas", "Cherries", "Dates" ]
+gatheredByGroup : List Item
+gatheredByGroup =
+    [ { group = 0, color = yellow }
+    , { group = 0, color = blue }
+    , { group = 0, color = green }
+    , { group = 1, color = green }
+    , { group = 1, color = blue }
+    , { group = 1, color = yellow }
+    , { group = 2, color = blue }
+    , { group = 2, color = yellow }
+    , { group = 2, color = green }
+    ]
 
 
 
 -- SYSTEM
 
 
-config : DnDList.Config Fruit
+config : DnDList.Groups.Config Item
 config =
-    { movement = DnDList.Free
-    , trigger = DnDList.OnDrag
-    , operation = DnDList.RotateOut
+    { movement = DnDList.Groups.Free
+    , trigger = DnDList.Groups.OnDrag
+    , operation = DnDList.Groups.Swap
     , beforeUpdate = \_ _ list -> list
+    , groups =
+        { comparator = compareByGroup
+        , operation = DnDList.Groups.Swap
+        , beforeUpdate = updateOnGroupChange
+        }
     }
 
 
-system : DnDList.System Fruit Msg
+system : DnDList.Groups.System Item Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.Groups.create config MyMsg
+
+
+updateOnGroupChange : Int -> Int -> List Item -> List Item
+updateOnGroupChange dragIndex dropIndex list =
+    let
+        dragItem : List Item
+        dragItem =
+            list |> List.drop dragIndex |> List.take 1
+
+        dropItem : List Item
+        dropItem =
+            list |> List.drop dropIndex |> List.take 1
+    in
+    list
+        |> List.indexedMap
+            (\index item ->
+                if index == dragIndex then
+                    List.map2
+                        (\element dropElement ->
+                            { element | group = dropElement.group }
+                        )
+                        [ item ]
+                        dropItem
+
+                else if index == dropIndex then
+                    List.map2
+                        (\element dragElement ->
+                            { element | group = dragElement.group }
+                        )
+                        [ item ]
+                        dragItem
+
+                else
+                    [ item ]
+            )
+        |> List.concat
+
+
+compareByGroup : Item -> Item -> Bool
+compareByGroup dragElement dropElement =
+    dragElement.group == dropElement.group
 
 
 
@@ -56,15 +113,15 @@ system =
 
 
 type alias Model =
-    { draggable : DnDList.Draggable
-    , items : List Fruit
+    { draggable : DnDList.Groups.Draggable
+    , items : List Item
     }
 
 
 initialModel : Model
 initialModel =
     { draggable = system.draggable
-    , items = data
+    , items = gatheredByGroup
     }
 
 
@@ -87,7 +144,7 @@ subscriptions model =
 
 
 type Msg
-    = MyMsg DnDList.Msg
+    = MyMsg DnDList.Groups.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -98,7 +155,10 @@ update message model =
                 ( draggable, items ) =
                     system.update msg model.draggable model.items
             in
-            ( { model | draggable = draggable, items = items }
+            ( { model
+                | draggable = draggable
+                , items = items
+              }
             , system.commands model.draggable
             )
 
@@ -109,53 +169,186 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section
-        [ Html.Attributes.style "text-align" "center" ]
+    Html.section sectionStyles
         [ model.items
-            |> List.indexedMap (itemView model.draggable)
-            |> Html.div []
-        , draggedItemView model.draggable model.items
+            |> List.filter (\{ group } -> group == 0)
+            |> List.indexedMap (itemView model (calculateOffset 0 0 model.items))
+            |> Html.div containerStyles
+        , model.items
+            |> List.filter (\{ group } -> group == 1)
+            |> List.indexedMap (itemView model (calculateOffset 0 1 model.items))
+            |> Html.div containerStyles
+        , model.items
+            |> List.filter (\{ group } -> group == 2)
+            |> List.indexedMap (itemView model (calculateOffset 0 2 model.items))
+            |> Html.div containerStyles
+        , draggedItemView model
         ]
 
 
-itemView : DnDList.Draggable -> Int -> Fruit -> Html.Html Msg
-itemView draggable index item =
+itemView : Model -> Int -> Int -> Item -> Html.Html Msg
+itemView model offset localIndex { group, color } =
     let
+        globalIndex : Int
+        globalIndex =
+            localIndex + offset
+
         itemId : String
         itemId =
-            "id-" ++ item
-    in
-    case system.info draggable of
-        Just { dragIndex } ->
-            if dragIndex /= index then
-                Html.p
-                    (Html.Attributes.id itemId :: system.dropEvents index itemId)
-                    [ Html.text item ]
+            "id-" ++ String.fromInt globalIndex
+
+        ( width, height ) =
+            if group == 0 then
+                ( "120px", "60px" )
+
+            else if group == 2 then
+                ( "60px", "120px" )
 
             else
-                Html.p
-                    [ Html.Attributes.id itemId ]
-                    [ Html.text "[---------]" ]
-
-        Nothing ->
-            Html.p
-                (Html.Attributes.id itemId :: system.dragEvents index itemId)
-                [ Html.text item ]
-
-
-draggedItemView : DnDList.Draggable -> List Fruit -> Html.Html Msg
-draggedItemView draggable items =
-    let
-        maybeDraggedItem : Maybe Fruit
-        maybeDraggedItem =
-            system.info draggable
-                |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
+                ( "60px", "60px" )
     in
-    case maybeDraggedItem of
-        Just item ->
-            Html.div
-                (system.draggedStyles draggable)
-                [ Html.text item ]
+    case system.info model.draggable of
+        Just { dragIndex } ->
+            if globalIndex /= dragIndex then
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: itemStyles color
+                        ++ [ Html.Attributes.style "width" width
+                           , Html.Attributes.style "height" height
+                           ]
+                        ++ system.dropEvents globalIndex itemId
+                    )
+                    []
 
-        Nothing ->
+            else
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: itemStyles gray
+                        ++ [ Html.Attributes.style "width" width
+                           , Html.Attributes.style "height" height
+                           ]
+                    )
+                    []
+
+        _ ->
+            Html.div
+                (Html.Attributes.id itemId
+                    :: itemStyles color
+                    ++ [ Html.Attributes.style "width" width
+                       , Html.Attributes.style "height" height
+                       ]
+                    ++ system.dragEvents globalIndex itemId
+                )
+                []
+
+
+draggedItemView : Model -> Html.Html Msg
+draggedItemView model =
+    case ( system.info model.draggable, maybeDraggedItem model.draggable model.items ) of
+        ( Just { dragIndex, targetElement }, Just { color } ) ->
+            let
+                width : String
+                width =
+                    targetElement.element.width |> round |> String.fromInt
+
+                height : String
+                height =
+                    targetElement.element.height |> round |> String.fromInt
+            in
+            Html.div
+                (itemStyles color
+                    ++ system.draggedStyles model.draggable
+                    ++ [ Html.Attributes.style "width" (width ++ "px")
+                       , Html.Attributes.style "height" (height ++ "px")
+                       , Html.Attributes.style "transition" "width 0.5s, height 0.5s"
+                       ]
+                )
+                []
+
+        _ ->
             Html.text ""
+
+
+
+-- HELPERS
+
+
+calculateOffset : Int -> Int -> List Item -> Int
+calculateOffset index group list =
+    case list of
+        [] ->
+            0
+
+        x :: xs ->
+            if x.group == group then
+                index
+
+            else
+                calculateOffset (index + 1) group xs
+
+
+maybeDraggedItem : DnDList.Groups.Draggable -> List Item -> Maybe Item
+maybeDraggedItem draggable items =
+    system.info draggable
+        |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
+
+
+
+-- COLORS
+
+
+green : String
+green =
+    "#25D366"
+
+
+yellow : String
+yellow =
+    "#bfd325"
+
+
+blue : String
+blue =
+    "#2592d3"
+
+
+gray : String
+gray =
+    "dimgray"
+
+
+
+-- STYLES
+
+
+sectionStyles : List (Html.Attribute msg)
+sectionStyles =
+    [ Html.Attributes.style "display" "flex"
+    , Html.Attributes.style "flex-wrap" "wrap"
+    , Html.Attributes.style "flex-direction" "column"
+    , Html.Attributes.style "align-items" "center"
+    , Html.Attributes.style "padding-top" "2em"
+    ]
+
+
+containerStyles : List (Html.Attribute msg)
+containerStyles =
+    [ Html.Attributes.style "display" "flex"
+    , Html.Attributes.style "justify-content" "end"
+    , Html.Attributes.style "padding-bottom" "3em"
+    ]
+
+
+itemStyles : String -> List (Html.Attribute msg)
+itemStyles color =
+    [ Html.Attributes.style "width" "60px"
+    , Html.Attributes.style "height" "60px"
+    , Html.Attributes.style "border-radius" "8px"
+    , Html.Attributes.style "color" "white"
+    , Html.Attributes.style "cursor" "pointer"
+    , Html.Attributes.style "margin-right" "2em"
+    , Html.Attributes.style "display" "flex"
+    , Html.Attributes.style "align-items" "center"
+    , Html.Attributes.style "justify-content" "center"
+    , Html.Attributes.style "background-color" color
+    ]
