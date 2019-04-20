@@ -35,7 +35,7 @@ type alias Config a =
     }
 ```
 
-<sup>\*</sup> This is pseudocode with the purpose of providing a first _impression_ of the `Config` type.
+<sup>\*</sup> This is pseudocode with the purpose of making a first _impression_ of the `Config` type.
 
 ## Info
 
