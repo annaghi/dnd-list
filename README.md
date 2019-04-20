@@ -24,19 +24,6 @@ draggedStyles : DnDList.Draggable -> List (Html.Attribute Msg)
 info : DnDList.Draggable -> Maybe Info
 ```
 
-## Info
-
-```elm
-type alias Info =
-    { dragIndex : Int
-    , dropIndex : Int
-    , sourceElement : Browser.Dom.Element
-    , sourceElementId : String
-    , targetElement : Browser.Dom.Element
-    , targetElementId : String
-    }
-```
-
 ## Config<sup>\*</sup>
 
 ```elm
@@ -49,6 +36,19 @@ type alias Config a =
 ```
 
 <sup>\*</sup> This is pseudocode with the purpose of providing a first _impression_ of the `Config` type.
+
+## Info
+
+```elm
+type alias Info =
+    { dragIndex : Int
+    , dropIndex : Int
+    , sourceElement : Browser.Dom.Element
+    , sourceElementId : String
+    , targetElement : Browser.Dom.Element
+    , targetElementId : String
+    }
+```
 
 ## Example
 
