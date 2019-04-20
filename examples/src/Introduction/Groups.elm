@@ -36,8 +36,8 @@ type alias Item =
     }
 
 
-gatheredGroups : List Item
-gatheredGroups =
+gatheredByGroup : List Item
+gatheredByGroup =
     [ Item Number "C" blue
     , Item Number "2" red
     , Item Number "1" red
@@ -116,7 +116,7 @@ type alias Model =
 initialModel : Model
 initialModel =
     { draggable = system.draggable
-    , items = gatheredGroups
+    , items = gatheredByGroup
     }
 
 
