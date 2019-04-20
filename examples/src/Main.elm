@@ -191,10 +191,10 @@ stepUrl url model =
         parser =
             Url.Parser.oneOf
                 [ Url.Parser.map
-                    (stepIntroduction model (Introduction.Root.init "groups"))
+                    (stepIntroduction model (Introduction.Root.init "resize"))
                     Url.Parser.top
                 , Url.Parser.map
-                    (stepIntroduction model (Introduction.Root.init "groups"))
+                    (stepIntroduction model (Introduction.Root.init "resize"))
                     (Url.Parser.s Base.base)
                 , Url.Parser.map
                     (\slug ->
