@@ -25,8 +25,8 @@ main =
 
 
 type Group
-    = Top
-    | Bottom
+    = Number
+    | Letter
 
 
 type alias Item =
@@ -36,18 +36,18 @@ type alias Item =
     }
 
 
-gatheredByGroup : List Item
-gatheredByGroup =
-    [ Item Top "C" blue
-    , Item Top "2" red
-    , Item Top "1" red
-    , Item Top "" transparent
-    , Item Bottom "A" blue
-    , Item Bottom "D" blue
-    , Item Bottom "3" red
-    , Item Bottom "B" blue
-    , Item Bottom "4" red
-    , Item Bottom "" transparent
+gatheredGroups : List Item
+gatheredGroups =
+    [ Item Number "C" blue
+    , Item Number "2" red
+    , Item Number "1" red
+    , Item Number "" transparent
+    , Item Letter "A" blue
+    , Item Letter "D" blue
+    , Item Letter "3" red
+    , Item Letter "B" blue
+    , Item Letter "4" red
+    , Item Letter "" transparent
     ]
 
 
@@ -57,19 +57,25 @@ gatheredByGroup =
 
 config : DnDList.Groups.Config Item
 config =
-    { operation = DnDList.Groups.RotateOut
-    , movement = DnDList.Groups.Free
+    { movement = DnDList.Groups.Free
     , trigger = DnDList.Groups.OnDrag
-    , beforeUpdate = updateGroup
+    , operation = DnDList.Groups.RotateOut
+    , beforeUpdate = \_ _ list -> list
     , groups =
-        { operation = DnDList.Groups.InsertBefore
-        , comparator = groupComparator
+        { comparator = compareByGroup
+        , operation = DnDList.Groups.InsertBefore
+        , beforeUpdate = updateOnGroupChange
         }
     }
 
 
-updateGroup : Int -> Int -> List Item -> List Item
-updateGroup dragIndex dropIndex list =
+compareByGroup : Item -> Item -> Bool
+compareByGroup dragItem dropItem =
+    dragItem.group == dropItem.group
+
+
+updateOnGroupChange : Int -> Int -> List Item -> List Item
+updateOnGroupChange dragIndex dropIndex list =
     let
         drop : List Item
         drop =
@@ -92,11 +98,6 @@ updateGroup dragIndex dropIndex list =
         |> List.concat
 
 
-groupComparator : Item -> Item -> Bool
-groupComparator dragItem dropItem =
-    dragItem.group == dropItem.group
-
-
 system : DnDList.Groups.System Item Msg
 system =
     DnDList.Groups.create config MyMsg
@@ -115,7 +116,7 @@ type alias Model =
 initialModel : Model
 initialModel =
     { draggable = system.draggable
-    , items = gatheredByGroup
+    , items = gatheredGroups
     }
 
 
@@ -165,12 +166,12 @@ view : Model -> Html.Html Msg
 view model =
     Html.section sectionStyles
         [ model.items
-            |> List.filter (\item -> item.group == Top)
-            |> List.indexedMap (itemView model 0)
+            |> List.filter (\item -> item.group == Number)
+            |> List.indexedMap (itemView model (calculateOffset 0 Number model.items))
             |> Html.div (containerStyles lightRed)
         , model.items
-            |> List.filter (\item -> item.group == Bottom)
-            |> List.indexedMap (itemView model (findOffset 0 Bottom model.items))
+            |> List.filter (\item -> item.group == Letter)
+            |> List.indexedMap (itemView model (calculateOffset 0 Letter model.items))
             |> Html.div (containerStyles lightBlue)
         , draggedItemView model.draggable model.items
         ]
@@ -190,26 +191,49 @@ itemView model offset localIndex { group, value, color } =
     case ( system.info model.draggable, maybeDraggedItem model.draggable model.items ) of
         ( Just { dragIndex }, Just draggedItem ) ->
             if value == "" && draggedItem.group /= group then
-                Html.div (auxStyles ++ system.dropEvents globalIndex) []
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: auxiliaryStyles
+                        ++ system.dropEvents globalIndex itemId
+                    )
+                    []
 
             else if value == "" && draggedItem.group == group then
-                Html.div auxStyles []
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: auxiliaryStyles
+                    )
+                    []
 
             else if dragIndex /= globalIndex then
                 Html.div
-                    (attrs color itemId ++ system.dropEvents globalIndex)
+                    (Html.Attributes.id itemId
+                        :: itemStyles color
+                        ++ system.dropEvents globalIndex itemId
+                    )
                     [ Html.text value ]
 
             else
-                Html.div (attrs gray itemId) []
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: itemStyles gray
+                    )
+                    []
 
         _ ->
             if value == "" then
-                Html.div auxStyles []
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: auxiliaryStyles
+                    )
+                    []
 
             else
                 Html.div
-                    (attrs color itemId ++ system.dragEvents globalIndex itemId)
+                    (Html.Attributes.id itemId
+                        :: itemStyles color
+                        ++ system.dragEvents globalIndex itemId
+                    )
                     [ Html.text value ]
 
 
@@ -229,8 +253,8 @@ draggedItemView draggable items =
 -- HELPERS
 
 
-findOffset : Int -> Group -> List Item -> Int
-findOffset index group list =
+calculateOffset : Int -> Group -> List Item -> Int
+calculateOffset index group list =
     case list of
         [] ->
             0
@@ -240,12 +264,7 @@ findOffset index group list =
                 index
 
             else
-                findOffset (index + 1) group xs
-
-
-attrs : String -> String -> List (Html.Attribute msg)
-attrs color itemId =
-    Html.Attributes.id itemId :: itemStyles color
+                calculateOffset (index + 1) group xs
 
 
 maybeDraggedItem : DnDList.Groups.Draggable -> List Item -> Maybe Item
@@ -294,7 +313,9 @@ transparent =
 
 sectionStyles : List (Html.Attribute msg)
 sectionStyles =
-    [ Html.Attributes.style "display" "table" ]
+    [ Html.Attributes.style "display" "table"
+    , Html.Attributes.style "padding" "2em 0"
+    ]
 
 
 containerStyles : String -> List (Html.Attribute msg)
@@ -311,7 +332,7 @@ itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
     [ Html.Attributes.style "width" "50px"
     , Html.Attributes.style "height" "50px"
-    , Html.Attributes.style "background" color
+    , Html.Attributes.style "background-color" color
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
@@ -322,8 +343,8 @@ itemStyles color =
     ]
 
 
-auxStyles : List (Html.Attribute msg)
-auxStyles =
+auxiliaryStyles : List (Html.Attribute msg)
+auxiliaryStyles =
     [ Html.Attributes.style "flex-grow" "1"
     , Html.Attributes.style "width" "auto"
     , Html.Attributes.style "min-width" "50px"

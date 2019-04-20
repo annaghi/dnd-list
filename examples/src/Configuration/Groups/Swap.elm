@@ -56,13 +56,14 @@ gatheredByGroup =
 
 config : DnDList.Groups.Config Item
 config =
-    { operation = DnDList.Groups.Swap
-    , movement = DnDList.Groups.Free
+    { movement = DnDList.Groups.Free
     , trigger = DnDList.Groups.OnDrag
-    , beforeUpdate = updateGroups
+    , operation = DnDList.Groups.Swap
+    , beforeUpdate = \_ _ list -> list
     , groups =
-        { operation = DnDList.Groups.Swap
-        , comparator = compareGroups
+        { comparator = compareByGroup
+        , operation = DnDList.Groups.Swap
+        , beforeUpdate = updateOnGroupChange
         }
     }
 
@@ -72,8 +73,8 @@ system =
     DnDList.Groups.create config MyMsg
 
 
-updateGroups : Int -> Int -> List Item -> List Item
-updateGroups dragIndex dropIndex list =
+updateOnGroupChange : Int -> Int -> List Item -> List Item
+updateOnGroupChange dragIndex dropIndex list =
     let
         dragItem : List Item
         dragItem =
@@ -108,8 +109,8 @@ updateGroups dragIndex dropIndex list =
         |> List.concat
 
 
-compareGroups : Item -> Item -> Bool
-compareGroups dragElement dropElement =
+compareByGroup : Item -> Item -> Bool
+compareByGroup dragElement dropElement =
     dragElement.group == dropElement.group
 
 
@@ -181,11 +182,11 @@ view model =
             |> Html.div containerStyles
         , model.items
             |> List.filter (\{ group } -> group == 1)
-            |> List.indexedMap (itemView model (findOffset 0 1 model.items))
+            |> List.indexedMap (itemView model (calculateOffset 0 1 model.items))
             |> Html.div containerStyles
         , model.items
             |> List.filter (\{ group } -> group == 2)
-            |> List.indexedMap (itemView model (findOffset 0 2 model.items))
+            |> List.indexedMap (itemView model (calculateOffset 0 2 model.items))
             |> Html.div containerStyles
         , draggedItemView model
         ]
@@ -210,7 +211,7 @@ itemView model offset localIndex { group, meta } =
         Just { dragIndex } ->
             if globalIndex /= dragIndex then
                 Html.div
-                    (attrs meta.color ++ system.dropEvents globalIndex)
+                    (attrs meta.color ++ system.dropEvents globalIndex itemId)
                     [ Html.text meta.value ]
 
             else
@@ -246,8 +247,8 @@ draggedItemView model =
 -- HELPERS
 
 
-findOffset : Int -> Int -> List Item -> Int
-findOffset index group list =
+calculateOffset : Int -> Int -> List Item -> Int
+calculateOffset index group list =
     case list of
         [] ->
             0
@@ -257,7 +258,7 @@ findOffset index group list =
                 index
 
             else
-                findOffset (index + 1) group xs
+                calculateOffset (index + 1) group xs
 
 
 

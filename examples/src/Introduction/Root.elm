@@ -23,6 +23,7 @@ import Introduction.Independents
 import Introduction.Keyed
 import Introduction.Margins
 import Introduction.Masonry
+import Introduction.Resize
 import Url.Builder
 
 
@@ -42,8 +43,10 @@ type Example
     | Handle Introduction.Handle.Model
     | Keyed Introduction.Keyed.Model
     | Margins Introduction.Margins.Model
+    | Masonry Introduction.Masonry.Model
     | Independents Introduction.Independents.Model
     | Groups Introduction.Groups.Model
+    | Resize Introduction.Resize.Model
 
 
 init : String -> ( Model, Cmd Msg )
@@ -69,11 +72,17 @@ selectExample slug =
         "margins" ->
             Margins Introduction.Margins.initialModel
 
+        "masonry" ->
+            Masonry Introduction.Masonry.initialModel
+
         "independents" ->
             Independents Introduction.Independents.initialModel
 
         "groups" ->
             Groups Introduction.Groups.initialModel
+
+        "resize" ->
+            Resize Introduction.Resize.initialModel
 
         _ ->
             Basic Introduction.Basic.initialModel
@@ -81,7 +90,8 @@ selectExample slug =
 
 initialCommand : Cmd Msg
 initialCommand =
-    Cmd.none
+    Cmd.batch
+        [ Cmd.map MasonryMsg Introduction.Masonry.commands ]
 
 
 
@@ -94,8 +104,10 @@ type Msg
     | HandleMsg Introduction.Handle.Msg
     | KeyedMsg Introduction.Keyed.Msg
     | MarginsMsg Introduction.Margins.Msg
+    | MasonryMsg Introduction.Masonry.Msg
     | IndependentsMsg Introduction.Independents.Msg
     | GroupsMsg Introduction.Groups.Msg
+    | ResizeMsg Introduction.Resize.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -116,11 +128,17 @@ update message model =
         ( MarginsMsg msg, Margins mo ) ->
             stepMargins model (Introduction.Margins.update msg mo)
 
+        ( MasonryMsg msg, Masonry mo ) ->
+            stepMasonry model (Introduction.Masonry.update msg mo)
+
         ( IndependentsMsg msg, Independents mo ) ->
             stepIndependents model (Introduction.Independents.update msg mo)
 
         ( GroupsMsg msg, Groups mo ) ->
             stepGroups model (Introduction.Groups.update msg mo)
+
+        ( ResizeMsg msg, Resize mo ) ->
+            stepResize model (Introduction.Resize.update msg mo)
 
         _ ->
             ( model, Cmd.none )
@@ -151,6 +169,11 @@ stepMargins model ( mo, cmds ) =
     ( { model | example = Margins mo }, Cmd.map MarginsMsg cmds )
 
 
+stepMasonry : Model -> ( Introduction.Masonry.Model, Cmd Introduction.Masonry.Msg ) -> ( Model, Cmd Msg )
+stepMasonry model ( mo, cmds ) =
+    ( { model | example = Masonry mo }, Cmd.map MasonryMsg cmds )
+
+
 stepIndependents : Model -> ( Introduction.Independents.Model, Cmd Introduction.Independents.Msg ) -> ( Model, Cmd Msg )
 stepIndependents model ( mo, cmds ) =
     ( { model | example = Independents mo }, Cmd.map IndependentsMsg cmds )
@@ -159,6 +182,11 @@ stepIndependents model ( mo, cmds ) =
 stepGroups : Model -> ( Introduction.Groups.Model, Cmd Introduction.Groups.Msg ) -> ( Model, Cmd Msg )
 stepGroups model ( mo, cmds ) =
     ( { model | example = Groups mo }, Cmd.map GroupsMsg cmds )
+
+
+stepResize : Model -> ( Introduction.Resize.Model, Cmd Introduction.Resize.Msg ) -> ( Model, Cmd Msg )
+stepResize model ( mo, cmds ) =
+    ( { model | example = Resize mo }, Cmd.map ResizeMsg cmds )
 
 
 
@@ -183,11 +211,17 @@ subscriptions model =
         Margins mo ->
             Sub.map MarginsMsg (Introduction.Margins.subscriptions mo)
 
+        Masonry mo ->
+            Sub.map MasonryMsg (Introduction.Masonry.subscriptions mo)
+
         Independents mo ->
             Sub.map IndependentsMsg (Introduction.Independents.subscriptions mo)
 
         Groups mo ->
             Sub.map GroupsMsg (Introduction.Groups.subscriptions mo)
+
+        Resize mo ->
+            Sub.map ResizeMsg (Introduction.Resize.subscriptions mo)
 
 
 
@@ -204,8 +238,10 @@ navigationView =
           , Handle Introduction.Handle.initialModel
           , Keyed Introduction.Keyed.initialModel
           , Margins Introduction.Margins.initialModel
+          , Masonry Introduction.Masonry.initialModel
           , Independents Introduction.Independents.initialModel
           , Groups Introduction.Groups.initialModel
+          , Resize Introduction.Resize.initialModel
           ]
             |> List.map linkView
             |> Html.ul []
@@ -261,11 +297,17 @@ demoView model =
         Margins mo ->
             Html.map MarginsMsg (Introduction.Margins.view mo)
 
+        Masonry mo ->
+            Html.map MasonryMsg (Introduction.Masonry.view mo)
+
         Independents mo ->
             Html.map IndependentsMsg (Introduction.Independents.view mo)
 
         Groups mo ->
             Html.map GroupsMsg (Introduction.Groups.view mo)
+
+        Resize mo ->
+            Html.map ResizeMsg (Introduction.Resize.view mo)
 
 
 codeView : Model -> Html.Html Msg
@@ -286,11 +328,17 @@ codeView model =
         Margins _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Margins.elm"
 
+        Masonry _ ->
+            toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Masonry.elm"
+
         Independents _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Independents.elm"
 
         Groups _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Groups.elm"
+
+        Resize _ ->
+            toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Resize.elm"
 
 
 toCode : String -> Html.Html msg
@@ -342,6 +390,12 @@ info example =
             , description = "Wrap elements in case top or left margins are needed."
             }
 
+        Masonry _ ->
+            { slug = "masonry"
+            , title = "Masonry"
+            , description = "Simple horizontal masonry."
+            }
+
         Independents _ ->
             { slug = "independents"
             , title = "Independent lists"
@@ -351,5 +405,11 @@ info example =
         Groups _ ->
             { slug = "groups"
             , title = "Groupable list"
+            , description = "The list state invariant is that the list has to be gathered by the grouping property."
+            }
+
+        Resize _ ->
+            { slug = "resize"
+            , title = "Resize"
             , description = "The list state invariant is that the list has to be gathered by the grouping property."
             }

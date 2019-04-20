@@ -45,9 +45,9 @@ data =
 
 config : DnDList.Config KeyedItem
 config =
-    { operation = DnDList.Swap
-    , movement = DnDList.Free
+    { movement = DnDList.Free
     , trigger = DnDList.OnDrag
+    , operation = DnDList.Swap
     , beforeUpdate = \_ _ list -> list
     }
 
@@ -129,31 +129,27 @@ itemView draggable index ( key, item ) =
         itemId : String
         itemId =
             "id-" ++ item
-
-        attrs : List (Html.Attribute msg)
-        attrs =
-            Html.Attributes.id itemId :: itemStyles
     in
     case system.info draggable of
         Just { dragIndex } ->
             if dragIndex /= index then
                 ( key
                 , Html.div
-                    (attrs ++ system.dropEvents index)
+                    (Html.Attributes.id itemId :: itemStyles "#3da565" ++ system.dropEvents index itemId)
                     [ Html.text item ]
                 )
 
             else
                 ( key
                 , Html.div
-                    (attrs ++ placeholderItemStyles)
+                    (Html.Attributes.id itemId :: itemStyles "dimgray")
                     []
                 )
 
         Nothing ->
             ( key
             , Html.div
-                (attrs ++ system.dragEvents index itemId)
+                (Html.Attributes.id itemId :: itemStyles "#3da565" ++ system.dragEvents index itemId)
                 [ Html.text item ]
             )
 
@@ -169,7 +165,7 @@ draggedItemView draggable items =
     case maybeDraggedItem of
         Just ( _, item ) ->
             Html.div
-                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)
+                (itemStyles "#2f804e" ++ system.draggedStyles draggable)
                 [ Html.text item ]
 
         Nothing ->
@@ -186,14 +182,15 @@ containerStyles =
     , Html.Attributes.style "flex-wrap" "wrap"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
+    , Html.Attributes.style "padding-top" "2em"
     ]
 
 
-itemStyles : List (Html.Attribute msg)
-itemStyles =
+itemStyles : String -> List (Html.Attribute msg)
+itemStyles color =
     [ Html.Attributes.style "width" "50px"
     , Html.Attributes.style "height" "50px"
-    , Html.Attributes.style "background" "#3da565"
+    , Html.Attributes.style "background-color" color
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
@@ -202,13 +199,3 @@ itemStyles =
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
     ]
-
-
-draggedItemStyles : List (Html.Attribute msg)
-draggedItemStyles =
-    [ Html.Attributes.style "background" "#2f804e" ]
-
-
-placeholderItemStyles : List (Html.Attribute msg)
-placeholderItemStyles =
-    [ Html.Attributes.style "background" "dimgray" ]

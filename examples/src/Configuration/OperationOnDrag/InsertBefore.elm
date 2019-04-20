@@ -43,9 +43,9 @@ data =
 
 config : DnDList.Config Item
 config =
-    { operation = DnDList.InsertBefore
-    , movement = DnDList.Free
+    { movement = DnDList.Free
     , trigger = DnDList.OnDrag
+    , operation = DnDList.InsertBefore
     , beforeUpdate = updateColors
     }
 
@@ -183,12 +183,12 @@ itemView draggable index { value, color } =
         Just { dragIndex, dropIndex } ->
             if dragIndex /= index && dropIndex /= index then
                 Html.div
-                    (attrs color ++ system.dropEvents index)
+                    (attrs color ++ system.dropEvents index itemId)
                     [ Html.text value ]
 
             else if dragIndex /= index && dropIndex == index then
                 Html.div
-                    (attrs sourceColor ++ system.dropEvents index)
+                    (attrs sourceColor ++ system.dropEvents index itemId)
                     [ Html.text value ]
 
             else

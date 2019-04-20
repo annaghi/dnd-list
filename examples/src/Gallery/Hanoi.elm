@@ -52,9 +52,9 @@ data =
 
 config : DnDList.Config Disk
 config =
-    { operation = DnDList.InsertAfter
-    , movement = DnDList.Free
+    { movement = DnDList.Free
     , trigger = DnDList.OnDrop
+    , operation = DnDList.InsertAfter
     , beforeUpdate = updateTower
     }
 
@@ -191,10 +191,6 @@ itemView model maybeTopDisk offset localIndex { tower, width, startColor, solved
         color : String
         color =
             paint model.solved startColor solvedColor
-
-        attrs : List (Html.Attribute msg)
-        attrs =
-            Html.Attributes.id itemId :: diskStyles width color
     in
     case system.info model.draggable of
         Just { dragIndex } ->
@@ -203,40 +199,69 @@ itemView model maybeTopDisk offset localIndex { tower, width, startColor, solved
                     ( Just draggedItem, Just top ) ->
                         if draggedItem.width < top.width then
                             Html.div
-                                (attrs ++ droppableDiskStyles ++ system.dropEvents globalIndex)
+                                (Html.Attributes.id itemId
+                                    :: diskStyles width color
+                                    ++ droppableDiskStyles
+                                    ++ system.dropEvents globalIndex itemId
+                                )
                                 []
 
                         else
                             Html.div
-                                (attrs ++ droppableDiskStyles)
+                                (Html.Attributes.id itemId
+                                    :: diskStyles width color
+                                    ++ droppableDiskStyles
+                                )
                                 []
 
                     _ ->
                         Html.div
-                            (attrs ++ droppableDiskStyles ++ system.dropEvents globalIndex)
+                            (Html.Attributes.id itemId
+                                :: diskStyles width color
+                                ++ droppableDiskStyles
+                                ++ system.dropEvents globalIndex itemId
+                            )
                             []
 
             else if globalIndex == dragIndex then
                 Html.div
-                    (attrs ++ placeholderDiskStyles)
+                    (Html.Attributes.id itemId
+                        :: diskStyles width color
+                        ++ placeholderDiskStyles
+                    )
                     []
 
             else
-                Html.div attrs []
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: diskStyles width color
+                    )
+                    []
 
         _ ->
             if localIndex == 0 then
                 Html.div
-                    (attrs ++ droppableDiskStyles)
+                    (Html.Attributes.id itemId
+                        :: diskStyles width color
+                        ++ droppableDiskStyles
+                    )
                     []
 
             else if localIndex == 1 then
                 Html.div
-                    (attrs ++ draggableDiskStyles ++ system.dragEvents globalIndex itemId)
+                    (Html.Attributes.id itemId
+                        :: diskStyles width color
+                        ++ draggableDiskStyles
+                        ++ system.dragEvents globalIndex itemId
+                    )
                     []
 
             else
-                Html.div attrs []
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: diskStyles width color
+                    )
+                    []
 
 
 draggedItemView : Model -> Html.Html Msg
@@ -287,6 +312,7 @@ sectionStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-wrap" "wrap"
     , Html.Attributes.style "justify-content" "center"
+    , Html.Attributes.style "padding" "1em 0 3em 0"
     ]
 
 

@@ -59,13 +59,14 @@ solution =
 
 config : DnDList.Groups.Config Item
 config =
-    { operation = DnDList.Groups.Swap
-    , movement = DnDList.Groups.Free
+    { movement = DnDList.Groups.Free
     , trigger = DnDList.Groups.OnDrop
-    , beforeUpdate = updateGroup
+    , operation = DnDList.Groups.Swap
+    , beforeUpdate = \_ _ list -> list
     , groups =
-        { operation = DnDList.Groups.Swap
-        , comparator = groupComparator
+        { comparator = compareByGroup
+        , operation = DnDList.Groups.Swap
+        , beforeUpdate = updateOnGroupChange
         }
     }
 
@@ -75,8 +76,8 @@ system =
     DnDList.Groups.create config MyMsg
 
 
-updateGroup : Int -> Int -> List Item -> List Item
-updateGroup dragIndex dropIndex list =
+updateOnGroupChange : Int -> Int -> List Item -> List Item
+updateOnGroupChange dragIndex dropIndex list =
     let
         dragItem : List Item
         dragItem =
@@ -111,8 +112,8 @@ updateGroup dragIndex dropIndex list =
         |> List.concat
 
 
-groupComparator : Item -> Item -> Bool
-groupComparator dragItem dropItem =
+compareByGroup : Item -> Item -> Bool
+compareByGroup dragItem dropItem =
     dragItem.group == dropItem.group
 
 
@@ -243,29 +244,39 @@ itemView draggable offset localIndex { value, color } =
         itemId : String
         itemId =
             "id-" ++ String.fromInt globalIndex
-
-        attrs : String -> List (Html.Attribute msg)
-        attrs color_ =
-            Html.Attributes.id itemId :: itemStyles color_
     in
     case system.info draggable of
         Just { dragIndex, dropIndex } ->
             if dragIndex /= globalIndex && dropIndex /= globalIndex then
                 Html.div
-                    (attrs color ++ system.dropEvents globalIndex)
+                    (Html.Attributes.id itemId
+                        :: itemStyles color
+                        ++ system.dropEvents globalIndex itemId
+                    )
                     [ Html.text value ]
 
             else if dragIndex /= globalIndex && dropIndex == globalIndex then
                 Html.div
-                    (attrs color ++ droppableStyles ++ system.dropEvents globalIndex)
+                    (Html.Attributes.id itemId
+                        :: itemStyles color
+                        ++ droppableStyles
+                        ++ system.dropEvents globalIndex itemId
+                    )
                     [ Html.text value ]
 
             else
-                Html.div (attrs gray) []
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: itemStyles gray
+                    )
+                    []
 
         _ ->
             Html.div
-                (attrs color ++ system.dragEvents globalIndex itemId)
+                (Html.Attributes.id itemId
+                    :: itemStyles color
+                    ++ system.dragEvents globalIndex itemId
+                )
                 [ Html.text value ]
 
 
@@ -418,6 +429,7 @@ containerStyles =
     , Html.Attributes.style "grid-template-rows" "150px 150px"
     , Html.Attributes.style "grid-gap" "2em"
     , Html.Attributes.style "justify-content" "center"
+    , Html.Attributes.style "padding" "3em"
     ]
 
 

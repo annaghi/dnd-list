@@ -39,9 +39,9 @@ data =
 
 config : DnDList.Config Fruit
 config =
-    { operation = DnDList.Swap
-    , movement = DnDList.Free
+    { movement = DnDList.Free
     , trigger = DnDList.OnDrag
+    , operation = DnDList.Swap
     , beforeUpdate = \_ _ list -> list
     }
 
@@ -123,25 +123,25 @@ itemView draggable index fruit =
         fruitId : String
         fruitId =
             "id-" ++ fruit
-
-        attrs : List (Html.Attribute msg)
-        attrs =
-            Html.Attributes.id fruitId :: itemStyles
     in
     case system.info draggable of
         Just { dragIndex } ->
             if dragIndex /= index then
-                Html.div (attrs ++ system.dropEvents index)
-                    [ Html.div handleStyles []
+                Html.div
+                    (Html.Attributes.id fruitId :: itemStyles green ++ system.dropEvents index fruitId)
+                    [ Html.div (handleStyles darkGreen) []
                     , Html.text fruit
                     ]
 
             else
-                Html.div (attrs ++ placeholderItemStyles) []
+                Html.div
+                    (Html.Attributes.id fruitId :: itemStyles "dimgray")
+                    []
 
         Nothing ->
-            Html.div attrs
-                [ Html.div (handleStyles ++ system.dragEvents index fruitId) []
+            Html.div
+                (Html.Attributes.id fruitId :: itemStyles green)
+                [ Html.div (handleStyles darkGreen ++ system.dragEvents index fruitId) []
                 , Html.text fruit
                 ]
 
@@ -157,13 +157,37 @@ draggedItemView draggable fruits =
     case maybeDraggedFruit of
         Just fruit ->
             Html.div
-                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)
-                [ Html.div (handleStyles ++ draggedHandleStyles) []
+                (itemStyles orange ++ system.draggedStyles draggable)
+                [ Html.div (handleStyles darkOrange) []
                 , Html.text fruit
                 ]
 
         Nothing ->
             Html.text ""
+
+
+
+-- COLORS
+
+
+green : String
+green =
+    "#cddc39"
+
+
+orange : String
+orange =
+    "#dc9a39"
+
+
+darkGreen : String
+darkGreen =
+    "#afb42b"
+
+
+darkOrange : String
+darkOrange =
+    "#b4752b"
 
 
 
@@ -176,14 +200,15 @@ containerStyles =
     , Html.Attributes.style "flex-wrap" "wrap"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
+    , Html.Attributes.style "padding-top" "4em"
     ]
 
 
-itemStyles : List (Html.Attribute msg)
-itemStyles =
+itemStyles : String -> List (Html.Attribute msg)
+itemStyles color =
     [ Html.Attributes.style "width" "180px"
     , Html.Attributes.style "height" "100px"
-    , Html.Attributes.style "background" "#cddc39"
+    , Html.Attributes.style "background-color" color
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "#000"
     , Html.Attributes.style "display" "flex"
@@ -192,27 +217,12 @@ itemStyles =
     ]
 
 
-draggedItemStyles : List (Html.Attribute msg)
-draggedItemStyles =
-    [ Html.Attributes.style "background" "#dc9a39" ]
-
-
-placeholderItemStyles : List (Html.Attribute msg)
-placeholderItemStyles =
-    [ Html.Attributes.style "background" "dimgray" ]
-
-
-handleStyles : List (Html.Attribute msg)
-handleStyles =
+handleStyles : String -> List (Html.Attribute msg)
+handleStyles color =
     [ Html.Attributes.style "width" "50px"
     , Html.Attributes.style "height" "50px"
-    , Html.Attributes.style "background" "#afb42b"
+    , Html.Attributes.style "background-color" color
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "margin" "20px"
     , Html.Attributes.style "cursor" "pointer"
     ]
-
-
-draggedHandleStyles : List (Html.Attribute msg)
-draggedHandleStyles =
-    [ Html.Attributes.style "background" "#b4752b" ]

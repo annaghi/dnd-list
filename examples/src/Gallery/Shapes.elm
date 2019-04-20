@@ -67,9 +67,9 @@ shapeNumber =
 
 config : DnDList.Config Item
 config =
-    { operation = DnDList.Unmove
-    , movement = DnDList.Free
+    { movement = DnDList.Free
     , trigger = DnDList.OnDrop
+    , operation = DnDList.Unmove
     , beforeUpdate = updateShapes
     }
 
@@ -254,17 +254,21 @@ droppableItemView draggable index { shape, color } =
     let
         shiftedIndex =
             index + shapeNumber
+
+        itemId : String
+        itemId =
+            "shape-" ++ String.fromInt shiftedIndex
     in
     case system.info draggable of
         Just _ ->
             Html.div
                 wrapperStyles
-                [ shapeView shape color (system.dropEvents shiftedIndex) ]
+                [ shapeView shape color (Html.Attributes.id itemId :: system.dropEvents shiftedIndex itemId) ]
 
         _ ->
             Html.div
                 wrapperStyles
-                [ shapeView shape color [] ]
+                [ shapeView shape color [ Html.Attributes.id itemId ] ]
 
 
 draggedItemView : DnDList.Draggable -> List Item -> Html.Html Msg

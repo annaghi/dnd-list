@@ -43,9 +43,9 @@ data =
 
 config : DnDList.Config Item
 config =
-    { operation = DnDList.RotateOut
-    , movement = DnDList.Horizontal
+    { movement = DnDList.Horizontal
     , trigger = DnDList.OnDrag
+    , operation = DnDList.RotateOut
     , beforeUpdate = \_ _ list -> list
     }
 
@@ -163,7 +163,7 @@ itemView draggable affected index item =
         Just { dragIndex } ->
             if dragIndex /= index then
                 Html.div
-                    (attrs ++ system.dropEvents index)
+                    (attrs ++ system.dropEvents index itemId)
                     [ Html.text item ]
 
             else

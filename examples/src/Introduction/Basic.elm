@@ -39,9 +39,9 @@ data =
 
 config : DnDList.Config Fruit
 config =
-    { operation = DnDList.RotateOut
-    , movement = DnDList.Free
+    { movement = DnDList.Free
     , trigger = DnDList.OnDrag
+    , operation = DnDList.RotateOut
     , beforeUpdate = \_ _ list -> list
     }
 
@@ -129,7 +129,7 @@ itemView draggable index item =
         Just { dragIndex } ->
             if dragIndex /= index then
                 Html.p
-                    (Html.Attributes.id itemId :: system.dropEvents index)
+                    (Html.Attributes.id itemId :: system.dropEvents index itemId)
                     [ Html.text item ]
 
             else

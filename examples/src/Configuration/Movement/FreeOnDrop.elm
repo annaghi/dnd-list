@@ -43,9 +43,9 @@ data =
 
 config : DnDList.Config Item
 config =
-    { operation = DnDList.Swap
-    , movement = DnDList.Free
+    { movement = DnDList.Free
     , trigger = DnDList.OnDrop
+    , operation = DnDList.Swap
     , beforeUpdate = \_ _ list -> list
     }
 
@@ -163,12 +163,12 @@ itemView draggable affected index item =
         Just { dragIndex, dropIndex } ->
             if dragIndex /= index && dropIndex /= index then
                 Html.div
-                    (attrs ++ system.dropEvents index)
+                    (attrs ++ system.dropEvents index itemId)
                     [ Html.text item ]
 
             else if dragIndex /= index && dropIndex == index then
                 Html.div
-                    (attrs ++ overedItemStyles ++ system.dropEvents index)
+                    (attrs ++ overedItemStyles ++ system.dropEvents index itemId)
                     [ Html.text item ]
 
             else

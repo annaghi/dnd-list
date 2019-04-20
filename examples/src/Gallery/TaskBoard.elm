@@ -37,8 +37,8 @@ type Activity
     | Done
 
 
-sortedByGroup : List Card
-sortedByGroup =
+gatheredByActivity : List Card
+gatheredByActivity =
     [ Card ToDo "D"
     , Card ToDo "B"
     , Card ToDo "A"
@@ -58,13 +58,14 @@ sortedByGroup =
 
 cardConfig : DnDList.Groups.Config Card
 cardConfig =
-    { operation = DnDList.Groups.RotateOut
-    , movement = DnDList.Groups.Free
+    { movement = DnDList.Groups.Free
     , trigger = DnDList.Groups.OnDrag
-    , beforeUpdate = updateGroup
+    , operation = DnDList.Groups.RotateOut
+    , beforeUpdate = \_ _ list -> list
     , groups =
-        { operation = DnDList.Groups.InsertBefore
-        , comparator = activityComparator
+        { comparator = compareByActivity
+        , operation = DnDList.Groups.InsertBefore
+        , beforeUpdate = updateOnActivityChange
         }
     }
 
@@ -74,18 +75,13 @@ cardSystem =
     DnDList.Groups.create cardConfig CardMoved
 
 
-activityComparator : Card -> Card -> Bool
-activityComparator dragItem dropItem =
+compareByActivity : Card -> Card -> Bool
+compareByActivity dragItem dropItem =
     dragItem.activity == dropItem.activity
 
 
-isAux : Card -> Bool
-isAux element =
-    element.description == ""
-
-
-updateGroup : Int -> Int -> List Card -> List Card
-updateGroup dragIndex dropIndex list =
+updateOnActivityChange : Int -> Int -> List Card -> List Card
+updateOnActivityChange dragIndex dropIndex list =
     let
         dropCard : List Card
         dropCard =
@@ -110,9 +106,9 @@ updateGroup dragIndex dropIndex list =
 
 columnConfig : DnDList.Config (List Card)
 columnConfig =
-    { operation = DnDList.RotateOut
-    , movement = DnDList.Free
+    { movement = DnDList.Free
     , trigger = DnDList.OnDrag
+    , operation = DnDList.RotateOut
     , beforeUpdate = \_ _ list -> list
     }
 
@@ -137,7 +133,7 @@ initialModel : Model
 initialModel =
     { cardDraggable = cardSystem.draggable
     , columnDraggable = columnSystem.draggable
-    , cards = sortedByGroup
+    , cards = gatheredByActivity
     }
 
 
@@ -185,7 +181,7 @@ update message model =
         ColumnMoved msg ->
             let
                 ( columnDraggable, columns ) =
-                    columnSystem.update msg model.columnDraggable (groupByActivity model.cards)
+                    columnSystem.update msg model.columnDraggable (gatherByActivity model.cards)
             in
             ( { model
                 | columnDraggable = columnDraggable
@@ -204,37 +200,19 @@ view model =
     let
         columns : List (List Card)
         columns =
-            groupByActivity model.cards
+            gatherByActivity model.cards
 
-        lengths : List Int
-        lengths =
-            List.map List.length columns
-
-        getOffset : Int -> Int
-        getOffset columnIndex =
-            lengths |> List.take columnIndex |> List.foldl (+) 0
+        calculateOffset : Int -> Int
+        calculateOffset columnIndex =
+            columns |> List.map List.length |> List.take columnIndex |> List.foldl (+) 0
     in
     Html.section []
         [ columns
-            |> List.indexedMap (\i column -> columnView model (getOffset i) i column)
+            |> List.indexedMap (\i column -> columnView model (calculateOffset i) i column)
             |> Html.div boardStyles
         , draggedColumnView model
         , draggedCardView model
         ]
-
-
-findOffset : Int -> Activity -> List Card -> Int
-findOffset index activity list =
-    case list of
-        [] ->
-            0
-
-        x :: xs ->
-            if x.activity == activity then
-                index
-
-            else
-                findOffset (index + 1) activity xs
 
 
 columnView : Model -> Int -> Int -> List Card -> Html.Html Msg
@@ -243,12 +221,19 @@ columnView model offset index cards =
         heading : Heading
         heading =
             getActivity (List.take 1 cards)
+
+        columnId : String
+        columnId =
+            "column-" ++ String.fromInt index
+
+        attrs color =
+            Html.Attributes.id columnId :: columnStyles color
     in
     case columnSystem.info model.columnDraggable of
         Just { dragIndex, sourceElement } ->
             if dragIndex /= index then
                 Html.div
-                    (columnStyles "transparent" ++ columnSystem.dropEvents index)
+                    (attrs "transparent" ++ columnSystem.dropEvents index columnId)
                     [ Html.h3
                         (columnHeadingStyles heading.color)
                         [ Html.text heading.title ]
@@ -264,17 +249,12 @@ columnView model offset index cards =
                         sourceElement.element.height |> round |> String.fromInt
                 in
                 Html.div
-                    (Html.Attributes.style "height" (height ++ "px") :: columnStyles gray)
+                    (attrs gray ++ [ Html.Attributes.style "height" (height ++ "px") ])
                     []
 
         _ ->
-            let
-                columnId : String
-                columnId =
-                    "column-" ++ String.fromInt index
-            in
             Html.div
-                (Html.Attributes.id columnId :: columnStyles "transparent")
+                (attrs "transparent")
                 [ Html.h3
                     (columnHeadingStyles heading.color ++ columnSystem.dragEvents index columnId)
                     [ Html.text heading.title ]
@@ -299,43 +279,45 @@ eventfulCardView model offset localIndex { activity, description } =
         globalIndex : Int
         globalIndex =
             localIndex + offset
+
+        cardId : String
+        cardId =
+            "card-" ++ String.fromInt globalIndex
+
+        attrs styles =
+            Html.Attributes.id cardId :: styles
     in
     case ( cardSystem.info model.cardDraggable, maybeDraggedCard model ) of
         ( Just { dragIndex }, Just dragCard ) ->
             if description == "" && activity /= dragCard.activity then
                 Html.div
-                    (auxiliaryCardStyles ++ cardSystem.dropEvents globalIndex)
+                    (attrs auxiliaryCardStyles ++ cardSystem.dropEvents globalIndex cardId)
                     []
 
             else if description == "" && activity == dragCard.activity then
                 Html.div
-                    auxiliaryCardStyles
+                    (attrs auxiliaryCardStyles)
                     []
 
             else if globalIndex /= dragIndex then
                 Html.div
-                    (cardStyles yellow ++ cardSystem.dropEvents globalIndex)
+                    (attrs (cardStyles yellow) ++ cardSystem.dropEvents globalIndex cardId)
                     [ Html.text description ]
 
             else
                 Html.div
-                    (cardStyles gray)
+                    (attrs (cardStyles gray))
                     []
 
         _ ->
-            let
-                cardId : String
-                cardId =
-                    "card-" ++ String.fromInt globalIndex
-            in
             if description == "" then
                 Html.div
-                    auxiliaryCardStyles
+                    (attrs auxiliaryCardStyles)
                     []
 
             else
                 Html.div
-                    (Html.Attributes.id cardId :: cardStyles yellow ++ draggableCardStyles ++ cardSystem.dragEvents globalIndex cardId)
+                    (attrs (cardStyles yellow) ++ draggableCardStyles ++ cardSystem.dragEvents globalIndex cardId)
                     [ Html.text description ]
 
 
@@ -378,8 +360,8 @@ draggedCardView model =
 -- HELPERS
 
 
-groupByActivity : List Card -> List (List Card)
-groupByActivity cards =
+gatherByActivity : List Card -> List (List Card)
+gatherByActivity cards =
     List.foldr
         (\x acc ->
             case acc of
@@ -403,7 +385,7 @@ groupByActivity cards =
 maybeDraggedColumn : Model -> Maybe (List Card)
 maybeDraggedColumn { columnDraggable, cards } =
     columnSystem.info columnDraggable
-        |> Maybe.andThen (\{ dragIndex } -> groupByActivity cards |> List.drop dragIndex |> List.head)
+        |> Maybe.andThen (\{ dragIndex } -> gatherByActivity cards |> List.drop dragIndex |> List.head)
 
 
 maybeDraggedCard : Model -> Maybe Card
@@ -476,6 +458,7 @@ boardStyles =
     , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "margin" "0 auto"
     , Html.Attributes.style "min-height" "600px"
+    , Html.Attributes.style "padding" "3em"
     ]
 
 

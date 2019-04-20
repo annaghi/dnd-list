@@ -31,7 +31,16 @@ type alias Color =
 
 colors : List Color
 colors =
-    [ "#39a5dc", "#3997dc", "#398adc", "#397cdc", "#396edc", "#3961dc", "#3953dc" ]
+    [ "#acfe2f"
+    , "#cefe2f"
+    , "#f0fe2f"
+    , "#feea2f"
+    , "#fec72f"
+    , "#fea52f"
+    , "#fe832f"
+    , "#fe612f"
+    , "#fe3f2f"
+    ]
 
 
 
@@ -40,9 +49,9 @@ colors =
 
 config : DnDList.Config Item
 config =
-    { operation = DnDList.Swap
-    , movement = DnDList.Free
+    { movement = DnDList.Free
     , trigger = DnDList.OnDrag
+    , operation = DnDList.Swap
     , beforeUpdate = \_ _ list -> list
     }
 
@@ -150,21 +159,31 @@ itemView draggable index (Item color width) =
         itemId : String
         itemId =
             "id-" ++ color
-
-        attrs : List (Html.Attribute msg)
-        attrs =
-            Html.Attributes.id itemId :: itemStyles color width
     in
     case system.info draggable of
         Just { dragIndex } ->
             if dragIndex /= index then
-                Html.div (attrs ++ system.dropEvents index) []
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: itemStyles color width
+                        ++ system.dropEvents index itemId
+                    )
+                    []
 
             else
-                Html.div (attrs ++ placeholderItemStyles) []
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: itemStyles "dimgray" width
+                    )
+                    []
 
         Nothing ->
-            Html.div (attrs ++ system.dragEvents index itemId) []
+            Html.div
+                (Html.Attributes.id itemId
+                    :: itemStyles color width
+                    ++ system.dragEvents index itemId
+                )
+                []
 
 
 draggedItemView : DnDList.Draggable -> List Item -> Html.Html Msg
@@ -177,7 +196,11 @@ draggedItemView draggable items =
     in
     case maybeDraggedItem of
         Just (Item color width) ->
-            Html.div (itemStyles color width ++ system.draggedStyles draggable) []
+            Html.div
+                (itemStyles color width
+                    ++ system.draggedStyles draggable
+                )
+                []
 
         Nothing ->
             Html.text ""
@@ -193,20 +216,16 @@ containerStyles =
     , Html.Attributes.style "flex-wrap" "wrap"
     , Html.Attributes.style "margin" "0 auto"
     , Html.Attributes.style "max-width" "40em"
+    , Html.Attributes.style "padding-top" "2em"
     ]
 
 
 itemStyles : Color -> Width -> List (Html.Attribute msg)
 itemStyles color width =
-    [ Html.Attributes.style "background" color
+    [ Html.Attributes.style "background-color" color
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "flex" "1 0 auto"
-    , Html.Attributes.style "height" "5em"
+    , Html.Attributes.style "height" "4em"
     , Html.Attributes.style "margin" "0 1.5em 1.5em 0"
     , Html.Attributes.style "width" (String.fromInt width ++ "px")
     ]
-
-
-placeholderItemStyles : List (Html.Attribute msg)
-placeholderItemStyles =
-    [ Html.Attributes.style "background" "dimgray" ]

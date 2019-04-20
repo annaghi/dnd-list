@@ -44,9 +44,9 @@ blueData =
 
 redConfig : DnDList.Config String
 redConfig =
-    { operation = DnDList.Swap
-    , movement = DnDList.Free
+    { movement = DnDList.Free
     , trigger = DnDList.OnDrag
+    , operation = DnDList.Swap
     , beforeUpdate = \_ _ list -> list
     }
 
@@ -58,9 +58,9 @@ redSystem =
 
 blueConfig : DnDList.Config String
 blueConfig =
-    { operation = DnDList.Swap
-    , movement = DnDList.Free
+    { movement = DnDList.Free
     , trigger = DnDList.OnDrag
+    , operation = DnDList.Swap
     , beforeUpdate = \_ _ list -> list
     }
 
@@ -174,15 +174,25 @@ redView draggable index item =
         Just { dragIndex } ->
             if dragIndex /= index then
                 Html.div
-                    (attrs red itemId ++ redSystem.dropEvents index)
+                    (Html.Attributes.id itemId
+                        :: itemStyles red
+                        ++ redSystem.dropEvents index itemId
+                    )
                     [ Html.text item ]
 
             else
-                Html.div (attrs gray itemId) []
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: itemStyles gray
+                    )
+                    []
 
         Nothing ->
             Html.div
-                (attrs red itemId ++ redSystem.dragEvents index itemId)
+                (Html.Attributes.id itemId
+                    :: itemStyles red
+                    ++ redSystem.dragEvents index itemId
+                )
                 [ Html.text item ]
 
 
@@ -197,15 +207,25 @@ blueView draggable index item =
         Just { dragIndex } ->
             if dragIndex /= index then
                 Html.div
-                    (attrs blue itemId ++ blueSystem.dropEvents index)
+                    (Html.Attributes.id itemId
+                        :: itemStyles blue
+                        ++ blueSystem.dropEvents index itemId
+                    )
                     [ Html.text item ]
 
             else
-                Html.div (attrs gray itemId) []
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: itemStyles gray
+                    )
+                    []
 
         Nothing ->
             Html.div
-                (attrs blue itemId ++ blueSystem.dragEvents index itemId)
+                (Html.Attributes.id itemId
+                    :: itemStyles blue
+                    ++ blueSystem.dragEvents index itemId
+                )
                 [ Html.text item ]
 
 
@@ -245,6 +265,10 @@ draggedBlueView draggable items =
             Html.text ""
 
 
+
+-- HELPERS
+
+
 attrs : String -> String -> List (Html.Attribute msg)
 attrs color itemId =
     Html.Attributes.id itemId :: itemStyles color
@@ -266,12 +290,12 @@ blue =
 
 draggedRed : String
 draggedRed =
-    "#562f30"
+    "#9e2629"
 
 
 draggedBlue : String
 draggedBlue =
-    "#425769"
+    "#26659e"
 
 
 gray : String
@@ -288,6 +312,7 @@ sectionStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-direction" "column"
     , Html.Attributes.style "align-items" "center"
+    , Html.Attributes.style "padding-top" "2em"
     ]
 
 
@@ -303,7 +328,7 @@ itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
     [ Html.Attributes.style "width" "50px"
     , Html.Attributes.style "height" "50px"
-    , Html.Attributes.style "background" color
+    , Html.Attributes.style "background-color" color
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
