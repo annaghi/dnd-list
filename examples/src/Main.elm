@@ -6,6 +6,7 @@ import Browser.Dom
 import Browser.Navigation
 import Configuration.Root
 import Gallery.Root
+import Home
 import Html
 import Html.Attributes
 import Introduction.Root
@@ -48,6 +49,7 @@ init flags url key =
 
 type Example
     = NotFound
+    | Home Home.Model
     | Introduction Introduction.Root.Model
     | Configuration Configuration.Root.Model
     | Gallery Gallery.Root.Model
@@ -61,6 +63,7 @@ type Msg
     = NoOp
     | LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
+    | HomeMsg Home.Msg
     | IntroductionMsg Introduction.Root.Msg
     | ConfigurationMsg Configuration.Root.Msg
     | GalleryMsg Gallery.Root.Msg
@@ -90,6 +93,14 @@ update message model =
         UrlChanged url ->
             stepUrl url model
 
+        HomeMsg msg ->
+            case model.example of
+                Home mo ->
+                    stepHome model (Home.update msg mo)
+
+                _ ->
+                    ( model, Cmd.none )
+
         IntroductionMsg msg ->
             case model.example of
                 Introduction mo ->
@@ -113,6 +124,11 @@ update message model =
 
                 _ ->
                     ( model, Cmd.none )
+
+
+stepHome : Model -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg )
+stepHome model ( mo, cmds ) =
+    ( { model | example = Home mo }, Cmd.map HomeMsg cmds )
 
 
 stepIntroduction : Model -> ( Introduction.Root.Model, Cmd Introduction.Root.Msg ) -> ( Model, Cmd Msg )
@@ -139,6 +155,9 @@ subscriptions model =
     case model.example of
         NotFound ->
             Sub.none
+
+        Home mo ->
+            Sub.map HomeMsg (Home.subscriptions mo)
 
         Introduction mo ->
             Sub.map IntroductionMsg (Introduction.Root.subscriptions mo)
@@ -172,10 +191,10 @@ stepUrl url model =
         parser =
             Url.Parser.oneOf
                 [ Url.Parser.map
-                    (stepGallery model (Gallery.Root.init "hanoi"))
+                    (stepIntroduction model (Introduction.Root.init "groups"))
                     Url.Parser.top
                 , Url.Parser.map
-                    (stepGallery model (Gallery.Root.init "hanoi"))
+                    (stepIntroduction model (Introduction.Root.init "groups"))
                     (Url.Parser.s Base.base)
                 , Url.Parser.map
                     (\slug ->
@@ -229,6 +248,9 @@ view model =
             (case model.example of
                 NotFound ->
                     [ Html.text "Not found" ]
+
+                Home mo ->
+                    [ Html.map HomeMsg (Home.view mo) ]
 
                 Introduction mo ->
                     [ Html.map IntroductionMsg (Introduction.Root.headerView mo)
