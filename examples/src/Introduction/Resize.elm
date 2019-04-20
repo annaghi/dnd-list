@@ -24,12 +24,6 @@ main =
 -- DATA
 
 
-type alias Meta =
-    { value : String
-    , color : String
-    }
-
-
 type alias Item =
     { group : Int
     , color : String
