@@ -172,7 +172,7 @@ view model =
     Html.section sectionStyles
         [ model.items
             |> List.filter (\{ group } -> group == 0)
-            |> List.indexedMap (itemView model 0)
+            |> List.indexedMap (itemView model (calculateOffset 0 0 model.items))
             |> Html.div containerStyles
         , model.items
             |> List.filter (\{ group } -> group == 1)
@@ -195,46 +195,57 @@ itemView model offset localIndex { group, color } =
 
         itemId : String
         itemId =
-            "none-" ++ String.fromInt globalIndex
+            "id-" ++ String.fromInt globalIndex
 
-        attrs : String -> List (Html.Attribute msg)
-        attrs color_ =
+        ( width, height ) =
             if group == 0 then
-                Html.Attributes.id itemId :: itemStyles color_ ++ [ Html.Attributes.style "width" "100px" ]
+                ( "120px", "60px" )
 
             else if group == 2 then
-                Html.Attributes.id itemId :: itemStyles color_ ++ [ Html.Attributes.style "height" "100px" ]
+                ( "60px", "120px" )
 
             else
-                Html.Attributes.id itemId :: itemStyles color_
+                ( "60px", "60px" )
     in
     case system.info model.draggable of
         Just { dragIndex } ->
             if globalIndex /= dragIndex then
                 Html.div
-                    (attrs color ++ system.dropEvents globalIndex itemId)
-                    []
+                    (Html.Attributes.id itemId
+                        :: itemStyles color
+                        ++ [ Html.Attributes.style "width" width
+                           , Html.Attributes.style "height" height
+                           ]
+                        ++ system.dropEvents globalIndex itemId
+                    )
+                    [ Html.div handleStyles [ Html.text "⠶" ] ]
 
             else
                 Html.div
-                    (attrs gray)
+                    (Html.Attributes.id itemId
+                        :: itemStyles gray
+                        ++ [ Html.Attributes.style "width" width
+                           , Html.Attributes.style "height" height
+                           ]
+                    )
                     []
 
         _ ->
             Html.div
-                (attrs color ++ system.dragEvents globalIndex itemId)
-                []
+                (Html.Attributes.id itemId
+                    :: itemStyles color
+                    ++ [ Html.Attributes.style "width" width
+                       , Html.Attributes.style "height" height
+                       ]
+                )
+                [ Html.div (handleStyles ++ system.dragEvents globalIndex itemId) [ Html.text "⠶" ] ]
 
 
 draggedItemView : Model -> Html.Html Msg
 draggedItemView model =
-    case system.info model.draggable of
-        Just { dragIndex, targetElement } ->
+    case ( system.info model.draggable, maybeDraggedItem model.draggable model.items ) of
+        ( Just { dragIndex, targetElement }, Just { color } ) ->
             let
-                maybeDraggedItem : Maybe Item
-                maybeDraggedItem =
-                    model.items |> List.drop dragIndex |> List.head
-
                 width : String
                 width =
                     targetElement.element.width |> round |> String.fromInt
@@ -243,21 +254,17 @@ draggedItemView model =
                 height =
                     targetElement.element.height |> round |> String.fromInt
             in
-            case maybeDraggedItem of
-                Just { color } ->
-                    Html.div
-                        (itemStyles color
-                            ++ system.draggedStyles model.draggable
-                            ++ [ Html.Attributes.style "width" (width ++ "px")
-                               , Html.Attributes.style "height" (height ++ "px")
-                               ]
-                        )
-                        []
+            Html.div
+                (itemStyles color
+                    ++ system.draggedStyles model.draggable
+                    ++ [ Html.Attributes.style "width" (width ++ "px")
+                       , Html.Attributes.style "height" (height ++ "px")
+                       , Html.Attributes.style "transition" "width 0.5s, height 0.5s"
+                       ]
+                )
+                [ Html.div handleStyles [ Html.text "⠶" ] ]
 
-                _ ->
-                    Html.text ""
-
-        Nothing ->
+        _ ->
             Html.text ""
 
 
@@ -277,6 +284,12 @@ calculateOffset index group list =
 
             else
                 calculateOffset (index + 1) group xs
+
+
+maybeDraggedItem : DnDList.Groups.Draggable -> List Item -> Maybe Item
+maybeDraggedItem draggable items =
+    system.info draggable
+        |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
 
 
 
@@ -303,11 +316,6 @@ gray =
     "dimgray"
 
 
-transparent : String
-transparent =
-    "transparent"
-
-
 
 -- STYLES
 
@@ -332,15 +340,22 @@ containerStyles =
 
 itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
-    [ Html.Attributes.style "width" "50px"
-    , Html.Attributes.style "height" "50px"
-    , Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "color" "white"
-    , Html.Attributes.style "cursor" "pointer"
+    [ Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "margin-right" "2em"
+    , Html.Attributes.style "display" "flex"
+    , Html.Attributes.style "align-items" "flex-start"
+    , Html.Attributes.style "justify-content" "flex-start"
+    , Html.Attributes.style "background-color" color
+    ]
+
+
+handleStyles : List (Html.Attribute msg)
+handleStyles =
+    [ Html.Attributes.style "width" "60px"
+    , Html.Attributes.style "height" "60px"
+    , Html.Attributes.style "color" "black"
+    , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "background-color" color
-    , Html.Attributes.style "transition" "width 0.5s, height 0.5s"
     ]
