@@ -217,6 +217,7 @@ view model =
             |> Html.section
                 [ Html.Attributes.style "display" "flex"
                 , Html.Attributes.style "justify-content" "center"
+                , Html.Attributes.style "padding-top" "2em"
                 ]
         , model.examples
             |> List.drop 2
