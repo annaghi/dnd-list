@@ -24,32 +24,27 @@ main =
 -- DATA
 
 
-type alias Meta =
-    { value : String
-    , color : String
-    }
-
-
 type alias Item =
     { group : Int
-    , meta : Meta
+    , value : String
+    , color : String
     }
 
 
 gatheredByGroup : List Item
 gatheredByGroup =
-    [ { group = 0, meta = Meta "2" red }
-    , { group = 0, meta = Meta "B" blue }
-    , { group = 0, meta = Meta "A" blue }
-    , { group = 0, meta = Meta "III" green }
-    , { group = 0, meta = Meta "" transparent }
-    , { group = 1, meta = Meta "C" blue }
-    , { group = 1, meta = Meta "1" red }
-    , { group = 1, meta = Meta "I" green }
-    , { group = 1, meta = Meta "3" red }
-    , { group = 1, meta = Meta "" transparent }
-    , { group = 2, meta = Meta "II" green }
-    , { group = 2, meta = Meta "" transparent }
+    [ Item 0 "2" red
+    , Item 0 "B" blue
+    , Item 0 "A" blue
+    , Item 0 "III" green
+    , Item 0 "" transparent
+    , Item 1 "C" blue
+    , Item 1 "1" red
+    , Item 1 "I" green
+    , Item 1 "3" red
+    , Item 1 "" transparent
+    , Item 2 "II" green
+    , Item 2 "" transparent
     ]
 
 
@@ -184,7 +179,7 @@ view model =
 
 
 itemView : Model -> Int -> Int -> Item -> Html.Html Msg
-itemView model offset localIndex { group, meta } =
+itemView model offset localIndex { group, value, color } =
     let
         globalIndex : Int
         globalIndex =
@@ -196,20 +191,20 @@ itemView model offset localIndex { group, meta } =
     in
     case ( system.info model.draggable, maybeDraggedItem model ) of
         ( Just { dragIndex }, Just dragItem ) ->
-            if meta.value == "" && group /= dragItem.group then
+            if value == "" && group /= dragItem.group then
                 Html.div
                     (Html.Attributes.id itemId :: auxiliaryItemStyles ++ system.dropEvents globalIndex itemId)
                     []
 
-            else if meta.value == "" && group == dragItem.group then
+            else if value == "" && group == dragItem.group then
                 Html.div
                     (Html.Attributes.id itemId :: auxiliaryItemStyles)
                     []
 
             else if globalIndex /= dragIndex then
                 Html.div
-                    (Html.Attributes.id itemId :: itemStyles meta.color ++ system.dropEvents globalIndex itemId)
-                    [ Html.text meta.value ]
+                    (Html.Attributes.id itemId :: itemStyles color ++ system.dropEvents globalIndex itemId)
+                    [ Html.text value ]
 
             else
                 Html.div
@@ -217,24 +212,24 @@ itemView model offset localIndex { group, meta } =
                     []
 
         _ ->
-            if meta.value == "" then
+            if value == "" then
                 Html.div
                     (Html.Attributes.id itemId :: auxiliaryItemStyles)
                     []
 
             else
                 Html.div
-                    (Html.Attributes.id itemId :: itemStyles meta.color ++ draggableItemStyles ++ system.dragEvents globalIndex itemId)
-                    [ Html.text meta.value ]
+                    (Html.Attributes.id itemId :: itemStyles color ++ draggableItemStyles ++ system.dragEvents globalIndex itemId)
+                    [ Html.text value ]
 
 
 draggedItemView : Model -> Html.Html Msg
 draggedItemView model =
     case maybeDraggedItem model of
-        Just { meta } ->
+        Just { value, color } ->
             Html.div
-                (itemStyles meta.color ++ draggableItemStyles ++ system.draggedStyles model.draggable)
-                [ Html.text meta.value ]
+                (itemStyles color ++ draggableItemStyles ++ system.draggedStyles model.draggable)
+                [ Html.text value ]
 
         _ ->
             Html.text ""
