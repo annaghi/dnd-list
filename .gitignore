@@ -14,4 +14,6 @@ docs.json
 examples/**/main.js
 
 # development files
-dev*
+dev/*
+!dev/Main.elm
+!dev/elm.json
