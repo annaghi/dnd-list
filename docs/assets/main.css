@@ -85,6 +85,7 @@ main > section {
   padding: 0 3em;
 }
 section .link {
+  flex: 0 1 100px;
   cursor: pointer;
   display: table;
   margin-right: 1em;
