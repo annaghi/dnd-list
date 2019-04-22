@@ -4,7 +4,6 @@ import Browser
 import DnDList
 import Html
 import Html.Attributes
-import Html.Events
 import Svg
 import Svg.Attributes
 import Svg.Events
