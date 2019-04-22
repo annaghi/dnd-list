@@ -8,67 +8,22 @@
 
     <title>annaghi | dnd-list</title>
 
-    <link rel="icon" type="image/png" href="assets/favicon.png?v=1" />
+    <link rel="icon" type="image/png" href="/dnd-list/assets/favicon.png?v=1" />
 
-    <script src="assets/highlight/highlight.pack.js"></script>
-    <link rel="stylesheet" href="assets/highlight/styles/atom-one-dark.css" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400" rel="stylesheet" />
 
-    <script type="text/javascript" src="assets/main.js"></script>
-    <link rel="stylesheet" href="assets/main.css" />
+    <script src="/dnd-list/assets/redirect.js"></script>
+
+    <script src="/dnd-list/assets/highlight/highlight.pack.js"></script>
+    <link rel="stylesheet" href="/dnd-list/assets/highlight/styles/atom-one-light.css" />
+
+    <script type="text/javascript" src="/dnd-list/assets/main.js"></script>
+    <script type="text/javascript" src="/dnd-list/assets/custom-element-elm-code.js"></script>
+    <link rel="stylesheet" href="/dnd-list/assets/main.css" />
   </head>
 
   <body>
     <script>
-      customElements.define(
-        "elm-code",
-        class extends HTMLElement {
-          constructor() {
-            super();
-            this._elm = { code: "" };
-          }
-
-          get code() {
-            return this._elm.code;
-          }
-
-          set code(value) {
-            if (value === this._elm.code) {
-              return;
-            }
-            this._elm.code = value;
-            this._update();
-          }
-
-          _update() {
-            if (this._pre) {
-              this._pre.parentNode.removeChild(this._pre);
-            }
-            if (this._code) {
-              this._code.parentNode.removeChild(this._code);
-            }
-            this._highlight();
-          }
-
-          _highlight() {
-            this._pre = document.createElement("pre");
-            this._code = document.createElement("code");
-            this._code.innerHTML = this._elm.code;
-            this._pre.appendChild(this._code);
-            this.appendChild(this._pre);
-
-            hljs.highlightBlock(this._code);
-          }
-
-          connectedCallback() {
-            setTimeout(() => {
-              if (this._elm.code !== "") {
-                this._update();
-              }
-            });
-          }
-        }
-      );
-
       Elm.Main.init();
     </script>
   </body>

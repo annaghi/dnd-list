@@ -1,33 +1,35 @@
 module DnDList exposing
-    ( System, create, Config
-    , Msg
-    , Movement(..), Operation(..), Trigger(..)
+    ( System, create, Msg
+    , Config
+    , Movement(..), Trigger(..), Operation(..)
+    , Info
     , Draggable
     )
 
-{-| While dragging a list item, the mouse events and the list reordering are handled internally by this module.
+{-| While dragging a list item, the mouse events and the list sorting are handled internally by this module.
 
-First you need to create a `System` object which holds the information and functions related to the drag operation.
+First you need to create a `System` object which holds the information and the functions related to the drag operation.
 
 Using this object you can wire up the internal model, subscriptions, commands, and update into your model, subscriptions, commands, and update respectively.
 
-You have access to the drag and drop events as well as the position styles of the dragged element in your `view` functions.
-Also you have access to the drag and drop index which allows you to style or track the affected elements.
+Also you have access to the drag and drop events, and the dragged element's position styles in your `view` functions.
+You can get information about the drag source and drop target elements too, which allows you to style or track the affected elements.
 
 
 # System
 
-@docs System, create, Config
+@docs System, create, Msg
 
 
-# Message
+# Config
 
-@docs Msg
+@docs Config
+@docs Movement, Trigger, Operation
 
 
-# Movement
+# Info
 
-@docs Movement, Operation, Trigger
+@docs Info
 
 
 # System Fields
@@ -49,12 +51,12 @@ Also you have access to the drag and drop index which allows you to style or tra
 
 ## commands
 
-`commands` is a function to access the DOM for the dragged element `x`, `y`, `width` and `height` information.
+`commands` is a function to access the DOM for the drag source and the drop target `x`, `y`, `width` and `height` information.
 
     update : Msg -> Model -> ( Model, Cmd Msg )
-    update msg model =
-        case msg of
-            MyMsg message ->
+    update message model =
+        case message of
+            MyMsg msg ->
                 let
                     updatedModel = ...
                 in
@@ -65,15 +67,15 @@ Also you have access to the drag and drop index which allows you to style or tra
 
 ## update
 
-`update` is a function which returns an updated `Draggable` and the reordered list for your model.
+`update` is a function which returns an updated `Draggable` and the sorted list for your model.
 
     update : Msg -> Model -> ( Model, Cmd Msg )
-    update msg model =
-        case msg of
-            MyMsg message ->
+    update message model =
+        case message of
+            MyMsg msg ->
                 let
                     ( draggable, items ) =
-                        system.update message model.draggable model.items
+                        system.update msg model.draggable model.items
                 in
                 ( { model | draggable = draggable, items = items }
                 , system.commands model.draggable
@@ -93,7 +95,9 @@ Also you have access to the drag and drop index which allows you to style or tra
                         "id-" ++ item
                 in
                 Html.div
-                    (Html.Attributes.id itemId :: system.dragEvents index itemId)
+                    (Html.Attributes.id itemId
+                        :: system.dragEvents index itemId
+                    )
                     [ Html.text item ]
             )
         |> Html.div []
@@ -106,39 +110,33 @@ Also you have access to the drag and drop index which allows you to style or tra
     model.items
         |> List.indexedMap
             (\index item ->
+                let
+                    itemId : String
+                    itemId =
+                        "id-" ++ item
+                in
                 Html.div
-                    (system.dropEvents index)
+                    (Html.Attributes.id itemId
+                        :: system.dropEvents index itemId
+                    )
                     [ Html.text item ]
             )
         |> Html.div []
 
 
-## dragIndex
-
-`dragIndex` is a helper which returns the index of the dragged element.
-
-    maybeDragIndex : Maybe Int
-    maybeDragIndex =
-        system.dragIndex model.draggable
-
-
-## dropIndex
-
-`dropIndex` is a helper which returns the index of the item that the dragged element was dropped on.
-
-    maybeDropIndex : Maybe Int
-    maybeDropIndex =
-        system.dropIndex model.draggable
-
-
 ## draggedStyles
 
-`draggedStyles` is a helper to set the current position of the dragged element.
-The position is absolute to the `body` tag.
+`draggedStyles` is a helper which returns the positioning styles of the dragged element.
+The position is absolute to the `body` HTML element.
 
     Html.div
         (system.draggedStyles model.draggable)
         [ Html.text item ]
+
+
+## info
+
+See [Info](#info)
 
 -}
 
@@ -148,10 +146,12 @@ import Html
 import Html.Attributes
 import Html.Events
 import Json.Decode
+import Operations
 import Task
+import Utils
 
 
-{-| A `Draggable` represents the information about the current drag operation.
+{-| A `Draggable` represents the internal information about the current drag operation.
 It should be set in your model and can be initialized through the `System`'s `draggable` field.
 
     type alias Model =
@@ -171,37 +171,87 @@ type Draggable
 
 
 type alias Model =
-    { dragIdx : Int
-    , dropIdx : Int
+    { dragIndex : Int
+    , dropIndex : Int
     , dragCounter : Int
     , startPosition : Position
     , currentPosition : Position
-    , element : Maybe Browser.Dom.Element
-    , elementId : String
+    , sourceElement : Maybe Browser.Dom.Element
+    , sourceElementId : String
+    , targetElement : Maybe Browser.Dom.Element
+    , targetElementId : String
     }
 
 
-{-| A `System` encapsulates a `Draggable` which represents the information about the drag operation and the drag related functions.
+{-| A `System` encapsulates a `Draggable` which is the internal model of the drag operation, some drag related functions and an `Info` object.
 
-For the details, see [System Fields](#system-fields)
+For the details, see [System Fields](#system-fields) and [Info](#info)
 
 -}
-type alias System msg a =
+type alias System a msg =
     { draggable : Draggable
     , subscriptions : Draggable -> Sub msg
     , commands : Draggable -> Cmd msg
     , update : Msg -> Draggable -> List a -> ( Draggable, List a )
     , dragEvents : Int -> String -> List (Html.Attribute msg)
-    , dropEvents : Int -> List (Html.Attribute msg)
-    , dragIndex : Draggable -> Maybe Int
-    , dropIndex : Draggable -> Maybe Int
+    , dropEvents : Int -> String -> List (Html.Attribute msg)
     , draggedStyles : Draggable -> List (Html.Attribute msg)
+    , info : Draggable -> Maybe Info
+    }
+
+
+{-| Information about the drag source and the drop target elements.
+It is accessible through the `System`'s `info` field.
+
+  - `dragIndex`: The index of the drag source.
+
+  - `dropIndex`: The index of the drop target.
+
+  - `sourceElement`: Information about the drag source, see `Browser.Dom.Element`.
+
+  - `sourceElementId`: HTML id of the drag source.
+
+  - `targetElement`: Information about the drop target, see `Browser.Dom.Element`.
+
+  - `targetElementId`: HTML id of the drop target.
+
+```
+itemView : Html.Html Msg
+itemView =
+    ...
+
+    case system.info draggable of
+        Just { dragIndex } ->
+            -- Render when dragging is performed.
+
+        Nothing ->
+            -- Render when there is no dragging.
+```
+
+    maybeDraggedItem : Maybe Fruit
+    maybeDraggedItem =
+        system.info draggable
+            |> Maybe.andThen
+                (\{ dragIndex } ->
+                    items
+                        |> List.drop dragIndex
+                        |> List.head
+                )
+
+-}
+type alias Info =
+    { dragIndex : Int
+    , dropIndex : Int
+    , sourceElement : Browser.Dom.Element
+    , sourceElementId : String
+    , targetElement : Browser.Dom.Element
+    , targetElementId : String
     }
 
 
 {-| Creates a `System` object according to your configuration.
 
-Having a list of fruits:
+Let's have a list of fruits:
 
     type alias Fruit =
         String
@@ -210,70 +260,67 @@ Having a list of fruits:
     data =
         [ "Apples", "Bananas", "Cherries", "Dates" ]
 
-The `System` is a wrapper type around your message and list item types:
+The `System` is a wrapper type around the list item and your message types:
 
-    system : DnDList.System Msg Fruit
+    system : DnDList.System Fruit Msg
     system =
-        DnDList.create config
+        DnDList.create config MyMsg
 
 -}
-create : Config msg -> System msg a
-create { message, movement } =
+create : Config a -> (Msg -> msg) -> System a msg
+create config message =
     { draggable = Draggable Nothing
     , subscriptions = subscriptions message
     , commands = commands message
-    , update = update movement
+    , update = update config
     , dragEvents = dragEvents message
     , dropEvents = dropEvents message
-    , dragIndex = dragIndex
-    , dropIndex = dropIndex
-    , draggedStyles = draggedStyles movement
+    , draggedStyles = draggedStyles config.movement
+    , info = info
     }
 
 
 {-| Represents the `System` configuration.
 
-  - `message`: Your message wrapper.
+  - `movement`: Dragging can be constrained to horizontal or vertical only, or can be set to free.
 
-  - `movement`: The kind of the `Movement`. It can be Free, Horizontal, or Vertical.
+  - `trigger`: Sorting can be triggered again and again while dragging over the drop targets, or it can be triggered only once on that drop target where the mouse was finally released.
 
-Example configuration:
+  - `operation`: Different kind of sort operations can be performed on the list.
+    You can compare them here: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag) and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
 
-    config : DnDList.Config Msg
+  - `beforeUpdate`: This is a hook and gives you access to the list before the sort is being performed.
+
+Example configuration with a void `beforeUpdate`:
+
+    config : DnDList.Config Fruit
     config =
-        { message = MyMsg
-        , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag
+        { movement = DnDList.Free
+        , trigger = DnDList.OnDrag
+        , operation = DnDList.RotateOut
+        , beforeUpdate = \_ _ list -> list
         }
 
 -}
-type alias Config msg =
-    { message : Msg -> msg
-    , movement : Movement
+type alias Config a =
+    { movement : Movement
+    , trigger : Trigger
+    , operation : Operation
+    , beforeUpdate : Int -> Int -> List a -> List a
     }
 
 
 {-| Represents the mouse dragging movement.
 Dragging can be restricted to vertical or horizontal axis only, or it can be free.
+See them in action: [compare movement](https://annaghi.github.io/dnd-list/configuration/movement).
 -}
 type Movement
-    = Free Operation Trigger
+    = Free
     | Horizontal
     | Vertical
 
 
-{-| Represents the list reordering operation.
-
-  - `Rotate`: The items between the dragged and the drop target elements will be circularly shifted.
-
-  - `Swap`: The dragged and the drop target elements will be swapped, and no other item will be moved.
-
--}
-type Operation
-    = Rotate
-    | Swap
-
-
-{-| Represents the event when the list will be reordered.
+{-| Represents the event when the list will be sorted.
 
   - `OnDrag`: Triggers the list update when the dragged element is dragging over a drop target element.
 
@@ -283,6 +330,31 @@ type Operation
 type Trigger
     = OnDrag
     | OnDrop
+
+
+{-| Represents the list sorting operation.
+See them in action: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag) and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
+
+  - `InsertAfter`: The dragged element will be inserted after the drop target element.
+
+  - `InsertBefore`: The dragged element will be inserted before the drop target element.
+
+  - `RotateIn`: The items between the drag source and the drop target will be circularly shifted, excluding the drop target.
+
+  - `RotateOut`: The items between the drag source and the drop target will be circularly shifted, including the drop target.
+
+  - `Swap`: The drag source and the drop target will be swapped.
+
+  - `Unmove`: No item will be moved.
+
+-}
+type Operation
+    = InsertAfter
+    | InsertBefore
+    | RotateIn
+    | RotateOut
+    | Swap
+    | Unmove
 
 
 type alias Position =
@@ -300,7 +372,7 @@ subscriptions wrap (Draggable model) =
         Just _ ->
             Sub.batch
                 [ Browser.Events.onMouseMove
-                    (Json.Decode.map2 Position pageX pageY
+                    (Json.Decode.map2 Position Utils.pageX Utils.pageY
                         |> Json.Decode.map (wrap << Drag)
                     )
                 , Browser.Events.onMouseUp
@@ -309,18 +381,40 @@ subscriptions wrap (Draggable model) =
 
 
 commands : (Msg -> msg) -> Draggable -> Cmd msg
-commands wrap (Draggable model) =
+commands wrap draggable =
+    Cmd.batch
+        [ sourceCommands wrap draggable
+        , targetCommands wrap draggable
+        ]
+
+
+sourceCommands : (Msg -> msg) -> Draggable -> Cmd msg
+sourceCommands wrap (Draggable model) =
     case model of
         Nothing ->
             Cmd.none
 
         Just m ->
-            case m.element of
+            case m.sourceElement of
                 Nothing ->
-                    Task.attempt (wrap << GotDragged) (Browser.Dom.getElement m.elementId)
+                    Task.attempt (wrap << GotSourceElement) (Browser.Dom.getElement m.sourceElementId)
 
                 _ ->
                     Cmd.none
+
+
+targetCommands : (Msg -> msg) -> Draggable -> Cmd msg
+targetCommands wrap (Draggable model) =
+    case model of
+        Nothing ->
+            Cmd.none
+
+        Just m ->
+            if m.dragCounter == 0 then
+                Task.attempt (wrap << GotTargetElement) (Browser.Dom.getElement m.targetElementId)
+
+            else
+                Cmd.none
 
 
 {-| Internal message type. You should wrap it within your message constructor.
@@ -332,26 +426,29 @@ commands wrap (Draggable model) =
 type Msg
     = DragStart Int String Position
     | Drag Position
-    | DragOver Int
+    | DragOver Int String
     | DragEnter Int
     | DragLeave
     | DragEnd
-    | GotDragged (Result Browser.Dom.Error Browser.Dom.Element)
+    | GotSourceElement (Result Browser.Dom.Error Browser.Dom.Element)
+    | GotTargetElement (Result Browser.Dom.Error Browser.Dom.Element)
 
 
-update : Movement -> Msg -> Draggable -> List a -> ( Draggable, List a )
-update movement msg (Draggable model) list =
+update : Config a -> Msg -> Draggable -> List a -> ( Draggable, List a )
+update { operation, trigger, beforeUpdate } msg (Draggable model) list =
     case msg of
-        DragStart dragIdx elementId xy ->
+        DragStart dragIndex sourceElementId xy ->
             ( Draggable <|
                 Just
-                    { dragIdx = dragIdx
-                    , dropIdx = dragIdx
+                    { dragIndex = dragIndex
+                    , dropIndex = dragIndex
                     , dragCounter = 0
                     , startPosition = xy
                     , currentPosition = xy
-                    , element = Nothing
-                    , elementId = elementId
+                    , sourceElement = Nothing
+                    , sourceElementId = sourceElementId
+                    , targetElement = Nothing
+                    , targetElementId = sourceElementId
                     }
             , list
             )
@@ -363,214 +460,196 @@ update movement msg (Draggable model) list =
             , list
             )
 
-        DragOver dropIdx ->
+        DragOver dropIndex targetElementId ->
             ( model
-                |> Maybe.map (\m -> { m | dropIdx = dropIdx })
+                |> Maybe.map (\m -> { m | dropIndex = dropIndex, targetElementId = targetElementId })
                 |> Draggable
             , list
             )
 
-        DragEnter dropIdx ->
-            case model of
-                Just m ->
-                    if m.dragCounter > 1 then
-                        case movement of
-                            Free Rotate OnDrag ->
-                                ( Draggable (Just { m | dragIdx = dropIdx, dragCounter = 0 })
-                                , rotateReorder m.dragIdx dropIdx list
-                                )
-
-                            Free Swap OnDrag ->
-                                ( Draggable (Just { m | dragIdx = dropIdx, dragCounter = 0 })
-                                , swapReorder m.dragIdx dropIdx list
-                                )
-
-                            Free _ OnDrop ->
-                                ( Draggable (Just { m | dragCounter = 0 })
-                                , list
-                                )
-
-                            _ ->
-                                ( Draggable (Just { m | dragIdx = dropIdx, dragCounter = 0 })
-                                , swapReorder m.dragIdx dropIdx list
-                                )
+        DragEnter dropIndex ->
+            case ( model, trigger ) of
+                ( Just m, OnDrag ) ->
+                    if m.dragCounter > 1 && m.dragIndex /= dropIndex then
+                        onDragUpdate dropIndex m operation beforeUpdate list
 
                     else
                         ( Draggable model, list )
 
                 _ ->
-                    ( Draggable model, list )
+                    ( model
+                        |> Maybe.map (\m -> { m | dragCounter = 0 })
+                        |> Draggable
+                    , list
+                    )
 
         DragLeave ->
             ( model
-                |> Maybe.map (\m -> { m | dropIdx = m.dragIdx })
+                |> Maybe.map (\m -> { m | dropIndex = m.dragIndex })
                 |> Draggable
             , list
             )
 
         DragEnd ->
-            case model of
-                Just m ->
-                    case movement of
-                        Free Rotate OnDrop ->
-                            ( Draggable Nothing, rotateReorder m.dragIdx m.dropIdx list )
+            case ( model, trigger ) of
+                ( Just m, OnDrop ) ->
+                    if m.dragIndex /= m.dropIndex then
+                        onDropUpdate m operation beforeUpdate list
 
-                        Free Swap OnDrop ->
-                            ( Draggable Nothing, swapReorder m.dragIdx m.dropIdx list )
-
-                        _ ->
-                            ( Draggable Nothing, list )
+                    else
+                        ( Draggable Nothing, list )
 
                 _ ->
                     ( Draggable Nothing, list )
 
-        GotDragged (Err _) ->
+        GotSourceElement (Err _) ->
             ( Draggable model, list )
 
-        GotDragged (Ok element) ->
+        GotSourceElement (Ok sourceElement) ->
             ( model
-                |> Maybe.map (\m -> { m | element = Just element })
+                |> Maybe.map (\m -> { m | sourceElement = Just sourceElement, targetElement = Just sourceElement })
+                |> Draggable
+            , list
+            )
+
+        GotTargetElement (Err _) ->
+            ( Draggable model, list )
+
+        GotTargetElement (Ok targetElement) ->
+            ( model
+                |> Maybe.map (\m -> { m | targetElement = Just targetElement })
                 |> Draggable
             , list
             )
 
 
-swapReorder : Int -> Int -> List a -> List a
-swapReorder dragIdx dropIdx list =
-    if dragIdx /= dropIdx then
-        swap dragIdx dropIdx list
+onDragUpdate : Int -> Model -> Operation -> (Int -> Int -> List a -> List a) -> List a -> ( Draggable, List a )
+onDragUpdate dropIndex m operation beforeUpdate list =
+    case operation of
+        InsertAfter ->
+            ( Draggable
+                (Just
+                    { m
+                        | dragIndex =
+                            if m.dragIndex > dropIndex then
+                                dropIndex + 1
 
-    else
-        list
-
-
-swap : Int -> Int -> List a -> List a
-swap i j list =
-    let
-        item_i : List a
-        item_i =
-            list |> List.drop i |> List.take 1
-
-        item_j : List a
-        item_j =
-            list |> List.drop j |> List.take 1
-    in
-    list
-        |> List.indexedMap
-            (\index item ->
-                if index == i then
-                    item_j
-
-                else if index == j then
-                    item_i
-
-                else
-                    [ item ]
+                            else
+                                dropIndex
+                        , dragCounter = 0
+                    }
+                )
+            , Operations.insertAfter beforeUpdate m.dragIndex dropIndex list
             )
-        |> List.concat
+
+        InsertBefore ->
+            ( Draggable <|
+                Just
+                    { m
+                        | dragIndex =
+                            if m.dragIndex < dropIndex then
+                                dropIndex - 1
+
+                            else
+                                dropIndex
+                        , dragCounter = 0
+                    }
+            , Operations.insertBefore beforeUpdate m.dragIndex dropIndex list
+            )
+
+        RotateIn ->
+            ( Draggable
+                (Just
+                    { m
+                        | dragIndex =
+                            if m.dragIndex < dropIndex then
+                                dropIndex - 1
+
+                            else if m.dragIndex > dropIndex then
+                                dropIndex + 1
+
+                            else
+                                dropIndex
+                        , dragCounter = 0
+                    }
+                )
+            , Operations.rotateIn beforeUpdate m.dragIndex dropIndex list
+            )
+
+        RotateOut ->
+            ( Draggable (Just { m | dragIndex = dropIndex, dragCounter = 0 })
+            , Operations.rotateOut beforeUpdate m.dragIndex dropIndex list
+            )
+
+        Swap ->
+            ( Draggable (Just { m | dragIndex = dropIndex, dragCounter = 0 })
+            , Operations.swap beforeUpdate m.dragIndex dropIndex list
+            )
+
+        Unmove ->
+            ( Draggable (Just { m | dragCounter = 0 })
+            , Operations.unmove beforeUpdate m.dragIndex dropIndex list
+            )
 
 
-rotateReorder : Int -> Int -> List a -> List a
-rotateReorder dragIdx dropIdx list =
-    if dragIdx < dropIdx then
-        rotate dragIdx dropIdx list
+onDropUpdate : Model -> Operation -> (Int -> Int -> List a -> List a) -> List a -> ( Draggable, List a )
+onDropUpdate m operation beforeUpdate list =
+    case operation of
+        InsertAfter ->
+            ( Draggable Nothing, Operations.insertAfter beforeUpdate m.dragIndex m.dropIndex list )
 
-    else if dragIdx > dropIdx then
-        let
-            n : Int
-            n =
-                List.length list - 1
-        in
-        List.reverse (rotate (n - dragIdx) (n - dropIdx) (List.reverse list))
+        InsertBefore ->
+            ( Draggable Nothing, Operations.insertBefore beforeUpdate m.dragIndex m.dropIndex list )
 
-    else
-        list
+        RotateIn ->
+            ( Draggable Nothing, Operations.rotateIn beforeUpdate m.dragIndex m.dropIndex list )
 
+        RotateOut ->
+            ( Draggable Nothing, Operations.rotateOut beforeUpdate m.dragIndex m.dropIndex list )
 
-rotate : Int -> Int -> List a -> List a
-rotate i j list =
-    let
-        n : Int
-        n =
-            List.length list
+        Swap ->
+            ( Draggable Nothing, Operations.swap beforeUpdate m.dragIndex m.dropIndex list )
 
-        beginning : List a
-        beginning =
-            List.take i list
-
-        middle : List a
-        middle =
-            list |> List.drop i |> List.take (j - i + 1)
-
-        end : List a
-        end =
-            list |> List.reverse |> List.take (n - j - 1) |> List.reverse
-    in
-    beginning ++ rotateRecursive middle ++ end
-
-
-rotateRecursive : List a -> List a
-rotateRecursive list =
-    case list of
-        [] ->
-            []
-
-        [ x ] ->
-            [ x ]
-
-        x :: [ y ] ->
-            y :: [ x ]
-
-        x :: y :: rest ->
-            y :: rotateRecursive (x :: rest)
+        Unmove ->
+            ( Draggable Nothing, Operations.unmove beforeUpdate m.dragIndex m.dropIndex list )
 
 
 dragEvents : (Msg -> msg) -> Int -> String -> List (Html.Attribute msg)
-dragEvents wrap dragIdx elementId =
+dragEvents wrap dragIndex sourceElementId =
     [ Html.Events.preventDefaultOn "mousedown"
-        (Json.Decode.map2 Position pageX pageY
-            |> Json.Decode.map (wrap << DragStart dragIdx elementId)
+        (Json.Decode.map2 Position Utils.pageX Utils.pageY
+            |> Json.Decode.map (wrap << DragStart dragIndex sourceElementId)
             |> Json.Decode.map (\msg -> ( msg, True ))
         )
     ]
 
 
-dropEvents : (Msg -> msg) -> Int -> List (Html.Attribute msg)
-dropEvents wrap dropIdx =
-    [ Html.Events.onMouseOver (wrap (DragOver dropIdx))
-    , Html.Events.onMouseEnter (wrap (DragEnter dropIdx))
+dropEvents : (Msg -> msg) -> Int -> String -> List (Html.Attribute msg)
+dropEvents wrap dropIndex targetElementId =
+    [ Html.Events.onMouseOver (wrap (DragOver dropIndex targetElementId))
+    , Html.Events.onMouseEnter (wrap (DragEnter dropIndex))
     , Html.Events.onMouseLeave (wrap DragLeave)
     ]
 
 
-pageX : Json.Decode.Decoder Float
-pageX =
-    Json.Decode.field "pageX" Json.Decode.float
-
-
-pageY : Json.Decode.Decoder Float
-pageY =
-    Json.Decode.field "pageY" Json.Decode.float
-
-
-dragIndex : Draggable -> Maybe Int
-dragIndex (Draggable model) =
-    model
-        |> Maybe.andThen
-            (\m ->
-                m.element
-                    |> Maybe.map (\_ -> m.dragIdx)
-            )
-
-
-dropIndex : Draggable -> Maybe Int
-dropIndex (Draggable model) =
-    model
-        |> Maybe.andThen
-            (\m ->
-                m.element
-                    |> Maybe.map (\_ -> m.dropIdx)
-            )
+info : Draggable -> Maybe Info
+info (Draggable model) =
+    Maybe.andThen
+        (\m ->
+            Maybe.map2
+                (\source target ->
+                    { dragIndex = m.dragIndex
+                    , dropIndex = m.dropIndex
+                    , sourceElement = source
+                    , sourceElementId = m.sourceElementId
+                    , targetElement = target
+                    , targetElementId = m.targetElementId
+                    }
+                )
+                m.sourceElement
+                m.targetElement
+        )
+        model
 
 
 draggedStyles : Movement -> Draggable -> List (Html.Attribute msg)
@@ -580,7 +659,7 @@ draggedStyles movement (Draggable model) =
             []
 
         Just m ->
-            case m.element of
+            case m.sourceElement of
                 Just { element } ->
                     case movement of
                         Horizontal ->
@@ -588,11 +667,11 @@ draggedStyles movement (Draggable model) =
                             , Html.Attributes.style "top" "0"
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "transform" <|
-                                translate
+                                Utils.translate
                                     (round (m.currentPosition.x - m.startPosition.x + element.x))
                                     (round element.y)
-                            , Html.Attributes.style "height" (px (round element.height))
-                            , Html.Attributes.style "width" (px (round element.width))
+                            , Html.Attributes.style "height" (Utils.px (round element.height))
+                            , Html.Attributes.style "width" (Utils.px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"
                             ]
 
@@ -601,36 +680,26 @@ draggedStyles movement (Draggable model) =
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "top" "0"
                             , Html.Attributes.style "transform" <|
-                                translate
+                                Utils.translate
                                     (round element.x)
                                     (round (m.currentPosition.y - m.startPosition.y + element.y))
-                            , Html.Attributes.style "height" (px (round element.height))
-                            , Html.Attributes.style "width" (px (round element.width))
+                            , Html.Attributes.style "height" (Utils.px (round element.height))
+                            , Html.Attributes.style "width" (Utils.px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"
                             ]
 
-                        Free _ _ ->
+                        Free ->
                             [ Html.Attributes.style "position" "absolute"
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "top" "0"
                             , Html.Attributes.style "transform" <|
-                                translate
+                                Utils.translate
                                     (round (m.currentPosition.x - m.startPosition.x + element.x))
                                     (round (m.currentPosition.y - m.startPosition.y + element.y))
-                            , Html.Attributes.style "height" (px (round element.height))
-                            , Html.Attributes.style "width" (px (round element.width))
+                            , Html.Attributes.style "height" (Utils.px (round element.height))
+                            , Html.Attributes.style "width" (Utils.px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"
                             ]
 
                 _ ->
                     []
-
-
-px : Int -> String
-px n =
-    String.fromInt n ++ "px"
-
-
-translate : Int -> Int -> String
-translate x y =
-    "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"

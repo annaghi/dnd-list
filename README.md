@@ -9,7 +9,7 @@ Drag and Drop for sortable lists in Elm web apps with mouse support.
 ## Basic API
 
 ```elm
-create : DnDList.Config Msg -> DnDList.System Msg a
+create : DnDList.Config a -> Msg -> DnDList.System a Msg
 ```
 
 ```elm
@@ -17,13 +17,37 @@ update: DnDList.Msg -> DnDList.Draggable -> List a -> ( DnDList.Draggable, List 
 
 dragEvents : Int -> String -> List (Html.Attribute Msg)
 
-dropEvents : Int -> List (Html.Attribute Msg)
-
-dragIndex : DnDList.Draggable -> Maybe Int
-
-dropIndex : DnDList.Draggable -> Maybe Int
+dropEvents : Int -> String -> List (Html.Attribute Msg)
 
 draggedStyles : DnDList.Draggable -> List (Html.Attribute Msg)
+
+info : DnDList.Draggable -> Maybe Info
+```
+
+## Config<sup>\*</sup>
+
+```elm
+type alias Config a =
+    { movement : Free | Horizontal | Vertical
+    , trigger : OnDrag | OnDrop
+    , operation : InsertAfter | InsertBefore | RotateIn | RotateOut | Swap | Unmove
+    , beforeUpdate : DragIndex -> DropIndex -> List a -> List a
+    }
+```
+
+<sup>\*</sup> This is pseudocode with the purpose of making a first impression of the `Config` type.
+
+## Info
+
+```elm
+type alias Info =
+    { dragIndex : Int
+    , dropIndex : Int
+    , sourceElement : Browser.Dom.Element
+    , sourceElementId : String
+    , targetElement : Browser.Dom.Element
+    , targetElementId : String
+    }
 ```
 
 ## Example
@@ -68,16 +92,18 @@ data =
 -- SYSTEM
 
 
-config : DnDList.Config Msg
+config : DnDList.Config Fruit
 config =
-    { message = MyMsg
-    , movement = DnDList.Free DnDList.Rotate DnDList.OnDrag
+    { movement = DnDList.Free
+    , trigger = DnDList.OnDrag
+    , operation = DnDList.RotateOut
+    , beforeUpdate = \_ _ list -> list
     }
 
 
-system : DnDList.System Msg Fruit
+system : DnDList.System Fruit Msg
 system =
-    DnDList.create config
+    DnDList.create config MyMsg
 
 
 
@@ -120,12 +146,12 @@ type Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        MyMsg message ->
+update message model =
+    case message of
+        MyMsg msg ->
             let
                 ( draggable, items ) =
-                    system.update message model.draggable model.items
+                    system.update msg model.draggable model.items
             in
             ( { model | draggable = draggable, items = items }
             , system.commands model.draggable
@@ -138,43 +164,38 @@ update msg model =
 
 view : Model -> Html.Html Msg
 view model =
-    let
-        maybeDragIndex : Maybe Int
-        maybeDragIndex =
-            system.dragIndex model.draggable
-    in
     Html.section
-        [ Html.Attributes.style "margin" "6em 0"
-        , Html.Attributes.style "text-align" "center"
-        ]
+        [ Html.Attributes.style "text-align" "center" ]
         [ model.items
-            |> List.indexedMap (itemView maybeDragIndex)
+            |> List.indexedMap (itemView model.draggable)
             |> Html.div []
         , draggedItemView model.draggable model.items
         ]
 
 
-itemView : Maybe Int -> Int -> Fruit -> Html.Html Msg
-itemView maybeDragIndex index item =
-    case maybeDragIndex of
-        Nothing ->
-            let
-                itemId : String
-                itemId =
-                    "id-" ++ item
-            in
-            Html.p
-                (Html.Attributes.id itemId :: system.dragEvents index itemId)
-                [ Html.text item ]
-
-        Just dragIndex ->
+itemView : DnDList.Draggable -> Int -> Fruit -> Html.Html Msg
+itemView draggable index item =
+    let
+        itemId : String
+        itemId =
+            "id-" ++ item
+    in
+    case system.info draggable of
+        Just { dragIndex } ->
             if dragIndex /= index then
                 Html.p
-                    (system.dropEvents index)
+                    (Html.Attributes.id itemId :: system.dropEvents index itemId)
                     [ Html.text item ]
 
             else
-                Html.p [] [ Html.text "[---------]" ]
+                Html.p
+                    [ Html.Attributes.id itemId ]
+                    [ Html.text "[---------]" ]
+
+        Nothing ->
+            Html.p
+                (Html.Attributes.id itemId :: system.dragEvents index itemId)
+                [ Html.text item ]
 
 
 draggedItemView : DnDList.Draggable -> List Fruit -> Html.Html Msg
@@ -182,8 +203,8 @@ draggedItemView draggable items =
     let
         maybeDraggedItem : Maybe Fruit
         maybeDraggedItem =
-            system.dragIndex draggable
-                |> Maybe.andThen (\index -> items |> List.drop index |> List.head)
+            system.info draggable
+                |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
     in
     case maybeDraggedItem of
         Just item ->
