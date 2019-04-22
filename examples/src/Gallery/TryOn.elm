@@ -88,11 +88,22 @@ updateColor dragIndex dropIndex list =
                                 ( Size, Color ) ->
                                     { dropElement | color = dragElement.color }
 
+                                ( Size, Size ) ->
+                                    { dropElement | color = dragElement.color }
+
                                 _ ->
                                     dropElement
                         )
                         [ item ]
                         dragItem
+
+                else if index == dragIndex then
+                    case item.property of
+                        Size ->
+                            [ { item | color = gray } ]
+
+                        _ ->
+                            [ item ]
 
                 else
                     [ item ]
@@ -229,20 +240,38 @@ sizeView model offset index item =
             item.height * 60
     in
     case system.info model.draggable of
-        Just _ ->
-            Html.div
-                (Html.Attributes.id itemId
-                    :: itemStyles width height item.color
-                    ++ system.dropEvents globalIndex itemId
-                )
-                []
+        Just { dragIndex } ->
+            if dragIndex /= globalIndex then
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: itemStyles width height item.color
+                        ++ system.dropEvents globalIndex itemId
+                    )
+                    []
+
+            else
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: itemStyles width height gray
+                        ++ system.dropEvents globalIndex itemId
+                    )
+                    []
 
         _ ->
-            Html.div
-                (Html.Attributes.id itemId
-                    :: itemStyles width height item.color
-                )
-                []
+            if item.color /= gray then
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: itemStyles width height item.color
+                        ++ system.dragEvents globalIndex itemId
+                    )
+                    []
+
+            else
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: itemStyles width height item.color
+                    )
+                    []
 
 
 draggedItemView : Model -> Html.Html Msg

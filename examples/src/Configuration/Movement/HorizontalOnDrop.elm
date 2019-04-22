@@ -1,12 +1,10 @@
 module Configuration.Movement.HorizontalOnDrop exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
 
 import Browser
-import Browser.Events
 import DnDList
 import Html
 import Html.Attributes
 import Html.Events
-import Json.Decode
 
 
 

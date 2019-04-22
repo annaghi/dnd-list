@@ -213,7 +213,7 @@ view model =
     Html.div []
         [ model.examples
             |> List.take 2
-            |> List.indexedMap (demoWrapperView model.id)
+            |> List.indexedMap (demoWrapperView 0 model.id)
             |> Html.section
                 [ Html.Attributes.style "display" "flex"
                 , Html.Attributes.style "justify-content" "center"
@@ -222,12 +222,12 @@ view model =
         , model.examples
             |> List.drop 2
             |> List.take 2
-            |> List.indexedMap (demoWrapperView model.id)
+            |> List.indexedMap (demoWrapperView 2 model.id)
             |> Html.section []
         , model.examples
             |> List.drop 4
             |> List.take 2
-            |> List.indexedMap (demoWrapperView model.id)
+            |> List.indexedMap (demoWrapperView 4 model.id)
             |> Html.section
                 [ Html.Attributes.style "display" "flex"
                 , Html.Attributes.style "justify-content" "center"
@@ -235,9 +235,13 @@ view model =
         ]
 
 
-demoWrapperView : Int -> Int -> Example -> Html.Html Msg
-demoWrapperView currentId id example =
+demoWrapperView : Int -> Int -> Int -> Example -> Html.Html Msg
+demoWrapperView offset currentId id example =
     let
+        globalId : Int
+        globalId =
+            offset + id
+
         title : String
         title =
             (info >> .title) example
@@ -250,8 +254,7 @@ demoWrapperView currentId id example =
         [ demoView example
         , Html.div
             [ Html.Attributes.class "link"
-            , Html.Events.onClick (LinkClicked id)
-            , Html.Attributes.classList [ ( "is-active", id == currentId ) ]
+            , Html.Events.onClick (LinkClicked globalId)
             ]
             [ Html.text title ]
         ]
