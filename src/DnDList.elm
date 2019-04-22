@@ -1,33 +1,35 @@
 module DnDList exposing
-    ( System, create, Config
-    , Msg
-    , Operation(..), Movement(..), Trigger(..)
-    , Draggable, Info
+    ( System, create, Msg
+    , Config
+    , Movement(..), Trigger(..), Operation(..)
+    , Info
+    , Draggable
     )
 
 {-| While dragging a list item, the mouse events and the list sorting are handled internally by this module.
 
-First you need to create a `System` object which holds the information and functions related to the drag operation.
+First you need to create a `System` object which holds the information and the functions related to the drag operation.
 
 Using this object you can wire up the internal model, subscriptions, commands, and update into your model, subscriptions, commands, and update respectively.
 
-You have access to the drag and drop events as well as the position styles of the dragged element in your `view` functions.
-Also you have access to the drag and drop index which allows you to style or track the affected elements.
+Also you have access to the drag and drop events, and the dragged element's position styles in your `view` functions.
+You can get information about the drag source and drop target elements too, which allows you to style or track the affected elements.
 
 
 # System
 
-@docs System, create, Config
-
-
-# Message
-
-@docs Msg
+@docs System, create, Msg
 
 
 # Config
 
-@docs Operation, Movement, Trigger
+@docs Config
+@docs Movement, Trigger, Operation
+
+
+# Info
+
+@docs Info
 
 
 # System Fields
@@ -35,7 +37,7 @@ Also you have access to the drag and drop index which allows you to style or tra
 
 ## draggable
 
-@docs Draggable, Info
+@docs Draggable
 
 
 ## subscriptions
@@ -49,12 +51,12 @@ Also you have access to the drag and drop index which allows you to style or tra
 
 ## commands
 
-`commands` is a function to access the DOM for the dragged element `x`, `y`, `width` and `height` information.
+`commands` is a function to access the DOM for the drag source and the drop target `x`, `y`, `width` and `height` information.
 
     update : Msg -> Model -> ( Model, Cmd Msg )
-    update msg model =
-        case msg of
-            MyMsg message ->
+    update message model =
+        case message of
+            MyMsg msg ->
                 let
                     updatedModel = ...
                 in
@@ -68,12 +70,12 @@ Also you have access to the drag and drop index which allows you to style or tra
 `update` is a function which returns an updated `Draggable` and the sorted list for your model.
 
     update : Msg -> Model -> ( Model, Cmd Msg )
-    update msg model =
-        case msg of
-            MyMsg message ->
+    update message model =
+        case message of
+            MyMsg msg ->
                 let
                     ( draggable, items ) =
-                        system.update message model.draggable model.items
+                        system.update msg model.draggable model.items
                 in
                 ( { model | draggable = draggable, items = items }
                 , system.commands model.draggable
@@ -93,7 +95,9 @@ Also you have access to the drag and drop index which allows you to style or tra
                         "id-" ++ item
                 in
                 Html.div
-                    (Html.Attributes.id itemId :: system.dragEvents index itemId)
+                    (Html.Attributes.id itemId
+                        :: system.dragEvents index itemId
+                    )
                     [ Html.text item ]
             )
         |> Html.div []
@@ -106,46 +110,33 @@ Also you have access to the drag and drop index which allows you to style or tra
     model.items
         |> List.indexedMap
             (\index item ->
+                let
+                    itemId : String
+                    itemId =
+                        "id-" ++ item
+                in
                 Html.div
-                    (system.dropEvents index)
+                    (Html.Attributes.id itemId
+                        :: system.dropEvents index itemId
+                    )
                     [ Html.text item ]
             )
         |> Html.div []
 
 
-## dragIndex
-
-`dragIndex` is a helper which returns the index of the dragged element.
-
-    maybeDragIndex : Maybe Int
-    maybeDragIndex =
-        system.dragIndex model.draggable
-
-
-## dropIndex
-
-`dropIndex` is a helper which returns the index of the item that the dragged element was dropped on.
-
-    maybeDropIndex : Maybe Int
-    maybeDropIndex =
-        system.dropIndex model.draggable
-
-
-## sourceElement
-
-`sourceElement` is a helper which returns `Browser.Dom.Element` information of the dragged element.
-
-    TODO : example code
-
-
 ## draggedStyles
 
-`draggedStyles` is a helper which returns the position related styles of the dragged element.
-The position is absolute to the `body` tag.
+`draggedStyles` is a helper which returns the positioning styles of the dragged element.
+The position is absolute to the `body` HTML element.
 
     Html.div
         (system.draggedStyles model.draggable)
         [ Html.text item ]
+
+
+## info
+
+See [Info](#info)
 
 -}
 
@@ -160,7 +151,7 @@ import Task
 import Utils
 
 
-{-| A `Draggable` represents the information about the current drag operation.
+{-| A `Draggable` represents the internal information about the current drag operation.
 It should be set in your model and can be initialized through the `System`'s `draggable` field.
 
     type alias Model =
@@ -192,9 +183,9 @@ type alias Model =
     }
 
 
-{-| A `System` encapsulates a `Draggable` which represents the information about the drag operation and the drag related functions.
+{-| A `System` encapsulates a `Draggable` which is the internal model of the drag operation, some drag related functions and an `Info` object.
 
-For the details, see [System Fields](#system-fields)
+For the details, see [System Fields](#system-fields) and [Info](#info)
 
 -}
 type alias System a msg =
@@ -209,6 +200,45 @@ type alias System a msg =
     }
 
 
+{-| Information about the drag source and the drop target elements.
+It is accessible through the `System`'s `info` field.
+
+  - `dragIndex`: The index of the drag source.
+
+  - `dropIndex`: The index of the drop target.
+
+  - `sourceElement`: Information about the drag source, see `Browser.Dom.Element`.
+
+  - `sourceElementId`: HTML id of the drag source.
+
+  - `targetElement`: Information about the drop target, see `Browser.Dom.Element`.
+
+  - `targetElementId`: HTML id of the drop target.
+
+```
+itemView : Html.Html Msg
+itemView =
+    ...
+
+    case system.info draggable of
+        Just { dragIndex } ->
+            -- Render when dragging is performed.
+
+        Nothing ->
+            -- Render when there is no dragging.
+```
+
+    maybeDraggedItem : Maybe Fruit
+    maybeDraggedItem =
+        system.info draggable
+            |> Maybe.andThen
+                (\{ dragIndex } ->
+                    items
+                        |> List.drop dragIndex
+                        |> List.head
+                )
+
+-}
 type alias Info =
     { dragIndex : Int
     , dropIndex : Int
@@ -221,7 +251,7 @@ type alias Info =
 
 {-| Creates a `System` object according to your configuration.
 
-Having a list of fruits:
+Let's have a list of fruits:
 
     type alias Fruit =
         String
@@ -230,11 +260,11 @@ Having a list of fruits:
     data =
         [ "Apples", "Bananas", "Cherries", "Dates" ]
 
-The `System` is a wrapper type around your message and list item types:
+The `System` is a wrapper type around the list item and your message types:
 
-    system : DnDList.System Msg Fruit
+    system : DnDList.System Fruit Msg
     system =
-        DnDList.create config
+        DnDList.create config MyMsg
 
 -}
 create : Config a -> (Msg -> msg) -> System a msg
@@ -252,16 +282,23 @@ create config message =
 
 {-| Represents the `System` configuration.
 
-  - `message`: Your message wrapper.
+  - `movement`: Dragging can be constrained to horizontal or vertical only, or can be set to free.
 
-  - `movement`: The kind of the `Movement`. It can be Free, Horizontal, or Vertical.
+  - `trigger`: Sorting can be triggered again and again while dragging over the drop targets, or it can be triggered only once on that drop target where the mouse was finally released.
 
-Example configuration:
+  - `operation`: Different kind of sort operations can be performed on the list.
+    You can compare them here: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag) and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
 
-    config : DnDList.Config Msg
+  - `beforeUpdate`: This is a hook and gives you access to the list before the sort is being performed.
+
+Example configuration with a void `beforeUpdate`:
+
+    config : DnDList.Config Fruit
     config =
-        { message = MyMsg
-        , movement = DnDList.Free DnDList.RotateOut DnDList.OnDrag
+        { movement = DnDList.Free
+        , trigger = DnDList.OnDrag
+        , operation = DnDList.RotateOut
+        , beforeUpdate = \_ _ list -> list
         }
 
 -}
@@ -275,33 +312,12 @@ type alias Config a =
 
 {-| Represents the mouse dragging movement.
 Dragging can be restricted to vertical or horizontal axis only, or it can be free.
+See them in action: [compare movement](https://annaghi.github.io/dnd-list/configuration/movement).
 -}
 type Movement
     = Free
     | Horizontal
     | Vertical
-
-
-{-| Represents the list sorting operation.
-
-  - `InsertAfter`: The dragged element will be inserted after the drop target element.
-
-  - `InsertBefore`: The dragged element will be inserted before the drop target element.
-
-  - `RotateIn`: The items between the dragged and the drop target elements will be circularly shifted.
-
-  - `RotateOut`: The items between the dragged and the drop target elements will be circularly shifted.
-
-  - `Swap`: The dragged and the drop target elements will be swapped, and no other item will be moved.
-
--}
-type Operation
-    = InsertAfter
-    | InsertBefore
-    | RotateIn
-    | RotateOut
-    | Swap
-    | Unmove
 
 
 {-| Represents the event when the list will be sorted.
@@ -314,6 +330,31 @@ type Operation
 type Trigger
     = OnDrag
     | OnDrop
+
+
+{-| Represents the list sorting operation.
+See them in action: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag) and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
+
+  - `InsertAfter`: The dragged element will be inserted after the drop target element.
+
+  - `InsertBefore`: The dragged element will be inserted before the drop target element.
+
+  - `RotateIn`: The items between the drag source and the drop target will be circularly shifted, excluding the drop target.
+
+  - `RotateOut`: The items between the drag source and the drop target will be circularly shifted, including the drop target.
+
+  - `Swap`: The drag source and the drop target will be swapped.
+
+  - `Unmove`: No item will be moved.
+
+-}
+type Operation
+    = InsertAfter
+    | InsertBefore
+    | RotateIn
+    | RotateOut
+    | Swap
+    | Unmove
 
 
 type alias Position =
@@ -369,7 +410,7 @@ targetCommands wrap (Draggable model) =
             Cmd.none
 
         Just m ->
-            if m.dragIndex /= m.dropIndex then
+            if m.dragCounter == 0 then
                 Task.attempt (wrap << GotTargetElement) (Browser.Dom.getElement m.targetElementId)
 
             else
@@ -436,7 +477,11 @@ update { operation, trigger, beforeUpdate } msg (Draggable model) list =
                         ( Draggable model, list )
 
                 _ ->
-                    ( Draggable model, list )
+                    ( model
+                        |> Maybe.map (\m -> { m | dragCounter = 0 })
+                        |> Draggable
+                    , list
+                    )
 
         DragLeave ->
             ( model
