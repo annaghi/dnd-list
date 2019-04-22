@@ -176,10 +176,8 @@ demoWrapperView currentId id example =
         ]
         [ demoView example
         , Html.div
-            [ Html.Attributes.style "flex" "0 1 100px"
-            , Html.Attributes.class "link"
+            [ Html.Attributes.class "link"
             , Html.Events.onClick (LinkClicked id)
-            , Html.Attributes.classList [ ( "is-active", id == currentId ) ]
             ]
             [ Html.text title ]
         ]
