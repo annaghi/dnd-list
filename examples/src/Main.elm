@@ -279,7 +279,7 @@ headerView =
     Html.header []
         [ Html.h1 []
             [ Html.a
-                [ Html.Attributes.href "/" ]
+                [ Html.Attributes.href (Url.Builder.absolute [ Base.base ] []) ]
                 [ Html.text "dnd-list" ]
             ]
         , Html.div []
