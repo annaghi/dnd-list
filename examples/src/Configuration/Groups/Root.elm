@@ -203,25 +203,17 @@ demoView example =
 
 
 type alias Info =
-    { title : String
-    , config : String
-    }
+    { title : String }
 
 
 info : Example -> Info
 info example =
     case example of
         InsertAfter _ ->
-            { title = "Insert after"
-            , config = ""
-            }
+            { title = "Insert after" }
 
         InsertBefore _ ->
-            { title = "Insert before"
-            , config = ""
-            }
+            { title = "Insert before" }
 
         Swap _ ->
-            { title = "Swap"
-            , config = ""
-            }
+            { title = "Swap" }

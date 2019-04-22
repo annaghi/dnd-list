@@ -25,8 +25,8 @@ main =
 
 
 type Group
-    = Number
-    | Letter
+    = Top
+    | Bottom
 
 
 type alias Item =
@@ -38,16 +38,16 @@ type alias Item =
 
 gatheredByGroup : List Item
 gatheredByGroup =
-    [ Item Number "C" blue
-    , Item Number "2" red
-    , Item Number "1" red
-    , Item Number "" transparent
-    , Item Letter "A" blue
-    , Item Letter "D" blue
-    , Item Letter "3" red
-    , Item Letter "B" blue
-    , Item Letter "4" red
-    , Item Letter "" transparent
+    [ Item Top "C" blue
+    , Item Top "2" red
+    , Item Top "1" red
+    , Item Top "" transparent
+    , Item Bottom "A" blue
+    , Item Bottom "D" blue
+    , Item Bottom "3" red
+    , Item Bottom "B" blue
+    , Item Bottom "4" red
+    , Item Bottom "" transparent
     ]
 
 
@@ -166,12 +166,12 @@ view : Model -> Html.Html Msg
 view model =
     Html.section sectionStyles
         [ model.items
-            |> List.filter (\item -> item.group == Number)
-            |> List.indexedMap (itemView model (calculateOffset 0 Number model.items))
+            |> List.filter (\item -> item.group == Top)
+            |> List.indexedMap (itemView model (calculateOffset 0 Top model.items))
             |> Html.div (containerStyles lightRed)
         , model.items
-            |> List.filter (\item -> item.group == Letter)
-            |> List.indexedMap (itemView model (calculateOffset 0 Letter model.items))
+            |> List.filter (\item -> item.group == Bottom)
+            |> List.indexedMap (itemView model (calculateOffset 0 Bottom model.items))
             |> Html.div (containerStyles lightBlue)
         , draggedItemView model.draggable model.items
         ]

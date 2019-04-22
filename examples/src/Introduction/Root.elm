@@ -44,9 +44,9 @@ type Example
     | Keyed Introduction.Keyed.Model
     | Margins Introduction.Margins.Model
     | Masonry Introduction.Masonry.Model
+    | Resize Introduction.Resize.Model
     | Independents Introduction.Independents.Model
     | Groups Introduction.Groups.Model
-    | Resize Introduction.Resize.Model
 
 
 init : String -> ( Model, Cmd Msg )
@@ -75,14 +75,14 @@ selectExample slug =
         "masonry" ->
             Masonry Introduction.Masonry.initialModel
 
+        "resize" ->
+            Resize Introduction.Resize.initialModel
+
         "independents" ->
             Independents Introduction.Independents.initialModel
 
         "groups" ->
             Groups Introduction.Groups.initialModel
-
-        "resize" ->
-            Resize Introduction.Resize.initialModel
 
         _ ->
             Basic Introduction.Basic.initialModel
@@ -105,9 +105,9 @@ type Msg
     | KeyedMsg Introduction.Keyed.Msg
     | MarginsMsg Introduction.Margins.Msg
     | MasonryMsg Introduction.Masonry.Msg
+    | ResizeMsg Introduction.Resize.Msg
     | IndependentsMsg Introduction.Independents.Msg
     | GroupsMsg Introduction.Groups.Msg
-    | ResizeMsg Introduction.Resize.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -131,14 +131,14 @@ update message model =
         ( MasonryMsg msg, Masonry mo ) ->
             stepMasonry model (Introduction.Masonry.update msg mo)
 
+        ( ResizeMsg msg, Resize mo ) ->
+            stepResize model (Introduction.Resize.update msg mo)
+
         ( IndependentsMsg msg, Independents mo ) ->
             stepIndependents model (Introduction.Independents.update msg mo)
 
         ( GroupsMsg msg, Groups mo ) ->
             stepGroups model (Introduction.Groups.update msg mo)
-
-        ( ResizeMsg msg, Resize mo ) ->
-            stepResize model (Introduction.Resize.update msg mo)
 
         _ ->
             ( model, Cmd.none )
@@ -174,6 +174,11 @@ stepMasonry model ( mo, cmds ) =
     ( { model | example = Masonry mo }, Cmd.map MasonryMsg cmds )
 
 
+stepResize : Model -> ( Introduction.Resize.Model, Cmd Introduction.Resize.Msg ) -> ( Model, Cmd Msg )
+stepResize model ( mo, cmds ) =
+    ( { model | example = Resize mo }, Cmd.map ResizeMsg cmds )
+
+
 stepIndependents : Model -> ( Introduction.Independents.Model, Cmd Introduction.Independents.Msg ) -> ( Model, Cmd Msg )
 stepIndependents model ( mo, cmds ) =
     ( { model | example = Independents mo }, Cmd.map IndependentsMsg cmds )
@@ -182,11 +187,6 @@ stepIndependents model ( mo, cmds ) =
 stepGroups : Model -> ( Introduction.Groups.Model, Cmd Introduction.Groups.Msg ) -> ( Model, Cmd Msg )
 stepGroups model ( mo, cmds ) =
     ( { model | example = Groups mo }, Cmd.map GroupsMsg cmds )
-
-
-stepResize : Model -> ( Introduction.Resize.Model, Cmd Introduction.Resize.Msg ) -> ( Model, Cmd Msg )
-stepResize model ( mo, cmds ) =
-    ( { model | example = Resize mo }, Cmd.map ResizeMsg cmds )
 
 
 
@@ -214,14 +214,14 @@ subscriptions model =
         Masonry mo ->
             Sub.map MasonryMsg (Introduction.Masonry.subscriptions mo)
 
+        Resize mo ->
+            Sub.map ResizeMsg (Introduction.Resize.subscriptions mo)
+
         Independents mo ->
             Sub.map IndependentsMsg (Introduction.Independents.subscriptions mo)
 
         Groups mo ->
             Sub.map GroupsMsg (Introduction.Groups.subscriptions mo)
-
-        Resize mo ->
-            Sub.map ResizeMsg (Introduction.Resize.subscriptions mo)
 
 
 
@@ -239,9 +239,9 @@ navigationView =
           , Keyed Introduction.Keyed.initialModel
           , Margins Introduction.Margins.initialModel
           , Masonry Introduction.Masonry.initialModel
+          , Resize Introduction.Resize.initialModel
           , Independents Introduction.Independents.initialModel
           , Groups Introduction.Groups.initialModel
-          , Resize Introduction.Resize.initialModel
           ]
             |> List.map linkView
             |> Html.ul []
@@ -300,14 +300,14 @@ demoView model =
         Masonry mo ->
             Html.map MasonryMsg (Introduction.Masonry.view mo)
 
+        Resize mo ->
+            Html.map ResizeMsg (Introduction.Resize.view mo)
+
         Independents mo ->
             Html.map IndependentsMsg (Introduction.Independents.view mo)
 
         Groups mo ->
             Html.map GroupsMsg (Introduction.Groups.view mo)
-
-        Resize mo ->
-            Html.map ResizeMsg (Introduction.Resize.view mo)
 
 
 codeView : Model -> Html.Html Msg
@@ -331,14 +331,14 @@ codeView model =
         Masonry _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Masonry.elm"
 
+        Resize _ ->
+            toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Resize.elm"
+
         Independents _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Independents.elm"
 
         Groups _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Groups.elm"
-
-        Resize _ ->
-            toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Resize.elm"
 
 
 toCode : String -> Html.Html msg
@@ -375,7 +375,7 @@ info example =
         Handle _ ->
             { slug = "handle"
             , title = "Drag handle"
-            , description = "Use a subelement as a drag handler."
+            , description = "Use a subelement as a drag handle."
             }
 
         Keyed _ ->
@@ -396,6 +396,12 @@ info example =
             , description = "Simple horizontal masonry."
             }
 
+        Resize _ ->
+            { slug = "resize"
+            , title = "Resize"
+            , description = "Put a drag handle to the top-left corner with resizable dragged elements."
+            }
+
         Independents _ ->
             { slug = "independents"
             , title = "Independent lists"
@@ -405,11 +411,5 @@ info example =
         Groups _ ->
             { slug = "groups"
             , title = "Groupable list"
-            , description = "The list state invariant is that the list has to be gathered by the grouping property."
-            }
-
-        Resize _ ->
-            { slug = "resize"
-            , title = "Resize"
             , description = "The list state invariant is that the list has to be gathered by the grouping property."
             }

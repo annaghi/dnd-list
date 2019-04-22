@@ -17,6 +17,7 @@ import Gallery.Hanoi
 import Gallery.Puzzle
 import Gallery.Shapes
 import Gallery.TaskBoard
+import Gallery.TryOn
 import Html
 import Html.Attributes
 import Url.Builder
@@ -36,6 +37,7 @@ type Example
     = Hanoi Gallery.Hanoi.Model
     | Puzzle Gallery.Puzzle.Model
     | Shapes Gallery.Shapes.Model
+    | TryOn Gallery.TryOn.Model
     | TaskBoard Gallery.TaskBoard.Model
 
 
@@ -55,6 +57,9 @@ selectExample slug =
 
         "shapes" ->
             Shapes Gallery.Shapes.initialModel
+
+        "try-on" ->
+            TryOn Gallery.TryOn.initialModel
 
         "taskboard" ->
             TaskBoard Gallery.TaskBoard.initialModel
@@ -77,6 +82,7 @@ type Msg
     = HanoiMsg Gallery.Hanoi.Msg
     | PuzzleMsg Gallery.Puzzle.Msg
     | ShapesMsg Gallery.Shapes.Msg
+    | TryOnMsg Gallery.TryOn.Msg
     | TaskBoardMsg Gallery.TaskBoard.Msg
 
 
@@ -91,6 +97,9 @@ update message model =
 
         ( ShapesMsg msg, Shapes mo ) ->
             stepShapes model (Gallery.Shapes.update msg mo)
+
+        ( TryOnMsg msg, TryOn mo ) ->
+            stepTryOn model (Gallery.TryOn.update msg mo)
 
         ( TaskBoardMsg msg, TaskBoard mo ) ->
             stepTaskBoard model (Gallery.TaskBoard.update msg mo)
@@ -114,6 +123,11 @@ stepShapes model ( mo, cmds ) =
     ( { model | example = Shapes mo }, Cmd.map ShapesMsg cmds )
 
 
+stepTryOn : Model -> ( Gallery.TryOn.Model, Cmd Gallery.TryOn.Msg ) -> ( Model, Cmd Msg )
+stepTryOn model ( mo, cmds ) =
+    ( { model | example = TryOn mo }, Cmd.map TryOnMsg cmds )
+
+
 stepTaskBoard : Model -> ( Gallery.TaskBoard.Model, Cmd Gallery.TaskBoard.Msg ) -> ( Model, Cmd Msg )
 stepTaskBoard model ( mo, cmds ) =
     ( { model | example = TaskBoard mo }, Cmd.map TaskBoardMsg cmds )
@@ -135,6 +149,9 @@ subscriptions model =
         Shapes mo ->
             Sub.map ShapesMsg (Gallery.Shapes.subscriptions mo)
 
+        TryOn mo ->
+            Sub.map TryOnMsg (Gallery.TryOn.subscriptions mo)
+
         TaskBoard mo ->
             Sub.map TaskBoardMsg (Gallery.TaskBoard.subscriptions mo)
 
@@ -151,6 +168,7 @@ navigationView =
         , [ Hanoi Gallery.Hanoi.initialModel
           , Puzzle Gallery.Puzzle.initialModel
           , Shapes Gallery.Shapes.initialModel
+          , TryOn Gallery.TryOn.initialModel
           , TaskBoard Gallery.TaskBoard.initialModel
           ]
             |> List.map linkView
@@ -201,6 +219,9 @@ demoView model =
         Shapes mo ->
             Html.map ShapesMsg (Gallery.Shapes.view mo)
 
+        TryOn mo ->
+            Html.map TryOnMsg (Gallery.TryOn.view mo)
+
         TaskBoard mo ->
             Html.map TaskBoardMsg (Gallery.TaskBoard.view mo)
 
@@ -216,6 +237,9 @@ codeView model =
 
         Shapes _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/Shapes.elm"
+
+        TryOn _ ->
+            toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/TryOn.elm"
 
         TaskBoard _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/TaskBoard.elm"
@@ -243,23 +267,29 @@ info example =
         Hanoi _ ->
             { slug = "hanoi"
             , title = "Towers of Hanoi"
-            , description = ""
+            , description = "Plain list with auxiliary elements."
             }
 
         Puzzle _ ->
             { slug = "puzzle"
             , title = "Puzzle"
-            , description = ""
+            , description = "List with groups without auxiliary elements."
             }
 
         Shapes _ ->
             { slug = "shapes"
             , title = "Geometric shapes"
-            , description = ""
+            , description = "Plain list with Unmove operation and beforeUpdate."
+            }
+
+        TryOn _ ->
+            { slug = "try-on"
+            , title = "Try-On"
+            , description = "Plain list with info.targetElement."
             }
 
         TaskBoard _ ->
             { slug = "taskboard"
             , title = "Task board"
-            , description = ""
+            , description = "Two systems - one for the cards and one for the columns."
             }

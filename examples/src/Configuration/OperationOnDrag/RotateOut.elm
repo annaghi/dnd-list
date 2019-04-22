@@ -236,7 +236,7 @@ targetColor =
 
 affectedColor : String
 affectedColor =
-    "blue"
+    "purple"
 
 
 
