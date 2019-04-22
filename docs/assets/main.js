@@ -23966,7 +23966,12 @@ var author$project$Main$headerView = A2(
 					elm$html$Html$a,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$href('/')
+							elm$html$Html$Attributes$href(
+							A2(
+								elm$url$Url$Builder$absolute,
+								_List_fromArray(
+									[author$project$Base$base]),
+								_List_Nil))
 						]),
 					_List_fromArray(
 						[
