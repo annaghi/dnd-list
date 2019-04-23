@@ -65,15 +65,18 @@ system =
 updateTower : Int -> Int -> List Disk -> List Disk
 updateTower dragIndex dropIndex list =
     let
-        dropItem : List Disk
-        dropItem =
+        drop : List Disk
+        drop =
             list |> List.drop dropIndex |> List.take 1
     in
     list
         |> List.indexedMap
             (\index item ->
                 if index == dragIndex then
-                    List.map2 (\disk dropDisk -> { disk | tower = dropDisk.tower }) [ item ] dropItem
+                    List.map2
+                        (\dragDisk dropDisk -> { dragDisk | tower = dropDisk.tower })
+                        [ item ]
+                        drop
 
                 else
                     [ item ]
@@ -163,27 +166,27 @@ view model =
     in
     Html.section sectionStyles
         [ firstTower
-            |> List.indexedMap (itemView model (topDisk firstTower) 0)
+            |> List.indexedMap (diskView model (topDisk firstTower) 0)
             |> Html.div towerStyles
         , secondTower
-            |> List.indexedMap (itemView model (topDisk secondTower) (List.length firstTower))
+            |> List.indexedMap (diskView model (topDisk secondTower) (List.length firstTower))
             |> Html.div towerStyles
         , thirdTower
-            |> List.indexedMap (itemView model (topDisk thirdTower) (List.length firstTower + List.length secondTower))
+            |> List.indexedMap (diskView model (topDisk thirdTower) (List.length firstTower + List.length secondTower))
             |> Html.div towerStyles
-        , draggedItemView model
+        , draggedDiskView model
         ]
 
 
-itemView : Model -> Maybe Disk -> Int -> Int -> Disk -> Html.Html Msg
-itemView model maybeTopDisk offset localIndex { tower, width, startColor, solvedColor } =
+diskView : Model -> Maybe Disk -> Int -> Int -> Disk -> Html.Html Msg
+diskView model maybeTopDisk offset localIndex { tower, width, startColor, solvedColor } =
     let
         globalIndex : Int
         globalIndex =
             localIndex + offset
 
-        itemId : String
-        itemId =
+        diskId : String
+        diskId =
             "id-" ++ String.fromInt globalIndex
 
         color : String
@@ -193,20 +196,20 @@ itemView model maybeTopDisk offset localIndex { tower, width, startColor, solved
     case system.info model.draggable of
         Just { dragIndex } ->
             if localIndex == 0 then
-                case ( maybeDraggedItem model, maybeTopDisk ) of
-                    ( Just draggedItem, Just top ) ->
-                        if draggedItem.width < top.width then
+                case ( maybeDraggedDisk model, maybeTopDisk ) of
+                    ( Just draggedDisk, Just top ) ->
+                        if draggedDisk.width < top.width then
                             Html.div
-                                (Html.Attributes.id itemId
+                                (Html.Attributes.id diskId
                                     :: diskStyles width color
                                     ++ droppableDiskStyles
-                                    ++ system.dropEvents globalIndex itemId
+                                    ++ system.dropEvents globalIndex diskId
                                 )
                                 []
 
                         else
                             Html.div
-                                (Html.Attributes.id itemId
+                                (Html.Attributes.id diskId
                                     :: diskStyles width color
                                     ++ droppableDiskStyles
                                 )
@@ -214,16 +217,16 @@ itemView model maybeTopDisk offset localIndex { tower, width, startColor, solved
 
                     _ ->
                         Html.div
-                            (Html.Attributes.id itemId
+                            (Html.Attributes.id diskId
                                 :: diskStyles width color
                                 ++ droppableDiskStyles
-                                ++ system.dropEvents globalIndex itemId
+                                ++ system.dropEvents globalIndex diskId
                             )
                             []
 
             else if globalIndex == dragIndex then
                 Html.div
-                    (Html.Attributes.id itemId
+                    (Html.Attributes.id diskId
                         :: diskStyles width color
                         ++ placeholderDiskStyles
                     )
@@ -231,7 +234,7 @@ itemView model maybeTopDisk offset localIndex { tower, width, startColor, solved
 
             else
                 Html.div
-                    (Html.Attributes.id itemId
+                    (Html.Attributes.id diskId
                         :: diskStyles width color
                     )
                     []
@@ -239,7 +242,7 @@ itemView model maybeTopDisk offset localIndex { tower, width, startColor, solved
         _ ->
             if localIndex == 0 then
                 Html.div
-                    (Html.Attributes.id itemId
+                    (Html.Attributes.id diskId
                         :: diskStyles width color
                         ++ droppableDiskStyles
                     )
@@ -247,24 +250,24 @@ itemView model maybeTopDisk offset localIndex { tower, width, startColor, solved
 
             else if localIndex == 1 then
                 Html.div
-                    (Html.Attributes.id itemId
+                    (Html.Attributes.id diskId
                         :: diskStyles width color
                         ++ draggableDiskStyles
-                        ++ system.dragEvents globalIndex itemId
+                        ++ system.dragEvents globalIndex diskId
                     )
                     []
 
             else
                 Html.div
-                    (Html.Attributes.id itemId
+                    (Html.Attributes.id diskId
                         :: diskStyles width color
                     )
                     []
 
 
-draggedItemView : Model -> Html.Html Msg
-draggedItemView model =
-    case maybeDraggedItem model of
+draggedDiskView : Model -> Html.Html Msg
+draggedDiskView model =
+    case maybeDraggedDisk model of
         Just { width, startColor, solvedColor } ->
             Html.div
                 (diskStyles width (paint model.solved startColor solvedColor)
@@ -281,8 +284,8 @@ draggedItemView model =
 -- HELPERS
 
 
-maybeDraggedItem : Model -> Maybe Disk
-maybeDraggedItem { draggable, disks } =
+maybeDraggedDisk : Model -> Maybe Disk
+maybeDraggedDisk { draggable, disks } =
     system.info draggable
         |> Maybe.andThen (\{ dragIndex } -> disks |> List.drop dragIndex |> List.head)
 

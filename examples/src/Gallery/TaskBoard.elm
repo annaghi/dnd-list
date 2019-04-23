@@ -83,8 +83,8 @@ compareByActivity dragItem dropItem =
 updateOnActivityChange : Int -> Int -> List Card -> List Card
 updateOnActivityChange dragIndex dropIndex list =
     let
-        dropCard : List Card
-        dropCard =
+        drop : List Card
+        drop =
             list |> List.drop dropIndex |> List.take 1
     in
     list
@@ -92,11 +92,9 @@ updateOnActivityChange dragIndex dropIndex list =
             (\index item ->
                 if index == dragIndex then
                     List.map2
-                        (\element dropElement ->
-                            { element | activity = dropElement.activity }
-                        )
+                        (\dragItem dropItem -> { dragItem | activity = dropItem.activity })
                         [ item ]
-                        dropCard
+                        drop
 
                 else
                     [ item ]

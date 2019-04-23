@@ -81,48 +81,36 @@ system =
 updateShapes : Int -> Int -> List Item -> List Item
 updateShapes dragIndex dropIndex list =
     let
-        dragItem : List Item
-        dragItem =
+        drag : List Item
+        drag =
             list |> List.drop dragIndex |> List.take 1
 
-        dropItem : List Item
-        dropItem =
+        drop : List Item
+        drop =
             list |> List.drop dropIndex |> List.take 1
 
         fit : Bool
         fit =
             List.map2
-                (\dragElement dropElement -> dragElement.shape == dropElement.shape)
-                dragItem
-                dropItem
+                (\dragItem dropItem -> dragItem.shape == dropItem.shape)
+                drag
+                drop
                 |> List.foldl (||) False
     in
     list
         |> List.indexedMap
             (\index item ->
                 if index == dragIndex && fit then
-                    List.map2
-                        (\element dropElement ->
-                            { element | color = "transparent", solved = True }
-                        )
-                        [ item ]
-                        dropItem
+                    [ { item | color = "transparent", solved = True } ]
 
                 else if index == dropIndex && fit then
                     List.map2
-                        (\element dragElement ->
-                            { element | attempts = element.attempts + 1, color = dragElement.color, solved = True }
-                        )
+                        (\dragItem dropItem -> { dropItem | attempts = dropItem.attempts + 1, color = dragItem.color, solved = True })
+                        drag
                         [ item ]
-                        dragItem
 
                 else if index == dropIndex && not fit then
-                    List.map2
-                        (\element dragElement ->
-                            { element | attempts = element.attempts + 1 }
-                        )
-                        [ item ]
-                        dragItem
+                    [ { item | attempts = item.attempts + 1 } ]
 
                 else
                     [ item ]

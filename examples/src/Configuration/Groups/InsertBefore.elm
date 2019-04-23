@@ -71,11 +71,16 @@ system =
     DnDList.Groups.create config MyMsg
 
 
+compareByGroup : Item -> Item -> Bool
+compareByGroup dragItem dropItem =
+    dragItem.group == dropItem.group
+
+
 updateOnGroupChange : Int -> Int -> List Item -> List Item
 updateOnGroupChange dragIndex dropIndex list =
     let
-        dropItem : List Item
-        dropItem =
+        drop : List Item
+        drop =
             list |> List.drop dropIndex |> List.take 1
     in
     list
@@ -83,21 +88,14 @@ updateOnGroupChange dragIndex dropIndex list =
             (\index item ->
                 if index == dragIndex then
                     List.map2
-                        (\element dropElement ->
-                            { element | group = dropElement.group }
-                        )
+                        (\dragItem dropItem -> { dragItem | group = dropItem.group })
                         [ item ]
-                        dropItem
+                        drop
 
                 else
                     [ item ]
             )
         |> List.concat
-
-
-compareByGroup : Item -> Item -> Bool
-compareByGroup dragElement dropElement =
-    dragElement.group == dropElement.group
 
 
 
