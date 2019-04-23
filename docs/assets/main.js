@@ -5727,8 +5727,8 @@ var author$project$DnDList$Groups$info = function (_n0) {
 			return A3(
 				elm$core$Maybe$map2,
 				F2(
-					function (source, target) {
-						return {cM: m.cM, ek: m.ek, af: source, a5: m.a5, ay: target, az: m.az};
+					function (sourceElement, targetElement) {
+						return {cM: m.cM, ek: m.ek, af: sourceElement, a5: m.a5, ay: targetElement, az: m.az};
 					}),
 				m.af,
 				m.ay);
@@ -6925,8 +6925,8 @@ var author$project$DnDList$info = function (_n0) {
 			return A3(
 				elm$core$Maybe$map2,
 				F2(
-					function (source, target) {
-						return {cM: m.cM, ek: m.ek, af: source, a5: m.a5, ay: target, az: m.az};
+					function (sourceElement, targetElement) {
+						return {cM: m.cM, ek: m.ek, af: sourceElement, a5: m.a5, ay: targetElement, az: m.az};
 					}),
 				m.af,
 				m.ay);
