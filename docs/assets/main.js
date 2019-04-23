@@ -24672,7 +24672,7 @@ var author$project$Introduction$Groups$containerStyles = function (color) {
 				rtfeldman$elm_css$Css$backgroundColor(
 				rtfeldman$elm_css$Css$hex(color)),
 				rtfeldman$elm_css$Css$paddingTop(
-				rtfeldman$elm_css$Css$em(2))
+				rtfeldman$elm_css$Css$em(3))
 			]));
 };
 var rtfeldman$elm_css$Css$Internal$property = F2(
@@ -24888,9 +24888,9 @@ var author$project$Introduction$Groups$auxiliaryStyles = rtfeldman$elm_css$Html$
 		[
 			rtfeldman$elm_css$Css$height(rtfeldman$elm_css$Css$auto),
 			rtfeldman$elm_css$Css$height(
-			rtfeldman$elm_css$Css$rem(2)),
+			rtfeldman$elm_css$Css$rem(3)),
 			rtfeldman$elm_css$Css$width(
-			rtfeldman$elm_css$Css$rem(8))
+			rtfeldman$elm_css$Css$rem(10))
 		]));
 var author$project$Introduction$Groups$gray = 'dimgray';
 var rtfeldman$elm_css$VirtualDom$Styled$property = F2(
