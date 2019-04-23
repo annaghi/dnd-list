@@ -141,7 +141,6 @@ See [Info](#info)
 
 import Browser.Dom
 import Browser.Events
-import DnDList.Utils
 import Html
 import Html.Attributes
 import Html.Events
@@ -520,7 +519,7 @@ update { operation, trigger, beforeUpdate, groups } msg (Draggable model) list =
             case ( model, trigger ) of
                 ( Just m, OnDrag ) ->
                     if m.dragCounter > 1 && m.dragIndex /= dropIndex then
-                        if DnDList.Utils.equalGroups groups.comparator m.dragIndex dropIndex list then
+                        if equalGroups groups.comparator m.dragIndex dropIndex list then
                             onDragUpdate dropIndex m operation beforeUpdate list
 
                         else
@@ -547,7 +546,7 @@ update { operation, trigger, beforeUpdate, groups } msg (Draggable model) list =
             case ( model, trigger ) of
                 ( Just m, OnDrop ) ->
                     if m.dragIndex /= m.dropIndex then
-                        if DnDList.Utils.equalGroups groups.comparator m.dragIndex m.dropIndex list then
+                        if equalGroups groups.comparator m.dragIndex m.dropIndex list then
                             onDropUpdate m operation beforeUpdate list
 
                         else
