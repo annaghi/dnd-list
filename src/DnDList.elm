@@ -10,10 +10,12 @@ module DnDList exposing
 
 First you need to create a `System` object which holds the information and the functions related to the drag operation.
 
-Using this object you can wire up the internal model, subscriptions, commands, and update into your model, subscriptions, commands, and update respectively.
+Using this object you can wire up the internal model, subscriptions, commands,
+and update into your model, subscriptions, commands, and update respectively.
 
 Also you have access to the drag and drop events, and the dragged element's position styles in your `view` functions.
-You can get information about the drag source and drop target elements too, which allows you to style or track the affected elements.
+You can get information about the drag source and drop target elements too,
+which allows you to style or track the affected elements.
 
 
 # System
@@ -51,7 +53,8 @@ You can get information about the drag source and drop target elements too, whic
 
 ## commands
 
-`commands` is a function to access the DOM for the drag source and the drop target `x`, `y`, `width` and `height` information.
+`commands` is a function to access the DOM for the drag source and the drop target `x`, `y`,
+`width` and `height` information.
 
     update : Msg -> Model -> ( Model, Cmd Msg )
     update message model =
@@ -92,7 +95,7 @@ You can get information about the drag source and drop target elements too, whic
                 let
                     itemId : String
                     itemId =
-                        "id-" ++ item
+                        "id-" ++ String.fromInt index
                 in
                 Html.div
                     (Html.Attributes.id itemId
@@ -113,7 +116,7 @@ You can get information about the drag source and drop target elements too, whic
                 let
                     itemId : String
                     itemId =
-                        "id-" ++ item
+                        "id-" ++ String.fromInt index
                 in
                 Html.div
                     (Html.Attributes.id itemId
@@ -183,9 +186,10 @@ type alias Model =
     }
 
 
-{-| A `System` encapsulates a `Draggable` which is the internal model of the drag operation, some drag related functions and an `Info` object.
+{-| A `System` encapsulates a `Draggable` which is the internal model of the drag operation,
+some drag related functions and an `Info` object.
 
-For the details, see [System Fields](#system-fields) and [Info](#info)
+For the details, see [System Fields](#system-fields) and [Info](#info).
 
 -}
 type alias System a msg =
@@ -284,10 +288,12 @@ create config message =
 
   - `movement`: Dragging can be constrained to horizontal or vertical only, or can be set to free.
 
-  - `trigger`: Sorting can be triggered again and again while dragging over the drop targets, or it can be triggered only once on that drop target where the mouse was finally released.
+  - `trigger`: Sorting can be triggered again and again while dragging over the drop targets,
+    or it can be triggered only once on that drop target where the mouse was finally released.
 
   - `operation`: Different kind of sort operations can be performed on the list.
-    You can compare them here: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag) and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
+    You can compare them here: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
+    and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
 
   - `beforeUpdate`: This is a hook and gives you access to the list before the sort is being performed.
 
@@ -333,15 +339,18 @@ type Trigger
 
 
 {-| Represents the list sorting operation.
-See them in action: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag) and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
+See them in action: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
+and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
 
   - `InsertAfter`: The dragged element will be inserted after the drop target element.
 
   - `InsertBefore`: The dragged element will be inserted before the drop target element.
 
-  - `RotateIn`: The items between the drag source and the drop target will be circularly shifted, excluding the drop target.
+  - `RotateIn`: The items between the drag source and the drop target will be circularly shifted,
+    excluding the drop target.
 
-  - `RotateOut`: The items between the drag source and the drop target will be circularly shifted, including the drop target.
+  - `RotateOut`: The items between the drag source and the drop target will be circularly shifted,
+    including the drop target.
 
   - `Swap`: The drag source and the drop target will be swapped.
 

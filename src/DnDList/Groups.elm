@@ -7,12 +7,14 @@ module DnDList.Groups exposing
     )
 
 {-| If the list is groupable by a certain property, the items can be transferred between those groups.
-This module does not use drop zones, instead it uses a list prepared with auxiliary items.
-Check the [demo](https://annaghi.github.io/dnd-list/introduction/groups) or the [configuration](https://annaghi.github.io/dnd-list/configuration/groups).
+Instead of using drop zones, this module requires the list to be prepared with auxiliary items.
+Check the [demo](https://annaghi.github.io/dnd-list/introduction/groups)
+and the [configurations](https://annaghi.github.io/dnd-list/configuration/groups).
 
 This module is an extended version of the DnDList module.
-The `Config` is extended with the `groups` field,
-and the internal sorting distinguishes between the sort operation performed on items from the same group, and the sort operation performed on items from different groups.
+The `Config` has a new field called `groups`,
+and the internal sorting distinguishes between the operation performed on items from the same group,
+and the operation performed on items from different groups.
 
 
 # System
@@ -50,7 +52,8 @@ and the internal sorting distinguishes between the sort operation performed on i
 
 ## commands
 
-`commands` is a function to access the DOM for the drag source and the drop target `x`, `y`, `width` and `height` information.
+`commands` is a function to access the DOM for the drag source and the drop target `x`, `y`,
+`width` and `height` information.
 
     update : Msg -> Model -> ( Model, Cmd Msg )
     update message model =
@@ -91,7 +94,7 @@ and the internal sorting distinguishes between the sort operation performed on i
                 let
                     itemId : String
                     itemId =
-                        "id-" ++ item
+                        "id-" ++ String.fromInt index
                 in
                 Html.div
                     (Html.Attributes.id itemId
@@ -112,7 +115,7 @@ and the internal sorting distinguishes between the sort operation performed on i
                 let
                     itemId : String
                     itemId =
-                        "id-" ++ item
+                        "id-" ++ String.fromInt index
                 in
                 Html.div
                     (Html.Attributes.id itemId
@@ -182,9 +185,10 @@ type alias Model =
     }
 
 
-{-| A `System` encapsulates a `Draggable` which is the internal model of the drag operation, some drag related functions and an `Info` object.
+{-| A `System` encapsulates a `Draggable` which is the internal model of the drag operation,
+some drag related functions and an `Info` object.
 
-For the details, see [System Fields](#system-fields) and [Info](#info)
+For the details, see [System Fields](#system-fields) and [Info](#info).
 
 -}
 type alias System a msg =
@@ -278,7 +282,8 @@ and a list which is gathered by these groups and prepared with auxiliary items:
         , Item Bottom "" transparent
         ]
 
-The auxiliary items (the `transparent` ones) separate the groups and they can be considered as headers or footers of a particular group.
+The auxiliary items (the `transparent` ones) separate the groups
+and they can be considered as header or footer of a particular group.
 In this case they are footers.
 
 This setup obeys the list state invariant - you should hold the following rules always true:
@@ -310,16 +315,19 @@ create config message =
 
   - `movement`: Dragging can be constrained to horizontal or vertical only, or can be set to free.
 
-  - `trigger`: Sorting can be triggered again and again while dragging over the drop targets, or it can be triggered only once on that drop target where the mouse was finally released.
+  - `trigger`: Sorting can be triggered again and again while dragging over the drop targets,
+    or it can be triggered only once on that drop target where the mouse was finally released.
 
-  - `operation`: The sort operation performed on the items from the same group.
+  - `operation`: The sort operation which is performed on the items from the same group.
 
-  - `beforeUpdate`: This is a hook and gives you access to the list before the sort is being performed on the items from the same group.
+  - `beforeUpdate`: This is a hook and gives you access to the list
+    before the sort is being performed on the items from the same group.
 
   - `groups`: The grouping related configuration:
       - `comparator`: Function which compares two items by the grouping property.
-      - `operation`: The sort operation performed on the items from different groups.
-      - `beforeUpdate`: This is a hook and gives you access to the list before the sort is being performed on the items from different groups.
+      - `operation`: The sort operation which is performed on the items from different groups.
+      - `beforeUpdate`: This is a hook and gives you access to the list
+        before the sort is being performed on the items from different groups.
 
 Example configuration:
 
@@ -381,15 +389,18 @@ type Trigger
 
 
 {-| Represents the list sorting operation.
-See them in action: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag) and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
+See them in action: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
+and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
 
   - `InsertAfter`: The dragged element will be inserted after the drop target element.
 
   - `InsertBefore`: The dragged element will be inserted before the drop target element.
 
-  - `RotateIn`: The items between the drag source and the drop target will be circularly shifted, excluding the drop target.
+  - `RotateIn`: The items between the drag source and the drop target will be circularly shifted,
+    excluding the drop target.
 
-  - `RotateOut`: The items between the drag source and the drop target will be circularly shifted, including the drop target.
+  - `RotateOut`: The items between the drag source and the drop target will be circularly shifted,
+    including the drop target.
 
   - `Swap`: The drag source and the drop target will be swapped.
 
@@ -759,3 +770,26 @@ draggedStyles movement (Draggable model) =
 
                 _ ->
                     []
+
+
+equalGroups : (a -> a -> Bool) -> Int -> Int -> List a -> Bool
+equalGroups comparator dragIndex dropIndex list =
+    let
+        dragItem : List a
+        dragItem =
+            list |> List.drop dragIndex |> List.take 1
+
+        dropItem : List a
+        dropItem =
+            list |> List.drop dropIndex |> List.take 1
+
+        result : List Bool
+        result =
+            List.map2
+                (\dragElement dropElement ->
+                    comparator dragElement dropElement
+                )
+                dragItem
+                dropItem
+    in
+    List.foldl (||) False result
