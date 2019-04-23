@@ -326,14 +326,14 @@ towerStyles =
     , Html.Attributes.style "box-shadow" "0 10px 0 0 dimgray"
     , Html.Attributes.style "margin-right" "5em"
     , Html.Attributes.style "width" "300px"
-    , Html.Attributes.style "height" "240px"
+    , Html.Attributes.style "height" "280px"
     ]
 
 
 diskStyles : Int -> String -> List (Html.Attribute msg)
 diskStyles width color =
     [ Html.Attributes.style "width" (String.fromInt width ++ "px")
-    , Html.Attributes.style "min-height" "40px"
+    , Html.Attributes.style "min-height" "50px"
     , Html.Attributes.style "background" color
     , Html.Attributes.style "margin-bottom" "10px"
     ]

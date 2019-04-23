@@ -281,7 +281,7 @@ info example =
 
         Shapes _ ->
             { slug = "shapes"
-            , title = "Geometric shapes"
+            , title = "Geometric shapes + SVG"
             , description = "Plain list with Unmove operation and beforeUpdate."
             }
 

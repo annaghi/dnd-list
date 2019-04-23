@@ -225,7 +225,7 @@ itemStyles color width =
     [ Html.Attributes.style "background-color" color
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "flex" "1 0 auto"
-    , Html.Attributes.style "height" "4em"
+    , Html.Attributes.style "height" "4.5rem"
     , Html.Attributes.style "margin" "0 1.5em 1.5em 0"
     , Html.Attributes.style "width" (String.fromInt width ++ "px")
     ]

@@ -8,13 +8,12 @@ module DnDList.Groups exposing
 
 {-| If the list is groupable by a certain property, the items can be transferred between those groups.
 Instead of using drop zones, this module requires the list to be prepared with auxiliary items.
-Check the [demo](https://annaghi.github.io/dnd-list/introduction/groups)
-and the [configurations](https://annaghi.github.io/dnd-list/configuration/groups).
+Check the [demo](https://annaghi.github.io/dnd-list/introduction/groups).
 
 This module is an extended version of the DnDList module.
 The `Config` has a new field called `groups`,
-and the internal sorting distinguishes between the operation performed on items from the same group,
-and the operation performed on items from different groups.
+and the internal sorting distinguishes between the operation performed on items from the _same_ group,
+and the operation performed on items from _different_ groups.
 
 
 # System
@@ -129,7 +128,7 @@ and the operation performed on items from different groups.
 ## draggedStyles
 
 `draggedStyles` is a helper which returns the positioning styles of the dragged element.
-The position is absolute to the `body` HTML element.
+The dragged element has absolute position relative to the viewport.
 
     Html.div
         (system.draggedStyles model.draggable)
@@ -138,7 +137,7 @@ The position is absolute to the `body` HTML element.
 
 ## info
 
-See [Info](#info)
+See [Info](#info).
 
 -}
 
@@ -252,7 +251,7 @@ type alias Info =
     }
 
 
-{-| Creates a `System` object according to your configuration.
+{-| Creates a `System` object according to the configuration.
 
 Let's have two groups:
 
@@ -286,10 +285,10 @@ The auxiliary items (the `transparent` ones) separate the groups
 and they can be considered as header or footer of a particular group.
 In this case they are footers.
 
-This setup obeys the list state invariant - you should hold the following rules always true:
+The sort operations (except the `Unmove`) were designed with the following list state invariant in mind:
 
-  - the items have to be gathered by the grouping property
-  - the auxiliary items have to keep their places (header or footer)
+  - the items are gathered by the grouping property
+  - the auxiliary items keep their places (headers or footers)
 
 The `System` is a wrapper type around the list item and your message types:
 
@@ -314,20 +313,24 @@ create config message =
 {-| Represents the `System` configuration.
 
   - `movement`: Dragging can be constrained to horizontal or vertical only, or can be set to free.
+    [Movement with Swap](https://annaghi.github.io/dnd-list/configuration/movement).
 
   - `trigger`: Sorting can be triggered again and again while dragging over the drop targets,
     or it can be triggered only once on that drop target where the mouse was finally released.
 
-  - `operation`: The sort operation which is performed on the items from the same group.
+  - `operation`: The sort operation which is performed on the items from the _same_ group.
+    [Triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
+    and [Triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
 
   - `beforeUpdate`: This is a hook and gives you access to the list
-    before the sort is being performed on the items from the same group.
+    before the sort is being performed on the items from the _same_ group.
 
-  - `groups`: The grouping related configuration:
+  - `groups`: The grouping related configuration,
+    see [groups configurations](https://annaghi.github.io/dnd-list/configuration/groups).
       - `comparator`: Function which compares two items by the grouping property.
-      - `operation`: The sort operation which is performed on the items from different groups.
+      - `operation`: The sort operation which is performed on the items from _different_ groups.
       - `beforeUpdate`: This is a hook and gives you access to the list
-        before the sort is being performed on the items from different groups.
+        before the sort is being performed on the items from _different_ groups.
 
 Example configuration:
 
@@ -368,7 +371,7 @@ type alias Config a =
 
 {-| Represents the mouse dragging movement.
 Dragging can be restricted to vertical or horizontal axis only, or it can be free.
-See them in action: [compare movement](https://annaghi.github.io/dnd-list/configuration/movement).
+A comparison can be found here: [movement with Swap](https://annaghi.github.io/dnd-list/configuration/movement).
 -}
 type Movement
     = Free
@@ -388,8 +391,8 @@ type Trigger
     | OnDrop
 
 
-{-| Represents the list sorting operation.
-See them in action: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
+{-| Represents the list sort operation.
+A detailed comparison can be found here: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
 and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
 
   - `InsertAfter`: The dragged element will be inserted after the drop target element.

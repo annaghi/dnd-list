@@ -188,8 +188,8 @@ containerStyles =
 
 itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
-    [ Html.Attributes.style "width" "50px"
-    , Html.Attributes.style "height" "50px"
+    [ Html.Attributes.style "width" "5rem"
+    , Html.Attributes.style "height" "5rem"
     , Html.Attributes.style "background-color" color
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"

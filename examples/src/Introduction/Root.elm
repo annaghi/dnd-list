@@ -413,6 +413,6 @@ info example =
 
         Groups _ ->
             { slug = "groups"
-            , title = "Groupable list"
-            , description = "The list state invariant is that the list has to be gathered by the grouping property."
+            , title = "Groupable list + elm-css"
+            , description = "The list state invariant is that the list has to be gathered by the grouping property, and the auxiliary items have to preserve their places."
             }

@@ -183,11 +183,11 @@ colorView model index item =
 
         width : Int
         width =
-            item.width * 60
+            item.width * 5
 
         height : Int
         height =
-            item.height * 60
+            item.height * 5
     in
     case system.info model.draggable of
         Just _ ->
@@ -221,11 +221,11 @@ sizeView model offset index item =
 
         width : Int
         width =
-            item.width * 50
+            item.width * 4
 
         height : Int
         height =
-            item.height * 50
+            item.height * 4
     in
     case system.info model.draggable of
         Just { dragIndex } ->
@@ -267,19 +267,23 @@ draggedItemView model =
     case ( system.info model.draggable, maybeDraggedItem model ) of
         ( Just { dragIndex, targetElement }, Just { color } ) ->
             let
+                baseFontSize : Float
+                baseFontSize =
+                    16
+
                 width : Int
                 width =
-                    round targetElement.element.width
+                    round (targetElement.element.width / baseFontSize)
 
                 height : Int
                 height =
-                    round targetElement.element.height
+                    round (targetElement.element.height / baseFontSize)
             in
             Html.div
                 (itemStyles width height color
                     ++ system.draggedStyles model.draggable
-                    ++ [ Html.Attributes.style "width" (String.fromInt width ++ "px")
-                       , Html.Attributes.style "height" (String.fromInt height ++ "px")
+                    ++ [ Html.Attributes.style "width" (String.fromInt width ++ "rem")
+                       , Html.Attributes.style "height" (String.fromInt height ++ "rem")
                        , Html.Attributes.style "transition" "width 0.5s, height 0.5s"
                        ]
                 )
@@ -341,7 +345,7 @@ sectionStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "padding-top" "3em"
+    , Html.Attributes.style "padding-top" "3rem"
     ]
 
 
@@ -351,7 +355,7 @@ colorStyles =
     , Html.Attributes.style "flex-direction" "column"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "padding-right" "3em"
+    , Html.Attributes.style "padding-right" "3rem"
     ]
 
 
@@ -367,8 +371,8 @@ sizeStyles =
 itemStyles : Int -> Int -> String -> List (Html.Attribute msg)
 itemStyles width height color =
     [ Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "margin" "0 3em 3em 0"
+    , Html.Attributes.style "margin" "0 3rem 3rem 0"
     , Html.Attributes.style "background-color" color
-    , Html.Attributes.style "width" (String.fromInt width ++ "px")
-    , Html.Attributes.style "height" (String.fromInt height ++ "px")
+    , Html.Attributes.style "width" (String.fromInt width ++ "rem")
+    , Html.Attributes.style "height" (String.fromInt height ++ "rem")
     ]
