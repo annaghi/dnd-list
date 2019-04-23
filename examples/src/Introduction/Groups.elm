@@ -86,9 +86,7 @@ updateOnGroupChange dragIndex dropIndex list =
             (\index item ->
                 if index == dragIndex then
                     List.map2
-                        (\dragItem dropItem ->
-                            { dragItem | group = dropItem.group }
-                        )
+                        (\dragItem dropItem -> { dragItem | group = dropItem.group })
                         [ item ]
                         drop
 

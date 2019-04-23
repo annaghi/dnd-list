@@ -280,22 +280,22 @@ attrs color itemId =
 
 red : String
 red =
-    "#c30005"
+    "#ff1117"
 
 
 blue : String
 blue =
-    "#0067c3"
+    "#118eff"
 
 
 draggedRed : String
 draggedRed =
-    "#9e2629"
+    "#c30005"
 
 
 draggedBlue : String
 draggedBlue =
-    "#26659e"
+    "#0067c3"
 
 
 gray : String

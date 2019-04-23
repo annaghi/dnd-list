@@ -1,6 +1,6 @@
 ### Development
 
-If you want to create an example, use the `Main.elm` file.
+You can use this directory and the `Main.elm` file to build an example.
 
 ```bash
 npm run watch:dev

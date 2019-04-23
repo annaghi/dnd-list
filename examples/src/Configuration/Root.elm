@@ -5,7 +5,6 @@ module Configuration.Root exposing
     , demoView
     , headerView
     , init
-    , initialCommand
     , navigationView
     , subscriptions
     , update
@@ -41,7 +40,7 @@ type Example
 
 init : String -> ( Model, Cmd Msg )
 init slug =
-    ( { slug = slug, example = selectExample slug }, initialCommand )
+    ( { slug = slug, example = selectExample slug }, Cmd.none )
 
 
 selectExample : String -> Example
@@ -61,11 +60,6 @@ selectExample slug =
 
         _ ->
             OperationOnDrag Configuration.OperationOnDrag.Root.initialModel
-
-
-initialCommand : Cmd Msg
-initialCommand =
-    Cmd.none
 
 
 
@@ -241,13 +235,13 @@ info example =
     case example of
         OperationOnDrag _ ->
             { slug = "operations-drag"
-            , title = "Operations on drag"
+            , title = "Operations on Drag"
             , description = "The behavior of the different operations applied on lists while dragging."
             }
 
         OperationOnDrop _ ->
             { slug = "operations-drop"
-            , title = "Operations on drop"
+            , title = "Operations on Drop"
             , description = "The behavior of the different operations applied on lists on drop."
             }
 

@@ -39,16 +39,14 @@ type alias Item =
 
 data : List Item
 data =
-    [ Item Color 1 1 red
-    , Item Color 1 1 green
-    , Item Color 1 1 blue
-    , Item Color 1 1 yellow
+    [ Item Color 1 1 papayaWhip
+    , Item Color 1 1 pink
+    , Item Color 1 1 violet
+    , Item Color 1 1 lavender
     , Item Size 1 2 gray
     , Item Size 2 2 gray
-    , Item Size 2 1 gray
     , Item Size 1 3 gray
-    , Item Size 3 2 gray
-    , Item Size 3 1 gray
+    , Item Size 2 3 gray
     , Item Size 3 3 gray
     ]
 
@@ -74,8 +72,8 @@ system =
 updateColor : Int -> Int -> List Item -> List Item
 updateColor dragIndex dropIndex list =
     let
-        dragItem : List Item
-        dragItem =
+        drag : List Item
+        drag =
             list |> List.drop dragIndex |> List.take 1
     in
     list
@@ -83,19 +81,9 @@ updateColor dragIndex dropIndex list =
             (\index item ->
                 if index == dropIndex then
                     List.map2
-                        (\dropElement dragElement ->
-                            case ( dropElement.property, dragElement.property ) of
-                                ( Size, Color ) ->
-                                    { dropElement | color = dragElement.color }
-
-                                ( Size, Size ) ->
-                                    { dropElement | color = dragElement.color }
-
-                                _ ->
-                                    dropElement
-                        )
+                        (\dragItem dropItem -> { dropItem | color = dragItem.color })
+                        drag
                         [ item ]
-                        dragItem
 
                 else if index == dragIndex then
                     case item.property of
@@ -181,7 +169,7 @@ view model =
             |> List.filter (\item -> item.property == Size)
             |> List.indexedMap
                 (sizeView model (model.items |> List.filter (\item -> item.property == Color) |> List.length))
-            |> Html.div containerStyles
+            |> Html.div sizeStyles
         , draggedItemView model
         ]
 
@@ -233,11 +221,11 @@ sizeView model offset index item =
 
         width : Int
         width =
-            item.width * 60
+            item.width * 50
 
         height : Int
         height =
-            item.height * 60
+            item.height * 50
     in
     case system.info model.draggable of
         Just { dragIndex } ->
@@ -319,29 +307,24 @@ type alias Color =
     String
 
 
-yellow : Color
-yellow =
-    "#cddc39"
+lavender : Color
+lavender =
+    "#956dbd"
 
 
-blue : Color
-blue =
-    "#2592d3"
+violet : Color
+violet =
+    "#d291bc"
 
 
-green : Color
-green =
-    "#25D366"
+pink : Color
+pink =
+    "#fec8d8"
 
 
-orange : Color
-orange =
-    "#dc9a39"
-
-
-red : Color
-red =
-    "#dc4839"
+papayaWhip : Color
+papayaWhip =
+    "#ffead3"
 
 
 gray : Color
@@ -372,11 +355,11 @@ colorStyles =
     ]
 
 
-containerStyles : List (Html.Attribute msg)
-containerStyles =
+sizeStyles : List (Html.Attribute msg)
+sizeStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-wrap" "wrap"
-    , Html.Attributes.style "align-items" "center"
+    , Html.Attributes.style "align-items" "baseline"
     , Html.Attributes.style "justify-content" "center"
     ]
 

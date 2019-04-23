@@ -5,7 +5,6 @@ module Gallery.Root exposing
     , demoView
     , headerView
     , init
-    , initialCommand
     , navigationView
     , subscriptions
     , update
@@ -43,7 +42,7 @@ type Example
 
 init : String -> ( Model, Cmd Msg )
 init slug =
-    ( { slug = slug, example = selectExample slug }, initialCommand )
+    ( { slug = slug, example = selectExample slug }, commands )
 
 
 selectExample : String -> Example
@@ -66,12 +65,6 @@ selectExample slug =
 
         _ ->
             Hanoi Gallery.Hanoi.initialModel
-
-
-initialCommand : Cmd Msg
-initialCommand =
-    Cmd.batch
-        [ Cmd.map PuzzleMsg Gallery.Puzzle.commands ]
 
 
 
@@ -131,6 +124,16 @@ stepTryOn model ( mo, cmds ) =
 stepTaskBoard : Model -> ( Gallery.TaskBoard.Model, Cmd Gallery.TaskBoard.Msg ) -> ( Model, Cmd Msg )
 stepTaskBoard model ( mo, cmds ) =
     ( { model | example = TaskBoard mo }, Cmd.map TaskBoardMsg cmds )
+
+
+
+-- COMMANDS
+
+
+commands : Cmd Msg
+commands =
+    Cmd.batch
+        [ Cmd.map PuzzleMsg Gallery.Puzzle.commands ]
 
 
 
@@ -284,7 +287,7 @@ info example =
 
         TryOn _ ->
             { slug = "try-on"
-            , title = "Try-On"
+            , title = "Try on"
             , description = "Plain list with info.targetElement."
             }
 
