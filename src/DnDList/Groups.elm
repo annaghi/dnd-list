@@ -707,12 +707,12 @@ info (Draggable model) =
     Maybe.andThen
         (\m ->
             Maybe.map2
-                (\source target ->
+                (\sourceElement targetElement ->
                     { dragIndex = m.dragIndex
                     , dropIndex = m.dropIndex
-                    , sourceElement = source
+                    , sourceElement = sourceElement
                     , sourceElementId = m.sourceElementId
-                    , targetElement = target
+                    , targetElement = targetElement
                     , targetElementId = m.targetElementId
                     }
                 )
