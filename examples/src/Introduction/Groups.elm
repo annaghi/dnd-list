@@ -163,7 +163,8 @@ update message model =
 view : Model -> Html.Html Msg
 view model =
     Html.Styled.toUnstyled <|
-        Html.Styled.section [ sectionStyles ]
+        Html.Styled.section
+            [ sectionStyles ]
             [ model.items
                 |> List.filter (\item -> item.group == Top)
                 |> List.indexedMap (itemView model (calculateOffset 0 Top model.items))
@@ -326,7 +327,7 @@ containerStyles color =
     Html.Styled.Attributes.css
         [ Css.display Css.table
         , Css.backgroundColor (Css.hex color)
-        , Css.paddingTop (Css.em 2)
+        , Css.paddingTop (Css.em 3)
         ]
 
 
@@ -351,6 +352,6 @@ auxiliaryStyles : Html.Styled.Attribute msg
 auxiliaryStyles =
     Html.Styled.Attributes.css
         [ Css.height Css.auto
-        , Css.height (Css.rem 2)
-        , Css.width (Css.rem 8)
+        , Css.height (Css.rem 3)
+        , Css.width (Css.rem 10)
         ]
