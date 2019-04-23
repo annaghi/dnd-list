@@ -15799,7 +15799,7 @@ var author$project$Gallery$Hanoi$sectionStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'flex-wrap', 'wrap'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center'),
-		A2(elm$html$Html$Attributes$style, 'padding', '1em 0 3em 0')
+		A2(elm$html$Html$Attributes$style, 'padding-bottom', '2em')
 	]);
 var author$project$Gallery$Hanoi$topDisk = function (disks) {
 	return elm$core$List$head(
@@ -15814,7 +15814,7 @@ var author$project$Gallery$Hanoi$towerStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'box-shadow', '0 10px 0 0 dimgray'),
 		A2(elm$html$Html$Attributes$style, 'margin-right', '5em'),
 		A2(elm$html$Html$Attributes$style, 'width', '300px'),
-		A2(elm$html$Html$Attributes$style, 'height', '280px')
+		A2(elm$html$Html$Attributes$style, 'height', '320px')
 	]);
 var author$project$Gallery$Hanoi$view = function (model) {
 	var thirdTower = A2(
