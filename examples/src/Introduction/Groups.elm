@@ -1,9 +1,11 @@
 module Introduction.Groups exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
 
 import Browser
+import Css
 import DnDList.Groups
 import Html
-import Html.Attributes
+import Html.Styled
+import Html.Styled.Attributes
 
 
 
@@ -40,13 +42,11 @@ gatheredByGroup : List Item
 gatheredByGroup =
     [ Item Top "C" blue
     , Item Top "2" red
-    , Item Top "1" red
+    , Item Top "A" blue
     , Item Top "" transparent
-    , Item Bottom "A" blue
-    , Item Bottom "D" blue
     , Item Bottom "3" red
     , Item Bottom "B" blue
-    , Item Bottom "4" red
+    , Item Bottom "1" red
     , Item Bottom "" transparent
     ]
 
@@ -162,20 +162,21 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section sectionStyles
-        [ model.items
-            |> List.filter (\item -> item.group == Top)
-            |> List.indexedMap (itemView model (calculateOffset 0 Top model.items))
-            |> Html.div (containerStyles lightRed)
-        , model.items
-            |> List.filter (\item -> item.group == Bottom)
-            |> List.indexedMap (itemView model (calculateOffset 0 Bottom model.items))
-            |> Html.div (containerStyles lightBlue)
-        , draggedItemView model.draggable model.items
-        ]
+    Html.Styled.toUnstyled <|
+        Html.Styled.section [ sectionStyles ]
+            [ model.items
+                |> List.filter (\item -> item.group == Top)
+                |> List.indexedMap (itemView model (calculateOffset 0 Top model.items))
+                |> Html.Styled.div [ containerStyles lightRed ]
+            , model.items
+                |> List.filter (\item -> item.group == Bottom)
+                |> List.indexedMap (itemView model (calculateOffset 0 Bottom model.items))
+                |> Html.Styled.div [ containerStyles lightBlue ]
+            , draggedItemView model.draggable model.items
+            ]
 
 
-itemView : Model -> Int -> Int -> Item -> Html.Html Msg
+itemView : Model -> Int -> Int -> Item -> Html.Styled.Html Msg
 itemView model offset localIndex { group, value, color } =
     let
         globalIndex : Int
@@ -189,62 +190,64 @@ itemView model offset localIndex { group, value, color } =
     case ( system.info model.draggable, maybeDraggedItem model.draggable model.items ) of
         ( Just { dragIndex }, Just draggedItem ) ->
             if value == "" && draggedItem.group /= group then
-                Html.div
-                    (Html.Attributes.id itemId
+                Html.Styled.div
+                    (Html.Styled.Attributes.id itemId
                         :: auxiliaryStyles
-                        ++ system.dropEvents globalIndex itemId
+                        :: List.map Html.Styled.Attributes.fromUnstyled (system.dropEvents globalIndex itemId)
                     )
                     []
 
             else if value == "" && draggedItem.group == group then
-                Html.div
-                    (Html.Attributes.id itemId
-                        :: auxiliaryStyles
+                Html.Styled.div
+                    (Html.Styled.Attributes.id itemId
+                        :: [ auxiliaryStyles ]
                     )
                     []
 
             else if dragIndex /= globalIndex then
-                Html.div
-                    (Html.Attributes.id itemId
+                Html.Styled.div
+                    (Html.Styled.Attributes.id itemId
                         :: itemStyles color
-                        ++ system.dropEvents globalIndex itemId
+                        :: List.map Html.Styled.Attributes.fromUnstyled (system.dropEvents globalIndex itemId)
                     )
-                    [ Html.text value ]
+                    [ Html.Styled.text value ]
 
             else
-                Html.div
-                    (Html.Attributes.id itemId
-                        :: itemStyles gray
+                Html.Styled.div
+                    (Html.Styled.Attributes.id itemId
+                        :: [ itemStyles gray ]
                     )
                     []
 
         _ ->
             if value == "" then
-                Html.div
-                    (Html.Attributes.id itemId
-                        :: auxiliaryStyles
+                Html.Styled.div
+                    (Html.Styled.Attributes.id itemId
+                        :: [ auxiliaryStyles ]
                     )
                     []
 
             else
-                Html.div
-                    (Html.Attributes.id itemId
+                Html.Styled.div
+                    (Html.Styled.Attributes.id itemId
                         :: itemStyles color
-                        ++ system.dragEvents globalIndex itemId
+                        :: List.map Html.Styled.Attributes.fromUnstyled (system.dragEvents globalIndex itemId)
                     )
-                    [ Html.text value ]
+                    [ Html.Styled.text value ]
 
 
-draggedItemView : DnDList.Groups.Draggable -> List Item -> Html.Html Msg
+draggedItemView : DnDList.Groups.Draggable -> List Item -> Html.Styled.Html Msg
 draggedItemView draggable items =
     case maybeDraggedItem draggable items of
         Just { value, color } ->
-            Html.div
-                (itemStyles color ++ system.draggedStyles draggable)
-                [ Html.text value ]
+            Html.Styled.div
+                (itemStyles color
+                    :: List.map Html.Styled.Attributes.fromUnstyled (system.draggedStyles draggable)
+                )
+                [ Html.Styled.text value ]
 
         Nothing ->
-            Html.text ""
+            Html.Styled.text ""
 
 
 
@@ -309,42 +312,45 @@ transparent =
 -- STYLES
 
 
-sectionStyles : List (Html.Attribute msg)
+sectionStyles : Html.Styled.Attribute msg
 sectionStyles =
-    [ Html.Attributes.style "display" "table"
-    , Html.Attributes.style "padding" "2em 0"
-    ]
+    Html.Styled.Attributes.css
+        [ Css.displayFlex
+        , Css.alignItems Css.top
+        , Css.justifyContent Css.center
+        ]
 
 
-containerStyles : String -> List (Html.Attribute msg)
+containerStyles : String -> Html.Styled.Attribute msg
 containerStyles color =
-    [ Html.Attributes.style "display" "flex"
-    , Html.Attributes.style "flex-wrap" "wrap"
-    , Html.Attributes.style "background-color" color
-    , Html.Attributes.style "padding" "1em"
-    , Html.Attributes.style "width" "720px"
-    ]
+    Html.Styled.Attributes.css
+        [ Css.display Css.table
+        , Css.backgroundColor (Css.hex color)
+        , Css.paddingTop (Css.em 2)
+        ]
 
 
-itemStyles : String -> List (Html.Attribute msg)
+itemStyles : String -> Html.Styled.Attribute msg
 itemStyles color =
-    [ Html.Attributes.style "width" "50px"
-    , Html.Attributes.style "height" "50px"
-    , Html.Attributes.style "background-color" color
-    , Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "color" "white"
-    , Html.Attributes.style "cursor" "pointer"
-    , Html.Attributes.style "margin" "0 2em 0 0"
-    , Html.Attributes.style "display" "flex"
-    , Html.Attributes.style "align-items" "center"
-    , Html.Attributes.style "justify-content" "center"
-    ]
+    Html.Styled.Attributes.css
+        [ Css.width (Css.rem 5)
+        , Css.height (Css.rem 5)
+        , Css.backgroundColor (Css.hex color)
+        , Css.borderRadius (Css.px 8)
+        , Css.color (Css.hex "#ffffff")
+        , Css.cursor Css.pointer
+        , Css.margin4 (Css.em 0) Css.auto (Css.em 2) Css.auto
+        , Css.displayFlex
+        , Css.alignItems Css.center
+        , Css.justifyContent Css.center
+        , Css.nthLastChild "2" [ Css.marginBottom (Css.px 0) ]
+        ]
 
 
-auxiliaryStyles : List (Html.Attribute msg)
+auxiliaryStyles : Html.Styled.Attribute msg
 auxiliaryStyles =
-    [ Html.Attributes.style "flex-grow" "1"
-    , Html.Attributes.style "width" "auto"
-    , Html.Attributes.style "min-width" "50px"
-    , Html.Attributes.style "height" "50px"
-    ]
+    Html.Styled.Attributes.css
+        [ Css.height Css.auto
+        , Css.height (Css.rem 2)
+        , Css.width (Css.rem 8)
+        ]

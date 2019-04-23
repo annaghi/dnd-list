@@ -464,7 +464,7 @@ columnStyles : String -> List (Html.Attribute msg)
 columnStyles color =
     [ Html.Attributes.style "background" color
     , Html.Attributes.style "box-shadow" "0 0 0 1px black"
-    , Html.Attributes.style "width" "200px"
+    , Html.Attributes.style "width" "220px"
     ]
 
 
@@ -473,7 +473,7 @@ columnHeadingStyles color =
     [ Html.Attributes.style "background" color
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
-    , Html.Attributes.style "height" "50px"
+    , Html.Attributes.style "height" "60px"
     , Html.Attributes.style "margin" "0"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
@@ -487,7 +487,7 @@ containerStyles =
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-direction" "column"
     , Html.Attributes.style "align-items" "center"
-    , Html.Attributes.style "height" "calc(100% - 70px)"
+    , Html.Attributes.style "height" "calc(100% - 80px)"
     , Html.Attributes.style "padding-top" "20px"
     ]
 
@@ -501,8 +501,8 @@ cardStyles color =
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "margin-bottom" "20px"
-    , Html.Attributes.style "width" "160px"
-    , Html.Attributes.style "height" "50px"
+    , Html.Attributes.style "width" "170px"
+    , Html.Attributes.style "height" "60px"
     ]
 
 
@@ -517,7 +517,7 @@ auxiliaryCardStyles =
 
     -- , Html.Attributes.style "box-shadow" "0 0 0 1px red"
     , Html.Attributes.style "flex-grow" "1"
-    , Html.Attributes.style "width" "200px"
+    , Html.Attributes.style "width" "220px"
     , Html.Attributes.style "height" "auto"
-    , Html.Attributes.style "min-height" "50px"
+    , Html.Attributes.style "min-height" "60px"
     ]

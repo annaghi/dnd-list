@@ -421,11 +421,11 @@ transparent =
 containerStyles : List (Html.Attribute msg)
 containerStyles =
     [ Html.Attributes.style "display" "grid"
-    , Html.Attributes.style "grid-template-columns" "150px 150px"
-    , Html.Attributes.style "grid-template-rows" "150px 150px"
+    , Html.Attributes.style "grid-template-columns" "12em 12em"
+    , Html.Attributes.style "grid-template-rows" "12em 12em"
     , Html.Attributes.style "grid-gap" "2em"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "padding" "3em"
+    , Html.Attributes.style "padding" "3em 0"
     ]
 
 
@@ -443,11 +443,11 @@ groupStyles color solved =
     [ Html.Attributes.style "background" bgColor
     , Html.Attributes.style "box-shadow" ("0 0 0 4px " ++ color)
     , Html.Attributes.style "display" "grid"
-    , Html.Attributes.style "grid-template-columns" "50px 50px"
-    , Html.Attributes.style "grid-template-rows" "50px 50px"
-    , Html.Attributes.style "grid-gap" "1em"
+    , Html.Attributes.style "grid-template-columns" "4em 4em"
+    , Html.Attributes.style "grid-template-rows" "4em 4em"
+    , Html.Attributes.style "grid-gap" "1.4em"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "padding" "20px"
+    , Html.Attributes.style "padding" "1.3em"
     ]
 
 

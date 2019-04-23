@@ -146,11 +146,11 @@ itemView model index ( color, spot ) =
 
         width : Int
         width =
-            spot.width * 60
+            spot.width * 5
 
         height : Int
         height =
-            spot.height * 60
+            spot.height * 5
     in
     case system.info model.draggable of
         Just { dragIndex } ->
@@ -283,8 +283,8 @@ itemStyles width height color =
     , Html.Attributes.style "align-items" "flex-start"
     , Html.Attributes.style "justify-content" "flex-start"
     , Html.Attributes.style "background-color" color
-    , Html.Attributes.style "width" (String.fromInt width ++ "px")
-    , Html.Attributes.style "height" (String.fromInt height ++ "px")
+    , Html.Attributes.style "width" (String.fromInt width ++ "rem")
+    , Html.Attributes.style "height" (String.fromInt height ++ "rem")
     ]
 
 
