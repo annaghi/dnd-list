@@ -254,5 +254,5 @@ info example =
         Groups _ ->
             { slug = "groups"
             , title = "Groups"
-            , description = "The list state invariant is that the list has to be gathered by the grouping property."
+            , description = "The list state invariant is that the list has to be gathered by the grouping property, and the auxiliary items have to preserve their places."
             }
