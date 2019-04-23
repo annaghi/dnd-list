@@ -13,9 +13,9 @@ First you need to create a `System` object which holds the information and the f
 Using this object you can wire up the internal model, subscriptions, commands,
 and update into your model, subscriptions, commands, and update respectively.
 
-Also you have access to the drag and drop events, and the dragged element's position styles in your `view` functions.
-You can get information about the drag source and drop target elements too,
-which allows you to style or track the affected elements.
+Also you have access to the drag and drop events and the dragged element's position styles in your `view` functions.
+You can get information about the drag source and the drop target elements too,
+which allows to style or track the affected elements.
 
 
 # System
@@ -130,7 +130,7 @@ which allows you to style or track the affected elements.
 ## draggedStyles
 
 `draggedStyles` is a helper which returns the positioning styles of the dragged element.
-The position is absolute to the `body` HTML element.
+The dragged element has absolute position relative to the viewport.
 
     Html.div
         (system.draggedStyles model.draggable)
@@ -139,7 +139,7 @@ The position is absolute to the `body` HTML element.
 
 ## info
 
-See [Info](#info)
+See [Info](#info).
 
 -}
 
@@ -253,7 +253,7 @@ type alias Info =
     }
 
 
-{-| Creates a `System` object according to your configuration.
+{-| Creates a `System` object according to the configuration.
 
 Let's have a list of fruits:
 
@@ -287,13 +287,14 @@ create config message =
 {-| Represents the `System` configuration.
 
   - `movement`: Dragging can be constrained to horizontal or vertical only, or can be set to free.
+    [Movement with Swap](https://annaghi.github.io/dnd-list/configuration/movement).
 
   - `trigger`: Sorting can be triggered again and again while dragging over the drop targets,
     or it can be triggered only once on that drop target where the mouse was finally released.
 
   - `operation`: Different kind of sort operations can be performed on the list.
-    You can compare them here: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
-    and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
+    [Triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
+    and [Triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
 
   - `beforeUpdate`: This is a hook and gives you access to the list before the sort is being performed.
 
@@ -318,7 +319,7 @@ type alias Config a =
 
 {-| Represents the mouse dragging movement.
 Dragging can be restricted to vertical or horizontal axis only, or it can be free.
-See them in action: [compare movement](https://annaghi.github.io/dnd-list/configuration/movement).
+A comparison can be found here: [movement with Swap](https://annaghi.github.io/dnd-list/configuration/movement).
 -}
 type Movement
     = Free
@@ -338,8 +339,8 @@ type Trigger
     | OnDrop
 
 
-{-| Represents the list sorting operation.
-See them in action: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
+{-| Represents the list sort operation.
+A detailed comparison can be found here: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
 and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
 
   - `InsertAfter`: The dragged element will be inserted after the drop target element.
