@@ -24,18 +24,16 @@ draggedStyles : DnDList.Draggable -> List (Html.Attribute Msg)
 info : DnDList.Draggable -> Maybe Info
 ```
 
-## Config<sup>\*</sup>
+## Config
 
 ```elm
-type alias Config a =
+pseudo type alias Config a =
     { movement : Free | Horizontal | Vertical
     , trigger : OnDrag | OnDrop
     , operation : InsertAfter | InsertBefore | RotateIn | RotateOut | Swap | Unmove
     , beforeUpdate : DragIndex -> DropIndex -> List a -> List a
     }
 ```
-
-<sup>\*</sup> This is pseudocode with the purpose of making a first impression of the `Config` type.
 
 ## Info
 
