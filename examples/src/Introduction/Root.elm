@@ -5,7 +5,6 @@ module Introduction.Root exposing
     , demoView
     , headerView
     , init
-    , initialCommand
     , navigationView
     , subscriptions
     , update
@@ -51,7 +50,7 @@ type Example
 
 init : String -> ( Model, Cmd Msg )
 init slug =
-    ( { slug = slug, example = selectExample slug }, initialCommand )
+    ( { slug = slug, example = selectExample slug }, commands )
 
 
 selectExample : String -> Example
@@ -86,12 +85,6 @@ selectExample slug =
 
         _ ->
             Basic Introduction.Basic.initialModel
-
-
-initialCommand : Cmd Msg
-initialCommand =
-    Cmd.batch
-        [ Cmd.map MasonryMsg Introduction.Masonry.commands ]
 
 
 
@@ -187,6 +180,16 @@ stepIndependents model ( mo, cmds ) =
 stepGroups : Model -> ( Introduction.Groups.Model, Cmd Introduction.Groups.Msg ) -> ( Model, Cmd Msg )
 stepGroups model ( mo, cmds ) =
     ( { model | example = Groups mo }, Cmd.map GroupsMsg cmds )
+
+
+
+-- COMMANDS
+
+
+commands : Cmd Msg
+commands =
+    Cmd.batch
+        [ Cmd.map MasonryMsg Introduction.Masonry.commands ]
 
 
 
@@ -363,7 +366,7 @@ info example =
         Basic _ ->
             { slug = "basic"
             , title = "Basic"
-            , description = "Basic sortable list"
+            , description = "Plain sortable list"
             }
 
         BasicElmUI _ ->

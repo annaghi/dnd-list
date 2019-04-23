@@ -165,15 +165,6 @@ stepVerticalOnDrop ( mo, cmds ) =
 
 
 
--- COMMANDS
-
-
-commands : Int -> Cmd Msg
-commands id =
-    Cmd.none
-
-
-
 -- SUBSCRIPTIONS
 
 
