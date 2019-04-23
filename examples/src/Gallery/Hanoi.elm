@@ -313,7 +313,7 @@ sectionStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-wrap" "wrap"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "padding" "1em 0 3em 0"
+    , Html.Attributes.style "padding-bottom" "2em"
     ]
 
 
@@ -326,7 +326,7 @@ towerStyles =
     , Html.Attributes.style "box-shadow" "0 10px 0 0 dimgray"
     , Html.Attributes.style "margin-right" "5em"
     , Html.Attributes.style "width" "300px"
-    , Html.Attributes.style "height" "280px"
+    , Html.Attributes.style "height" "320px"
     ]
 
 
