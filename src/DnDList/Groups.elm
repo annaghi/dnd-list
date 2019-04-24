@@ -1,7 +1,7 @@
 module DnDList.Groups exposing
     ( System, create, Msg
     , Config
-    , Movement(..), Trigger(..), Operation(..)
+    , Trigger(..), Operation(..)
     , Info
     , Draggable
     )
@@ -10,9 +10,9 @@ module DnDList.Groups exposing
 Instead of using drop zones, this module requires the list to be prepared with auxiliary items.
 Check the [demo](https://annaghi.github.io/dnd-list/introduction/groups).
 
-This module is an extended version of the DnDList module.
-The `Config` has a new field called `groups`,
-and the internal sorting distinguishes between the operation performed on items from the _same_ group,
+This module is a modified version of the DnDList module.
+The `Config` is extended with a new field called `groups`, and diminished with the field `movement`.
+The internal sorting distinguishes between the operation performed on items from the _same_ group,
 and the operation performed on items from _different_ groups.
 
 
@@ -24,7 +24,7 @@ and the operation performed on items from _different_ groups.
 # Config
 
 @docs Config
-@docs Movement, Trigger, Operation
+@docs Trigger, Operation
 
 
 # Info
@@ -305,17 +305,15 @@ create config message =
     , update = update config
     , dragEvents = dragEvents message
     , dropEvents = dropEvents message
-    , draggedStyles = draggedStyles config.movement
+    , draggedStyles = draggedStyles
     , info = info
     }
 
 
 {-| Represents the `System` configuration.
 
-  - `movement`: Dragging can be constrained to horizontal or vertical only, or can be set to free.
-    [Movement with Swap](https://annaghi.github.io/dnd-list/configuration/movement).
-
-  - `trigger`: Sorting can be triggered again and again while dragging over the drop targets,
+  - `trigger`: The operation on the items from the _same_ group
+    can be triggered again and again while dragging over the drop targets,
     or it can be triggered only once on that drop target where the mouse was finally released.
 
   - `operation`: The sort operation which is performed on the items from the _same_ group.
@@ -325,9 +323,10 @@ create config message =
   - `beforeUpdate`: This is a hook and gives you access to the list
     before the sort is being performed on the items from the _same_ group.
 
-  - `groups`: The grouping related configuration,
+  - `groups`: Configuration for items from _different_ groups,
     see [groups configurations](https://annaghi.github.io/dnd-list/configuration/groups).
       - `comparator`: Function which compares two items by the grouping property.
+      - `trigger`: When the operation on the items from the _different_ groups will be triggered.
       - `operation`: The sort operation which is performed on the items from _different_ groups.
       - `beforeUpdate`: This is a hook and gives you access to the list
         before the sort is being performed on the items from _different_ groups.
@@ -336,12 +335,12 @@ Example configuration:
 
     config : DnDList.Groups.Config Item
     config =
-        { movement = DnDList.Groups.Free
-        , trigger = DnDList.Groups.OnDrag
+        { trigger = DnDList.Groups.OnDrag
         , operation = DnDList.Groups.RotateOut
         , beforeUpdate = \_ _ list -> list
         , groups =
             { comparator = compareByGroup
+            , trigger = DnDList.Groups.OnDrag
             , operation = DnDList.Groups.InsertBefore
             , beforeUpdate = updateOnGroupChange
             }
@@ -357,26 +356,16 @@ Example configuration:
 
 -}
 type alias Config a =
-    { movement : Movement
-    , trigger : Trigger
+    { trigger : Trigger
     , operation : Operation
     , beforeUpdate : Int -> Int -> List a -> List a
     , groups :
         { comparator : a -> a -> Bool
+        , trigger : Trigger
         , operation : Operation
         , beforeUpdate : Int -> Int -> List a -> List a
         }
     }
-
-
-{-| Represents the mouse dragging movement.
-Dragging can be restricted to vertical or horizontal axis only, or it can be free.
-A comparison can be found here: [movement with Swap](https://annaghi.github.io/dnd-list/configuration/movement).
--}
-type Movement
-    = Free
-    | Horizontal
-    | Vertical
 
 
 {-| Represents the event when the list will be sorted.
@@ -530,24 +519,23 @@ update { operation, trigger, beforeUpdate, groups } msg (Draggable model) list =
             )
 
         DragEnter dropIndex ->
-            case ( model, trigger ) of
-                ( Just m, OnDrag ) ->
+            case model of
+                Just m ->
                     if m.dragCounter > 1 && m.dragIndex /= dropIndex then
-                        if equalGroups groups.comparator m.dragIndex dropIndex list then
+                        if trigger == OnDrag && equalGroups groups.comparator m.dragIndex dropIndex list then
                             onDragUpdate dropIndex m operation beforeUpdate list
 
-                        else
+                        else if groups.trigger == OnDrag && not (equalGroups groups.comparator m.dragIndex dropIndex list) then
                             onDragUpdate dropIndex m groups.operation groups.beforeUpdate list
+
+                        else
+                            ( Draggable (Just { m | dragCounter = 0 }), list )
 
                     else
                         ( Draggable model, list )
 
                 _ ->
-                    ( model
-                        |> Maybe.map (\m -> { m | dragCounter = 0 })
-                        |> Draggable
-                    , list
-                    )
+                    ( Draggable model, list )
 
         DragLeave ->
             ( model
@@ -557,14 +545,17 @@ update { operation, trigger, beforeUpdate, groups } msg (Draggable model) list =
             )
 
         DragEnd ->
-            case ( model, trigger ) of
-                ( Just m, OnDrop ) ->
+            case model of
+                Just m ->
                     if m.dragIndex /= m.dropIndex then
-                        if equalGroups groups.comparator m.dragIndex m.dropIndex list then
+                        if trigger == OnDrop && equalGroups groups.comparator m.dragIndex m.dropIndex list then
                             onDropUpdate m operation beforeUpdate list
 
-                        else
+                        else if groups.trigger == OnDrop && not (equalGroups groups.comparator m.dragIndex m.dropIndex list) then
                             onDropUpdate m groups.operation groups.beforeUpdate list
+
+                        else
+                            ( Draggable Nothing, list )
 
                     else
                         ( Draggable Nothing, list )
@@ -722,8 +713,8 @@ info (Draggable model) =
         model
 
 
-draggedStyles : Movement -> Draggable -> List (Html.Attribute msg)
-draggedStyles movement (Draggable model) =
+draggedStyles : Draggable -> List (Html.Attribute msg)
+draggedStyles (Draggable model) =
     case model of
         Nothing ->
             []
@@ -731,45 +722,17 @@ draggedStyles movement (Draggable model) =
         Just m ->
             case m.sourceElement of
                 Just { element } ->
-                    case movement of
-                        Horizontal ->
-                            [ Html.Attributes.style "position" "absolute"
-                            , Html.Attributes.style "top" "0"
-                            , Html.Attributes.style "left" "0"
-                            , Html.Attributes.style "transform" <|
-                                Utils.translate
-                                    (round (m.currentPosition.x - m.startPosition.x + element.x))
-                                    (round element.y)
-                            , Html.Attributes.style "height" (Utils.px (round element.height))
-                            , Html.Attributes.style "width" (Utils.px (round element.width))
-                            , Html.Attributes.style "pointer-events" "none"
-                            ]
-
-                        Vertical ->
-                            [ Html.Attributes.style "position" "absolute"
-                            , Html.Attributes.style "left" "0"
-                            , Html.Attributes.style "top" "0"
-                            , Html.Attributes.style "transform" <|
-                                Utils.translate
-                                    (round element.x)
-                                    (round (m.currentPosition.y - m.startPosition.y + element.y))
-                            , Html.Attributes.style "height" (Utils.px (round element.height))
-                            , Html.Attributes.style "width" (Utils.px (round element.width))
-                            , Html.Attributes.style "pointer-events" "none"
-                            ]
-
-                        Free ->
-                            [ Html.Attributes.style "position" "absolute"
-                            , Html.Attributes.style "left" "0"
-                            , Html.Attributes.style "top" "0"
-                            , Html.Attributes.style "transform" <|
-                                Utils.translate
-                                    (round (m.currentPosition.x - m.startPosition.x + element.x))
-                                    (round (m.currentPosition.y - m.startPosition.y + element.y))
-                            , Html.Attributes.style "height" (Utils.px (round element.height))
-                            , Html.Attributes.style "width" (Utils.px (round element.width))
-                            , Html.Attributes.style "pointer-events" "none"
-                            ]
+                    [ Html.Attributes.style "position" "absolute"
+                    , Html.Attributes.style "left" "0"
+                    , Html.Attributes.style "top" "0"
+                    , Html.Attributes.style "transform" <|
+                        Utils.translate
+                            (round (m.currentPosition.x - m.startPosition.x + element.x))
+                            (round (m.currentPosition.y - m.startPosition.y + element.y))
+                    , Html.Attributes.style "height" (Utils.px (round element.height))
+                    , Html.Attributes.style "width" (Utils.px (round element.width))
+                    , Html.Attributes.style "pointer-events" "none"
+                    ]
 
                 _ ->
                     []

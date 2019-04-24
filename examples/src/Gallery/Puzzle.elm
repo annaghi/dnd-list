@@ -59,12 +59,12 @@ solution =
 
 config : DnDList.Groups.Config Item
 config =
-    { movement = DnDList.Groups.Free
-    , trigger = DnDList.Groups.OnDrop
+    { trigger = DnDList.Groups.OnDrag
     , operation = DnDList.Groups.Swap
     , beforeUpdate = \_ _ list -> list
     , groups =
         { comparator = compareByGroup
+        , trigger = DnDList.Groups.OnDrop
         , operation = DnDList.Groups.Swap
         , beforeUpdate = updateOnGroupChange
         }
