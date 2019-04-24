@@ -60,7 +60,7 @@ solution =
 config : DnDList.Groups.Config Item
 config =
     { trigger = DnDList.Groups.OnDrag
-    , operation = DnDList.Groups.RotateOut
+    , operation = DnDList.Groups.Swap
     , beforeUpdate = \_ _ list -> list
     , groups =
         { comparator = compareByGroup
