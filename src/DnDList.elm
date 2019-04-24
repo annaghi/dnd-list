@@ -7,6 +7,7 @@ module DnDList exposing
     )
 
 {-| While dragging a list item, the mouse events and the list sorting are handled internally by this module.
+Check the [demo](https://annaghi.github.io/dnd-list/introduction/basic).
 
 First you need to create a `System` object which holds the information and the functions related to the drag operation.
 
@@ -87,7 +88,7 @@ which allows to style or track the affected elements.
 
 ## dragEvents
 
-`dragEvents` is a function which wraps all the events for draggable elements.
+`dragEvents` is a function which wraps up all the events for draggable elements.
 
     model.items
         |> List.indexedMap
@@ -108,7 +109,7 @@ which allows to style or track the affected elements.
 
 ## dropEvents
 
-`dropEvents` is a function which wraps all the events for droppable elements.
+`dropEvents` is a function which wraps up all the events for droppable elements.
 
     model.items
         |> List.indexedMap
@@ -286,15 +287,16 @@ create config message =
 
 {-| Represents the `System` configuration.
 
-  - `movement`: Dragging can be constrained to horizontal or vertical only, or can be set to free.
-    [Movement with Swap](https://annaghi.github.io/dnd-list/configuration/movement).
+  - `movement`: Dragging can be constrained to horizontal or vertical axis only, or it can be set to free.
+    This [demo config](https://annaghi.github.io/dnd-list/configuration/movement) shows the different movements in action.
 
-  - `trigger`: Sorting can be triggered again and again while dragging over the drop targets,
+  - `trigger`: Sorting can be triggered again and again while dragging over the drop target elements,
     or it can be triggered only once on that drop target where the mouse was finally released.
 
   - `operation`: Different kind of sort operations can be performed on the list.
-    [Triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
-    and [Triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
+    You can compare them when they are
+    [triggered on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
+    or [triggered on drop](https://annaghi.github.io/dnd-list/configuration/operations-drop).
 
   - `beforeUpdate`: This is a hook and gives you access to the list before the sort is being performed.
 
@@ -318,8 +320,14 @@ type alias Config a =
 
 
 {-| Represents the mouse dragging movement.
-Dragging can be restricted to vertical or horizontal axis only, or it can be free.
-A comparison can be found here: [movement with Swap](https://annaghi.github.io/dnd-list/configuration/movement).
+This [demo config](https://annaghi.github.io/dnd-list/configuration/movement) shows the different movements in action.
+
+  - `Free` : The dragged element moves as the mouse moves.
+
+  - `Horizontal` : The dragged element can only move horizontally.
+
+  - `Vertical` : The dragged element can only move vertically.
+
 -}
 type Movement
     = Free
@@ -329,9 +337,9 @@ type Movement
 
 {-| Represents the event when the list will be sorted.
 
-  - `OnDrag`: Triggers the list update when the dragged element is dragging over a drop target element.
+  - `OnDrag`: Sorting is triggered when the dragged element is dragged over a drop target element.
 
-  - `OnDrop`: Triggers the list update when the dragged element is dropped on a drop target element.
+  - `OnDrop`: Sorting is triggered when the dragged element is dropped on a drop target element.
 
 -}
 type Trigger
@@ -340,20 +348,21 @@ type Trigger
 
 
 {-| Represents the list sort operation.
-A detailed comparison can be found here: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
-and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
+A detailed comparison can be found here:
+[triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
+and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drop).
 
-  - `InsertAfter`: The dragged element will be inserted after the drop target element.
+  - `InsertAfter`: The drag source element will be inserted after the drop target element.
 
-  - `InsertBefore`: The dragged element will be inserted before the drop target element.
+  - `InsertBefore`: The drag source element will be inserted before the drop target element.
 
-  - `RotateIn`: The items between the drag source and the drop target will be circularly shifted,
+  - `RotateIn`: The items between the drag source and the drop target elements will be circularly shifted,
     excluding the drop target.
 
-  - `RotateOut`: The items between the drag source and the drop target will be circularly shifted,
+  - `RotateOut`: The items between the drag source and the drop target elements will be circularly shifted,
     including the drop target.
 
-  - `Swap`: The drag source and the drop target will be swapped.
+  - `Swap`: The drag source and the drop target elements will be swapped.
 
   - `Unmove`: No item will be moved.
 
