@@ -11,7 +11,7 @@ Instead of using drop zones, this module requires the list to be prepared with a
 Check the [demo](https://annaghi.github.io/dnd-list/introduction/groups).
 
 This module is a modified version of the DnDList module.
-The `Config` is extended with a new field called `groups`, and diminished with the field `movement`.
+The `Config` is extended with a new field called `groups`, and the `movement` field was diminished.
 The internal sorting distinguishes between the operation performed on items from the _same_ group,
 and the operation performed on items from _different_ groups.
 
@@ -85,7 +85,7 @@ and the operation performed on items from _different_ groups.
 
 ## dragEvents
 
-`dragEvents` is a function which wraps all the events for draggable elements.
+`dragEvents` is a function which wraps up all the events for draggable elements.
 
     model.items
         |> List.indexedMap
@@ -106,7 +106,7 @@ and the operation performed on items from _different_ groups.
 
 ## dropEvents
 
-`dropEvents` is a function which wraps all the events for droppable elements.
+`dropEvents` is a function which wraps up all the events for droppable elements.
 
     model.items
         |> List.indexedMap
@@ -312,24 +312,26 @@ create config message =
 
 {-| Represents the `System` configuration.
 
-  - `trigger`: The operation on the items from the _same_ group
-    can be triggered again and again while dragging over the drop targets,
+  - `trigger`: This setting is for the items from the _same_ group.
+    Sorting can be triggered again and again while dragging over the drop target elements,
     or it can be triggered only once on that drop target where the mouse was finally released.
 
-  - `operation`: The sort operation which is performed on the items from the _same_ group.
-    [Triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
-    and [Triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
+  - `operation`: This setting is for the items from the _same_ group.
+    Different kind of sort operations can be performed on the list.
+    You can compare them when they are
+    [triggered on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
+    or [triggered on drop](https://annaghi.github.io/dnd-list/configuration/operations-drop).
 
   - `beforeUpdate`: This is a hook and gives you access to the list
     before the sort is being performed on the items from the _same_ group.
 
-  - `groups`: Configuration for items from _different_ groups,
+  - `groups`: This setting is for the items from _different_ groups.
+    To have a better understanding of how this works
     see [groups configurations](https://annaghi.github.io/dnd-list/configuration/groups).
       - `comparator`: Function which compares two items by the grouping property.
-      - `trigger`: When the operation on the items from the _different_ groups will be triggered.
-      - `operation`: The sort operation which is performed on the items from _different_ groups.
-      - `beforeUpdate`: This is a hook and gives you access to the list
-        before the sort is being performed on the items from _different_ groups.
+      - `trigger`: Same as the plain `trigger` but applied on items from _different_ groups.
+      - `operation`: Same as the plain `operation` but applied on the items from _different_ groups.
+      - `beforeUpdate`: Same as the plain `beforeUpdate` but applied on the items from _different_ groups.
 
 Example configuration:
 
@@ -352,7 +354,7 @@ Example configuration:
 
     updateOnGroupChange : Int -> Int -> List Item -> List Item
     updateOnGroupChange dragIndex dropIndex list =
-        -- update the group field of the dragged item
+        -- update the group field of the drag source
 
 -}
 type alias Config a =
@@ -370,9 +372,9 @@ type alias Config a =
 
 {-| Represents the event when the list will be sorted.
 
-  - `OnDrag`: Triggers the list update when the dragged element is dragging over a drop target element.
+  - `OnDrag`: Sorting is triggered when the dragged element is dragged over a drop target element.
 
-  - `OnDrop`: Triggers the list update when the dragged element is dropped on a drop target element.
+  - `OnDrop`: Sorting is triggered when the dragged element is dropped on a drop target element.
 
 -}
 type Trigger
@@ -381,20 +383,21 @@ type Trigger
 
 
 {-| Represents the list sort operation.
-A detailed comparison can be found here: [triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
-and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drag).
+A detailed comparison can be found here:
+[triggering on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
+and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operations-drop).
 
-  - `InsertAfter`: The dragged element will be inserted after the drop target element.
+  - `InsertAfter`: The drag source element will be inserted after the drop target element.
 
-  - `InsertBefore`: The dragged element will be inserted before the drop target element.
+  - `InsertBefore`: The drag source element will be inserted before the drop target element.
 
-  - `RotateIn`: The items between the drag source and the drop target will be circularly shifted,
+  - `RotateIn`: The items between the drag source and the drop target elements will be circularly shifted,
     excluding the drop target.
 
-  - `RotateOut`: The items between the drag source and the drop target will be circularly shifted,
+  - `RotateOut`: The items between the drag source and the drop target elements will be circularly shifted,
     including the drop target.
 
-  - `Swap`: The drag source and the drop target will be swapped.
+  - `Swap`: The drag source and the drop target elements will be swapped.
 
   - `Unmove`: No item will be moved.
 
