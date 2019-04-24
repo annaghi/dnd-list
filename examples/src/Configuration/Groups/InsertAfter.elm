@@ -54,12 +54,12 @@ gatheredByGroup =
 
 config : DnDList.Groups.Config Item
 config =
-    { movement = DnDList.Groups.Free
-    , trigger = DnDList.Groups.OnDrag
+    { trigger = DnDList.Groups.OnDrag
     , operation = DnDList.Groups.Swap
     , beforeUpdate = \_ _ list -> list
     , groups =
         { comparator = compareByGroup
+        , trigger = DnDList.Groups.OnDrag
         , operation = DnDList.Groups.InsertAfter
         , beforeUpdate = updateOnGroupChange
         }

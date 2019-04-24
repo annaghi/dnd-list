@@ -58,12 +58,12 @@ gatheredByActivity =
 
 cardConfig : DnDList.Groups.Config Card
 cardConfig =
-    { movement = DnDList.Groups.Free
-    , trigger = DnDList.Groups.OnDrag
+    { trigger = DnDList.Groups.OnDrag
     , operation = DnDList.Groups.RotateOut
     , beforeUpdate = \_ _ list -> list
     , groups =
         { comparator = compareByActivity
+        , trigger = DnDList.Groups.OnDrag
         , operation = DnDList.Groups.InsertBefore
         , beforeUpdate = updateOnActivityChange
         }
