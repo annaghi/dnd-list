@@ -13,16 +13,6 @@ class ElmCodeElement extends HTMLElement {
       return;
     }
     this._elm.href = value;
-    this._update();
-  }
-
-  _update() {
-    if (this._pre) {
-      this._pre.parentNode.removeChild(this._pre);
-    }
-    if (this._code) {
-      this._code.parentNode.removeChild(this._code);
-    }
     this._highlight();
   }
 
@@ -32,6 +22,13 @@ class ElmCodeElement extends HTMLElement {
         return response.text();
       })
       .then(source => {
+        if (this._pre) {
+          this._pre.parentNode.removeChild(this._pre);
+        }
+        if (this._code) {
+          this._code.parentNode.removeChild(this._code);
+        }
+
         this._pre = document.createElement("pre");
         this._code = document.createElement("code");
         this._code.innerHTML = source;
@@ -45,7 +42,7 @@ class ElmCodeElement extends HTMLElement {
   connectedCallback() {
     setTimeout(() => {
       if (this._elm.href !== "") {
-        this._update();
+        this._highlight();
       }
     });
   }
