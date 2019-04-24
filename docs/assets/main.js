@@ -6107,6 +6107,7 @@ var author$project$DnDList$Groups$subscriptions = F2(
 					]));
 		}
 	});
+var author$project$DnDList$Groups$OnDrop = 1;
 var author$project$DnDList$Groups$equalGroups = F4(
 	function (comparator, dragIndex, dropIndex, list) {
 		var dropItem = A2(
@@ -6347,6 +6348,7 @@ var author$project$DnDList$Groups$onDropUpdate = F4(
 					A4(author$project$Operations$unmove, beforeUpdate, m.cM, m.el, list));
 		}
 	});
+var elm$core$Basics$not = _Basics_not;
 var elm$core$Maybe$map = F2(
 	function (f, maybe) {
 		if (!maybe.$) {
@@ -6402,34 +6404,12 @@ var author$project$DnDList$Groups$update = F4(
 				var dropIndex = msg.a;
 				if (!model.$) {
 					var m = model.a;
-					if ((m.m > 1) && (!_Utils_eq(m.cM, dropIndex))) {
-						if (A4(author$project$DnDList$Groups$equalGroups, groups.ec, m.cM, dropIndex, list)) {
-							if (!trigger) {
-								return A5(author$project$DnDList$Groups$onDragUpdate, dropIndex, m, operation, beforeUpdate, list);
-							} else {
-								return _Utils_Tuple2(
-									elm$core$Maybe$Just(
-										_Utils_update(
-											m,
-											{m: 0})),
-									list);
-							}
-						} else {
-							var _n5 = groups.dz;
-							if (!_n5) {
-								return A5(author$project$DnDList$Groups$onDragUpdate, dropIndex, m, groups.c8, groups.cB, list);
-							} else {
-								return _Utils_Tuple2(
-									elm$core$Maybe$Just(
-										_Utils_update(
-											m,
-											{m: 0})),
-									list);
-							}
-						}
-					} else {
-						return _Utils_Tuple2(model, list);
-					}
+					return ((m.m > 1) && (!_Utils_eq(m.cM, dropIndex))) ? (((!trigger) && A4(author$project$DnDList$Groups$equalGroups, groups.ec, m.cM, dropIndex, list)) ? A5(author$project$DnDList$Groups$onDragUpdate, dropIndex, m, operation, beforeUpdate, list) : (((!groups.dz) && (!A4(author$project$DnDList$Groups$equalGroups, groups.ec, m.cM, dropIndex, list))) ? A5(author$project$DnDList$Groups$onDragUpdate, dropIndex, m, groups.c8, groups.cB, list) : _Utils_Tuple2(
+						elm$core$Maybe$Just(
+							_Utils_update(
+								m,
+								{m: 0})),
+						list))) : _Utils_Tuple2(model, list);
 				} else {
 					return _Utils_Tuple2(model, list);
 				}
@@ -6447,24 +6427,7 @@ var author$project$DnDList$Groups$update = F4(
 			case 5:
 				if (!model.$) {
 					var m = model.a;
-					if (!_Utils_eq(m.cM, m.el)) {
-						if (A4(author$project$DnDList$Groups$equalGroups, groups.ec, m.cM, m.el, list)) {
-							if (trigger === 1) {
-								return A4(author$project$DnDList$Groups$onDropUpdate, m, operation, beforeUpdate, list);
-							} else {
-								return _Utils_Tuple2(elm$core$Maybe$Nothing, list);
-							}
-						} else {
-							var _n8 = groups.dz;
-							if (_n8 === 1) {
-								return A4(author$project$DnDList$Groups$onDropUpdate, m, groups.c8, groups.cB, list);
-							} else {
-								return _Utils_Tuple2(elm$core$Maybe$Nothing, list);
-							}
-						}
-					} else {
-						return _Utils_Tuple2(elm$core$Maybe$Nothing, list);
-					}
+					return (!_Utils_eq(m.cM, m.el)) ? (((trigger === 1) && A4(author$project$DnDList$Groups$equalGroups, groups.ec, m.cM, m.el, list)) ? A4(author$project$DnDList$Groups$onDropUpdate, m, operation, beforeUpdate, list) : (((groups.dz === 1) && (!A4(author$project$DnDList$Groups$equalGroups, groups.ec, m.cM, m.el, list))) ? A4(author$project$DnDList$Groups$onDropUpdate, m, groups.c8, groups.cB, list) : _Utils_Tuple2(elm$core$Maybe$Nothing, list))) : _Utils_Tuple2(elm$core$Maybe$Nothing, list);
 				} else {
 					return _Utils_Tuple2(elm$core$Maybe$Nothing, list);
 				}
@@ -8165,8 +8128,6 @@ var author$project$Gallery$Hanoi$initialModel = {U: author$project$Gallery$Hanoi
 var author$project$Gallery$Puzzle$MyMsg = function (a) {
 	return {$: 1, a: a};
 };
-var author$project$DnDList$Groups$OnDrop = 1;
-var author$project$DnDList$Groups$RotateOut = 3;
 var author$project$Gallery$Puzzle$compareByGroup = F2(
 	function (dragItem, dropItem) {
 		return _Utils_eq(dragItem.t, dropItem.t);
@@ -8217,7 +8178,7 @@ var author$project$Gallery$Puzzle$config = {
 			return list;
 		}),
 	et: {cB: author$project$Gallery$Puzzle$updateOnGroupChange, ec: author$project$Gallery$Puzzle$compareByGroup, c8: 4, dz: 1},
-	c8: 3,
+	c8: 4,
 	dz: 0
 };
 var author$project$Gallery$Puzzle$system = A2(author$project$DnDList$Groups$create, author$project$Gallery$Puzzle$config, author$project$Gallery$Puzzle$MyMsg);
@@ -8257,7 +8218,6 @@ var author$project$Gallery$Shapes$data = _List_fromArray(
 		A4(author$project$Gallery$Shapes$Item, 0, 'dimgray', 0, false)
 	]);
 var author$project$Gallery$Shapes$MyMsg = elm$core$Basics$identity;
-var elm$core$Basics$not = _Basics_not;
 var author$project$Gallery$Shapes$updateShapes = F3(
 	function (dragIndex, dropIndex, list) {
 		var drop = A2(
@@ -8316,6 +8276,7 @@ var author$project$Gallery$Shapes$initialModel = {z: author$project$Gallery$Shap
 var author$project$Gallery$TaskBoard$CardMoved = function (a) {
 	return {$: 0, a: a};
 };
+var author$project$DnDList$Groups$RotateOut = 3;
 var author$project$Gallery$TaskBoard$compareByActivity = F2(
 	function (dragItem, dropItem) {
 		return _Utils_eq(dragItem.v, dropItem.v);
