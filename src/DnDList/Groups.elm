@@ -522,21 +522,14 @@ update { operation, trigger, beforeUpdate, groups } msg (Draggable model) list =
             case model of
                 Just m ->
                     if m.dragCounter > 1 && m.dragIndex /= dropIndex then
-                        if equalGroups groups.comparator m.dragIndex dropIndex list then
-                            case trigger of
-                                OnDrag ->
-                                    onDragUpdate dropIndex m operation beforeUpdate list
+                        if trigger == OnDrag && equalGroups groups.comparator m.dragIndex dropIndex list then
+                            onDragUpdate dropIndex m operation beforeUpdate list
 
-                                _ ->
-                                    ( Draggable (Just { m | dragCounter = 0 }), list )
+                        else if groups.trigger == OnDrag && not (equalGroups groups.comparator m.dragIndex dropIndex list) then
+                            onDragUpdate dropIndex m groups.operation groups.beforeUpdate list
 
                         else
-                            case groups.trigger of
-                                OnDrag ->
-                                    onDragUpdate dropIndex m groups.operation groups.beforeUpdate list
-
-                                _ ->
-                                    ( Draggable (Just { m | dragCounter = 0 }), list )
+                            ( Draggable (Just { m | dragCounter = 0 }), list )
 
                     else
                         ( Draggable model, list )
@@ -544,21 +537,6 @@ update { operation, trigger, beforeUpdate, groups } msg (Draggable model) list =
                 _ ->
                     ( Draggable model, list )
 
-        -- case ( model, trigger, groups.trigger ) of
-        --     ( Just m, OnDrag ) ->
-        --         if m.dragCounter > 1 && m.dragIndex /= dropIndex then
-        --             if equalGroups groups.comparator m.dragIndex dropIndex list then
-        --                 onDragUpdate dropIndex m operation beforeUpdate list
-        --             else
-        --                 onDragUpdate dropIndex m groups.operation groups.beforeUpdate list
-        --         else
-        --             ( Draggable model, list )
-        --     _ ->
-        --         ( model
-        --             |> Maybe.map (\m -> { m | dragCounter = 0 })
-        --             |> Draggable
-        --         , list
-        --         )
         DragLeave ->
             ( model
                 |> Maybe.map (\m -> { m | dropIndex = m.dragIndex })
@@ -570,21 +548,14 @@ update { operation, trigger, beforeUpdate, groups } msg (Draggable model) list =
             case model of
                 Just m ->
                     if m.dragIndex /= m.dropIndex then
-                        if equalGroups groups.comparator m.dragIndex m.dropIndex list then
-                            case trigger of
-                                OnDrop ->
-                                    onDropUpdate m operation beforeUpdate list
+                        if trigger == OnDrop && equalGroups groups.comparator m.dragIndex m.dropIndex list then
+                            onDropUpdate m operation beforeUpdate list
 
-                                _ ->
-                                    ( Draggable Nothing, list )
+                        else if groups.trigger == OnDrop && not (equalGroups groups.comparator m.dragIndex m.dropIndex list) then
+                            onDropUpdate m groups.operation groups.beforeUpdate list
 
                         else
-                            case groups.trigger of
-                                OnDrop ->
-                                    onDropUpdate m groups.operation groups.beforeUpdate list
-
-                                _ ->
-                                    ( Draggable Nothing, list )
+                            ( Draggable Nothing, list )
 
                     else
                         ( Draggable Nothing, list )
@@ -592,16 +563,6 @@ update { operation, trigger, beforeUpdate, groups } msg (Draggable model) list =
                 _ ->
                     ( Draggable Nothing, list )
 
-        -- case ( model, trigger, groups.trigger ) of
-        --     ( Just m, OnDrop, OnDrop ) ->
-        --             if equalGroups groups.comparator m.dragIndex m.dropIndex list then
-        --                 onDropUpdate m operation beforeUpdate list
-        --             else
-        --                 onDropUpdate m groups.operation groups.beforeUpdate list
-        --         else
-        --             ( Draggable Nothing, list )
-        --     _ ->
-        --         ( Draggable Nothing, list )
         GotSourceElement (Err _) ->
             ( Draggable model, list )
 
