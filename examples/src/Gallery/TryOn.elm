@@ -59,7 +59,7 @@ config : DnDList.Config Item
 config =
     { movement = DnDList.Free
     , trigger = DnDList.OnDrop
-    , operation = DnDList.Unmove
+    , operation = DnDList.Unaltered
     , beforeUpdate = updateColor
     }
 

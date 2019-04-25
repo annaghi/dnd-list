@@ -1,4 +1,4 @@
-module Operations exposing (insertAfter, insertBefore, rotateIn, rotateOut, swap, unmove)
+module Operations exposing (insertAfter, insertBefore, rotateIn, rotateOut, swap, unaltered)
 
 
 insertAfter : (Int -> Int -> List a -> List a) -> Int -> Int -> List a -> List a
@@ -58,8 +58,8 @@ swap beforeUpdate dragIndex dropIndex list =
         list
 
 
-unmove : (Int -> Int -> List a -> List a) -> Int -> Int -> List a -> List a
-unmove beforeUpdate dragIndex dropIndex list =
+unaltered : (Int -> Int -> List a -> List a) -> Int -> Int -> List a -> List a
+unaltered beforeUpdate dragIndex dropIndex list =
     if dragIndex /= dropIndex then
         beforeUpdate dragIndex dropIndex list
 

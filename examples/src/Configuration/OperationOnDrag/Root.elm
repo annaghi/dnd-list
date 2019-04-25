@@ -15,7 +15,7 @@ import Configuration.OperationOnDrag.InsertBefore
 import Configuration.OperationOnDrag.RotateIn
 import Configuration.OperationOnDrag.RotateOut
 import Configuration.OperationOnDrag.Swap
-import Configuration.OperationOnDrag.Unmove
+import Configuration.OperationOnDrag.Unaltered
 import Html
 import Html.Attributes
 import Html.Events
@@ -37,7 +37,7 @@ type Example
     | RotateIn Configuration.OperationOnDrag.RotateIn.Model
     | RotateOut Configuration.OperationOnDrag.RotateOut.Model
     | Swap Configuration.OperationOnDrag.Swap.Model
-    | Unmove Configuration.OperationOnDrag.Unmove.Model
+    | Unaltered Configuration.OperationOnDrag.Unaltered.Model
 
 
 initialModel : Model
@@ -49,7 +49,7 @@ initialModel =
         , RotateIn Configuration.OperationOnDrag.RotateIn.initialModel
         , RotateOut Configuration.OperationOnDrag.RotateOut.initialModel
         , Swap Configuration.OperationOnDrag.Swap.initialModel
-        , Unmove Configuration.OperationOnDrag.Unmove.initialModel
+        , Unaltered Configuration.OperationOnDrag.Unaltered.initialModel
         ]
     }
 
@@ -78,7 +78,7 @@ url id =
             "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Configuration/OperationOnDrag/Swap.elm"
 
         5 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Configuration/OperationOnDrag/Unmove.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Configuration/OperationOnDrag/Unaltered.elm"
 
         _ ->
             ""
@@ -95,7 +95,7 @@ type Msg
     | RotateInMsg Configuration.OperationOnDrag.RotateIn.Msg
     | RotateOutMsg Configuration.OperationOnDrag.RotateOut.Msg
     | SwapMsg Configuration.OperationOnDrag.Swap.Msg
-    | UnmoveMsg Configuration.OperationOnDrag.Unmove.Msg
+    | UnalteredMsg Configuration.OperationOnDrag.Unaltered.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -124,8 +124,8 @@ update message model =
                             ( SwapMsg msg, Swap mo ) ->
                                 stepSwap (Configuration.OperationOnDrag.Swap.update msg mo)
 
-                            ( UnmoveMsg msg, Unmove mo ) ->
-                                stepUnmove (Configuration.OperationOnDrag.Unmove.update msg mo)
+                            ( UnalteredMsg msg, Unaltered mo ) ->
+                                stepUnaltered (Configuration.OperationOnDrag.Unaltered.update msg mo)
 
                             _ ->
                                 ( example, Cmd.none )
@@ -159,9 +159,9 @@ stepSwap ( mo, cmds ) =
     ( Swap mo, Cmd.map SwapMsg cmds )
 
 
-stepUnmove : ( Configuration.OperationOnDrag.Unmove.Model, Cmd Configuration.OperationOnDrag.Unmove.Msg ) -> ( Example, Cmd Msg )
-stepUnmove ( mo, cmds ) =
-    ( Unmove mo, Cmd.map UnmoveMsg cmds )
+stepUnaltered : ( Configuration.OperationOnDrag.Unaltered.Model, Cmd Configuration.OperationOnDrag.Unaltered.Msg ) -> ( Example, Cmd Msg )
+stepUnaltered ( mo, cmds ) =
+    ( Unaltered mo, Cmd.map UnalteredMsg cmds )
 
 
 
@@ -189,8 +189,8 @@ subscriptions model =
                     Swap mo ->
                         Sub.map SwapMsg (Configuration.OperationOnDrag.Swap.subscriptions mo)
 
-                    Unmove mo ->
-                        Sub.map UnmoveMsg (Configuration.OperationOnDrag.Unmove.subscriptions mo)
+                    Unaltered mo ->
+                        Sub.map UnalteredMsg (Configuration.OperationOnDrag.Unaltered.subscriptions mo)
             )
         |> Sub.batch
 
@@ -246,8 +246,8 @@ demoView example =
         Swap mo ->
             Html.map SwapMsg (Configuration.OperationOnDrag.Swap.view mo)
 
-        Unmove mo ->
-            Html.map UnmoveMsg (Configuration.OperationOnDrag.Unmove.view mo)
+        Unaltered mo ->
+            Html.map UnalteredMsg (Configuration.OperationOnDrag.Unaltered.view mo)
 
 
 
@@ -276,5 +276,5 @@ info example =
         Swap _ ->
             { title = "Swap" }
 
-        Unmove _ ->
-            { title = "Unmove" }
+        Unaltered _ ->
+            { title = "Unaltered" }
