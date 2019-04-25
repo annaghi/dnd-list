@@ -1,4 +1,4 @@
-module Configuration.OperationOnDrag.Unmove exposing (Model, Msg, initialModel, main, subscriptions, update, view)
+module Configuration.OperationOnDrop.Unaltered exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList
@@ -44,8 +44,8 @@ data =
 config : DnDList.Config Item
 config =
     { movement = DnDList.Free
-    , trigger = DnDList.OnDrag
-    , operation = DnDList.Unmove
+    , trigger = DnDList.OnDrop
+    , operation = DnDList.Unaltered
     , beforeUpdate = updateColors
     }
 
@@ -59,7 +59,7 @@ updateColors : Int -> Int -> List Item -> List Item
 updateColors dragIndex dropIndex items =
     if dragIndex /= dropIndex then
         List.indexedMap
-            (\i { value, color } ->
+            (\i { value } ->
                 if i == dragIndex then
                     Item value targetColor
 
@@ -67,7 +67,7 @@ updateColors dragIndex dropIndex items =
                     Item value sourceColor
 
                 else
-                    Item value color
+                    Item value baseColor
             )
             items
 
@@ -153,7 +153,7 @@ itemView draggable index { value, color } =
     let
         itemId : String
         itemId =
-            "unmove-" ++ value
+            "unaltered-" ++ value
 
         attrs : String -> List (Html.Attribute msg)
         attrs color_ =
