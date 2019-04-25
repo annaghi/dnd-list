@@ -364,7 +364,7 @@ and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operat
 
   - `Swap`: The drag source and the drop target elements will be swapped.
 
-  - `Unmove`: No item will be moved.
+  - `Unaltered`: No item will be moved.
 
 -}
 type Operation
@@ -373,7 +373,7 @@ type Operation
     | RotateIn
     | RotateOut
     | Swap
-    | Unmove
+    | Unaltered
 
 
 type alias Position =
@@ -605,9 +605,9 @@ onDragUpdate dropIndex m operation beforeUpdate list =
             , Operations.swap beforeUpdate m.dragIndex dropIndex list
             )
 
-        Unmove ->
+        Unaltered ->
             ( Draggable (Just { m | dragCounter = 0 })
-            , Operations.unmove beforeUpdate m.dragIndex dropIndex list
+            , Operations.unaltered beforeUpdate m.dragIndex dropIndex list
             )
 
 
@@ -629,8 +629,8 @@ onDropUpdate m operation beforeUpdate list =
         Swap ->
             ( Draggable Nothing, Operations.swap beforeUpdate m.dragIndex m.dropIndex list )
 
-        Unmove ->
-            ( Draggable Nothing, Operations.unmove beforeUpdate m.dragIndex m.dropIndex list )
+        Unaltered ->
+            ( Draggable Nothing, Operations.unaltered beforeUpdate m.dragIndex m.dropIndex list )
 
 
 dragEvents : (Msg -> msg) -> Int -> String -> List (Html.Attribute msg)
