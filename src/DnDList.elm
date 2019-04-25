@@ -364,7 +364,7 @@ and [triggering on drop](https://annaghi.github.io/dnd-list/configuration/operat
 
   - `Swap`: The drag source and the drop target elements will be swapped.
 
-  - `Unaltered`: No item will be moved.
+  - `Unaltered`: The list items keep their initial order.
 
 -}
 type Operation
