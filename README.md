@@ -27,7 +27,7 @@ info : DnDList.Draggable -> Maybe Info
 ## Config
 
 ```elm
-pseudo type alias Config a =
+pseudocode type alias Config a =
     { movement : Free | Horizontal | Vertical
     , trigger : OnDrag | OnDrop
     , operation : InsertAfter | InsertBefore | RotateIn | RotateOut | Swap | Unmove
@@ -51,7 +51,7 @@ type alias Info =
 ## Example
 
 ```elm
-module Basic exposing (main)
+module Main exposing (main)
 
 import Browser
 import DnDList

@@ -207,6 +207,7 @@ view model =
             |> List.indexedMap (demoWrapperView 0 model.id)
             |> Html.section
                 [ Html.Attributes.style "display" "flex"
+                , Html.Attributes.style "flex-wrap" "wrap"
                 , Html.Attributes.style "justify-content" "center"
                 , Html.Attributes.style "padding-top" "2em"
                 ]

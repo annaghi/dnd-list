@@ -132,8 +132,7 @@ stepTaskBoard model ( mo, cmds ) =
 
 commands : Cmd Msg
 commands =
-    Cmd.batch
-        [ Cmd.map PuzzleMsg Gallery.Puzzle.commands ]
+    Cmd.map PuzzleMsg Gallery.Puzzle.commands
 
 
 

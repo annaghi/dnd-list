@@ -17,7 +17,7 @@ main,
   flex-direction: column;
 }
 #sidebar {
-  padding: 0 2em;
+  padding: 0 2.5em;
 }
 
 a {
@@ -111,7 +111,7 @@ pre {
 
 @media (min-width: 1200px), (max-width: 360px) {
   nav li {
-    min-width: 200px;
+    width: 100%;
   }
   nav li:after {
     content: none;
@@ -137,7 +137,7 @@ pre {
     flex: 1 0 0px;
   }
   #sidebar {
-    flex: 0 0 300px;
+    flex: 0 0 330px;
   }
 }
 

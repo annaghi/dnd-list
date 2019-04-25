@@ -33,17 +33,17 @@ type alias Item =
 
 gatheredByGroup : List Item
 gatheredByGroup =
-    [ Item 0 "2" red
-    , Item 0 "B" blue
-    , Item 0 "A" blue
+    [ Item 0 "C" blue
+    , Item 0 "II" green
+    , Item 0 "2" red
+    , Item 0 "I" green
+    , Item 0 "3" red
     , Item 0 "III" green
     , Item 0 "" transparent
-    , Item 1 "C" blue
-    , Item 1 "1" red
-    , Item 1 "I" green
-    , Item 1 "3" red
     , Item 1 "" transparent
-    , Item 2 "II" green
+    , Item 2 "B" blue
+    , Item 2 "A" blue
+    , Item 2 "1" red
     , Item 2 "" transparent
     ]
 
