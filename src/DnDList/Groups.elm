@@ -285,7 +285,7 @@ The auxiliary items (the `transparent` ones) separate the groups
 and they can be considered as header or footer of a particular group.
 In this case they are footers.
 
-The sort operations (except the `Unmove`) were designed with the following list state invariant in mind:
+The sort operations were designed with the following list state invariant in mind:
 
   - the items are gathered by the grouping property
   - the auxiliary items keep their places (headers or footers)
