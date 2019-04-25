@@ -236,7 +236,7 @@ view model =
     , body =
         [ Html.div
             [ Html.Attributes.id "sidebar" ]
-            [ headerView
+            [ cardView
             , Html.nav []
                 [ Html.map IntroductionMsg Introduction.Root.navigationView
                 , Html.map ConfigurationMsg Configuration.Root.navigationView
@@ -274,8 +274,8 @@ view model =
     }
 
 
-headerView : Html.Html Msg
-headerView =
+cardView : Html.Html Msg
+cardView =
     Html.header []
         [ Html.h1 []
             [ Html.a
