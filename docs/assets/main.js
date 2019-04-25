@@ -6495,17 +6495,17 @@ var author$project$Configuration$Groups$InsertBefore$red = '#8c4585';
 var author$project$Configuration$Groups$InsertBefore$transparent = 'transparent';
 var author$project$Configuration$Groups$InsertBefore$gatheredByGroup = _List_fromArray(
 	[
+		A3(author$project$Configuration$Groups$InsertBefore$Item, 0, 'C', author$project$Configuration$Groups$InsertBefore$blue),
+		A3(author$project$Configuration$Groups$InsertBefore$Item, 0, 'II', author$project$Configuration$Groups$InsertBefore$green),
 		A3(author$project$Configuration$Groups$InsertBefore$Item, 0, '2', author$project$Configuration$Groups$InsertBefore$red),
-		A3(author$project$Configuration$Groups$InsertBefore$Item, 0, 'B', author$project$Configuration$Groups$InsertBefore$blue),
-		A3(author$project$Configuration$Groups$InsertBefore$Item, 0, 'A', author$project$Configuration$Groups$InsertBefore$blue),
+		A3(author$project$Configuration$Groups$InsertBefore$Item, 0, 'I', author$project$Configuration$Groups$InsertBefore$green),
+		A3(author$project$Configuration$Groups$InsertBefore$Item, 0, '3', author$project$Configuration$Groups$InsertBefore$red),
 		A3(author$project$Configuration$Groups$InsertBefore$Item, 0, 'III', author$project$Configuration$Groups$InsertBefore$green),
 		A3(author$project$Configuration$Groups$InsertBefore$Item, 0, '', author$project$Configuration$Groups$InsertBefore$transparent),
-		A3(author$project$Configuration$Groups$InsertBefore$Item, 1, 'C', author$project$Configuration$Groups$InsertBefore$blue),
-		A3(author$project$Configuration$Groups$InsertBefore$Item, 1, '1', author$project$Configuration$Groups$InsertBefore$red),
-		A3(author$project$Configuration$Groups$InsertBefore$Item, 1, 'I', author$project$Configuration$Groups$InsertBefore$green),
-		A3(author$project$Configuration$Groups$InsertBefore$Item, 1, '3', author$project$Configuration$Groups$InsertBefore$red),
 		A3(author$project$Configuration$Groups$InsertBefore$Item, 1, '', author$project$Configuration$Groups$InsertBefore$transparent),
-		A3(author$project$Configuration$Groups$InsertBefore$Item, 2, 'II', author$project$Configuration$Groups$InsertBefore$green),
+		A3(author$project$Configuration$Groups$InsertBefore$Item, 2, 'B', author$project$Configuration$Groups$InsertBefore$blue),
+		A3(author$project$Configuration$Groups$InsertBefore$Item, 2, 'A', author$project$Configuration$Groups$InsertBefore$blue),
+		A3(author$project$Configuration$Groups$InsertBefore$Item, 2, '1', author$project$Configuration$Groups$InsertBefore$red),
 		A3(author$project$Configuration$Groups$InsertBefore$Item, 2, '', author$project$Configuration$Groups$InsertBefore$transparent)
 	]);
 var author$project$Configuration$Groups$InsertBefore$MyMsg = elm$core$Basics$identity;
@@ -8076,11 +8076,7 @@ var author$project$Gallery$Root$PuzzleMsg = function (a) {
 	return {$: 1, a: a};
 };
 var elm$core$Platform$Cmd$map = _Platform_map;
-var author$project$Gallery$Root$commands = elm$core$Platform$Cmd$batch(
-	_List_fromArray(
-		[
-			A2(elm$core$Platform$Cmd$map, author$project$Gallery$Root$PuzzleMsg, author$project$Gallery$Puzzle$commands)
-		]));
+var author$project$Gallery$Root$commands = A2(elm$core$Platform$Cmd$map, author$project$Gallery$Root$PuzzleMsg, author$project$Gallery$Puzzle$commands);
 var author$project$Gallery$Hanoi$Disk = F4(
 	function (tower, width, startColor, solvedColor) {
 		return {ck: solvedColor, bV: startColor, aC: tower, cp: width};
@@ -8491,11 +8487,7 @@ var author$project$Introduction$Masonry$commands = A2(
 var author$project$Introduction$Root$MasonryMsg = function (a) {
 	return {$: 5, a: a};
 };
-var author$project$Introduction$Root$commands = elm$core$Platform$Cmd$batch(
-	_List_fromArray(
-		[
-			A2(elm$core$Platform$Cmd$map, author$project$Introduction$Root$MasonryMsg, author$project$Introduction$Masonry$commands)
-		]));
+var author$project$Introduction$Root$commands = A2(elm$core$Platform$Cmd$map, author$project$Introduction$Root$MasonryMsg, author$project$Introduction$Masonry$commands);
 var author$project$Introduction$Basic$data = _List_fromArray(
 	['Apples', 'Bananas', 'Cherries', 'Dates']);
 var author$project$Introduction$Basic$MyMsg = elm$core$Basics$identity;
@@ -13786,6 +13778,7 @@ var author$project$Configuration$Movement$Root$view = function (model) {
 				_List_fromArray(
 					[
 						A2(elm$html$Html$Attributes$style, 'display', 'flex'),
+						A2(elm$html$Html$Attributes$style, 'flex-wrap', 'wrap'),
 						A2(elm$html$Html$Attributes$style, 'justify-content', 'center'),
 						A2(elm$html$Html$Attributes$style, 'padding-top', '2em')
 					]),
@@ -26478,7 +26471,7 @@ var author$project$Introduction$Root$navigationView = A2(
 					])))
 		]));
 var elm$html$Html$h1 = _VirtualDom_node('h1');
-var author$project$Main$headerView = A2(
+var author$project$Main$cardView = A2(
 	elm$html$Html$header,
 	_List_Nil,
 	_List_fromArray(
@@ -26553,7 +26546,7 @@ var author$project$Main$view = function (model) {
 					]),
 				_List_fromArray(
 					[
-						author$project$Main$headerView,
+						author$project$Main$cardView,
 						A2(
 						elm$html$Html$nav,
 						_List_Nil,
