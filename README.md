@@ -30,7 +30,7 @@ info : DnDList.Draggable -> Maybe Info
 pseudocode type alias Config a =
     { movement : Free | Horizontal | Vertical
     , trigger : OnDrag | OnDrop
-    , operation : InsertAfter | InsertBefore | RotateIn | RotateOut | Swap | Unmove
+    , operation : InsertAfter | InsertBefore | RotateIn | RotateOut | Swap | Unaltered
     , beforeUpdate : DragIndex -> DropIndex -> List a -> List a
     }
 ```
