@@ -188,8 +188,7 @@ stepGroups model ( mo, cmds ) =
 
 commands : Cmd Msg
 commands =
-    Cmd.batch
-        [ Cmd.map MasonryMsg Introduction.Masonry.commands ]
+    Cmd.map MasonryMsg Introduction.Masonry.commands
 
 
 
