@@ -8,11 +8,11 @@ module DnDList.Groups exposing
 
 {-| If the list is groupable by a certain property, the items can be transferred between those groups.
 Instead of using drop zones, this module requires the list to be prepared with auxiliary items.
-Here is a [groups demo](https://annaghi.github.io/dnd-list/introduction/groups),
+Here is a [demo with groups](https://annaghi.github.io/dnd-list/introduction/groups),
 we will refer to it throughout this page.
 
 This module is a modified version of the `DnDList` module.
-The `Config` is extended with a new field called `groups`, and the `movement` field was diminished.
+The `Config` is extended with a new field called `groups`, and the `movement` field is diminished.
 The internal sorting distinguishes between the operation performed on items from the _same group_,
 and the operation performed on items from _different groups_.
 
@@ -205,8 +205,9 @@ import Task
 import Utils
 
 
-{-| Represents the internal state of the current drag and drop features.
+{-| Represents the internal model of the current drag and drop features.
 We can set it in our model and initialize through the `System`'s `model` field.
+It will be `Nothing` if there is no ongoing dragging.
 
     type alias Model =
         { dnd : DnDList.Groups.Model
@@ -265,8 +266,8 @@ type alias System a msg =
 Suppose we have two groups:
 
     type Group
-        = Top
-        | Bottom
+        = Left
+        | Right
 
 and a list which is gathered by these groups and prepared with auxiliary items:
 
@@ -278,14 +279,14 @@ and a list which is gathered by these groups and prepared with auxiliary items:
 
     preparedData : List Item
     preparedData =
-        [ Item Top "C" blue
-        , Item Top "2" red
-        , Item Top "A" blue
-        , Item Top "" transparent
-        , Item Bottom "3" red
-        , Item Bottom "B" blue
-        , Item Bottom "1" red
-        , Item Bottom "" transparent
+        [ Item Left "C" blue
+        , Item Left "2" red
+        , Item Left "A" blue
+        , Item Left "" transparent
+        , Item Right "3" red
+        , Item Right "B" blue
+        , Item Right "1" red
+        , Item Right "" transparent
         ]
 
 The auxiliary items (the `transparent` ones) separate the groups
@@ -330,15 +331,15 @@ create config message =
     and one for [triggered on drop](https://annaghi.github.io/dnd-list/configuration/operations-drop).
 
   - `beforeUpdate`: This is a hook and gives us access to the list
-    before the sort is being performed on the items from the _same group_.
+    before the sort will be performed on the items from the _same group_.
 
   - `groups`: This setting is for the items from _different groups_.
     To have a better understanding of how this works
     see [groups configurations](https://annaghi.github.io/dnd-list/configuration/groups).
-      - `comparator`: Function which compares two items by the grouping property.
       - `trigger`: Same as the plain `trigger` but applied on items from _different groups_.
       - `operation`: Same as the plain `operation` but applied on the items from _different groups_.
       - `beforeUpdate`: Same as the plain `beforeUpdate` but applied on the items from _different groups_.
+      - `comparator`: Function which compares two items by the grouping property.
 
 Here is an example configuration:
 
@@ -348,20 +349,21 @@ Here is an example configuration:
         , operation = DnDList.Groups.RotateOut
         , beforeUpdate = \_ _ list -> list
         , groups =
-            { comparator = compareByGroup
-            , trigger = DnDList.Groups.OnDrag
+            { trigger = DnDList.Groups.OnDrag
             , operation = DnDList.Groups.InsertBefore
             , beforeUpdate = updateOnGroupChange
+            , comparator = compareByGroup
             }
         }
 
-    compareByGroup : Item -> Item -> Bool
-    compareByGroup dragElement dropElement =
-        -- Check whether the two groups are the same
 
     updateOnGroupChange : Int -> Int -> List Item -> List Item
     updateOnGroupChange dragIndex dropIndex list =
-        -- Update the group field of the drag source item
+        -- Update the group field of the drag source item.
+
+    compareByGroup : Item -> Item -> Bool
+    compareByGroup dragItem dropItem =
+        -- Check whether the two groups are the same.
 
 -}
 type alias Config a =
@@ -369,10 +371,10 @@ type alias Config a =
     , operation : Operation
     , beforeUpdate : Int -> Int -> List a -> List a
     , groups :
-        { comparator : a -> a -> Bool
-        , trigger : Trigger
+        { trigger : Trigger
         , operation : Operation
         , beforeUpdate : Int -> Int -> List a -> List a
+        , comparator : a -> a -> Bool
         }
     }
 
@@ -433,8 +435,8 @@ It is accessible through the `System`'s `info` field.
 
   - `dropElementId`: HTML id of the drop target.
 
-We can decide what to render when there is an ongoing dragging,
-and what to render when there is no dragging related to this `System` object:
+Checking the `Info` object we can decide what to render when there is an ongoing dragging,
+and what to render when there is no dragging:
 
     itemView : Model -> ... -> Html.Html Msg
     itemView model ... =
@@ -447,7 +449,7 @@ and what to render when there is no dragging related to this `System` object:
             Nothing ->
                 -- Render when there is no dragging.
 
-Or we can get the drag source item:
+Or we can get e.g. the drag source item:
 
     maybeDragItem : DnDList.Groups.Model -> List Item -> Maybe Item
     maybeDragItem dnd items =
