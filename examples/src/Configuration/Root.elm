@@ -236,19 +236,19 @@ info example =
         OperationOnDrag _ ->
             { slug = "operations-drag"
             , title = "Operations on Drag"
-            , description = "The behavior of the different operations applied on lists while dragging."
+            , description = "Compare the list operations triggered on drag."
             }
 
         OperationOnDrop _ ->
             { slug = "operations-drop"
             , title = "Operations on Drop"
-            , description = "The behavior of the different operations applied on lists on drop."
+            , description = "Compare the list operations triggered on drop."
             }
 
         Movement _ ->
             { slug = "movement"
             , title = "Movement with Swap"
-            , description = "The behavior of the Free, Horizontal and Vertical only drag movement with Swap list operation."
+            , description = "The behavior of the Free, Horizontal only and Vertical only drag movements with Swap list operation."
             }
 
         Groups _ ->

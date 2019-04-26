@@ -269,13 +269,13 @@ info example =
         Hanoi _ ->
             { slug = "hanoi"
             , title = "Towers of Hanoi"
-            , description = "Plain list with auxiliary elements."
+            , description = "Plain list with auxiliary items."
             }
 
         Puzzle _ ->
             { slug = "puzzle"
             , title = "Puzzle"
-            , description = "List with groups without auxiliary elements."
+            , description = "List with groups without auxiliary items."
             }
 
         Shapes _ ->

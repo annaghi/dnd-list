@@ -25,8 +25,8 @@ main =
 
 
 type Property
-    = Size
-    | Color
+    = Color
+    | Size
 
 
 type alias Item =
@@ -146,10 +146,7 @@ update message model =
                 ( dnd, items ) =
                     system.update msg model.dnd model.items
             in
-            ( { model
-                | dnd = dnd
-                , items = items
-              }
+            ( { model | dnd = dnd, items = items }
             , system.commands model.dnd
             )
 
@@ -164,12 +161,12 @@ view model =
         [ model.items
             |> List.filter (\item -> item.property == Color)
             |> List.indexedMap (colorView model)
-            |> Html.div colorStyles
+            |> Html.div colorGroupStyles
         , model.items
             |> List.filter (\item -> item.property == Size)
             |> List.indexedMap
                 (sizeView model (model.items |> List.filter (\item -> item.property == Color) |> List.length))
-            |> Html.div sizeStyles
+            |> Html.div sizeGroupStyles
         , ghostView model
         ]
 
@@ -209,15 +206,15 @@ colorView model index item =
 
 
 sizeView : Model -> Int -> Int -> Item -> Html.Html Msg
-sizeView model offset index item =
+sizeView model offset localIndex item =
     let
         globalIndex : Int
         globalIndex =
-            index + offset
+            offset + localIndex
 
         itemId : String
         itemId =
-            "size-" ++ String.fromInt index
+            "size-" ++ String.fromInt localIndex
 
         width : Int
         width =
@@ -350,8 +347,8 @@ sectionStyles =
     ]
 
 
-colorStyles : List (Html.Attribute msg)
-colorStyles =
+colorGroupStyles : List (Html.Attribute msg)
+colorGroupStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-direction" "column"
     , Html.Attributes.style "align-items" "center"
@@ -360,8 +357,8 @@ colorStyles =
     ]
 
 
-sizeStyles : List (Html.Attribute msg)
-sizeStyles =
+sizeGroupStyles : List (Html.Attribute msg)
+sizeGroupStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-wrap" "wrap"
     , Html.Attributes.style "align-items" "baseline"

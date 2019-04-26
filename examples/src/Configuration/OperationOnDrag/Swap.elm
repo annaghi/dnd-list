@@ -61,10 +61,10 @@ updateColors dragIndex dropIndex items =
         List.indexedMap
             (\i { value, color } ->
                 if i == dropIndex then
-                    Item value dragColor
+                    Item value dropColor
 
                 else if i == dragIndex then
-                    Item value dropColor
+                    Item value dragColor
 
                 else
                     Item value color
@@ -168,7 +168,7 @@ itemView dnd index { value, color } =
 
             else
                 Html.div
-                    (attrs dragColor)
+                    (attrs dropColor)
                     []
 
         _ ->
@@ -188,7 +188,7 @@ ghostView dnd items =
     case maybeDragItem of
         Just { value } ->
             Html.div
-                (itemStyles dropColor ++ system.ghostStyles dnd)
+                (itemStyles dragColor ++ system.ghostStyles dnd)
                 [ Html.text value ]
 
         Nothing ->
@@ -206,12 +206,12 @@ baseColor =
 
 dragColor : String
 dragColor =
-    "green"
+    "red"
 
 
 dropColor : String
 dropColor =
-    "red"
+    "green"
 
 
 affectedColor : String

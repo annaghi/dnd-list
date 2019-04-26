@@ -401,7 +401,7 @@ info example =
         Resize _ ->
             { slug = "resize"
             , title = "Resize"
-            , description = "Put a drag handle to the top-left corner with resizable items."
+            , description = "Put a drag handle to the top-left corner with resizable ghost element."
             }
 
         Independents _ ->

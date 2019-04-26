@@ -63,10 +63,10 @@ config =
     , operation = DnDList.Groups.Swap
     , beforeUpdate = \_ _ list -> list
     , groups =
-        { comparator = compareByGroup
-        , trigger = DnDList.Groups.OnDrop
+        { trigger = DnDList.Groups.OnDrop
         , operation = DnDList.Groups.Swap
         , beforeUpdate = updateOnGroupChange
+        , comparator = compareByGroup
         }
     }
 
@@ -198,10 +198,7 @@ update message model =
                 ( dnd, items ) =
                     system.update msg model.dnd model.items
             in
-            ( { model
-                | dnd = dnd
-                , items = items
-              }
+            ( { model | dnd = dnd, items = items }
             , system.commands model.dnd
             )
 
@@ -235,7 +232,7 @@ itemView dnd offset localIndex { value, color } =
     let
         globalIndex : Int
         globalIndex =
-            localIndex + offset
+            offset + localIndex
 
         itemId : String
         itemId =

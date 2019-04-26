@@ -151,7 +151,7 @@ itemView dnd affected index item =
             Html.Attributes.id itemId
                 :: itemStyles
                 ++ (if List.member index affected then
-                        affectedItemStyles
+                        affectedStyles
 
                     else
                         []
@@ -166,12 +166,12 @@ itemView dnd affected index item =
 
             else if dragIndex /= index && dropIndex == index then
                 Html.div
-                    (attrs ++ overedItemStyles ++ system.dropEvents index itemId)
+                    (attrs ++ overedStyles ++ system.dropEvents index itemId)
                     [ Html.text item ]
 
             else
                 Html.div
-                    (attrs ++ placeholderItemStyles)
+                    (attrs ++ placeholderStyles)
                     []
 
         Nothing ->
@@ -225,18 +225,18 @@ itemStyles =
     ]
 
 
-placeholderItemStyles : List (Html.Attribute msg)
-placeholderItemStyles =
+placeholderStyles : List (Html.Attribute msg)
+placeholderStyles =
     [ Html.Attributes.style "background-color" "dimgray" ]
 
 
-overedItemStyles : List (Html.Attribute msg)
-overedItemStyles =
+overedStyles : List (Html.Attribute msg)
+overedStyles =
     [ Html.Attributes.style "background-color" "#63bdc7" ]
 
 
-affectedItemStyles : List (Html.Attribute msg)
-affectedItemStyles =
+affectedStyles : List (Html.Attribute msg)
+affectedStyles =
     [ Html.Attributes.style "background-color" "#136169" ]
 
 

@@ -25,8 +25,8 @@ main =
 
 
 type Group
-    = Top
-    | Bottom
+    = Left
+    | Right
 
 
 type alias Item =
@@ -38,14 +38,14 @@ type alias Item =
 
 preparedData : List Item
 preparedData =
-    [ Item Top "C" blue
-    , Item Top "2" red
-    , Item Top "A" blue
-    , Item Top "" transparent
-    , Item Bottom "3" red
-    , Item Bottom "B" blue
-    , Item Bottom "1" red
-    , Item Bottom "" transparent
+    [ Item Left "C" blue
+    , Item Left "2" red
+    , Item Left "A" blue
+    , Item Left "" transparent
+    , Item Right "3" red
+    , Item Right "B" blue
+    , Item Right "1" red
+    , Item Right "" transparent
     ]
 
 
@@ -59,10 +59,10 @@ config =
     , operation = DnDList.Groups.RotateOut
     , beforeUpdate = \_ _ list -> list
     , groups =
-        { comparator = compareByGroup
-        , trigger = DnDList.Groups.OnDrag
+        { trigger = DnDList.Groups.OnDrag
         , operation = DnDList.Groups.InsertBefore
         , beforeUpdate = updateOnGroupChange
+        , comparator = compareByGroup
         }
     }
 
@@ -158,14 +158,14 @@ update message model =
 view : Model -> Html.Html Msg
 view model =
     Html.section sectionStyles
-        [ groupView model Top lightRed
-        , groupView model Bottom lightBlue
+        [ groupView model Left lightRed
+        , groupView model Right lightBlue
         , ghostView model.dnd model.items
         ]
 
 
 groupView : Model -> Group -> String -> Html.Html Msg
-groupView model group bgColor =
+groupView model group color =
     let
         items : List Item
         items =
@@ -174,7 +174,7 @@ groupView model group bgColor =
     in
     items
         |> List.indexedMap (itemView model (calculateOffset 0 group model.items))
-        |> Html.div (groupStyles bgColor)
+        |> Html.div (groupStyles color)
 
 
 itemView : Model -> Int -> Int -> Item -> Html.Html Msg
