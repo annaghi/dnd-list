@@ -401,7 +401,7 @@ info example =
         Resize _ ->
             { slug = "resize"
             , title = "Resize"
-            , description = "Put a drag handle to the top-left corner with resizable dragged elements."
+            , description = "Put a drag handle to the top-left corner with resizable items."
             }
 
         Independents _ ->
@@ -412,6 +412,6 @@ info example =
 
         Groups _ ->
             { slug = "groups"
-            , title = "Groupable list + elm-css"
+            , title = "Groupable list"
             , description = "The list state invariant is that the list has to be gathered by the grouping property, and the auxiliary items have to preserve their places."
             }

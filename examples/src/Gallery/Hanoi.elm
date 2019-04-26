@@ -89,7 +89,7 @@ updateTower dragIndex dropIndex list =
 
 
 type alias Model =
-    { draggable : DnDList.Draggable
+    { dnd : DnDList.Model
     , disks : List Disk
     , solved : Bool
     }
@@ -97,7 +97,7 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { draggable = system.draggable
+    { dnd = system.model
     , disks = data
     , solved = False
     }
@@ -114,7 +114,7 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    system.subscriptions model.draggable
+    system.subscriptions model.dnd
 
 
 
@@ -130,15 +130,15 @@ update message model =
     case message of
         MyMsg msg ->
             let
-                ( draggable, disks ) =
-                    system.update msg model.draggable model.disks
+                ( dnd, disks ) =
+                    system.update msg model.dnd model.disks
 
                 solved : Bool
                 solved =
                     disks |> List.take 3 |> List.all (\disk -> disk.startColor == "transparent")
             in
-            ( { model | draggable = draggable, disks = disks, solved = solved }
-            , system.commands model.draggable
+            ( { model | dnd = dnd, disks = disks, solved = solved }
+            , system.commands model.dnd
             )
 
 
@@ -148,38 +148,29 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    let
-        firstTower : List Disk
-        firstTower =
-            model.disks
-                |> List.filter (\{ tower } -> tower == 0)
-
-        secondTower : List Disk
-        secondTower =
-            model.disks
-                |> List.filter (\{ tower } -> tower == 1)
-
-        thirdTower : List Disk
-        thirdTower =
-            model.disks
-                |> List.filter (\{ tower } -> tower == 2)
-    in
     Html.section sectionStyles
-        [ firstTower
-            |> List.indexedMap (diskView model (topDisk firstTower) 0)
-            |> Html.div towerStyles
-        , secondTower
-            |> List.indexedMap (diskView model (topDisk secondTower) (List.length firstTower))
-            |> Html.div towerStyles
-        , thirdTower
-            |> List.indexedMap (diskView model (topDisk thirdTower) (List.length firstTower + List.length secondTower))
-            |> Html.div towerStyles
-        , draggedDiskView model
+        [ towerView model 0
+        , towerView model 1
+        , towerView model 2
+        , ghostDiskView model
         ]
 
 
+towerView : Model -> Int -> Html.Html Msg
+towerView model currentTower =
+    let
+        disks : List Disk
+        disks =
+            model.disks
+                |> List.filter (\{ tower } -> tower == currentTower)
+    in
+    disks
+        |> List.indexedMap (diskView model (maybeTopDisk disks) (calculateOffset 0 currentTower model.disks))
+        |> Html.div towerStyles
+
+
 diskView : Model -> Maybe Disk -> Int -> Int -> Disk -> Html.Html Msg
-diskView model maybeTopDisk offset localIndex { tower, width, startColor, solvedColor } =
+diskView model maybeTopDisk_ offset localIndex { tower, width, startColor, solvedColor } =
     let
         globalIndex : Int
         globalIndex =
@@ -193,16 +184,16 @@ diskView model maybeTopDisk offset localIndex { tower, width, startColor, solved
         color =
             paint model.solved startColor solvedColor
     in
-    case system.info model.draggable of
+    case system.info model.dnd of
         Just { dragIndex } ->
             if localIndex == 0 then
-                case ( maybeDraggedDisk model, maybeTopDisk ) of
-                    ( Just draggedDisk, Just top ) ->
-                        if draggedDisk.width < top.width then
+                case ( maybeDragDisk model.dnd model.disks, maybeTopDisk_ ) of
+                    ( Just dragDisk, Just topDisk ) ->
+                        if dragDisk.width < topDisk.width then
                             Html.div
                                 (Html.Attributes.id diskId
                                     :: diskStyles width color
-                                    ++ droppableDiskStyles
+                                    ++ auxiliaryStyles
                                     ++ system.dropEvents globalIndex diskId
                                 )
                                 []
@@ -211,7 +202,7 @@ diskView model maybeTopDisk offset localIndex { tower, width, startColor, solved
                             Html.div
                                 (Html.Attributes.id diskId
                                     :: diskStyles width color
-                                    ++ droppableDiskStyles
+                                    ++ auxiliaryStyles
                                 )
                                 []
 
@@ -219,7 +210,7 @@ diskView model maybeTopDisk offset localIndex { tower, width, startColor, solved
                         Html.div
                             (Html.Attributes.id diskId
                                 :: diskStyles width color
-                                ++ droppableDiskStyles
+                                ++ auxiliaryStyles
                                 ++ system.dropEvents globalIndex diskId
                             )
                             []
@@ -228,7 +219,7 @@ diskView model maybeTopDisk offset localIndex { tower, width, startColor, solved
                 Html.div
                     (Html.Attributes.id diskId
                         :: diskStyles width color
-                        ++ placeholderDiskStyles
+                        ++ placeholderStyles
                     )
                     []
 
@@ -244,7 +235,7 @@ diskView model maybeTopDisk offset localIndex { tower, width, startColor, solved
                 Html.div
                     (Html.Attributes.id diskId
                         :: diskStyles width color
-                        ++ droppableDiskStyles
+                        ++ auxiliaryStyles
                     )
                     []
 
@@ -252,7 +243,7 @@ diskView model maybeTopDisk offset localIndex { tower, width, startColor, solved
                 Html.div
                     (Html.Attributes.id diskId
                         :: diskStyles width color
-                        ++ draggableDiskStyles
+                        ++ cursorStyles
                         ++ system.dragEvents globalIndex diskId
                     )
                     []
@@ -265,14 +256,14 @@ diskView model maybeTopDisk offset localIndex { tower, width, startColor, solved
                     []
 
 
-draggedDiskView : Model -> Html.Html Msg
-draggedDiskView model =
-    case maybeDraggedDisk model of
+ghostDiskView : Model -> Html.Html Msg
+ghostDiskView model =
+    case maybeDragDisk model.dnd model.disks of
         Just { width, startColor, solvedColor } ->
             Html.div
                 (diskStyles width (paint model.solved startColor solvedColor)
-                    ++ draggableDiskStyles
-                    ++ system.draggedStyles model.draggable
+                    ++ cursorStyles
+                    ++ system.ghostStyles model.dnd
                 )
                 []
 
@@ -284,14 +275,28 @@ draggedDiskView model =
 -- HELPERS
 
 
-maybeDraggedDisk : Model -> Maybe Disk
-maybeDraggedDisk { draggable, disks } =
-    system.info draggable
+calculateOffset : Int -> Int -> List Disk -> Int
+calculateOffset index tower list =
+    case list of
+        [] ->
+            0
+
+        x :: xs ->
+            if x.tower == tower then
+                index
+
+            else
+                calculateOffset (index + 1) tower xs
+
+
+maybeDragDisk : DnDList.Model -> List Disk -> Maybe Disk
+maybeDragDisk dnd disks =
+    system.info dnd
         |> Maybe.andThen (\{ dragIndex } -> disks |> List.drop dragIndex |> List.head)
 
 
-topDisk : List Disk -> Maybe Disk
-topDisk disks =
+maybeTopDisk : List Disk -> Maybe Disk
+maybeTopDisk disks =
     disks |> List.drop 1 |> List.head
 
 
@@ -334,24 +339,24 @@ diskStyles : Int -> String -> List (Html.Attribute msg)
 diskStyles width color =
     [ Html.Attributes.style "width" (String.fromInt width ++ "px")
     , Html.Attributes.style "min-height" "50px"
-    , Html.Attributes.style "background" color
+    , Html.Attributes.style "background-color" color
     , Html.Attributes.style "margin-bottom" "10px"
     ]
 
 
-draggableDiskStyles : List (Html.Attribute msg)
-draggableDiskStyles =
-    [ Html.Attributes.style "cursor" "pointer" ]
-
-
-droppableDiskStyles : List (Html.Attribute msg)
-droppableDiskStyles =
+auxiliaryStyles : List (Html.Attribute msg)
+auxiliaryStyles =
     [ Html.Attributes.style "flex-grow" "1"
     , Html.Attributes.style "margin-bottom" "0"
     , Html.Attributes.style "height" "auto"
     ]
 
 
-placeholderDiskStyles : List (Html.Attribute msg)
-placeholderDiskStyles =
-    [ Html.Attributes.style "background" "transparent" ]
+placeholderStyles : List (Html.Attribute msg)
+placeholderStyles =
+    [ Html.Attributes.style "background-color" "transparent" ]
+
+
+cursorStyles : List (Html.Attribute msg)
+cursorStyles =
+    [ Html.Attributes.style "cursor" "pointer" ]

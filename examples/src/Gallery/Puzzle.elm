@@ -118,14 +118,14 @@ updateOnGroupChange dragIndex dropIndex list =
 
 
 type alias Model =
-    { draggable : DnDList.Groups.Draggable
+    { dnd : DnDList.Groups.Model
     , items : List Item
     }
 
 
 initialModel : Model
 initialModel =
-    { draggable = system.draggable
+    { dnd = system.model
     , items = []
     }
 
@@ -141,7 +141,7 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    system.subscriptions model.draggable
+    system.subscriptions model.dnd
 
 
 
@@ -195,14 +195,14 @@ update message model =
 
         MyMsg msg ->
             let
-                ( draggable, items ) =
-                    system.update msg model.draggable model.items
+                ( dnd, items ) =
+                    system.update msg model.dnd model.items
             in
             ( { model
-                | draggable = draggable
+                | dnd = dnd
                 , items = items
               }
-            , system.commands model.draggable
+            , system.commands model.dnd
             )
 
 
@@ -216,22 +216,22 @@ view model =
         [ List.range 0 3
             |> List.map
                 (\i ->
-                    groupView model.draggable (model.items |> List.drop (i * 4) |> List.take 4) (i * 4) i
+                    groupView model.dnd (model.items |> List.drop (i * 4) |> List.take 4) (i * 4) i
                 )
             |> Html.div containerStyles
-        , draggedItemView model.draggable model.items
+        , ghostView model.dnd model.items
         ]
 
 
-groupView : DnDList.Groups.Draggable -> List Item -> Int -> Int -> Html.Html Msg
-groupView draggable quads offset index =
+groupView : DnDList.Groups.Model -> List Item -> Int -> Int -> Html.Html Msg
+groupView dnd quads offset index =
     quads
-        |> List.indexedMap (itemView draggable offset)
+        |> List.indexedMap (itemView dnd offset)
         |> Html.div (groupStyles (groupColor index) (quads == (solution |> List.drop offset |> List.take 4)))
 
 
-itemView : DnDList.Groups.Draggable -> Int -> Int -> Item -> Html.Html Msg
-itemView draggable offset localIndex { value, color } =
+itemView : DnDList.Groups.Model -> Int -> Int -> Item -> Html.Html Msg
+itemView dnd offset localIndex { value, color } =
     let
         globalIndex : Int
         globalIndex =
@@ -241,7 +241,7 @@ itemView draggable offset localIndex { value, color } =
         itemId =
             "id-" ++ String.fromInt globalIndex
     in
-    case system.info draggable of
+    case system.info dnd of
         Just { dragIndex, dropIndex } ->
             if dragIndex /= globalIndex && dropIndex /= globalIndex then
                 Html.div
@@ -255,7 +255,7 @@ itemView draggable offset localIndex { value, color } =
                 Html.div
                     (Html.Attributes.id itemId
                         :: itemStyles color
-                        ++ droppableStyles
+                        ++ dropStyles
                         ++ system.dropEvents globalIndex itemId
                     )
                     [ Html.text value ]
@@ -276,18 +276,18 @@ itemView draggable offset localIndex { value, color } =
                 [ Html.text value ]
 
 
-draggedItemView : DnDList.Groups.Draggable -> List Item -> Html.Html Msg
-draggedItemView draggable items =
+ghostView : DnDList.Groups.Model -> List Item -> Html.Html Msg
+ghostView dnd items =
     let
-        maybeDraggedItem : Maybe Item
-        maybeDraggedItem =
-            system.info draggable
+        maybeDragItem : Maybe Item
+        maybeDragItem =
+            system.info dnd
                 |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
     in
-    case maybeDraggedItem of
+    case maybeDragItem of
         Just { value, color } ->
             Html.div
-                (itemStyles color ++ system.draggedStyles draggable)
+                (itemStyles color ++ system.ghostStyles dnd)
                 [ Html.text value ]
 
         _ ->
@@ -440,7 +440,7 @@ groupStyles color solved =
             else
                 transparent
     in
-    [ Html.Attributes.style "background" bgColor
+    [ Html.Attributes.style "background-color" bgColor
     , Html.Attributes.style "box-shadow" ("0 0 0 4px " ++ color)
     , Html.Attributes.style "display" "grid"
     , Html.Attributes.style "grid-template-columns" "4em 4em"
@@ -453,7 +453,7 @@ groupStyles color solved =
 
 itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
-    [ Html.Attributes.style "background" color
+    [ Html.Attributes.style "background-color" color
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
@@ -463,6 +463,6 @@ itemStyles color =
     ]
 
 
-droppableStyles : List (Html.Attribute msg)
-droppableStyles =
+dropStyles : List (Html.Attribute msg)
+dropStyles =
     [ Html.Attributes.style "opacity" "0.6" ]

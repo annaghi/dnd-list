@@ -58,7 +58,7 @@ system =
 
 
 type alias Model =
-    { draggable : DnDList.Draggable
+    { dnd : DnDList.Model
     , items : List Item
     , affected : List Int
     }
@@ -66,7 +66,7 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { draggable = system.draggable
+    { dnd = system.model
     , items = data
     , affected = []
     }
@@ -83,7 +83,7 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    system.subscriptions model.draggable
+    system.subscriptions model.dnd
 
 
 
@@ -100,12 +100,12 @@ update message model =
     case message of
         MyMsg msg ->
             let
-                ( draggable, items ) =
-                    system.update msg model.draggable model.items
+                ( dnd, items ) =
+                    system.update msg model.dnd model.items
 
                 affected : List Int
                 affected =
-                    case system.info draggable of
+                    case system.info dnd of
                         Just { dragIndex, dropIndex } ->
                             if dragIndex /= dropIndex then
                                 dragIndex :: dropIndex :: []
@@ -116,8 +116,8 @@ update message model =
                         _ ->
                             model.affected
             in
-            ( { model | draggable = draggable, items = items, affected = affected }
-            , system.commands model.draggable
+            ( { model | dnd = dnd, items = items, affected = affected }
+            , system.commands model.dnd
             )
 
         ClearAffected ->
@@ -133,14 +133,14 @@ view model =
     Html.section
         [ Html.Events.onMouseDown ClearAffected ]
         [ model.items
-            |> List.indexedMap (itemView model.draggable model.affected)
+            |> List.indexedMap (itemView model.dnd model.affected)
             |> Html.div containerStyles
-        , draggedItemView model.draggable model.items
+        , ghostView model.dnd model.items
         ]
 
 
-itemView : DnDList.Draggable -> List Int -> Int -> Item -> Html.Html Msg
-itemView draggable affected index item =
+itemView : DnDList.Model -> List Int -> Int -> Item -> Html.Html Msg
+itemView dnd affected index item =
     let
         itemId : String
         itemId =
@@ -157,7 +157,7 @@ itemView draggable affected index item =
                         []
                    )
     in
-    case system.info draggable of
+    case system.info dnd of
         Just { dragIndex, dropIndex } ->
             if dragIndex /= index && dropIndex /= index then
                 Html.div
@@ -180,18 +180,18 @@ itemView draggable affected index item =
                 [ Html.text item ]
 
 
-draggedItemView : DnDList.Draggable -> List Item -> Html.Html Msg
-draggedItemView draggable items =
+ghostView : DnDList.Model -> List Item -> Html.Html Msg
+ghostView dnd items =
     let
-        maybeDraggedItem : Maybe Item
-        maybeDraggedItem =
-            system.info draggable
+        maybeDragItem : Maybe Item
+        maybeDragItem =
+            system.info dnd
                 |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
     in
-    case maybeDraggedItem of
+    case maybeDragItem of
         Just item ->
             Html.div
-                (itemStyles ++ draggedItemStyles ++ system.draggedStyles draggable)
+                (itemStyles ++ ghostStyles ++ system.ghostStyles dnd)
                 [ Html.text item ]
 
         Nothing ->
@@ -209,7 +209,7 @@ containerStyles =
 
 itemStyles : List (Html.Attribute msg)
 itemStyles =
-    [ Html.Attributes.style "background" "#1e9daa"
+    [ Html.Attributes.style "background-color" "#1e9daa"
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
@@ -223,21 +223,21 @@ itemStyles =
     ]
 
 
-draggedItemStyles : List (Html.Attribute msg)
-draggedItemStyles =
-    [ Html.Attributes.style "background" "#aa1e9d" ]
-
-
 placeholderItemStyles : List (Html.Attribute msg)
 placeholderItemStyles =
-    [ Html.Attributes.style "background" "dimgray" ]
+    [ Html.Attributes.style "background-color" "dimgray" ]
 
 
 overedItemStyles : List (Html.Attribute msg)
 overedItemStyles =
-    [ Html.Attributes.style "background" "#63bdc7" ]
+    [ Html.Attributes.style "background-color" "#63bdc7" ]
 
 
 affectedItemStyles : List (Html.Attribute msg)
 affectedItemStyles =
-    [ Html.Attributes.style "background" "#136169" ]
+    [ Html.Attributes.style "background-color" "#136169" ]
+
+
+ghostStyles : List (Html.Attribute msg)
+ghostStyles =
+    [ Html.Attributes.style "background-color" "#aa1e9d" ]

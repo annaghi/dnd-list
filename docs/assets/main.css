@@ -143,14 +143,20 @@ pre {
 
 /* Colors */
 
-a,
+a {
+  color: #177fd6;
+}
+nav a:hover {
+  color: #a131c2;
+}
+
 .hljs-title {
   color: #177fd6;
 }
-nav a:hover,
 .hljs-keyword {
   color: #a131c2;
 }
+
 section .link {
   color: #61aeee;
 }
@@ -180,6 +186,7 @@ main section,
 .font-color-0-0-0-255 {
   color: white !important;
 }
+
 .hljs {
   background-color: #f2f2f2;
 }

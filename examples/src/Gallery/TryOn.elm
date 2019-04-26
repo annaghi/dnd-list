@@ -104,14 +104,14 @@ updateColor dragIndex dropIndex list =
 
 
 type alias Model =
-    { draggable : DnDList.Draggable
+    { dnd : DnDList.Model
     , items : List Item
     }
 
 
 initialModel : Model
 initialModel =
-    { draggable = system.draggable
+    { dnd = system.model
     , items = data
     }
 
@@ -127,7 +127,7 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    system.subscriptions model.draggable
+    system.subscriptions model.dnd
 
 
 
@@ -143,14 +143,14 @@ update message model =
     case message of
         MyMsg msg ->
             let
-                ( draggable, items ) =
-                    system.update msg model.draggable model.items
+                ( dnd, items ) =
+                    system.update msg model.dnd model.items
             in
             ( { model
-                | draggable = draggable
+                | dnd = dnd
                 , items = items
               }
-            , system.commands model.draggable
+            , system.commands model.dnd
             )
 
 
@@ -170,7 +170,7 @@ view model =
             |> List.indexedMap
                 (sizeView model (model.items |> List.filter (\item -> item.property == Color) |> List.length))
             |> Html.div sizeStyles
-        , draggedItemView model
+        , ghostView model
         ]
 
 
@@ -189,7 +189,7 @@ colorView model index item =
         height =
             item.height * 5
     in
-    case system.info model.draggable of
+    case system.info model.dnd of
         Just _ ->
             Html.div
                 (Html.Attributes.id itemId
@@ -202,8 +202,8 @@ colorView model index item =
             Html.div
                 (Html.Attributes.id itemId
                     :: itemStyles width height item.color
-                    ++ system.dragEvents index itemId
                     ++ [ Html.Attributes.style "cursor" "pointer" ]
+                    ++ system.dragEvents index itemId
                 )
                 []
 
@@ -227,7 +227,7 @@ sizeView model offset index item =
         height =
             item.height * 4
     in
-    case system.info model.draggable of
+    case system.info model.dnd of
         Just { dragIndex } ->
             if dragIndex /= globalIndex then
                 Html.div
@@ -250,6 +250,7 @@ sizeView model offset index item =
                 Html.div
                     (Html.Attributes.id itemId
                         :: itemStyles width height item.color
+                        ++ [ Html.Attributes.style "cursor" "pointer" ]
                         ++ system.dragEvents globalIndex itemId
                     )
                     []
@@ -262,10 +263,10 @@ sizeView model offset index item =
                     []
 
 
-draggedItemView : Model -> Html.Html Msg
-draggedItemView model =
-    case ( system.info model.draggable, maybeDraggedItem model ) of
-        ( Just { dragIndex, targetElement }, Just { color } ) ->
+ghostView : Model -> Html.Html Msg
+ghostView model =
+    case ( system.info model.dnd, maybeDragItem model ) of
+        ( Just { dragIndex, dropElement }, Just { color } ) ->
             let
                 baseFontSize : Float
                 baseFontSize =
@@ -273,15 +274,15 @@ draggedItemView model =
 
                 width : Int
                 width =
-                    round (targetElement.element.width / baseFontSize)
+                    round (dropElement.element.width / baseFontSize)
 
                 height : Int
                 height =
-                    round (targetElement.element.height / baseFontSize)
+                    round (dropElement.element.height / baseFontSize)
             in
             Html.div
                 (itemStyles width height color
-                    ++ system.draggedStyles model.draggable
+                    ++ system.ghostStyles model.dnd
                     ++ [ Html.Attributes.style "width" (String.fromInt width ++ "rem")
                        , Html.Attributes.style "height" (String.fromInt height ++ "rem")
                        , Html.Attributes.style "transition" "width 0.5s, height 0.5s"
@@ -297,9 +298,9 @@ draggedItemView model =
 -- HELPERS
 
 
-maybeDraggedItem : Model -> Maybe Item
-maybeDraggedItem { draggable, items } =
-    system.info draggable
+maybeDragItem : Model -> Maybe Item
+maybeDragItem { dnd, items } =
+    system.info dnd
         |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
 
 

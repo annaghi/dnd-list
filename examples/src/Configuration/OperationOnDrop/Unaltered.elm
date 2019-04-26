@@ -61,10 +61,10 @@ updateColors dragIndex dropIndex items =
         List.indexedMap
             (\i { value } ->
                 if i == dragIndex then
-                    Item value targetColor
+                    Item value dropColor
 
                 else if i == dropIndex then
-                    Item value sourceColor
+                    Item value dragColor
 
                 else
                     Item value baseColor
@@ -80,14 +80,14 @@ updateColors dragIndex dropIndex items =
 
 
 type alias Model =
-    { draggable : DnDList.Draggable
+    { dnd : DnDList.Model
     , items : List Item
     }
 
 
 initialModel : Model
 initialModel =
-    { draggable = system.draggable
+    { dnd = system.model
     , items = data
     }
 
@@ -103,7 +103,7 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    system.subscriptions model.draggable
+    system.subscriptions model.dnd
 
 
 
@@ -120,11 +120,11 @@ update message model =
     case message of
         MyMsg msg ->
             let
-                ( draggable, items ) =
-                    system.update msg model.draggable model.items
+                ( dnd, items ) =
+                    system.update msg model.dnd model.items
             in
-            ( { model | draggable = draggable, items = items }
-            , system.commands model.draggable
+            ( { model | dnd = dnd, items = items }
+            , system.commands model.dnd
             )
 
         ResetColors ->
@@ -142,14 +142,14 @@ view model =
     Html.section
         [ Html.Events.onMouseDown ResetColors ]
         [ model.items
-            |> List.indexedMap (itemView model.draggable)
+            |> List.indexedMap (itemView model.dnd)
             |> Html.div containerStyles
-        , draggedItemView model.draggable model.items
+        , ghostView model.dnd model.items
         ]
 
 
-itemView : DnDList.Draggable -> Int -> Item -> Html.Html Msg
-itemView draggable index { value, color } =
+itemView : DnDList.Model -> Int -> Item -> Html.Html Msg
+itemView dnd index { value, color } =
     let
         itemId : String
         itemId =
@@ -159,7 +159,7 @@ itemView draggable index { value, color } =
         attrs color_ =
             Html.Attributes.id itemId :: itemStyles color_
     in
-    case system.info draggable of
+    case system.info dnd of
         Just { dragIndex, dropIndex } ->
             if dragIndex /= index && dropIndex /= index then
                 Html.div
@@ -168,12 +168,12 @@ itemView draggable index { value, color } =
 
             else if dragIndex /= index && dropIndex == index then
                 Html.div
-                    (attrs sourceColor ++ system.dropEvents index itemId)
+                    (attrs dragColor ++ system.dropEvents index itemId)
                     [ Html.text value ]
 
             else
                 Html.div
-                    (attrs sourceColor)
+                    (attrs dragColor)
                     []
 
         _ ->
@@ -182,18 +182,18 @@ itemView draggable index { value, color } =
                 [ Html.text value ]
 
 
-draggedItemView : DnDList.Draggable -> List Item -> Html.Html Msg
-draggedItemView draggable items =
+ghostView : DnDList.Model -> List Item -> Html.Html Msg
+ghostView dnd items =
     let
-        maybeDraggedItem : Maybe Item
-        maybeDraggedItem =
-            system.info draggable
+        maybeDragItem : Maybe Item
+        maybeDragItem =
+            system.info dnd
                 |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
     in
-    case maybeDraggedItem of
+    case maybeDragItem of
         Just { value } ->
             Html.div
-                (itemStyles targetColor ++ system.draggedStyles draggable)
+                (itemStyles dropColor ++ system.ghostStyles dnd)
                 [ Html.text value ]
 
         Nothing ->
@@ -209,13 +209,13 @@ baseColor =
     "dimgray"
 
 
-sourceColor : String
-sourceColor =
+dragColor : String
+dragColor =
     "green"
 
 
-targetColor : String
-targetColor =
+dropColor : String
+dropColor =
     "red"
 
 
@@ -239,7 +239,7 @@ containerStyles =
 
 itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
-    [ Html.Attributes.style "background" color
+    [ Html.Attributes.style "background-color" color
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "display" "flex"

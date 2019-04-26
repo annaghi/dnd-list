@@ -57,14 +57,14 @@ system =
 
 
 type alias Model =
-    { draggable : DnDList.Draggable
+    { dnd : DnDList.Model
     , items : List Fruit
     }
 
 
 initialModel : Model
 initialModel =
-    { draggable = system.draggable
+    { dnd = system.model
     , items = data
     }
 
@@ -80,7 +80,7 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    system.subscriptions model.draggable
+    system.subscriptions model.dnd
 
 
 
@@ -96,11 +96,11 @@ update message model =
     case message of
         MyMsg msg ->
             let
-                ( draggable, items ) =
-                    system.update msg model.draggable model.items
+                ( dnd, items ) =
+                    system.update msg model.dnd model.items
             in
-            ( { model | draggable = draggable, items = items }
-            , system.commands model.draggable
+            ( { model | dnd = dnd, items = items }
+            , system.commands model.dnd
             )
 
 
@@ -114,23 +114,23 @@ view model =
         [ Element.layout
             [ Element.width Element.fill
             , Element.height Element.fill
-            , Element.inFront (draggedItemView model.draggable model.items)
+            , Element.inFront (ghostView model.dnd model.items)
             ]
             (Element.column
                 [ Element.centerX, Element.centerY, Element.padding 10, Element.spacing 10 ]
-                (model.items |> List.indexedMap (itemView model.draggable))
+                (model.items |> List.indexedMap (itemView model.dnd))
             )
         ]
 
 
-itemView : DnDList.Draggable -> Int -> Fruit -> Element.Element Msg
-itemView draggable index item =
+itemView : DnDList.Model -> Int -> Fruit -> Element.Element Msg
+itemView dnd index item =
     let
         itemId : String
         itemId =
             "id-" ++ item
     in
-    case system.info draggable of
+    case system.info dnd of
         Just { dragIndex } ->
             if dragIndex /= index then
                 Element.el
@@ -152,18 +152,18 @@ itemView draggable index item =
                 (Element.text item)
 
 
-draggedItemView : DnDList.Draggable -> List Fruit -> Element.Element Msg
-draggedItemView draggable items =
+ghostView : DnDList.Model -> List Fruit -> Element.Element Msg
+ghostView dnd items =
     let
-        maybeDraggedItem : Maybe Fruit
-        maybeDraggedItem =
-            system.info draggable
+        maybeDragItem : Maybe Fruit
+        maybeDragItem =
+            system.info dnd
                 |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
     in
-    case maybeDraggedItem of
+    case maybeDragItem of
         Just item ->
             Element.el
-                (List.map Element.htmlAttribute (system.draggedStyles draggable))
+                (List.map Element.htmlAttribute (system.ghostStyles dnd))
                 (Element.text item)
 
         Nothing ->

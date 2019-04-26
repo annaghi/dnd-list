@@ -25,20 +25,20 @@ main =
 -- DATA
 
 
-type alias Card =
-    { activity : Activity
-    , description : String
-    }
-
-
 type Activity
     = ToDo
     | Doing
     | Done
 
 
-gatheredByActivity : List Card
-gatheredByActivity =
+type alias Card =
+    { activity : Activity
+    , description : String
+    }
+
+
+data : List Card
+data =
     [ Card ToDo "D"
     , Card ToDo "B"
     , Card ToDo "A"
@@ -121,17 +121,17 @@ columnSystem =
 
 
 type alias Model =
-    { cardDraggable : DnDList.Groups.Draggable
-    , columnDraggable : DnDList.Draggable
+    { cardDnD : DnDList.Groups.Model
+    , columnDnD : DnDList.Model
     , cards : List Card
     }
 
 
 initialModel : Model
 initialModel =
-    { cardDraggable = cardSystem.draggable
-    , columnDraggable = columnSystem.draggable
-    , cards = gatheredByActivity
+    { cardDnD = cardSystem.model
+    , columnDnD = columnSystem.model
+    , cards = data
     }
 
 
@@ -147,8 +147,8 @@ init _ =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ cardSystem.subscriptions model.cardDraggable
-        , columnSystem.subscriptions model.columnDraggable
+        [ cardSystem.subscriptions model.cardDnD
+        , columnSystem.subscriptions model.columnDnD
         ]
 
 
@@ -166,26 +166,26 @@ update message model =
     case message of
         CardMoved msg ->
             let
-                ( cardDraggable, cards ) =
-                    cardSystem.update msg model.cardDraggable model.cards
+                ( cardDnD, cards ) =
+                    cardSystem.update msg model.cardDnD model.cards
             in
             ( { model
-                | cardDraggable = cardDraggable
+                | cardDnD = cardDnD
                 , cards = cards
               }
-            , cardSystem.commands model.cardDraggable
+            , cardSystem.commands model.cardDnD
             )
 
         ColumnMoved msg ->
             let
-                ( columnDraggable, columns ) =
-                    columnSystem.update msg model.columnDraggable (gatherByActivity model.cards)
+                ( columnDnD, columns ) =
+                    columnSystem.update msg model.columnDnD (gatherByActivity model.cards)
             in
             ( { model
-                | columnDraggable = columnDraggable
+                | columnDnD = columnDnD
                 , cards = List.concat columns
               }
-            , columnSystem.commands model.columnDraggable
+            , columnSystem.commands model.columnDnD
             )
 
 
@@ -208,8 +208,8 @@ view model =
         [ columns
             |> List.indexedMap (\i column -> columnView model (calculateOffset i) i column)
             |> Html.div boardStyles
-        , draggedColumnView model
-        , draggedCardView model
+        , columnGhostView model
+        , cardGhostView model
         ]
 
 
@@ -223,15 +223,15 @@ columnView model offset index cards =
         columnId : String
         columnId =
             "column-" ++ String.fromInt index
-
-        attrs color =
-            Html.Attributes.id columnId :: columnStyles color
     in
-    case columnSystem.info model.columnDraggable of
-        Just { dragIndex, sourceElement } ->
+    case columnSystem.info model.columnDnD of
+        Just { dragIndex, dragElement } ->
             if dragIndex /= index then
                 Html.div
-                    (attrs "transparent" ++ columnSystem.dropEvents index columnId)
+                    (Html.Attributes.id columnId
+                        :: columnStyles "transparent"
+                        ++ columnSystem.dropEvents index columnId
+                    )
                     [ Html.h3
                         (columnHeadingStyles heading.color)
                         [ Html.text heading.title ]
@@ -244,17 +244,24 @@ columnView model offset index cards =
                 let
                     height : String
                     height =
-                        sourceElement.element.height |> round |> String.fromInt
+                        dragElement.element.height |> round |> String.fromInt
                 in
                 Html.div
-                    (attrs gray ++ [ Html.Attributes.style "height" (height ++ "px") ])
+                    (Html.Attributes.id columnId
+                        :: columnStyles gray
+                        ++ [ Html.Attributes.style "height" (height ++ "px") ]
+                    )
                     []
 
         _ ->
             Html.div
-                (attrs "transparent")
+                (Html.Attributes.id columnId
+                    :: columnStyles "transparent"
+                )
                 [ Html.h3
-                    (columnHeadingStyles heading.color ++ columnSystem.dragEvents index columnId)
+                    (columnHeadingStyles heading.color
+                        ++ columnSystem.dragEvents index columnId
+                    )
                     [ Html.text heading.title ]
                 , cards
                     |> List.indexedMap (eventfulCardView model offset)
@@ -281,47 +288,44 @@ eventfulCardView model offset localIndex { activity, description } =
         cardId : String
         cardId =
             "card-" ++ String.fromInt globalIndex
-
-        attrs styles =
-            Html.Attributes.id cardId :: styles
     in
-    case ( cardSystem.info model.cardDraggable, maybeDraggedCard model ) of
+    case ( cardSystem.info model.cardDnD, maybeDragCard model ) of
         ( Just { dragIndex }, Just dragCard ) ->
             if description == "" && activity /= dragCard.activity then
                 Html.div
-                    (attrs auxiliaryCardStyles ++ cardSystem.dropEvents globalIndex cardId)
+                    (Html.Attributes.id cardId :: auxiliaryCardStyles ++ cardSystem.dropEvents globalIndex cardId)
                     []
 
             else if description == "" && activity == dragCard.activity then
                 Html.div
-                    (attrs auxiliaryCardStyles)
+                    (Html.Attributes.id cardId :: auxiliaryCardStyles)
                     []
 
             else if globalIndex /= dragIndex then
                 Html.div
-                    (attrs (cardStyles yellow) ++ cardSystem.dropEvents globalIndex cardId)
+                    (Html.Attributes.id cardId :: cardStyles yellow ++ cardSystem.dropEvents globalIndex cardId)
                     [ Html.text description ]
 
             else
                 Html.div
-                    (attrs (cardStyles gray))
+                    (Html.Attributes.id cardId :: cardStyles gray)
                     []
 
         _ ->
             if description == "" then
                 Html.div
-                    (attrs auxiliaryCardStyles)
+                    (Html.Attributes.id cardId :: auxiliaryCardStyles)
                     []
 
             else
                 Html.div
-                    (attrs (cardStyles yellow) ++ draggableCardStyles ++ cardSystem.dragEvents globalIndex cardId)
+                    (Html.Attributes.id cardId :: cardStyles yellow ++ cursorStyles ++ cardSystem.dragEvents globalIndex cardId)
                     [ Html.text description ]
 
 
-draggedColumnView : Model -> Html.Html Msg
-draggedColumnView model =
-    case maybeDraggedColumn model of
+columnGhostView : Model -> Html.Html Msg
+columnGhostView model =
+    case maybeDragColumn model of
         Just cards ->
             let
                 heading : Heading
@@ -329,7 +333,7 @@ draggedColumnView model =
                     getActivity (List.take 1 cards)
             in
             Html.div
-                (columnStyles "transparent" ++ columnSystem.draggedStyles model.columnDraggable)
+                (columnStyles "transparent" ++ columnSystem.ghostStyles model.columnDnD)
                 [ Html.h3
                     (columnHeadingStyles heading.color)
                     [ Html.text heading.title ]
@@ -342,12 +346,12 @@ draggedColumnView model =
             Html.text ""
 
 
-draggedCardView : Model -> Html.Html Msg
-draggedCardView model =
-    case maybeDraggedCard model of
+cardGhostView : Model -> Html.Html Msg
+cardGhostView model =
+    case maybeDragCard model of
         Just { description } ->
             Html.div
-                (cardStyles yellow ++ draggableCardStyles ++ cardSystem.draggedStyles model.cardDraggable)
+                (cardStyles yellow ++ cursorStyles ++ cardSystem.ghostStyles model.cardDnD)
                 [ Html.text description ]
 
         _ ->
@@ -380,15 +384,15 @@ gatherByActivity cards =
         cards
 
 
-maybeDraggedColumn : Model -> Maybe (List Card)
-maybeDraggedColumn { columnDraggable, cards } =
-    columnSystem.info columnDraggable
+maybeDragColumn : Model -> Maybe (List Card)
+maybeDragColumn { columnDnD, cards } =
+    columnSystem.info columnDnD
         |> Maybe.andThen (\{ dragIndex } -> gatherByActivity cards |> List.drop dragIndex |> List.head)
 
 
-maybeDraggedCard : Model -> Maybe Card
-maybeDraggedCard { cardDraggable, cards } =
-    cardSystem.info cardDraggable
+maybeDragCard : Model -> Maybe Card
+maybeDragCard { cardDnD, cards } =
+    cardSystem.info cardDnD
         |> Maybe.andThen (\{ dragIndex } -> cards |> List.drop dragIndex |> List.head)
 
 
@@ -462,7 +466,7 @@ boardStyles =
 
 columnStyles : String -> List (Html.Attribute msg)
 columnStyles color =
-    [ Html.Attributes.style "background" color
+    [ Html.Attributes.style "background-color" color
     , Html.Attributes.style "box-shadow" "0 0 0 1px black"
     , Html.Attributes.style "width" "220px"
     ]
@@ -470,7 +474,7 @@ columnStyles color =
 
 columnHeadingStyles : String -> List (Html.Attribute msg)
 columnHeadingStyles color =
-    [ Html.Attributes.style "background" color
+    [ Html.Attributes.style "background-color" color
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "height" "60px"
@@ -483,7 +487,7 @@ columnHeadingStyles color =
 
 containerStyles : List (Html.Attribute msg)
 containerStyles =
-    [ Html.Attributes.style "background" "#999999"
+    [ Html.Attributes.style "background-color" "#999999"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-direction" "column"
     , Html.Attributes.style "align-items" "center"
@@ -494,7 +498,7 @@ containerStyles =
 
 cardStyles : String -> List (Html.Attribute msg)
 cardStyles color =
-    [ Html.Attributes.style "background" color
+    [ Html.Attributes.style "background-color" color
     , Html.Attributes.style "color" "black"
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "display" "flex"
@@ -506,14 +510,14 @@ cardStyles color =
     ]
 
 
-draggableCardStyles : List (Html.Attribute msg)
-draggableCardStyles =
+cursorStyles : List (Html.Attribute msg)
+cursorStyles =
     [ Html.Attributes.style "cursor" "pointer" ]
 
 
 auxiliaryCardStyles : List (Html.Attribute msg)
 auxiliaryCardStyles =
-    [ Html.Attributes.style "background" "transparent"
+    [ Html.Attributes.style "background-color" "transparent"
 
     -- , Html.Attributes.style "box-shadow" "0 0 0 1px red"
     , Html.Attributes.style "flex-grow" "1"

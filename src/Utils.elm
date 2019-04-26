@@ -1,6 +1,12 @@
-module Utils exposing (pageX, pageY, px, translate)
+module Utils exposing (Position, pageX, pageY, px, translate)
 
 import Json.Decode
+
+
+type alias Position =
+    { x : Float
+    , y : Float
+    }
 
 
 px : Int -> String
