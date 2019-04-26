@@ -109,14 +109,14 @@ updateOnGroupChange dragIndex dropIndex list =
 
 
 type alias Model =
-    { draggable : DnDList.Groups.Draggable
+    { dnd : DnDList.Groups.Model
     , items : List Item
     }
 
 
 initialModel : Model
 initialModel =
-    { draggable = system.draggable
+    { dnd = system.model
     , items = gatheredByGroup
     }
 
@@ -132,7 +132,7 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    system.subscriptions model.draggable
+    system.subscriptions model.dnd
 
 
 
@@ -148,14 +148,14 @@ update message model =
     case message of
         MyMsg msg ->
             let
-                ( draggable, items ) =
-                    system.update msg model.draggable model.items
+                ( dnd, items ) =
+                    system.update msg model.dnd model.items
             in
             ( { model
-                | draggable = draggable
+                | dnd = dnd
                 , items = items
               }
-            , system.commands model.draggable
+            , system.commands model.dnd
             )
 
 
@@ -166,20 +166,19 @@ update message model =
 view : Model -> Html.Html Msg
 view model =
     Html.section sectionStyles
-        [ model.items
-            |> List.filter (\{ group } -> group == 0)
-            |> List.indexedMap (itemView model (calculateOffset 0 0 model.items))
-            |> Html.div containerStyles
-        , model.items
-            |> List.filter (\{ group } -> group == 1)
-            |> List.indexedMap (itemView model (calculateOffset 0 1 model.items))
-            |> Html.div containerStyles
-        , model.items
-            |> List.filter (\{ group } -> group == 2)
-            |> List.indexedMap (itemView model (calculateOffset 0 2 model.items))
-            |> Html.div containerStyles
-        , draggedItemView model
+        [ groupView model 0
+        , groupView model 1
+        , groupView model 2
+        , ghostView model
         ]
+
+
+groupView : Model -> Int -> Html.Html Msg
+groupView model currentGroup =
+    model.items
+        |> List.filter (\{ group } -> group == currentGroup)
+        |> List.indexedMap (itemView model (calculateOffset 0 currentGroup model.items))
+        |> Html.div groupStyles
 
 
 itemView : Model -> Int -> Int -> Item -> Html.Html Msg
@@ -203,7 +202,7 @@ itemView model offset localIndex { group, color } =
             else
                 ( "60px", "60px" )
     in
-    case system.info model.draggable of
+    case system.info model.dnd of
         Just { dragIndex } ->
             if globalIndex /= dragIndex then
                 Html.div
@@ -238,22 +237,22 @@ itemView model offset localIndex { group, color } =
                 []
 
 
-draggedItemView : Model -> Html.Html Msg
-draggedItemView model =
-    case ( system.info model.draggable, maybeDraggedItem model.draggable model.items ) of
-        ( Just { dragIndex, targetElement }, Just { color } ) ->
+ghostView : Model -> Html.Html Msg
+ghostView model =
+    case ( system.info model.dnd, maybeDragItem model.dnd model.items ) of
+        ( Just { dragIndex, dropElement }, Just { color } ) ->
             let
                 width : String
                 width =
-                    targetElement.element.width |> round |> String.fromInt
+                    dropElement.element.width |> round |> String.fromInt
 
                 height : String
                 height =
-                    targetElement.element.height |> round |> String.fromInt
+                    dropElement.element.height |> round |> String.fromInt
             in
             Html.div
                 (itemStyles color
-                    ++ system.draggedStyles model.draggable
+                    ++ system.ghostStyles model.dnd
                     ++ [ Html.Attributes.style "width" (width ++ "px")
                        , Html.Attributes.style "height" (height ++ "px")
                        , Html.Attributes.style "transition" "width 0.5s, height 0.5s"
@@ -283,9 +282,9 @@ calculateOffset index group list =
                 calculateOffset (index + 1) group xs
 
 
-maybeDraggedItem : DnDList.Groups.Draggable -> List Item -> Maybe Item
-maybeDraggedItem draggable items =
-    system.info draggable
+maybeDragItem : DnDList.Groups.Model -> List Item -> Maybe Item
+maybeDragItem dnd items =
+    system.info dnd
         |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
 
 
@@ -327,8 +326,8 @@ sectionStyles =
     ]
 
 
-containerStyles : List (Html.Attribute msg)
-containerStyles =
+groupStyles : List (Html.Attribute msg)
+groupStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "justify-content" "end"
     , Html.Attributes.style "padding-bottom" "3em"
