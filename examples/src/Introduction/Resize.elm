@@ -24,6 +24,10 @@ main =
 -- DATA
 
 
+type alias Color =
+    String
+
+
 data : List Color
 data =
     [ green
@@ -73,14 +77,14 @@ system =
 
 
 type alias Model =
-    { draggable : DnDList.Draggable
+    { dnd : DnDList.Model
     , colors : List Color
     }
 
 
 initialModel : Model
 initialModel =
-    { draggable = system.draggable
+    { dnd = system.model
     , colors = data
     }
 
@@ -96,7 +100,7 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    system.subscriptions model.draggable
+    system.subscriptions model.dnd
 
 
 
@@ -112,14 +116,14 @@ update message model =
     case message of
         MyMsg msg ->
             let
-                ( draggable, colors ) =
-                    system.update msg model.draggable model.colors
+                ( dnd, colors ) =
+                    system.update msg model.dnd model.colors
             in
             ( { model
-                | draggable = draggable
+                | dnd = dnd
                 , colors = colors
               }
-            , system.commands model.draggable
+            , system.commands model.dnd
             )
 
 
@@ -133,7 +137,7 @@ view model =
         [ List.map2 (\color spot -> ( color, spot )) model.colors spots
             |> List.indexedMap (itemView model)
             |> Html.div containerStyles
-        , draggedItemView model
+        , ghostView model
         ]
 
 
@@ -152,7 +156,7 @@ itemView model index ( color, spot ) =
         height =
             spot.height * 5
     in
-    case system.info model.draggable of
+    case system.info model.dnd of
         Just { dragIndex } ->
             if index /= dragIndex then
                 Html.div
@@ -183,22 +187,22 @@ itemView model index ( color, spot ) =
                 ]
 
 
-draggedItemView : Model -> Html.Html Msg
-draggedItemView model =
-    case ( system.info model.draggable, maybeDraggedItem model ) of
-        ( Just { dragIndex, targetElement }, Just color ) ->
+ghostView : Model -> Html.Html Msg
+ghostView model =
+    case ( system.info model.dnd, maybeDragItem model ) of
+        ( Just { dragIndex, dropElement }, Just color ) ->
             let
                 width : Int
                 width =
-                    round targetElement.element.width
+                    round dropElement.element.width
 
                 height : Int
                 height =
-                    round targetElement.element.height
+                    round dropElement.element.height
             in
             Html.div
                 (itemStyles width height color
-                    ++ system.draggedStyles model.draggable
+                    ++ system.ghostStyles model.dnd
                     ++ [ Html.Attributes.style "width" (String.fromInt width ++ "px")
                        , Html.Attributes.style "height" (String.fromInt height ++ "px")
                        , Html.Attributes.style "transition" "width 0.5s, height 0.5s"
@@ -217,18 +221,14 @@ draggedItemView model =
 -- HELPERS
 
 
-maybeDraggedItem : Model -> Maybe Color
-maybeDraggedItem { draggable, colors } =
-    system.info draggable
+maybeDragItem : Model -> Maybe Color
+maybeDragItem { dnd, colors } =
+    system.info dnd
         |> Maybe.andThen (\{ dragIndex } -> colors |> List.drop dragIndex |> List.head)
 
 
 
 -- COLORS
-
-
-type alias Color =
-    String
 
 
 yellow : Color

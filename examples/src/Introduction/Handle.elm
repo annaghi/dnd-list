@@ -56,14 +56,14 @@ system =
 
 
 type alias Model =
-    { draggable : DnDList.Draggable
+    { dnd : DnDList.Model
     , fruits : List Fruit
     }
 
 
 initialModel : Model
 initialModel =
-    { draggable = system.draggable
+    { dnd = system.model
     , fruits = data
     }
 
@@ -79,7 +79,7 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    system.subscriptions model.draggable
+    system.subscriptions model.dnd
 
 
 
@@ -95,11 +95,11 @@ update message model =
     case message of
         MyMsg msg ->
             let
-                ( draggable, fruits ) =
-                    system.update msg model.draggable model.fruits
+                ( dnd, fruits ) =
+                    system.update msg model.dnd model.fruits
             in
-            ( { model | draggable = draggable, fruits = fruits }
-            , system.commands model.draggable
+            ( { model | dnd = dnd, fruits = fruits }
+            , system.commands model.dnd
             )
 
 
@@ -111,20 +111,20 @@ view : Model -> Html.Html Msg
 view model =
     Html.section []
         [ model.fruits
-            |> List.indexedMap (itemView model.draggable)
+            |> List.indexedMap (itemView model.dnd)
             |> Html.div containerStyles
-        , draggedItemView model.draggable model.fruits
+        , ghostView model.dnd model.fruits
         ]
 
 
-itemView : DnDList.Draggable -> Int -> Fruit -> Html.Html Msg
-itemView draggable index fruit =
+itemView : DnDList.Model -> Int -> Fruit -> Html.Html Msg
+itemView dnd index fruit =
     let
         fruitId : String
         fruitId =
             "id-" ++ fruit
     in
-    case system.info draggable of
+    case system.info dnd of
         Just { dragIndex } ->
             if dragIndex /= index then
                 Html.div
@@ -146,18 +146,18 @@ itemView draggable index fruit =
                 ]
 
 
-draggedItemView : DnDList.Draggable -> List Fruit -> Html.Html Msg
-draggedItemView draggable fruits =
+ghostView : DnDList.Model -> List Fruit -> Html.Html Msg
+ghostView dnd fruits =
     let
-        maybeDraggedFruit : Maybe Fruit
-        maybeDraggedFruit =
-            system.info draggable
+        maybeDragFruit : Maybe Fruit
+        maybeDragFruit =
+            system.info dnd
                 |> Maybe.andThen (\{ dragIndex } -> fruits |> List.drop dragIndex |> List.head)
     in
-    case maybeDraggedFruit of
+    case maybeDragFruit of
         Just fruit ->
             Html.div
-                (itemStyles orange ++ system.draggedStyles draggable)
+                (itemStyles orange ++ system.ghostStyles dnd)
                 [ Html.div (handleStyles darkOrange) []
                 , Html.text fruit
                 ]

@@ -27,19 +27,24 @@ main =
 -- DATA
 
 
+type Shape
+    = Circle
+    | Cross
+    | Square
+    | Triangle
+
+
+shapeNumber : Int
+shapeNumber =
+    4
+
+
 type alias Item =
     { shape : Shape
     , color : String
     , attempts : Int
     , solved : Bool
     }
-
-
-type Shape
-    = Circle
-    | Cross
-    | Square
-    | Triangle
 
 
 data : List Item
@@ -53,11 +58,6 @@ data =
     , Item Cross "dimgray" 0 False
     , Item Circle "dimgray" 0 False
     ]
-
-
-shapeNumber : Int
-shapeNumber =
-    4
 
 
 
@@ -105,7 +105,13 @@ updateShapes dragIndex dropIndex list =
 
                 else if index == dropIndex && fit then
                     List.map2
-                        (\dragItem dropItem -> { dropItem | attempts = dropItem.attempts + 1, color = dragItem.color, solved = True })
+                        (\dragItem dropItem ->
+                            { dropItem
+                                | attempts = dropItem.attempts + 1
+                                , color = dragItem.color
+                                , solved = True
+                            }
+                        )
                         drag
                         [ item ]
 
@@ -123,14 +129,14 @@ updateShapes dragIndex dropIndex list =
 
 
 type alias Model =
-    { draggable : DnDList.Draggable
+    { dnd : DnDList.Model
     , items : List Item
     }
 
 
 initialModel : Model
 initialModel =
-    { draggable = system.draggable
+    { dnd = system.model
     , items = data
     }
 
@@ -146,7 +152,7 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    system.subscriptions model.draggable
+    system.subscriptions model.dnd
 
 
 
@@ -162,11 +168,11 @@ update message model =
     case message of
         MyMsg msg ->
             let
-                ( draggable, items ) =
-                    system.update msg model.draggable model.items
+                ( dnd, items ) =
+                    system.update msg model.dnd model.items
             in
-            ( { model | draggable = draggable, items = items }
-            , system.commands model.draggable
+            ( { model | dnd = dnd, items = items }
+            , system.commands model.dnd
             )
 
 
@@ -180,13 +186,13 @@ view model =
         [ scoreView model.items
         , model.items
             |> List.take shapeNumber
-            |> List.indexedMap (draggableItemView model.draggable)
+            |> List.indexedMap (shapeView model.dnd)
             |> Html.div containerStyles
         , model.items
             |> List.drop shapeNumber
-            |> List.indexedMap (droppableItemView model.draggable)
+            |> List.indexedMap (holeView model.dnd)
             |> Html.div containerStyles
-        , draggedItemView model.draggable model.items
+        , ghostView model.dnd model.items
         ]
 
 
@@ -204,19 +210,19 @@ scoreView items =
         [ Html.text ("Attempts: " ++ attempts) ]
 
 
-draggableItemView : DnDList.Draggable -> Int -> Item -> Html.Html Msg
-draggableItemView draggable index { shape, color, solved } =
+shapeView : DnDList.Model -> Int -> Item -> Html.Html Msg
+shapeView dnd index { shape, color, solved } =
     let
         itemId : String
         itemId =
             "shape-" ++ String.fromInt index
     in
-    case system.info draggable of
+    case system.info dnd of
         Just { dragIndex } ->
             if dragIndex /= index then
                 Html.div
                     wrapperStyles
-                    [ shapeView shape color [ Html.Attributes.id itemId ] ]
+                    [ svgShapeView shape color [ Html.Attributes.id itemId ] ]
 
             else
                 Html.div
@@ -232,49 +238,50 @@ draggableItemView draggable index { shape, color, solved } =
             else
                 Html.div
                     wrapperStyles
-                    [ shapeView shape color (Html.Attributes.id itemId :: system.dragEvents index itemId) ]
+                    [ svgShapeView shape color (Html.Attributes.id itemId :: system.dragEvents index itemId) ]
 
 
-droppableItemView : DnDList.Draggable -> Int -> Item -> Html.Html Msg
-droppableItemView draggable index { shape, color } =
+holeView : DnDList.Model -> Int -> Item -> Html.Html Msg
+holeView dnd index { shape, color } =
     let
-        shiftedIndex =
+        globalIndex : Int
+        globalIndex =
             index + shapeNumber
 
         itemId : String
         itemId =
-            "shape-" ++ String.fromInt shiftedIndex
+            "hole-" ++ String.fromInt globalIndex
     in
-    case system.info draggable of
+    case system.info dnd of
         Just _ ->
             Html.div
                 wrapperStyles
-                [ shapeView shape color (Html.Attributes.id itemId :: system.dropEvents shiftedIndex itemId) ]
+                [ svgShapeView shape color (Html.Attributes.id itemId :: system.dropEvents globalIndex itemId) ]
 
         _ ->
             Html.div
                 wrapperStyles
-                [ shapeView shape color [ Html.Attributes.id itemId ] ]
+                [ svgShapeView shape color [ Html.Attributes.id itemId ] ]
 
 
-draggedItemView : DnDList.Draggable -> List Item -> Html.Html Msg
-draggedItemView draggable items =
+ghostView : DnDList.Model -> List Item -> Html.Html Msg
+ghostView dnd items =
     let
-        maybeDraggedItem : Maybe Item
-        maybeDraggedItem =
-            system.info draggable
+        maybeDragItem : Maybe Item
+        maybeDragItem =
+            system.info dnd
                 |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
     in
-    case maybeDraggedItem of
+    case maybeDragItem of
         Just { shape, color } ->
-            shapeView shape color (system.draggedStyles draggable)
+            svgShapeView shape color (system.ghostStyles dnd)
 
         Nothing ->
             Html.text ""
 
 
-shapeView : Shape -> String -> List (Html.Attribute Msg) -> Html.Html Msg
-shapeView shape color dnd =
+svgShapeView : Shape -> String -> List (Html.Attribute Msg) -> Html.Html Msg
+svgShapeView shape color dnd =
     Svg.svg
         ([ Svg.Attributes.width "100"
          , Svg.Attributes.height "100"

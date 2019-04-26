@@ -56,14 +56,14 @@ system =
 
 
 type alias Model =
-    { draggable : DnDList.Draggable
+    { dnd : DnDList.Model
     , items : List Item
     }
 
 
 initialModel : Model
 initialModel =
-    { draggable = system.draggable
+    { dnd = system.model
     , items = data
     }
 
@@ -79,7 +79,7 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    system.subscriptions model.draggable
+    system.subscriptions model.dnd
 
 
 
@@ -95,11 +95,11 @@ update message model =
     case message of
         MyMsg msg ->
             let
-                ( draggable, items ) =
-                    system.update msg model.draggable model.items
+                ( dnd, items ) =
+                    system.update msg model.dnd model.items
             in
-            ( { model | draggable = draggable, items = items }
-            , system.commands model.draggable
+            ( { model | dnd = dnd, items = items }
+            , system.commands model.dnd
             )
 
 
@@ -111,26 +111,26 @@ view : Model -> Html.Html Msg
 view model =
     Html.section []
         [ model.items
-            |> List.indexedMap (itemView model.draggable)
+            |> List.indexedMap (itemView model.dnd)
             |> Html.div containerStyles
-        , draggedItemView model.draggable model.items
+        , ghostView model.dnd model.items
         ]
 
 
-itemView : DnDList.Draggable -> Int -> Item -> Html.Html Msg
-itemView draggable index item =
+itemView : DnDList.Model -> Int -> Item -> Html.Html Msg
+itemView dnd index item =
     let
         itemId : String
         itemId =
             "id-" ++ item
     in
-    case system.info draggable of
+    case system.info dnd of
         Just { dragIndex } ->
             if dragIndex /= index then
                 Html.div
                     [ Html.Attributes.style "margin" "2em" ]
                     [ Html.div
-                        (Html.Attributes.id itemId :: itemStyles "#3da565" ++ system.dropEvents index itemId)
+                        (Html.Attributes.id itemId :: itemStyles green ++ system.dropEvents index itemId)
                         [ Html.text item ]
                     ]
 
@@ -146,27 +146,41 @@ itemView draggable index item =
             Html.div
                 [ Html.Attributes.style "margin" "2em" ]
                 [ Html.div
-                    (Html.Attributes.id itemId :: itemStyles "#3da565" ++ system.dragEvents index itemId)
+                    (Html.Attributes.id itemId :: itemStyles green ++ system.dragEvents index itemId)
                     [ Html.text item ]
                 ]
 
 
-draggedItemView : DnDList.Draggable -> List Item -> Html.Html Msg
-draggedItemView draggable items =
+ghostView : DnDList.Model -> List Item -> Html.Html Msg
+ghostView dnd items =
     let
-        maybeDraggedItem : Maybe Item
-        maybeDraggedItem =
-            system.info draggable
+        maybeDragItem : Maybe Item
+        maybeDragItem =
+            system.info dnd
                 |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
     in
-    case maybeDraggedItem of
+    case maybeDragItem of
         Just item ->
             Html.div
-                (itemStyles "#2f804e" ++ system.draggedStyles draggable)
+                (itemStyles ghostGreen ++ system.ghostStyles dnd)
                 [ Html.text item ]
 
         Nothing ->
             Html.text ""
+
+
+
+-- COLORS
+
+
+green : String
+green =
+    "#3da565"
+
+
+ghostGreen : String
+ghostGreen =
+    "#2f804e"
 
 
 

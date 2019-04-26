@@ -75,8 +75,8 @@ blueSystem =
 
 
 type alias Model =
-    { redDraggable : DnDList.Draggable
-    , blueDraggable : DnDList.Draggable
+    { redDnD : DnDList.Model
+    , blueDnD : DnDList.Model
     , reds : List String
     , blues : List String
     }
@@ -84,8 +84,8 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { redDraggable = redSystem.draggable
-    , blueDraggable = blueSystem.draggable
+    { redDnD = redSystem.model
+    , blueDnD = blueSystem.model
     , reds = redData
     , blues = blueData
     }
@@ -103,8 +103,8 @@ init _ =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ redSystem.subscriptions model.redDraggable
-        , blueSystem.subscriptions model.blueDraggable
+        [ redSystem.subscriptions model.redDnD
+        , blueSystem.subscriptions model.blueDnD
         ]
 
 
@@ -122,26 +122,26 @@ update message model =
     case message of
         RedMsg msg ->
             let
-                ( redDraggable, reds ) =
-                    redSystem.update msg model.redDraggable model.reds
+                ( redDnD, reds ) =
+                    redSystem.update msg model.redDnD model.reds
             in
             ( { model
-                | redDraggable = redDraggable
+                | redDnD = redDnD
                 , reds = reds
               }
-            , redSystem.commands model.redDraggable
+            , redSystem.commands model.redDnD
             )
 
         BlueMsg msg ->
             let
-                ( blueDraggable, blues ) =
-                    blueSystem.update msg model.blueDraggable model.blues
+                ( blueDnD, blues ) =
+                    blueSystem.update msg model.blueDnD model.blues
             in
             ( { model
-                | blueDraggable = blueDraggable
+                | blueDnD = blueDnD
                 , blues = blues
               }
-            , blueSystem.commands model.blueDraggable
+            , blueSystem.commands model.blueDnD
             )
 
 
@@ -153,24 +153,24 @@ view : Model -> Html.Html Msg
 view model =
     Html.section sectionStyles
         [ model.reds
-            |> List.indexedMap (redView model.redDraggable)
+            |> List.indexedMap (redView model.redDnD)
             |> Html.div containerStyles
         , model.blues
-            |> List.indexedMap (blueView model.blueDraggable)
+            |> List.indexedMap (blueView model.blueDnD)
             |> Html.div containerStyles
-        , draggedRedView model.redDraggable model.reds
-        , draggedBlueView model.blueDraggable model.blues
+        , redGhostView model.redDnD model.reds
+        , blueGhostView model.blueDnD model.blues
         ]
 
 
-redView : DnDList.Draggable -> Int -> String -> Html.Html Msg
-redView draggable index item =
+redView : DnDList.Model -> Int -> String -> Html.Html Msg
+redView dnd index item =
     let
         itemId : String
         itemId =
             "red-" ++ item
     in
-    case redSystem.info draggable of
+    case redSystem.info dnd of
         Just { dragIndex } ->
             if dragIndex /= index then
                 Html.div
@@ -196,14 +196,14 @@ redView draggable index item =
                 [ Html.text item ]
 
 
-blueView : DnDList.Draggable -> Int -> String -> Html.Html Msg
-blueView draggable index item =
+blueView : DnDList.Model -> Int -> String -> Html.Html Msg
+blueView dnd index item =
     let
         itemId : String
         itemId =
             "blue-" ++ item
     in
-    case blueSystem.info draggable of
+    case blueSystem.info dnd of
         Just { dragIndex } ->
             if dragIndex /= index then
                 Html.div
@@ -229,49 +229,40 @@ blueView draggable index item =
                 [ Html.text item ]
 
 
-draggedRedView : DnDList.Draggable -> List String -> Html.Html Msg
-draggedRedView draggable items =
+redGhostView : DnDList.Model -> List String -> Html.Html Msg
+redGhostView dnd items =
     let
-        maybeDraggedRed : Maybe String
-        maybeDraggedRed =
-            redSystem.info draggable
+        maybeDragRed : Maybe String
+        maybeDragRed =
+            redSystem.info dnd
                 |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
     in
-    case maybeDraggedRed of
+    case maybeDragRed of
         Just item ->
             Html.div
-                (itemStyles draggedRed ++ redSystem.draggedStyles draggable)
+                (itemStyles ghostRed ++ redSystem.ghostStyles dnd)
                 [ Html.text item ]
 
         Nothing ->
             Html.text ""
 
 
-draggedBlueView : DnDList.Draggable -> List String -> Html.Html Msg
-draggedBlueView draggable items =
+blueGhostView : DnDList.Model -> List String -> Html.Html Msg
+blueGhostView dnd items =
     let
-        maybeDraggedBlue : Maybe String
-        maybeDraggedBlue =
-            blueSystem.info draggable
+        maybeDragBlue : Maybe String
+        maybeDragBlue =
+            blueSystem.info dnd
                 |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
     in
-    case maybeDraggedBlue of
+    case maybeDragBlue of
         Just item ->
             Html.div
-                (itemStyles draggedBlue ++ blueSystem.draggedStyles draggable)
+                (itemStyles ghostBlue ++ blueSystem.ghostStyles dnd)
                 [ Html.text item ]
 
         Nothing ->
             Html.text ""
-
-
-
--- HELPERS
-
-
-attrs : String -> String -> List (Html.Attribute msg)
-attrs color itemId =
-    Html.Attributes.id itemId :: itemStyles color
 
 
 
@@ -288,13 +279,13 @@ blue =
     "#118eff"
 
 
-draggedRed : String
-draggedRed =
+ghostRed : String
+ghostRed =
     "#c30005"
 
 
-draggedBlue : String
-draggedBlue =
+ghostBlue : String
+ghostBlue =
     "#0067c3"
 
 
