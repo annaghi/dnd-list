@@ -240,7 +240,7 @@ redGhostView dnd items =
     case maybeDragRed of
         Just item ->
             Html.div
-                (itemStyles ghostRed ++ redSystem.ghostStyles dnd)
+                (itemStyles redGhost ++ redSystem.ghostStyles dnd)
                 [ Html.text item ]
 
         Nothing ->
@@ -258,7 +258,7 @@ blueGhostView dnd items =
     case maybeDragBlue of
         Just item ->
             Html.div
-                (itemStyles ghostBlue ++ blueSystem.ghostStyles dnd)
+                (itemStyles blueGhost ++ blueSystem.ghostStyles dnd)
                 [ Html.text item ]
 
         Nothing ->
@@ -279,13 +279,13 @@ blue =
     "#118eff"
 
 
-ghostRed : String
-ghostRed =
+redGhost : String
+redGhost =
     "#c30005"
 
 
-ghostBlue : String
-ghostBlue =
+blueGhost : String
+blueGhost =
     "#0067c3"
 
 

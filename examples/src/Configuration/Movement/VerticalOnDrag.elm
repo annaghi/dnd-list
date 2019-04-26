@@ -151,7 +151,7 @@ itemView dnd affected index item =
             Html.Attributes.id itemId
                 :: itemStyles
                 ++ (if List.member index affected then
-                        affectedItemStyles
+                        affectedStyles
 
                     else
                         []
@@ -166,7 +166,7 @@ itemView dnd affected index item =
 
             else
                 Html.div
-                    (attrs ++ placeholderItemStyles)
+                    (attrs ++ placeholderStyles)
                     []
 
         Nothing ->
@@ -220,13 +220,13 @@ itemStyles =
     ]
 
 
-placeholderItemStyles : List (Html.Attribute msg)
-placeholderItemStyles =
+placeholderStyles : List (Html.Attribute msg)
+placeholderStyles =
     [ Html.Attributes.style "background-color" "dimgray" ]
 
 
-affectedItemStyles : List (Html.Attribute msg)
-affectedItemStyles =
+affectedStyles : List (Html.Attribute msg)
+affectedStyles =
     [ Html.Attributes.style "background-color" "#691361" ]
 
 

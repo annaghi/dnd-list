@@ -174,7 +174,7 @@ diskView model maybeTopDisk_ offset localIndex { tower, width, startColor, solve
     let
         globalIndex : Int
         globalIndex =
-            localIndex + offset
+            offset + localIndex
 
         diskId : String
         diskId =

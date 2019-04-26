@@ -187,8 +187,9 @@ import Task
 import Utils
 
 
-{-| Represents the internal state of the current drag and drop features.
+{-| Represents the internal model of the current drag and drop features.
 We can set it in our model and initialize through the `System`'s `model` field.
+It will be `Nothing` if there is no ongoing dragging.
 
     type alias Model =
         { dnd : DnDList.Model
@@ -286,7 +287,7 @@ create config message =
     [triggered on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
     and one for [triggered on drop](https://annaghi.github.io/dnd-list/configuration/operations-drop).
 
-  - `beforeUpdate`: This is a hook and gives us access to the list before the sort is being performed.
+  - `beforeUpdate`: This is a hook and gives us access to the list before the sort will be performed.
 
 Here is an example configuration with a void `beforeUpdate`:
 
@@ -379,8 +380,8 @@ It is accessible through the `System`'s `info` field.
 
   - `dropElementId`: HTML id of the drop target.
 
-We can decide what to render when there is an ongoing dragging,
-and what to render when there is no dragging related to this `System` object:
+Checking the `Info` object we can decide what to render when there is an ongoing dragging,
+and what to render when there is no dragging:
 
     itemView : DnDList.Model -> Int -> Fruit -> Html.Html Msg
     itemView dnd index item =
@@ -393,7 +394,7 @@ and what to render when there is no dragging related to this `System` object:
             Nothing ->
                 -- Render when there is no dragging.
 
-Or we can get the drag source item:
+Or we can get e.g. the drag source item:
 
     maybeDragItem : DnDList.Model -> List Fruit -> Maybe Fruit
     maybeDragItem dnd items =

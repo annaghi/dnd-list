@@ -222,7 +222,7 @@ shapeView dnd index { shape, color, solved } =
             if dragIndex /= index then
                 Html.div
                     wrapperStyles
-                    [ svgShapeView shape color [ Html.Attributes.id itemId ] ]
+                    [ svgView shape color [ Html.Attributes.id itemId ] ]
 
             else
                 Html.div
@@ -238,7 +238,7 @@ shapeView dnd index { shape, color, solved } =
             else
                 Html.div
                     wrapperStyles
-                    [ svgShapeView shape color (Html.Attributes.id itemId :: system.dragEvents index itemId) ]
+                    [ svgView shape color (Html.Attributes.id itemId :: system.dragEvents index itemId) ]
 
 
 holeView : DnDList.Model -> Int -> Item -> Html.Html Msg
@@ -246,7 +246,7 @@ holeView dnd index { shape, color } =
     let
         globalIndex : Int
         globalIndex =
-            index + shapeNumber
+            shapeNumber + index
 
         itemId : String
         itemId =
@@ -256,12 +256,12 @@ holeView dnd index { shape, color } =
         Just _ ->
             Html.div
                 wrapperStyles
-                [ svgShapeView shape color (Html.Attributes.id itemId :: system.dropEvents globalIndex itemId) ]
+                [ svgView shape color (Html.Attributes.id itemId :: system.dropEvents globalIndex itemId) ]
 
         _ ->
             Html.div
                 wrapperStyles
-                [ svgShapeView shape color [ Html.Attributes.id itemId ] ]
+                [ svgView shape color [ Html.Attributes.id itemId ] ]
 
 
 ghostView : DnDList.Model -> List Item -> Html.Html Msg
@@ -274,14 +274,14 @@ ghostView dnd items =
     in
     case maybeDragItem of
         Just { shape, color } ->
-            svgShapeView shape color (system.ghostStyles dnd)
+            svgView shape color (system.ghostStyles dnd)
 
         Nothing ->
             Html.text ""
 
 
-svgShapeView : Shape -> String -> List (Html.Attribute Msg) -> Html.Html Msg
-svgShapeView shape color dnd =
+svgView : Shape -> String -> List (Html.Attribute Msg) -> Html.Html Msg
+svgView shape color dnd =
     Svg.svg
         ([ Svg.Attributes.width "100"
          , Svg.Attributes.height "100"

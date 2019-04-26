@@ -62,10 +62,10 @@ cardConfig =
     , operation = DnDList.Groups.RotateOut
     , beforeUpdate = \_ _ list -> list
     , groups =
-        { comparator = compareByActivity
-        , trigger = DnDList.Groups.OnDrag
+        { trigger = DnDList.Groups.OnDrag
         , operation = DnDList.Groups.InsertBefore
         , beforeUpdate = updateOnActivityChange
+        , comparator = compareByActivity
         }
     }
 
@@ -283,7 +283,7 @@ eventfulCardView model offset localIndex { activity, description } =
     let
         globalIndex : Int
         globalIndex =
-            localIndex + offset
+            offset + localIndex
 
         cardId : String
         cardId =
@@ -510,11 +510,6 @@ cardStyles color =
     ]
 
 
-cursorStyles : List (Html.Attribute msg)
-cursorStyles =
-    [ Html.Attributes.style "cursor" "pointer" ]
-
-
 auxiliaryCardStyles : List (Html.Attribute msg)
 auxiliaryCardStyles =
     [ Html.Attributes.style "background-color" "transparent"
@@ -525,3 +520,8 @@ auxiliaryCardStyles =
     , Html.Attributes.style "height" "auto"
     , Html.Attributes.style "min-height" "60px"
     ]
+
+
+cursorStyles : List (Html.Attribute msg)
+cursorStyles =
+    [ Html.Attributes.style "cursor" "pointer" ]

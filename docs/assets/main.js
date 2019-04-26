@@ -7248,8 +7248,8 @@ var author$project$Configuration$OperationOnDrag$InsertAfter$MyMsg = function (a
 	return {$: 0, a: a};
 };
 var author$project$Configuration$OperationOnDrag$InsertAfter$affectedColor = 'purple';
-var author$project$Configuration$OperationOnDrag$InsertAfter$dragColor = 'green';
-var author$project$Configuration$OperationOnDrag$InsertAfter$dropColor = 'red';
+var author$project$Configuration$OperationOnDrag$InsertAfter$dragColor = 'red';
+var author$project$Configuration$OperationOnDrag$InsertAfter$dropColor = 'green';
 var author$project$Configuration$OperationOnDrag$InsertAfter$updateColors = F3(
 	function (dragIndex, dropIndex, items) {
 		return (_Utils_cmp(dragIndex, dropIndex) < 0) ? A2(
@@ -7258,7 +7258,7 @@ var author$project$Configuration$OperationOnDrag$InsertAfter$updateColors = F3(
 				function (i, _n0) {
 					var value = _n0.bi;
 					var color = _n0.a3;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, author$project$Configuration$OperationOnDrag$InsertAfter$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, author$project$Configuration$OperationOnDrag$InsertAfter$dragColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, author$project$Configuration$OperationOnDrag$InsertAfter$affectedColor) : A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, color)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, author$project$Configuration$OperationOnDrag$InsertAfter$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, author$project$Configuration$OperationOnDrag$InsertAfter$dropColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, author$project$Configuration$OperationOnDrag$InsertAfter$affectedColor) : A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, color)));
 				}),
 			items) : ((_Utils_cmp(dragIndex, dropIndex) > 0) ? A2(
 			elm$core$List$indexedMap,
@@ -7266,7 +7266,7 @@ var author$project$Configuration$OperationOnDrag$InsertAfter$updateColors = F3(
 				function (i, _n1) {
 					var value = _n1.bi;
 					var color = _n1.a3;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, author$project$Configuration$OperationOnDrag$InsertAfter$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, author$project$Configuration$OperationOnDrag$InsertAfter$dragColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, author$project$Configuration$OperationOnDrag$InsertAfter$affectedColor) : A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, color)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, author$project$Configuration$OperationOnDrag$InsertAfter$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, author$project$Configuration$OperationOnDrag$InsertAfter$dropColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, author$project$Configuration$OperationOnDrag$InsertAfter$affectedColor) : A2(author$project$Configuration$OperationOnDrag$InsertAfter$Item, value, color)));
 				}),
 			items) : items);
 	});
@@ -7292,8 +7292,8 @@ var author$project$Configuration$OperationOnDrag$InsertBefore$MyMsg = function (
 	return {$: 0, a: a};
 };
 var author$project$Configuration$OperationOnDrag$InsertBefore$affectedColor = 'purple';
-var author$project$Configuration$OperationOnDrag$InsertBefore$dragColor = 'green';
-var author$project$Configuration$OperationOnDrag$InsertBefore$dropColor = 'red';
+var author$project$Configuration$OperationOnDrag$InsertBefore$dragColor = 'red';
+var author$project$Configuration$OperationOnDrag$InsertBefore$dropColor = 'green';
 var author$project$Configuration$OperationOnDrag$InsertBefore$updateColors = F3(
 	function (dragIndex, dropIndex, items) {
 		return (_Utils_cmp(dragIndex, dropIndex) < 0) ? A2(
@@ -7302,7 +7302,7 @@ var author$project$Configuration$OperationOnDrag$InsertBefore$updateColors = F3(
 				function (i, _n0) {
 					var value = _n0.bi;
 					var color = _n0.a3;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, author$project$Configuration$OperationOnDrag$InsertBefore$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, author$project$Configuration$OperationOnDrag$InsertBefore$dragColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, author$project$Configuration$OperationOnDrag$InsertBefore$affectedColor) : A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, color)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, author$project$Configuration$OperationOnDrag$InsertBefore$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, author$project$Configuration$OperationOnDrag$InsertBefore$dropColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, author$project$Configuration$OperationOnDrag$InsertBefore$affectedColor) : A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, color)));
 				}),
 			items) : ((_Utils_cmp(dragIndex, dropIndex) > 0) ? A2(
 			elm$core$List$indexedMap,
@@ -7310,7 +7310,7 @@ var author$project$Configuration$OperationOnDrag$InsertBefore$updateColors = F3(
 				function (i, _n1) {
 					var value = _n1.bi;
 					var color = _n1.a3;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, author$project$Configuration$OperationOnDrag$InsertBefore$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, author$project$Configuration$OperationOnDrag$InsertBefore$dragColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, author$project$Configuration$OperationOnDrag$InsertBefore$affectedColor) : A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, color)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, author$project$Configuration$OperationOnDrag$InsertBefore$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, author$project$Configuration$OperationOnDrag$InsertBefore$dropColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, author$project$Configuration$OperationOnDrag$InsertBefore$affectedColor) : A2(author$project$Configuration$OperationOnDrag$InsertBefore$Item, value, color)));
 				}),
 			items) : items);
 	});
@@ -7354,8 +7354,8 @@ var author$project$Configuration$OperationOnDrag$RotateIn$MyMsg = function (a) {
 	return {$: 0, a: a};
 };
 var author$project$Configuration$OperationOnDrag$RotateIn$affectedColor = 'purple';
-var author$project$Configuration$OperationOnDrag$RotateIn$dragColor = 'green';
-var author$project$Configuration$OperationOnDrag$RotateIn$dropColor = 'red';
+var author$project$Configuration$OperationOnDrag$RotateIn$dragColor = 'red';
+var author$project$Configuration$OperationOnDrag$RotateIn$dropColor = 'green';
 var author$project$Configuration$OperationOnDrag$RotateIn$updateColors = F3(
 	function (dragIndex, dropIndex, items) {
 		return (_Utils_cmp(dragIndex, dropIndex) < 0) ? A2(
@@ -7364,7 +7364,7 @@ var author$project$Configuration$OperationOnDrag$RotateIn$updateColors = F3(
 				function (i, _n0) {
 					var value = _n0.bi;
 					var color = _n0.a3;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, author$project$Configuration$OperationOnDrag$RotateIn$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, author$project$Configuration$OperationOnDrag$RotateIn$dragColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, author$project$Configuration$OperationOnDrag$RotateIn$affectedColor) : A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, color)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, author$project$Configuration$OperationOnDrag$RotateIn$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, author$project$Configuration$OperationOnDrag$RotateIn$dropColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, author$project$Configuration$OperationOnDrag$RotateIn$affectedColor) : A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, color)));
 				}),
 			items) : ((_Utils_cmp(dragIndex, dropIndex) > 0) ? A2(
 			elm$core$List$indexedMap,
@@ -7372,7 +7372,7 @@ var author$project$Configuration$OperationOnDrag$RotateIn$updateColors = F3(
 				function (i, _n1) {
 					var value = _n1.bi;
 					var color = _n1.a3;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, author$project$Configuration$OperationOnDrag$RotateIn$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, author$project$Configuration$OperationOnDrag$RotateIn$dragColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, author$project$Configuration$OperationOnDrag$RotateIn$affectedColor) : A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, color)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, author$project$Configuration$OperationOnDrag$RotateIn$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, author$project$Configuration$OperationOnDrag$RotateIn$dropColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, author$project$Configuration$OperationOnDrag$RotateIn$affectedColor) : A2(author$project$Configuration$OperationOnDrag$RotateIn$Item, value, color)));
 				}),
 			items) : items);
 	});
@@ -7398,8 +7398,8 @@ var author$project$Configuration$OperationOnDrag$RotateOut$MyMsg = function (a) 
 	return {$: 0, a: a};
 };
 var author$project$Configuration$OperationOnDrag$RotateOut$affectedColor = 'purple';
-var author$project$Configuration$OperationOnDrag$RotateOut$dragColor = 'green';
-var author$project$Configuration$OperationOnDrag$RotateOut$dropColor = 'red';
+var author$project$Configuration$OperationOnDrag$RotateOut$dragColor = 'red';
+var author$project$Configuration$OperationOnDrag$RotateOut$dropColor = 'green';
 var author$project$Configuration$OperationOnDrag$RotateOut$updateColors = F3(
 	function (dragIndex, dropIndex, items) {
 		return (_Utils_cmp(dragIndex, dropIndex) < 0) ? A2(
@@ -7408,7 +7408,7 @@ var author$project$Configuration$OperationOnDrag$RotateOut$updateColors = F3(
 				function (i, _n0) {
 					var value = _n0.bi;
 					var color = _n0.a3;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, author$project$Configuration$OperationOnDrag$RotateOut$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, author$project$Configuration$OperationOnDrag$RotateOut$dragColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, author$project$Configuration$OperationOnDrag$RotateOut$affectedColor) : A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, color)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, author$project$Configuration$OperationOnDrag$RotateOut$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, author$project$Configuration$OperationOnDrag$RotateOut$dropColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, author$project$Configuration$OperationOnDrag$RotateOut$affectedColor) : A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, color)));
 				}),
 			items) : ((_Utils_cmp(dragIndex, dropIndex) > 0) ? A2(
 			elm$core$List$indexedMap,
@@ -7416,7 +7416,7 @@ var author$project$Configuration$OperationOnDrag$RotateOut$updateColors = F3(
 				function (i, _n1) {
 					var value = _n1.bi;
 					var color = _n1.a3;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, author$project$Configuration$OperationOnDrag$RotateOut$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, author$project$Configuration$OperationOnDrag$RotateOut$dragColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, author$project$Configuration$OperationOnDrag$RotateOut$affectedColor) : A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, color)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, author$project$Configuration$OperationOnDrag$RotateOut$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, author$project$Configuration$OperationOnDrag$RotateOut$dropColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, author$project$Configuration$OperationOnDrag$RotateOut$affectedColor) : A2(author$project$Configuration$OperationOnDrag$RotateOut$Item, value, color)));
 				}),
 			items) : items);
 	});
@@ -7441,8 +7441,8 @@ var author$project$Configuration$OperationOnDrag$Swap$data = A2(
 var author$project$Configuration$OperationOnDrag$Swap$MyMsg = function (a) {
 	return {$: 0, a: a};
 };
-var author$project$Configuration$OperationOnDrag$Swap$dragColor = 'green';
-var author$project$Configuration$OperationOnDrag$Swap$dropColor = 'red';
+var author$project$Configuration$OperationOnDrag$Swap$dragColor = 'red';
+var author$project$Configuration$OperationOnDrag$Swap$dropColor = 'green';
 var author$project$Configuration$OperationOnDrag$Swap$updateColors = F3(
 	function (dragIndex, dropIndex, items) {
 		return (!_Utils_eq(dragIndex, dropIndex)) ? A2(
@@ -7451,7 +7451,7 @@ var author$project$Configuration$OperationOnDrag$Swap$updateColors = F3(
 				function (i, _n0) {
 					var value = _n0.bi;
 					var color = _n0.a3;
-					return _Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$Swap$Item, value, author$project$Configuration$OperationOnDrag$Swap$dragColor) : (_Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$Swap$Item, value, author$project$Configuration$OperationOnDrag$Swap$dropColor) : A2(author$project$Configuration$OperationOnDrag$Swap$Item, value, color));
+					return _Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$Swap$Item, value, author$project$Configuration$OperationOnDrag$Swap$dropColor) : (_Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$Swap$Item, value, author$project$Configuration$OperationOnDrag$Swap$dragColor) : A2(author$project$Configuration$OperationOnDrag$Swap$Item, value, color));
 				}),
 			items) : items;
 	});
@@ -7475,8 +7475,8 @@ var author$project$Configuration$OperationOnDrag$Unaltered$data = A2(
 var author$project$Configuration$OperationOnDrag$Unaltered$MyMsg = function (a) {
 	return {$: 0, a: a};
 };
-var author$project$Configuration$OperationOnDrag$Unaltered$dragColor = 'green';
-var author$project$Configuration$OperationOnDrag$Unaltered$dropColor = 'red';
+var author$project$Configuration$OperationOnDrag$Unaltered$dragColor = 'red';
+var author$project$Configuration$OperationOnDrag$Unaltered$dropColor = 'green';
 var author$project$Configuration$OperationOnDrag$Unaltered$updateColors = F3(
 	function (dragIndex, dropIndex, items) {
 		return (!_Utils_eq(dragIndex, dropIndex)) ? A2(
@@ -7485,7 +7485,7 @@ var author$project$Configuration$OperationOnDrag$Unaltered$updateColors = F3(
 				function (i, _n0) {
 					var value = _n0.bi;
 					var color = _n0.a3;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$Unaltered$Item, value, author$project$Configuration$OperationOnDrag$Unaltered$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$Unaltered$Item, value, author$project$Configuration$OperationOnDrag$Unaltered$dragColor) : A2(author$project$Configuration$OperationOnDrag$Unaltered$Item, value, color));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrag$Unaltered$Item, value, author$project$Configuration$OperationOnDrag$Unaltered$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrag$Unaltered$Item, value, author$project$Configuration$OperationOnDrag$Unaltered$dropColor) : A2(author$project$Configuration$OperationOnDrag$Unaltered$Item, value, color));
 				}),
 			items) : items;
 	});
@@ -7523,8 +7523,8 @@ var author$project$Configuration$OperationOnDrop$InsertAfter$MyMsg = function (a
 	return {$: 0, a: a};
 };
 var author$project$Configuration$OperationOnDrop$InsertAfter$affectedColor = 'purple';
-var author$project$Configuration$OperationOnDrop$InsertAfter$dragColor = 'green';
-var author$project$Configuration$OperationOnDrop$InsertAfter$dropColor = 'red';
+var author$project$Configuration$OperationOnDrop$InsertAfter$dragColor = 'red';
+var author$project$Configuration$OperationOnDrop$InsertAfter$dropColor = 'green';
 var author$project$Configuration$OperationOnDrop$InsertAfter$updateColors = F3(
 	function (dragIndex, dropIndex, items) {
 		return (_Utils_cmp(dragIndex, dropIndex) < 0) ? A2(
@@ -7532,14 +7532,14 @@ var author$project$Configuration$OperationOnDrop$InsertAfter$updateColors = F3(
 			F2(
 				function (i, _n0) {
 					var value = _n0.bi;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$dragColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$affectedColor) : A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$baseColor)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$dropColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$affectedColor) : A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$baseColor)));
 				}),
 			items) : ((_Utils_cmp(dragIndex, dropIndex) > 0) ? A2(
 			elm$core$List$indexedMap,
 			F2(
 				function (i, _n1) {
 					var value = _n1.bi;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$dragColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$affectedColor) : A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$baseColor)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$dropColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$affectedColor) : A2(author$project$Configuration$OperationOnDrop$InsertAfter$Item, value, author$project$Configuration$OperationOnDrop$InsertAfter$baseColor)));
 				}),
 			items) : items);
 	});
@@ -7564,8 +7564,8 @@ var author$project$Configuration$OperationOnDrop$InsertBefore$MyMsg = function (
 	return {$: 0, a: a};
 };
 var author$project$Configuration$OperationOnDrop$InsertBefore$affectedColor = 'purple';
-var author$project$Configuration$OperationOnDrop$InsertBefore$dragColor = 'green';
-var author$project$Configuration$OperationOnDrop$InsertBefore$dropColor = 'red';
+var author$project$Configuration$OperationOnDrop$InsertBefore$dragColor = 'red';
+var author$project$Configuration$OperationOnDrop$InsertBefore$dropColor = 'green';
 var author$project$Configuration$OperationOnDrop$InsertBefore$updateColors = F3(
 	function (dragIndex, dropIndex, items) {
 		return (_Utils_cmp(dragIndex, dropIndex) < 0) ? A2(
@@ -7573,14 +7573,14 @@ var author$project$Configuration$OperationOnDrop$InsertBefore$updateColors = F3(
 			F2(
 				function (i, _n0) {
 					var value = _n0.bi;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$dragColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$affectedColor) : A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$baseColor)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$dropColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$affectedColor) : A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$baseColor)));
 				}),
 			items) : ((_Utils_cmp(dragIndex, dropIndex) > 0) ? A2(
 			elm$core$List$indexedMap,
 			F2(
 				function (i, _n1) {
 					var value = _n1.bi;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$dragColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$affectedColor) : A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$baseColor)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$dropColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$affectedColor) : A2(author$project$Configuration$OperationOnDrop$InsertBefore$Item, value, author$project$Configuration$OperationOnDrop$InsertBefore$baseColor)));
 				}),
 			items) : items);
 	});
@@ -7623,8 +7623,8 @@ var author$project$Configuration$OperationOnDrop$RotateIn$MyMsg = function (a) {
 	return {$: 0, a: a};
 };
 var author$project$Configuration$OperationOnDrop$RotateIn$affectedColor = 'purple';
-var author$project$Configuration$OperationOnDrop$RotateIn$dragColor = 'green';
-var author$project$Configuration$OperationOnDrop$RotateIn$dropColor = 'red';
+var author$project$Configuration$OperationOnDrop$RotateIn$dragColor = 'red';
+var author$project$Configuration$OperationOnDrop$RotateIn$dropColor = 'green';
 var author$project$Configuration$OperationOnDrop$RotateIn$updateColors = F3(
 	function (dragIndex, dropIndex, items) {
 		return (_Utils_cmp(dragIndex, dropIndex) < 0) ? A2(
@@ -7632,14 +7632,14 @@ var author$project$Configuration$OperationOnDrop$RotateIn$updateColors = F3(
 			F2(
 				function (i, _n0) {
 					var value = _n0.bi;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$dragColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$affectedColor) : A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$baseColor)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$dropColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$affectedColor) : A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$baseColor)));
 				}),
 			items) : ((_Utils_cmp(dragIndex, dropIndex) > 0) ? A2(
 			elm$core$List$indexedMap,
 			F2(
 				function (i, _n1) {
 					var value = _n1.bi;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$dragColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$affectedColor) : A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$baseColor)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$dropColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$affectedColor) : A2(author$project$Configuration$OperationOnDrop$RotateIn$Item, value, author$project$Configuration$OperationOnDrop$RotateIn$baseColor)));
 				}),
 			items) : items);
 	});
@@ -7664,8 +7664,8 @@ var author$project$Configuration$OperationOnDrop$RotateOut$MyMsg = function (a) 
 	return {$: 0, a: a};
 };
 var author$project$Configuration$OperationOnDrop$RotateOut$affectedColor = 'purple';
-var author$project$Configuration$OperationOnDrop$RotateOut$dragColor = 'green';
-var author$project$Configuration$OperationOnDrop$RotateOut$dropColor = 'red';
+var author$project$Configuration$OperationOnDrop$RotateOut$dragColor = 'red';
+var author$project$Configuration$OperationOnDrop$RotateOut$dropColor = 'green';
 var author$project$Configuration$OperationOnDrop$RotateOut$updateColors = F3(
 	function (dragIndex, dropIndex, items) {
 		return (_Utils_cmp(dragIndex, dropIndex) < 0) ? A2(
@@ -7673,14 +7673,14 @@ var author$project$Configuration$OperationOnDrop$RotateOut$updateColors = F3(
 			F2(
 				function (i, _n0) {
 					var value = _n0.bi;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$dragColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$affectedColor) : A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$baseColor)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$dropColor) : (((_Utils_cmp(dragIndex, i) < 0) && (_Utils_cmp(i, dropIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$affectedColor) : A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$baseColor)));
 				}),
 			items) : ((_Utils_cmp(dragIndex, dropIndex) > 0) ? A2(
 			elm$core$List$indexedMap,
 			F2(
 				function (i, _n1) {
 					var value = _n1.bi;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$dragColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$affectedColor) : A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$baseColor)));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$dropColor) : (((_Utils_cmp(dropIndex, i) < 0) && (_Utils_cmp(i, dragIndex) < 0)) ? A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$affectedColor) : A2(author$project$Configuration$OperationOnDrop$RotateOut$Item, value, author$project$Configuration$OperationOnDrop$RotateOut$baseColor)));
 				}),
 			items) : items);
 	});
@@ -7704,8 +7704,8 @@ var author$project$Configuration$OperationOnDrop$Swap$data = A2(
 var author$project$Configuration$OperationOnDrop$Swap$MyMsg = function (a) {
 	return {$: 0, a: a};
 };
-var author$project$Configuration$OperationOnDrop$Swap$dragColor = 'green';
-var author$project$Configuration$OperationOnDrop$Swap$dropColor = 'red';
+var author$project$Configuration$OperationOnDrop$Swap$dragColor = 'red';
+var author$project$Configuration$OperationOnDrop$Swap$dropColor = 'green';
 var author$project$Configuration$OperationOnDrop$Swap$updateColors = F3(
 	function (dragIndex, dropIndex, items) {
 		return (!_Utils_eq(dragIndex, dropIndex)) ? A2(
@@ -7713,7 +7713,7 @@ var author$project$Configuration$OperationOnDrop$Swap$updateColors = F3(
 			F2(
 				function (i, _n0) {
 					var value = _n0.bi;
-					return _Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$Swap$Item, value, author$project$Configuration$OperationOnDrop$Swap$dragColor) : (_Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$Swap$Item, value, author$project$Configuration$OperationOnDrop$Swap$dropColor) : A2(author$project$Configuration$OperationOnDrop$Swap$Item, value, author$project$Configuration$OperationOnDrop$Swap$baseColor));
+					return _Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$Swap$Item, value, author$project$Configuration$OperationOnDrop$Swap$dropColor) : (_Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$Swap$Item, value, author$project$Configuration$OperationOnDrop$Swap$dragColor) : A2(author$project$Configuration$OperationOnDrop$Swap$Item, value, author$project$Configuration$OperationOnDrop$Swap$baseColor));
 				}),
 			items) : items;
 	});
@@ -7737,8 +7737,8 @@ var author$project$Configuration$OperationOnDrop$Unaltered$data = A2(
 var author$project$Configuration$OperationOnDrop$Unaltered$MyMsg = function (a) {
 	return {$: 0, a: a};
 };
-var author$project$Configuration$OperationOnDrop$Unaltered$dragColor = 'green';
-var author$project$Configuration$OperationOnDrop$Unaltered$dropColor = 'red';
+var author$project$Configuration$OperationOnDrop$Unaltered$dragColor = 'red';
+var author$project$Configuration$OperationOnDrop$Unaltered$dropColor = 'green';
 var author$project$Configuration$OperationOnDrop$Unaltered$updateColors = F3(
 	function (dragIndex, dropIndex, items) {
 		return (!_Utils_eq(dragIndex, dropIndex)) ? A2(
@@ -7746,7 +7746,7 @@ var author$project$Configuration$OperationOnDrop$Unaltered$updateColors = F3(
 			F2(
 				function (i, _n0) {
 					var value = _n0.bi;
-					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$Unaltered$Item, value, author$project$Configuration$OperationOnDrop$Unaltered$dropColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$Unaltered$Item, value, author$project$Configuration$OperationOnDrop$Unaltered$dragColor) : A2(author$project$Configuration$OperationOnDrop$Unaltered$Item, value, author$project$Configuration$OperationOnDrop$Unaltered$baseColor));
+					return _Utils_eq(i, dragIndex) ? A2(author$project$Configuration$OperationOnDrop$Unaltered$Item, value, author$project$Configuration$OperationOnDrop$Unaltered$dragColor) : (_Utils_eq(i, dropIndex) ? A2(author$project$Configuration$OperationOnDrop$Unaltered$Item, value, author$project$Configuration$OperationOnDrop$Unaltered$dropColor) : A2(author$project$Configuration$OperationOnDrop$Unaltered$Item, value, author$project$Configuration$OperationOnDrop$Unaltered$baseColor));
 				}),
 			items) : items;
 	});
@@ -8343,12 +8343,12 @@ var author$project$Gallery$TaskBoard$data = _List_fromArray(
 		A2(author$project$Gallery$TaskBoard$Card, 2, '')
 	]);
 var author$project$Gallery$TaskBoard$initialModel = {t: author$project$Gallery$TaskBoard$cardSystem.db, u: author$project$Gallery$TaskBoard$data, v: author$project$Gallery$TaskBoard$columnSystem.db};
-var author$project$Gallery$TryOn$Color = 1;
+var author$project$Gallery$TryOn$Color = 0;
 var author$project$Gallery$TryOn$Item = F4(
 	function (property, width, height, color) {
 		return {a3: color, a6: height, aA: property, bj: width};
 	});
-var author$project$Gallery$TryOn$Size = 0;
+var author$project$Gallery$TryOn$Size = 1;
 var author$project$Gallery$TryOn$gray = 'dimgray';
 var author$project$Gallery$TryOn$lavender = '#956dbd';
 var author$project$Gallery$TryOn$papayaWhip = '#ffead3';
@@ -8356,15 +8356,15 @@ var author$project$Gallery$TryOn$pink = '#fec8d8';
 var author$project$Gallery$TryOn$violet = '#d291bc';
 var author$project$Gallery$TryOn$data = _List_fromArray(
 	[
-		A4(author$project$Gallery$TryOn$Item, 1, 1, 1, author$project$Gallery$TryOn$papayaWhip),
-		A4(author$project$Gallery$TryOn$Item, 1, 1, 1, author$project$Gallery$TryOn$pink),
-		A4(author$project$Gallery$TryOn$Item, 1, 1, 1, author$project$Gallery$TryOn$violet),
-		A4(author$project$Gallery$TryOn$Item, 1, 1, 1, author$project$Gallery$TryOn$lavender),
-		A4(author$project$Gallery$TryOn$Item, 0, 1, 2, author$project$Gallery$TryOn$gray),
-		A4(author$project$Gallery$TryOn$Item, 0, 2, 2, author$project$Gallery$TryOn$gray),
-		A4(author$project$Gallery$TryOn$Item, 0, 1, 3, author$project$Gallery$TryOn$gray),
-		A4(author$project$Gallery$TryOn$Item, 0, 2, 3, author$project$Gallery$TryOn$gray),
-		A4(author$project$Gallery$TryOn$Item, 0, 3, 3, author$project$Gallery$TryOn$gray)
+		A4(author$project$Gallery$TryOn$Item, 0, 1, 1, author$project$Gallery$TryOn$papayaWhip),
+		A4(author$project$Gallery$TryOn$Item, 0, 1, 1, author$project$Gallery$TryOn$pink),
+		A4(author$project$Gallery$TryOn$Item, 0, 1, 1, author$project$Gallery$TryOn$violet),
+		A4(author$project$Gallery$TryOn$Item, 0, 1, 1, author$project$Gallery$TryOn$lavender),
+		A4(author$project$Gallery$TryOn$Item, 1, 1, 2, author$project$Gallery$TryOn$gray),
+		A4(author$project$Gallery$TryOn$Item, 1, 2, 2, author$project$Gallery$TryOn$gray),
+		A4(author$project$Gallery$TryOn$Item, 1, 1, 3, author$project$Gallery$TryOn$gray),
+		A4(author$project$Gallery$TryOn$Item, 1, 2, 3, author$project$Gallery$TryOn$gray),
+		A4(author$project$Gallery$TryOn$Item, 1, 3, 3, author$project$Gallery$TryOn$gray)
 	]);
 var author$project$Gallery$TryOn$MyMsg = elm$core$Basics$identity;
 var author$project$Gallery$TryOn$updateColor = F3(
@@ -8393,7 +8393,7 @@ var author$project$Gallery$TryOn$updateColor = F3(
 						} else {
 							if (_Utils_eq(index, dragIndex)) {
 								var _n0 = item.aA;
-								if (!_n0) {
+								if (_n0 === 1) {
 									return _List_fromArray(
 										[
 											_Utils_update(
@@ -8512,12 +8512,12 @@ var author$project$Introduction$BasicElmUI$config = {
 };
 var author$project$Introduction$BasicElmUI$system = A2(author$project$DnDList$create, author$project$Introduction$BasicElmUI$config, elm$core$Basics$identity);
 var author$project$Introduction$BasicElmUI$initialModel = {x: author$project$Introduction$BasicElmUI$system.db, X: author$project$Introduction$BasicElmUI$data};
-var author$project$Introduction$Groups$Bottom = 1;
 var author$project$Introduction$Groups$Item = F3(
 	function (group, value, color) {
 		return {a3: color, p: group, bi: value};
 	});
-var author$project$Introduction$Groups$Top = 0;
+var author$project$Introduction$Groups$Left = 0;
+var author$project$Introduction$Groups$Right = 1;
 var author$project$Introduction$Groups$blue = '#0067c3';
 var author$project$Introduction$Groups$red = '#c30005';
 var author$project$Introduction$Groups$transparent = 'transparent';
@@ -12302,8 +12302,8 @@ var author$project$Configuration$Groups$InsertAfter$itemView = F4(
 		var group = _n0.p;
 		var value = _n0.bi;
 		var color = _n0.a3;
-		var globalIndex = localIndex + offset;
-		var itemId = 'start-' + elm$core$String$fromInt(globalIndex);
+		var globalIndex = offset + localIndex;
+		var itemId = 'header-' + elm$core$String$fromInt(globalIndex);
 		var _n1 = _Utils_Tuple2(
 			author$project$Configuration$Groups$InsertAfter$system.bG(model.x),
 			author$project$Configuration$Groups$InsertAfter$maybeDragItem(model));
@@ -12511,8 +12511,8 @@ var author$project$Configuration$Groups$InsertBefore$itemView = F4(
 		var group = _n0.p;
 		var value = _n0.bi;
 		var color = _n0.a3;
-		var globalIndex = localIndex + offset;
-		var itemId = 'end-' + elm$core$String$fromInt(globalIndex);
+		var globalIndex = offset + localIndex;
+		var itemId = 'footer-' + elm$core$String$fromInt(globalIndex);
 		var _n1 = _Utils_Tuple2(
 			author$project$Configuration$Groups$InsertBefore$system.bG(model.x),
 			author$project$Configuration$Groups$InsertBefore$maybeDragItem(model));
@@ -12692,7 +12692,7 @@ var author$project$Configuration$Groups$Swap$itemView = F4(
 		var group = _n0.p;
 		var value = _n0.bi;
 		var color = _n0.a3;
-		var globalIndex = localIndex + offset;
+		var globalIndex = offset + localIndex;
 		var itemId = 'none-' + elm$core$String$fromInt(globalIndex);
 		var _n1 = author$project$Configuration$Groups$Swap$system.bG(model.x);
 		if (!_n1.$) {
@@ -12913,11 +12913,11 @@ var author$project$Configuration$Movement$FreeOnDrag$ghostView = F2(
 			return elm$html$Html$text('');
 		}
 	});
-var author$project$Configuration$Movement$FreeOnDrag$affectedItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$FreeOnDrag$affectedStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', '#691361')
 	]);
-var author$project$Configuration$Movement$FreeOnDrag$placeholderItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$FreeOnDrag$placeholderStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', 'dimgray')
 	]);
@@ -12938,7 +12938,7 @@ var author$project$Configuration$Movement$FreeOnDrag$itemView = F4(
 			elm$html$Html$Attributes$id(itemId),
 			_Utils_ap(
 				author$project$Configuration$Movement$FreeOnDrag$itemStyles,
-				A2(elm$core$List$member, index, affected) ? author$project$Configuration$Movement$FreeOnDrag$affectedItemStyles : _List_Nil));
+				A2(elm$core$List$member, index, affected) ? author$project$Configuration$Movement$FreeOnDrag$affectedStyles : _List_Nil));
 		var _n0 = author$project$Configuration$Movement$FreeOnDrag$system.bG(dnd);
 		if (!_n0.$) {
 			var dragIndex = _n0.a.bw;
@@ -12952,7 +12952,7 @@ var author$project$Configuration$Movement$FreeOnDrag$itemView = F4(
 						elm$html$Html$text(item)
 					])) : A2(
 				elm$html$Html$div,
-				_Utils_ap(attrs, author$project$Configuration$Movement$FreeOnDrag$placeholderItemStyles),
+				_Utils_ap(attrs, author$project$Configuration$Movement$FreeOnDrag$placeholderStyles),
 				_List_Nil);
 		} else {
 			return A2(
@@ -13042,15 +13042,15 @@ var author$project$Configuration$Movement$FreeOnDrop$ghostView = F2(
 			return elm$html$Html$text('');
 		}
 	});
-var author$project$Configuration$Movement$FreeOnDrop$affectedItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$FreeOnDrop$affectedStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', '#136169')
 	]);
-var author$project$Configuration$Movement$FreeOnDrop$overedItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$FreeOnDrop$overedStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', '#63bdc7')
 	]);
-var author$project$Configuration$Movement$FreeOnDrop$placeholderItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$FreeOnDrop$placeholderStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', 'dimgray')
 	]);
@@ -13062,7 +13062,7 @@ var author$project$Configuration$Movement$FreeOnDrop$itemView = F4(
 			elm$html$Html$Attributes$id(itemId),
 			_Utils_ap(
 				author$project$Configuration$Movement$FreeOnDrop$itemStyles,
-				A2(elm$core$List$member, index, affected) ? author$project$Configuration$Movement$FreeOnDrop$affectedItemStyles : _List_Nil));
+				A2(elm$core$List$member, index, affected) ? author$project$Configuration$Movement$FreeOnDrop$affectedStyles : _List_Nil));
 		var _n0 = author$project$Configuration$Movement$FreeOnDrop$system.bG(dnd);
 		if (!_n0.$) {
 			var dragIndex = _n0.a.bw;
@@ -13080,14 +13080,14 @@ var author$project$Configuration$Movement$FreeOnDrop$itemView = F4(
 				_Utils_ap(
 					attrs,
 					_Utils_ap(
-						author$project$Configuration$Movement$FreeOnDrop$overedItemStyles,
+						author$project$Configuration$Movement$FreeOnDrop$overedStyles,
 						A2(author$project$Configuration$Movement$FreeOnDrop$system.bx, index, itemId))),
 				_List_fromArray(
 					[
 						elm$html$Html$text(item)
 					])) : A2(
 				elm$html$Html$div,
-				_Utils_ap(attrs, author$project$Configuration$Movement$FreeOnDrop$placeholderItemStyles),
+				_Utils_ap(attrs, author$project$Configuration$Movement$FreeOnDrop$placeholderStyles),
 				_List_Nil));
 		} else {
 			return A2(
@@ -13170,11 +13170,11 @@ var author$project$Configuration$Movement$HorizontalOnDrag$ghostView = F2(
 			return elm$html$Html$text('');
 		}
 	});
-var author$project$Configuration$Movement$HorizontalOnDrag$affectedItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$HorizontalOnDrag$affectedStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', '#691361')
 	]);
-var author$project$Configuration$Movement$HorizontalOnDrag$placeholderItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$HorizontalOnDrag$placeholderStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', 'dimgray')
 	]);
@@ -13186,7 +13186,7 @@ var author$project$Configuration$Movement$HorizontalOnDrag$itemView = F4(
 			elm$html$Html$Attributes$id(itemId),
 			_Utils_ap(
 				author$project$Configuration$Movement$HorizontalOnDrag$itemStyles,
-				A2(elm$core$List$member, index, affected) ? author$project$Configuration$Movement$HorizontalOnDrag$affectedItemStyles : _List_Nil));
+				A2(elm$core$List$member, index, affected) ? author$project$Configuration$Movement$HorizontalOnDrag$affectedStyles : _List_Nil));
 		var _n0 = author$project$Configuration$Movement$HorizontalOnDrag$system.bG(dnd);
 		if (!_n0.$) {
 			var dragIndex = _n0.a.bw;
@@ -13200,7 +13200,7 @@ var author$project$Configuration$Movement$HorizontalOnDrag$itemView = F4(
 						elm$html$Html$text(item)
 					])) : A2(
 				elm$html$Html$div,
-				_Utils_ap(attrs, author$project$Configuration$Movement$HorizontalOnDrag$placeholderItemStyles),
+				_Utils_ap(attrs, author$project$Configuration$Movement$HorizontalOnDrag$placeholderStyles),
 				_List_Nil);
 		} else {
 			return A2(
@@ -13283,15 +13283,15 @@ var author$project$Configuration$Movement$HorizontalOnDrop$ghostView = F2(
 			return elm$html$Html$text('');
 		}
 	});
-var author$project$Configuration$Movement$HorizontalOnDrop$affectedItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$HorizontalOnDrop$affectedStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', '#136169')
 	]);
-var author$project$Configuration$Movement$HorizontalOnDrop$overedItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$HorizontalOnDrop$overedStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', '#63bdc7')
 	]);
-var author$project$Configuration$Movement$HorizontalOnDrop$placeholderItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$HorizontalOnDrop$placeholderStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', 'dimgray')
 	]);
@@ -13303,7 +13303,7 @@ var author$project$Configuration$Movement$HorizontalOnDrop$itemView = F4(
 			elm$html$Html$Attributes$id(itemId),
 			_Utils_ap(
 				author$project$Configuration$Movement$HorizontalOnDrop$itemStyles,
-				A2(elm$core$List$member, index, affected) ? author$project$Configuration$Movement$HorizontalOnDrop$affectedItemStyles : _List_Nil));
+				A2(elm$core$List$member, index, affected) ? author$project$Configuration$Movement$HorizontalOnDrop$affectedStyles : _List_Nil));
 		var _n0 = author$project$Configuration$Movement$HorizontalOnDrop$system.bG(dnd);
 		if (!_n0.$) {
 			var dragIndex = _n0.a.bw;
@@ -13321,14 +13321,14 @@ var author$project$Configuration$Movement$HorizontalOnDrop$itemView = F4(
 				_Utils_ap(
 					attrs,
 					_Utils_ap(
-						author$project$Configuration$Movement$HorizontalOnDrop$overedItemStyles,
+						author$project$Configuration$Movement$HorizontalOnDrop$overedStyles,
 						A2(author$project$Configuration$Movement$HorizontalOnDrop$system.bx, index, itemId))),
 				_List_fromArray(
 					[
 						elm$html$Html$text(item)
 					])) : A2(
 				elm$html$Html$div,
-				_Utils_ap(attrs, author$project$Configuration$Movement$HorizontalOnDrop$placeholderItemStyles),
+				_Utils_ap(attrs, author$project$Configuration$Movement$HorizontalOnDrop$placeholderStyles),
 				_List_Nil));
 		} else {
 			return A2(
@@ -13412,11 +13412,11 @@ var author$project$Configuration$Movement$VerticalOnDrag$ghostView = F2(
 			return elm$html$Html$text('');
 		}
 	});
-var author$project$Configuration$Movement$VerticalOnDrag$affectedItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$VerticalOnDrag$affectedStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', '#691361')
 	]);
-var author$project$Configuration$Movement$VerticalOnDrag$placeholderItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$VerticalOnDrag$placeholderStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', 'dimgray')
 	]);
@@ -13428,7 +13428,7 @@ var author$project$Configuration$Movement$VerticalOnDrag$itemView = F4(
 			elm$html$Html$Attributes$id(itemId),
 			_Utils_ap(
 				author$project$Configuration$Movement$VerticalOnDrag$itemStyles,
-				A2(elm$core$List$member, index, affected) ? author$project$Configuration$Movement$VerticalOnDrag$affectedItemStyles : _List_Nil));
+				A2(elm$core$List$member, index, affected) ? author$project$Configuration$Movement$VerticalOnDrag$affectedStyles : _List_Nil));
 		var _n0 = author$project$Configuration$Movement$VerticalOnDrag$system.bG(dnd);
 		if (!_n0.$) {
 			var dragIndex = _n0.a.bw;
@@ -13442,7 +13442,7 @@ var author$project$Configuration$Movement$VerticalOnDrag$itemView = F4(
 						elm$html$Html$text(item)
 					])) : A2(
 				elm$html$Html$div,
-				_Utils_ap(attrs, author$project$Configuration$Movement$VerticalOnDrag$placeholderItemStyles),
+				_Utils_ap(attrs, author$project$Configuration$Movement$VerticalOnDrag$placeholderStyles),
 				_List_Nil);
 		} else {
 			return A2(
@@ -13526,15 +13526,15 @@ var author$project$Configuration$Movement$VerticalOnDrop$ghostView = F2(
 			return elm$html$Html$text('');
 		}
 	});
-var author$project$Configuration$Movement$VerticalOnDrop$affectedItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$VerticalOnDrop$affectedStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', '#136169')
 	]);
-var author$project$Configuration$Movement$VerticalOnDrop$overedItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$VerticalOnDrop$overedStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', '#63bdc7')
 	]);
-var author$project$Configuration$Movement$VerticalOnDrop$placeholderItemStyles = _List_fromArray(
+var author$project$Configuration$Movement$VerticalOnDrop$placeholderStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'background-color', 'dimgray')
 	]);
@@ -13546,7 +13546,7 @@ var author$project$Configuration$Movement$VerticalOnDrop$itemView = F4(
 			elm$html$Html$Attributes$id(itemId),
 			_Utils_ap(
 				author$project$Configuration$Movement$VerticalOnDrop$itemStyles,
-				A2(elm$core$List$member, index, affected) ? author$project$Configuration$Movement$VerticalOnDrop$affectedItemStyles : _List_Nil));
+				A2(elm$core$List$member, index, affected) ? author$project$Configuration$Movement$VerticalOnDrop$affectedStyles : _List_Nil));
 		var _n0 = author$project$Configuration$Movement$VerticalOnDrop$system.bG(dnd);
 		if (!_n0.$) {
 			var dragIndex = _n0.a.bw;
@@ -13564,14 +13564,14 @@ var author$project$Configuration$Movement$VerticalOnDrop$itemView = F4(
 				_Utils_ap(
 					attrs,
 					_Utils_ap(
-						author$project$Configuration$Movement$VerticalOnDrop$overedItemStyles,
+						author$project$Configuration$Movement$VerticalOnDrop$overedStyles,
 						A2(author$project$Configuration$Movement$VerticalOnDrop$system.bx, index, itemId))),
 				_List_fromArray(
 					[
 						elm$html$Html$text(item)
 					])) : A2(
 				elm$html$Html$div,
-				_Utils_ap(attrs, author$project$Configuration$Movement$VerticalOnDrop$placeholderItemStyles),
+				_Utils_ap(attrs, author$project$Configuration$Movement$VerticalOnDrop$placeholderStyles),
 				_List_Nil));
 		} else {
 			return A2(
@@ -13779,7 +13779,7 @@ var author$project$Configuration$OperationOnDrag$InsertAfter$ghostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Configuration$OperationOnDrag$InsertAfter$itemStyles(author$project$Configuration$OperationOnDrag$InsertAfter$dropColor),
+					author$project$Configuration$OperationOnDrag$InsertAfter$itemStyles(author$project$Configuration$OperationOnDrag$InsertAfter$dragColor),
 					author$project$Configuration$OperationOnDrag$InsertAfter$system.cY(dnd)),
 				_List_fromArray(
 					[
@@ -13815,14 +13815,14 @@ var author$project$Configuration$OperationOnDrag$InsertAfter$itemView = F3(
 					])) : (((!_Utils_eq(dragIndex, index)) && _Utils_eq(dropIndex, index)) ? A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					attrs(author$project$Configuration$OperationOnDrag$InsertAfter$dragColor),
+					attrs(author$project$Configuration$OperationOnDrag$InsertAfter$dropColor),
 					A2(author$project$Configuration$OperationOnDrag$InsertAfter$system.bx, index, itemId)),
 				_List_fromArray(
 					[
 						elm$html$Html$text(value)
 					])) : A2(
 				elm$html$Html$div,
-				attrs(author$project$Configuration$OperationOnDrag$InsertAfter$dragColor),
+				attrs(author$project$Configuration$OperationOnDrag$InsertAfter$dropColor),
 				_List_Nil));
 		} else {
 			return A2(
@@ -13892,7 +13892,7 @@ var author$project$Configuration$OperationOnDrag$InsertBefore$ghostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Configuration$OperationOnDrag$InsertBefore$itemStyles(author$project$Configuration$OperationOnDrag$InsertBefore$dropColor),
+					author$project$Configuration$OperationOnDrag$InsertBefore$itemStyles(author$project$Configuration$OperationOnDrag$InsertBefore$dragColor),
 					author$project$Configuration$OperationOnDrag$InsertBefore$system.cY(dnd)),
 				_List_fromArray(
 					[
@@ -13928,14 +13928,14 @@ var author$project$Configuration$OperationOnDrag$InsertBefore$itemView = F3(
 					])) : (((!_Utils_eq(dragIndex, index)) && _Utils_eq(dropIndex, index)) ? A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					attrs(author$project$Configuration$OperationOnDrag$InsertBefore$dragColor),
+					attrs(author$project$Configuration$OperationOnDrag$InsertBefore$dropColor),
 					A2(author$project$Configuration$OperationOnDrag$InsertBefore$system.bx, index, itemId)),
 				_List_fromArray(
 					[
 						elm$html$Html$text(value)
 					])) : A2(
 				elm$html$Html$div,
-				attrs(author$project$Configuration$OperationOnDrag$InsertBefore$dragColor),
+				attrs(author$project$Configuration$OperationOnDrag$InsertBefore$dropColor),
 				_List_Nil));
 		} else {
 			return A2(
@@ -14005,7 +14005,7 @@ var author$project$Configuration$OperationOnDrag$RotateIn$ghostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Configuration$OperationOnDrag$RotateIn$itemStyles(author$project$Configuration$OperationOnDrag$RotateIn$dropColor),
+					author$project$Configuration$OperationOnDrag$RotateIn$itemStyles(author$project$Configuration$OperationOnDrag$RotateIn$dragColor),
 					author$project$Configuration$OperationOnDrag$RotateIn$system.cY(dnd)),
 				_List_fromArray(
 					[
@@ -14041,14 +14041,14 @@ var author$project$Configuration$OperationOnDrag$RotateIn$itemView = F3(
 					])) : (((!_Utils_eq(dragIndex, index)) && _Utils_eq(dropIndex, index)) ? A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					attrs(author$project$Configuration$OperationOnDrag$RotateIn$dragColor),
+					attrs(author$project$Configuration$OperationOnDrag$RotateIn$dropColor),
 					A2(author$project$Configuration$OperationOnDrag$RotateIn$system.bx, index, itemId)),
 				_List_fromArray(
 					[
 						elm$html$Html$text(value)
 					])) : A2(
 				elm$html$Html$div,
-				attrs(author$project$Configuration$OperationOnDrag$RotateIn$dragColor),
+				attrs(author$project$Configuration$OperationOnDrag$RotateIn$dropColor),
 				_List_Nil));
 		} else {
 			return A2(
@@ -14118,7 +14118,7 @@ var author$project$Configuration$OperationOnDrag$RotateOut$ghostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Configuration$OperationOnDrag$RotateOut$itemStyles(author$project$Configuration$OperationOnDrag$RotateOut$dropColor),
+					author$project$Configuration$OperationOnDrag$RotateOut$itemStyles(author$project$Configuration$OperationOnDrag$RotateOut$dragColor),
 					author$project$Configuration$OperationOnDrag$RotateOut$system.cY(dnd)),
 				_List_fromArray(
 					[
@@ -14153,7 +14153,7 @@ var author$project$Configuration$OperationOnDrag$RotateOut$itemView = F3(
 						elm$html$Html$text(value)
 					])) : A2(
 				elm$html$Html$div,
-				attrs(author$project$Configuration$OperationOnDrag$RotateOut$dragColor),
+				attrs(author$project$Configuration$OperationOnDrag$RotateOut$dropColor),
 				_List_Nil);
 		} else {
 			return A2(
@@ -14223,7 +14223,7 @@ var author$project$Configuration$OperationOnDrag$Swap$ghostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Configuration$OperationOnDrag$Swap$itemStyles(author$project$Configuration$OperationOnDrag$Swap$dropColor),
+					author$project$Configuration$OperationOnDrag$Swap$itemStyles(author$project$Configuration$OperationOnDrag$Swap$dragColor),
 					author$project$Configuration$OperationOnDrag$Swap$system.cY(dnd)),
 				_List_fromArray(
 					[
@@ -14258,7 +14258,7 @@ var author$project$Configuration$OperationOnDrag$Swap$itemView = F3(
 						elm$html$Html$text(value)
 					])) : A2(
 				elm$html$Html$div,
-				attrs(author$project$Configuration$OperationOnDrag$Swap$dragColor),
+				attrs(author$project$Configuration$OperationOnDrag$Swap$dropColor),
 				_List_Nil);
 		} else {
 			return A2(
@@ -14328,7 +14328,7 @@ var author$project$Configuration$OperationOnDrag$Unaltered$ghostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Configuration$OperationOnDrag$Unaltered$itemStyles(author$project$Configuration$OperationOnDrag$Unaltered$dropColor),
+					author$project$Configuration$OperationOnDrag$Unaltered$itemStyles(author$project$Configuration$OperationOnDrag$Unaltered$dragColor),
 					author$project$Configuration$OperationOnDrag$Unaltered$system.cY(dnd)),
 				_List_fromArray(
 					[
@@ -14364,14 +14364,14 @@ var author$project$Configuration$OperationOnDrag$Unaltered$itemView = F3(
 					])) : (((!_Utils_eq(dragIndex, index)) && _Utils_eq(dropIndex, index)) ? A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					attrs(author$project$Configuration$OperationOnDrag$Unaltered$dragColor),
+					attrs(author$project$Configuration$OperationOnDrag$Unaltered$dropColor),
 					A2(author$project$Configuration$OperationOnDrag$Unaltered$system.bx, index, itemId)),
 				_List_fromArray(
 					[
 						elm$html$Html$text(value)
 					])) : A2(
 				elm$html$Html$div,
-				attrs(author$project$Configuration$OperationOnDrag$Unaltered$dragColor),
+				attrs(author$project$Configuration$OperationOnDrag$Unaltered$dropColor),
 				_List_Nil));
 		} else {
 			return A2(
@@ -14543,7 +14543,7 @@ var author$project$Configuration$OperationOnDrop$InsertAfter$ghostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Configuration$OperationOnDrop$InsertAfter$itemStyles(author$project$Configuration$OperationOnDrop$InsertAfter$dropColor),
+					author$project$Configuration$OperationOnDrop$InsertAfter$itemStyles(author$project$Configuration$OperationOnDrop$InsertAfter$dragColor),
 					author$project$Configuration$OperationOnDrop$InsertAfter$system.cY(dnd)),
 				_List_fromArray(
 					[
@@ -14579,14 +14579,14 @@ var author$project$Configuration$OperationOnDrop$InsertAfter$itemView = F3(
 					])) : (((!_Utils_eq(dragIndex, index)) && _Utils_eq(dropIndex, index)) ? A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					attrs(author$project$Configuration$OperationOnDrop$InsertAfter$dragColor),
+					attrs(author$project$Configuration$OperationOnDrop$InsertAfter$dropColor),
 					A2(author$project$Configuration$OperationOnDrop$InsertAfter$system.bx, index, itemId)),
 				_List_fromArray(
 					[
 						elm$html$Html$text(value)
 					])) : A2(
 				elm$html$Html$div,
-				attrs(author$project$Configuration$OperationOnDrop$InsertAfter$dragColor),
+				attrs(author$project$Configuration$OperationOnDrop$InsertAfter$dropColor),
 				_List_Nil));
 		} else {
 			return A2(
@@ -14656,7 +14656,7 @@ var author$project$Configuration$OperationOnDrop$InsertBefore$ghostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Configuration$OperationOnDrop$InsertBefore$itemStyles(author$project$Configuration$OperationOnDrop$InsertBefore$dropColor),
+					author$project$Configuration$OperationOnDrop$InsertBefore$itemStyles(author$project$Configuration$OperationOnDrop$InsertBefore$dragColor),
 					author$project$Configuration$OperationOnDrop$InsertBefore$system.cY(dnd)),
 				_List_fromArray(
 					[
@@ -14692,14 +14692,14 @@ var author$project$Configuration$OperationOnDrop$InsertBefore$itemView = F3(
 					])) : (((!_Utils_eq(dragIndex, index)) && _Utils_eq(dropIndex, index)) ? A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					attrs(author$project$Configuration$OperationOnDrop$InsertBefore$dragColor),
+					attrs(author$project$Configuration$OperationOnDrop$InsertBefore$dropColor),
 					A2(author$project$Configuration$OperationOnDrop$InsertBefore$system.bx, index, itemId)),
 				_List_fromArray(
 					[
 						elm$html$Html$text(value)
 					])) : A2(
 				elm$html$Html$div,
-				attrs(author$project$Configuration$OperationOnDrop$InsertBefore$dragColor),
+				attrs(author$project$Configuration$OperationOnDrop$InsertBefore$dropColor),
 				_List_Nil));
 		} else {
 			return A2(
@@ -14769,7 +14769,7 @@ var author$project$Configuration$OperationOnDrop$RotateIn$ghostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Configuration$OperationOnDrop$RotateIn$itemStyles(author$project$Configuration$OperationOnDrop$RotateIn$dropColor),
+					author$project$Configuration$OperationOnDrop$RotateIn$itemStyles(author$project$Configuration$OperationOnDrop$RotateIn$dragColor),
 					author$project$Configuration$OperationOnDrop$RotateIn$system.cY(dnd)),
 				_List_fromArray(
 					[
@@ -14805,14 +14805,14 @@ var author$project$Configuration$OperationOnDrop$RotateIn$itemView = F3(
 					])) : (((!_Utils_eq(dragIndex, index)) && _Utils_eq(dropIndex, index)) ? A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					attrs(author$project$Configuration$OperationOnDrop$RotateIn$dragColor),
+					attrs(author$project$Configuration$OperationOnDrop$RotateIn$dropColor),
 					A2(author$project$Configuration$OperationOnDrop$RotateIn$system.bx, index, itemId)),
 				_List_fromArray(
 					[
 						elm$html$Html$text(value)
 					])) : A2(
 				elm$html$Html$div,
-				attrs(author$project$Configuration$OperationOnDrop$RotateIn$dragColor),
+				attrs(author$project$Configuration$OperationOnDrop$RotateIn$dropColor),
 				_List_Nil));
 		} else {
 			return A2(
@@ -14882,7 +14882,7 @@ var author$project$Configuration$OperationOnDrop$RotateOut$ghostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Configuration$OperationOnDrop$RotateOut$itemStyles(author$project$Configuration$OperationOnDrop$RotateOut$dropColor),
+					author$project$Configuration$OperationOnDrop$RotateOut$itemStyles(author$project$Configuration$OperationOnDrop$RotateOut$dragColor),
 					author$project$Configuration$OperationOnDrop$RotateOut$system.cY(dnd)),
 				_List_fromArray(
 					[
@@ -14918,14 +14918,14 @@ var author$project$Configuration$OperationOnDrop$RotateOut$itemView = F3(
 					])) : (((!_Utils_eq(dragIndex, index)) && _Utils_eq(dropIndex, index)) ? A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					attrs(author$project$Configuration$OperationOnDrop$RotateOut$dragColor),
+					attrs(author$project$Configuration$OperationOnDrop$RotateOut$dropColor),
 					A2(author$project$Configuration$OperationOnDrop$RotateOut$system.bx, index, itemId)),
 				_List_fromArray(
 					[
 						elm$html$Html$text(value)
 					])) : A2(
 				elm$html$Html$div,
-				attrs(author$project$Configuration$OperationOnDrop$RotateOut$dragColor),
+				attrs(author$project$Configuration$OperationOnDrop$RotateOut$dropColor),
 				_List_Nil));
 		} else {
 			return A2(
@@ -14995,7 +14995,7 @@ var author$project$Configuration$OperationOnDrop$Swap$ghostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Configuration$OperationOnDrop$Swap$itemStyles(author$project$Configuration$OperationOnDrop$Swap$dropColor),
+					author$project$Configuration$OperationOnDrop$Swap$itemStyles(author$project$Configuration$OperationOnDrop$Swap$dragColor),
 					author$project$Configuration$OperationOnDrop$Swap$system.cY(dnd)),
 				_List_fromArray(
 					[
@@ -15031,14 +15031,14 @@ var author$project$Configuration$OperationOnDrop$Swap$itemView = F3(
 					])) : (((!_Utils_eq(dragIndex, index)) && _Utils_eq(dropIndex, index)) ? A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					attrs(author$project$Configuration$OperationOnDrop$Swap$dragColor),
+					attrs(author$project$Configuration$OperationOnDrop$Swap$dropColor),
 					A2(author$project$Configuration$OperationOnDrop$Swap$system.bx, index, itemId)),
 				_List_fromArray(
 					[
 						elm$html$Html$text(value)
 					])) : A2(
 				elm$html$Html$div,
-				attrs(author$project$Configuration$OperationOnDrop$Swap$dragColor),
+				attrs(author$project$Configuration$OperationOnDrop$Swap$dropColor),
 				_List_Nil));
 		} else {
 			return A2(
@@ -15108,7 +15108,7 @@ var author$project$Configuration$OperationOnDrop$Unaltered$ghostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Configuration$OperationOnDrop$Unaltered$itemStyles(author$project$Configuration$OperationOnDrop$Unaltered$dropColor),
+					author$project$Configuration$OperationOnDrop$Unaltered$itemStyles(author$project$Configuration$OperationOnDrop$Unaltered$dragColor),
 					author$project$Configuration$OperationOnDrop$Unaltered$system.cY(dnd)),
 				_List_fromArray(
 					[
@@ -15144,14 +15144,14 @@ var author$project$Configuration$OperationOnDrop$Unaltered$itemView = F3(
 					])) : (((!_Utils_eq(dragIndex, index)) && _Utils_eq(dropIndex, index)) ? A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					attrs(author$project$Configuration$OperationOnDrop$Unaltered$dragColor),
+					attrs(author$project$Configuration$OperationOnDrop$Unaltered$dropColor),
 					A2(author$project$Configuration$OperationOnDrop$Unaltered$system.bx, index, itemId)),
 				_List_fromArray(
 					[
 						elm$html$Html$text(value)
 					])) : A2(
 				elm$html$Html$div,
-				attrs(author$project$Configuration$OperationOnDrop$Unaltered$dragColor),
+				attrs(author$project$Configuration$OperationOnDrop$Unaltered$dropColor),
 				_List_Nil));
 		} else {
 			return A2(
@@ -15315,11 +15315,11 @@ var author$project$Configuration$Root$demoView = function (model) {
 var author$project$Configuration$Root$info = function (example) {
 	switch (example.$) {
 		case 0:
-			return {ai: 'The behavior of the different operations applied on lists while dragging.', N: 'operations-drag', aF: 'Operations on Drag'};
+			return {ai: 'Compare the list operations triggered on drag.', N: 'operations-drag', aF: 'Operations on Drag'};
 		case 1:
-			return {ai: 'The behavior of the different operations applied on lists on drop.', N: 'operations-drop', aF: 'Operations on Drop'};
+			return {ai: 'Compare the list operations triggered on drop.', N: 'operations-drop', aF: 'Operations on Drop'};
 		case 2:
-			return {ai: 'The behavior of the Free, Horizontal and Vertical only drag movement with Swap list operation.', N: 'movement', aF: 'Movement with Swap'};
+			return {ai: 'The behavior of the Free, Horizontal only and Vertical only drag movements with Swap list operation.', N: 'movement', aF: 'Movement with Swap'};
 		default:
 			return {ai: 'The list state invariant is that the list has to be gathered by the grouping property, and the auxiliary items have to preserve their places.', N: 'groups', aF: 'Groups'};
 	}
@@ -15580,7 +15580,7 @@ var author$project$Gallery$Hanoi$diskView = F5(
 		var width = _n0.bj;
 		var startColor = _n0.aY;
 		var solvedColor = _n0.bf;
-		var globalIndex = localIndex + offset;
+		var globalIndex = offset + localIndex;
 		var diskId = 'id-' + elm$core$String$fromInt(globalIndex);
 		var color = A3(author$project$Gallery$Hanoi$paint, model.aC, startColor, solvedColor);
 		var _n1 = author$project$Gallery$Hanoi$system.bG(model.x);
@@ -15808,7 +15808,7 @@ var author$project$Gallery$Puzzle$itemView = F4(
 	function (dnd, offset, localIndex, _n0) {
 		var value = _n0.bi;
 		var color = _n0.a3;
-		var globalIndex = localIndex + offset;
+		var globalIndex = offset + localIndex;
 		var itemId = 'id-' + elm$core$String$fromInt(globalIndex);
 		var _n1 = author$project$Gallery$Puzzle$system.bG(dnd);
 		if (!_n1.$) {
@@ -15997,7 +15997,7 @@ var author$project$Gallery$Shapes$triangle = function (color) {
 };
 var elm$svg$Svg$svg = elm$svg$Svg$trustedNode('svg');
 var elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
-var author$project$Gallery$Shapes$svgShapeView = F3(
+var author$project$Gallery$Shapes$svgView = F3(
 	function (shape, color, dnd) {
 		return A2(
 			elm$svg$Svg$svg,
@@ -16039,7 +16039,7 @@ var author$project$Gallery$Shapes$ghostView = F2(
 			var shape = maybeDragItem.a.ar;
 			var color = maybeDragItem.a.a3;
 			return A3(
-				author$project$Gallery$Shapes$svgShapeView,
+				author$project$Gallery$Shapes$svgView,
 				shape,
 				color,
 				author$project$Gallery$Shapes$system.cY(dnd));
@@ -16060,7 +16060,7 @@ var author$project$Gallery$Shapes$holeView = F3(
 	function (dnd, index, _n0) {
 		var shape = _n0.ar;
 		var color = _n0.a3;
-		var globalIndex = index + author$project$Gallery$Shapes$shapeNumber;
+		var globalIndex = author$project$Gallery$Shapes$shapeNumber + index;
 		var itemId = 'hole-' + elm$core$String$fromInt(globalIndex);
 		var _n1 = author$project$Gallery$Shapes$system.bG(dnd);
 		if (!_n1.$) {
@@ -16070,7 +16070,7 @@ var author$project$Gallery$Shapes$holeView = F3(
 				_List_fromArray(
 					[
 						A3(
-						author$project$Gallery$Shapes$svgShapeView,
+						author$project$Gallery$Shapes$svgView,
 						shape,
 						color,
 						A2(
@@ -16085,7 +16085,7 @@ var author$project$Gallery$Shapes$holeView = F3(
 				_List_fromArray(
 					[
 						A3(
-						author$project$Gallery$Shapes$svgShapeView,
+						author$project$Gallery$Shapes$svgView,
 						shape,
 						color,
 						_List_fromArray(
@@ -16134,7 +16134,7 @@ var author$project$Gallery$Shapes$shapeView = F3(
 				_List_fromArray(
 					[
 						A3(
-						author$project$Gallery$Shapes$svgShapeView,
+						author$project$Gallery$Shapes$svgView,
 						shape,
 						color,
 						_List_fromArray(
@@ -16149,7 +16149,7 @@ var author$project$Gallery$Shapes$shapeView = F3(
 				_List_fromArray(
 					[
 						A3(
-						author$project$Gallery$Shapes$svgShapeView,
+						author$project$Gallery$Shapes$svgView,
 						shape,
 						color,
 						A2(
@@ -16364,7 +16364,7 @@ var author$project$Gallery$TaskBoard$eventfulCardView = F4(
 	function (model, offset, localIndex, _n0) {
 		var activity = _n0.l;
 		var description = _n0.ai;
-		var globalIndex = localIndex + offset;
+		var globalIndex = offset + localIndex;
 		var cardId = 'card-' + elm$core$String$fromInt(globalIndex);
 		var _n1 = _Utils_Tuple2(
 			author$project$Gallery$TaskBoard$cardSystem.bG(model.t),
@@ -16539,7 +16539,7 @@ var author$project$Gallery$TaskBoard$view = function (model) {
 				author$project$Gallery$TaskBoard$cardGhostView(model)
 			]));
 };
-var author$project$Gallery$TryOn$colorStyles = _List_fromArray(
+var author$project$Gallery$TryOn$colorGroupStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'flex-direction', 'column'),
@@ -16653,7 +16653,7 @@ var author$project$Gallery$TryOn$sectionStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center'),
 		A2(elm$html$Html$Attributes$style, 'padding-top', '3rem')
 	]);
-var author$project$Gallery$TryOn$sizeStyles = _List_fromArray(
+var author$project$Gallery$TryOn$sizeGroupStyles = _List_fromArray(
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'flex-wrap', 'wrap'),
@@ -16661,11 +16661,11 @@ var author$project$Gallery$TryOn$sizeStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
 	]);
 var author$project$Gallery$TryOn$sizeView = F4(
-	function (model, offset, index, item) {
+	function (model, offset, localIndex, item) {
 		var width = item.bj * 4;
-		var itemId = 'size-' + elm$core$String$fromInt(index);
+		var itemId = 'size-' + elm$core$String$fromInt(localIndex);
 		var height = item.a6 * 4;
-		var globalIndex = index + offset;
+		var globalIndex = offset + localIndex;
 		var _n0 = author$project$Gallery$TryOn$system.bG(model.x);
 		if (!_n0.$) {
 			var dragIndex = _n0.a.bw;
@@ -16717,19 +16717,19 @@ var author$project$Gallery$TryOn$view = function (model) {
 			[
 				A2(
 				elm$html$Html$div,
-				author$project$Gallery$TryOn$colorStyles,
+				author$project$Gallery$TryOn$colorGroupStyles,
 				A2(
 					elm$core$List$indexedMap,
 					author$project$Gallery$TryOn$colorView(model),
 					A2(
 						elm$core$List$filter,
 						function (item) {
-							return item.aA === 1;
+							return !item.aA;
 						},
 						model.X))),
 				A2(
 				elm$html$Html$div,
-				author$project$Gallery$TryOn$sizeStyles,
+				author$project$Gallery$TryOn$sizeGroupStyles,
 				A2(
 					elm$core$List$indexedMap,
 					A2(
@@ -16739,13 +16739,13 @@ var author$project$Gallery$TryOn$view = function (model) {
 							A2(
 								elm$core$List$filter,
 								function (item) {
-									return item.aA === 1;
+									return !item.aA;
 								},
 								model.X))),
 					A2(
 						elm$core$List$filter,
 						function (item) {
-							return !item.aA;
+							return item.aA === 1;
 						},
 						model.X))),
 				author$project$Gallery$TryOn$ghostView(model)
@@ -16789,9 +16789,9 @@ var author$project$Gallery$Root$demoView = function (model) {
 var author$project$Gallery$Root$info = function (example) {
 	switch (example.$) {
 		case 0:
-			return {ai: 'Plain list with auxiliary elements.', N: 'hanoi', aF: 'Towers of Hanoi'};
+			return {ai: 'Plain list with auxiliary items.', N: 'hanoi', aF: 'Towers of Hanoi'};
 		case 1:
-			return {ai: 'List with groups without auxiliary elements.', N: 'puzzle', aF: 'Puzzle'};
+			return {ai: 'List with groups without auxiliary items.', N: 'puzzle', aF: 'Puzzle'};
 		case 2:
 			return {ai: 'Plain list with the Unaltered operation and beforeUpdate.', N: 'shapes', aF: 'Geometric shapes + SVG'};
 		case 3:
@@ -22711,7 +22711,7 @@ var author$project$Introduction$Groups$itemView = F4(
 		}
 	});
 var author$project$Introduction$Groups$groupView = F3(
-	function (model, group, bgColor) {
+	function (model, group, color) {
 		var items = A2(
 			elm$core$List$filter,
 			function (item) {
@@ -22720,7 +22720,7 @@ var author$project$Introduction$Groups$groupView = F3(
 			model.X);
 		return A2(
 			elm$html$Html$div,
-			author$project$Introduction$Groups$groupStyles(bgColor),
+			author$project$Introduction$Groups$groupStyles(color),
 			A2(
 				elm$core$List$indexedMap,
 				A2(
@@ -22876,7 +22876,7 @@ var author$project$Introduction$Handle$view = function (model) {
 				A2(author$project$Introduction$Handle$ghostView, model.x, model.am)
 			]));
 };
-var author$project$Introduction$Independents$ghostBlue = '#0067c3';
+var author$project$Introduction$Independents$blueGhost = '#0067c3';
 var author$project$Introduction$Independents$itemStyles = function (color) {
 	return _List_fromArray(
 		[
@@ -22907,7 +22907,7 @@ var author$project$Introduction$Independents$blueGhostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Introduction$Independents$itemStyles(author$project$Introduction$Independents$ghostBlue),
+					author$project$Introduction$Independents$itemStyles(author$project$Introduction$Independents$blueGhost),
 					author$project$Introduction$Independents$blueSystem.cY(dnd)),
 				_List_fromArray(
 					[
@@ -22964,7 +22964,7 @@ var author$project$Introduction$Independents$containerStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'flex-wrap', 'wrap'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center')
 	]);
-var author$project$Introduction$Independents$ghostRed = '#c30005';
+var author$project$Introduction$Independents$redGhost = '#c30005';
 var author$project$Introduction$Independents$redGhostView = F2(
 	function (dnd, items) {
 		var maybeDragRed = A2(
@@ -22980,7 +22980,7 @@ var author$project$Introduction$Independents$redGhostView = F2(
 			return A2(
 				elm$html$Html$div,
 				_Utils_ap(
-					author$project$Introduction$Independents$itemStyles(author$project$Introduction$Independents$ghostRed),
+					author$project$Introduction$Independents$itemStyles(author$project$Introduction$Independents$redGhost),
 					author$project$Introduction$Independents$redSystem.cY(dnd)),
 				_List_fromArray(
 					[
@@ -23662,7 +23662,7 @@ var author$project$Introduction$Root$info = function (example) {
 		case 5:
 			return {ai: 'Simple horizontal masonry.', N: 'masonry', aF: 'Masonry'};
 		case 6:
-			return {ai: 'Put a drag handle to the top-left corner with resizable items.', N: 'resize', aF: 'Resize'};
+			return {ai: 'Put a drag handle to the top-left corner with resizable ghost element.', N: 'resize', aF: 'Resize'};
 		case 7:
 			return {ai: 'Without thinking: duplicate everything.', N: 'independents', aF: 'Independent lists'};
 		default:

@@ -54,10 +54,10 @@ config =
     , operation = DnDList.Groups.Swap
     , beforeUpdate = \_ _ list -> list
     , groups =
-        { comparator = compareByGroup
-        , trigger = DnDList.Groups.OnDrag
+        { trigger = DnDList.Groups.OnDrag
         , operation = DnDList.Groups.Swap
         , beforeUpdate = updateOnGroupChange
+        , comparator = compareByGroup
         }
     }
 
@@ -186,7 +186,7 @@ itemView model offset localIndex { group, color } =
     let
         globalIndex : Int
         globalIndex =
-            localIndex + offset
+            offset + localIndex
 
         itemId : String
         itemId =
