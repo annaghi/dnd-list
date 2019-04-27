@@ -127,15 +127,6 @@ stepTaskBoard model ( mo, cmds ) =
 
 
 
--- COMMANDS
-
-
-commands : Cmd Msg
-commands =
-    Cmd.map PuzzleMsg Gallery.Puzzle.commands
-
-
-
 -- SUBSCRIPTIONS
 
 
@@ -159,11 +150,20 @@ subscriptions model =
 
 
 
+-- COMMANDS
+
+
+commands : Cmd Msg
+commands =
+    Cmd.map PuzzleMsg Gallery.Puzzle.commands
+
+
+
 -- VIEW
 
 
-navigationView : Html.Html Msg
-navigationView =
+navigationView : String -> Html.Html Msg
+navigationView currentPath =
     Html.div
         [ Html.Attributes.class "navigation" ]
         [ Html.h4 [] [ Html.text "Gallery" ]
@@ -173,13 +173,13 @@ navigationView =
           , TryOn Gallery.TryOn.initialModel
           , TaskBoard Gallery.TaskBoard.initialModel
           ]
-            |> List.map linkView
+            |> List.map (linkView currentPath)
             |> Html.ul []
         ]
 
 
-linkView : Example -> Html.Html Msg
-linkView example =
+linkView : String -> Example -> Html.Html Msg
+linkView currentPath example =
     let
         path : String
         path =
@@ -187,7 +187,9 @@ linkView example =
     in
     Html.li []
         [ Html.a
-            [ Html.Attributes.href path ]
+            [ Html.Attributes.classList [ ( "is-active", path == currentPath ) ]
+            , Html.Attributes.href path
+            ]
             [ Html.text ((info >> .title) example) ]
         ]
 

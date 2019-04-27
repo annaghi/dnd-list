@@ -245,7 +245,7 @@ demoWrapperView offset currentId id example =
         ]
         [ demoView example
         , Html.div
-            [ Html.Attributes.class "link"
+            [ Html.Attributes.classList [ ( "link", True ), ( "is-active", globalId == currentId ) ]
             , Html.Events.onClick (LinkClicked globalId)
             ]
             [ Html.text title ]

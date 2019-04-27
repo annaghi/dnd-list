@@ -41,10 +41,10 @@ pseudocode type alias Config a =
 type alias Info =
     { dragIndex : Int
     , dropIndex : Int
-    , dragElement : Browser.Dom.Element
-    , dropElement : Browser.Dom.Element
     , dragElementId : String
     , dropElementId : String
+    , dragElement : Browser.Dom.Element
+    , dropElement : Browser.Dom.Element
     }
 ```
 

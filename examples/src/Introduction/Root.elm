@@ -183,15 +183,6 @@ stepGroups model ( mo, cmds ) =
 
 
 
--- COMMANDS
-
-
-commands : Cmd Msg
-commands =
-    Cmd.map MasonryMsg Introduction.Masonry.commands
-
-
-
 -- SUBSCRIPTIONS
 
 
@@ -227,11 +218,20 @@ subscriptions model =
 
 
 
+-- COMMANDS
+
+
+commands : Cmd Msg
+commands =
+    Cmd.map MasonryMsg Introduction.Masonry.commands
+
+
+
 -- VIEW
 
 
-navigationView : Html.Html Msg
-navigationView =
+navigationView : String -> Html.Html Msg
+navigationView currentPath =
     Html.div
         [ Html.Attributes.class "navigation" ]
         [ Html.h4 [] [ Html.text "Introduction" ]
@@ -245,13 +245,13 @@ navigationView =
           , Independents Introduction.Independents.initialModel
           , Groups Introduction.Groups.initialModel
           ]
-            |> List.map linkView
+            |> List.map (linkView currentPath)
             |> Html.ul []
         ]
 
 
-linkView : Example -> Html.Html Msg
-linkView example =
+linkView : String -> Example -> Html.Html Msg
+linkView currentPath example =
     let
         path : String
         path =
@@ -259,7 +259,9 @@ linkView example =
     in
     Html.li []
         [ Html.a
-            [ Html.Attributes.href path ]
+            [ Html.Attributes.classList [ ( "is-active", path == currentPath ) ]
+            , Html.Attributes.href path
+            ]
             [ Html.text ((info >> .title) example) ]
         ]
 
@@ -412,6 +414,6 @@ info example =
 
         Groups _ ->
             { slug = "groups"
-            , title = "Groupable list"
+            , title = "Groupable items"
             , description = "The list state invariant is that the list has to be gathered by the grouping property, and the auxiliary items have to preserve their places."
             }

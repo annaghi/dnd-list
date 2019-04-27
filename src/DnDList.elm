@@ -58,8 +58,7 @@ The `System` object gives us access to the ghost element's position styles too.
 
 ## commands
 
-`commands` is a function to access the DOM for the drag source and the drop target `x`, `y`,
-`width` and `height` information.
+`commands` is a function to access the DOM for the drag source and the drop target as HTML elements.
 
     update : Msg -> Model -> ( Model, Cmd Msg )
     update message model =
@@ -169,6 +168,18 @@ The ghost element has absolute position relative to the viewport.
             Nothing ->
                 Html.text ""
 
+The following CSS will be generated:
+
+    {
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform: calculated from the dragElement and the mouse position;
+        height: the dragElement's height;
+        width: the dragElement's width;
+        pointer-events: none;
+    }
+
 
 ## info
 
@@ -188,8 +199,8 @@ import Utils
 
 
 {-| Represents the internal model of the current drag and drop features.
-We can set it in our model and initialize through the `System`'s `model` field.
 It will be `Nothing` if there is no ongoing dragging.
+We can set it in our model and initialize through the `System`'s `model` field.
 
     type alias Model =
         { dnd : DnDList.Model
@@ -213,10 +224,10 @@ type alias State =
     , dragCounter : Int
     , startPosition : Utils.Position
     , currentPosition : Utils.Position
-    , dragElement : Maybe Browser.Dom.Element
-    , dropElement : Maybe Browser.Dom.Element
     , dragElementId : String
     , dropElementId : String
+    , dragElement : Maybe Browser.Dom.Element
+    , dropElement : Maybe Browser.Dom.Element
     }
 
 
@@ -368,25 +379,23 @@ type Operation
 {-| Represents the information about the drag source and the drop target items.
 It is accessible through the `System`'s `info` field.
 
-  - `dragIndex`: The index of the drag source item.
+  - `dragIndex`: The index of the drag source.
 
-  - `dropIndex`: The index of the drop target item.
-
-  - `dragElement`: Information about the drag source as an HTML element, see `Browser.Dom.Element`.
-
-  - `dropElement`: Information about the drop target as an HTML element, see `Browser.Dom.Element`.
+  - `dropIndex`: The index of the drop target.
 
   - `dragElementId`: HTML id of the drag source.
 
   - `dropElementId`: HTML id of the drop target.
 
-Checking the `Info` object we can decide what to render when there is an ongoing dragging,
+  - `dragElement`: Information about the drag source as an HTML element, see `Browser.Dom.Element`.
+
+  - `dropElement`: Information about the drop target as an HTML element, see `Browser.Dom.Element`.
+
+We can check the `Info` object to decide what to render when there is an ongoing dragging,
 and what to render when there is no dragging:
 
     itemView : DnDList.Model -> Int -> Fruit -> Html.Html Msg
     itemView dnd index item =
-        ...
-
         case system.info dnd of
             Just _ ->
                 -- Render when there is an ongoing dragging.
@@ -410,10 +419,10 @@ Or we can get e.g. the drag source item:
 type alias Info =
     { dragIndex : Int
     , dropIndex : Int
-    , dragElement : Browser.Dom.Element
-    , dropElement : Browser.Dom.Element
     , dragElementId : String
     , dropElementId : String
+    , dragElement : Browser.Dom.Element
+    , dropElement : Browser.Dom.Element
     }
 
 
@@ -499,10 +508,10 @@ update { operation, trigger, beforeUpdate } msg (Model state) list =
                     , dragCounter = 0
                     , startPosition = xy
                     , currentPosition = xy
-                    , dragElement = Nothing
-                    , dropElement = Nothing
                     , dragElementId = dragElementId
                     , dropElementId = dragElementId
+                    , dragElement = Nothing
+                    , dropElement = Nothing
                     }
             , list
             )
@@ -694,10 +703,10 @@ info (Model state) =
                 (\dragElement dropElement ->
                     { dragIndex = s.dragIndex
                     , dropIndex = s.dropIndex
-                    , dragElement = dragElement
-                    , dropElement = dropElement
                     , dragElementId = s.dragElementId
                     , dropElementId = s.dropElementId
+                    , dragElement = dragElement
+                    , dropElement = dropElement
                     }
                 )
                 s.dragElement

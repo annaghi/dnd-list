@@ -39,12 +39,13 @@ main =
 type alias Model =
     { key : Browser.Navigation.Key
     , example : Example
+    , currentPath : String
     }
 
 
 init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url key =
-    stepUrl url { key = key, example = NotFound }
+    stepUrl url { key = key, example = NotFound, currentPath = currentPath url }
 
 
 type Example
@@ -78,7 +79,7 @@ update message model =
         LinkClicked urlRequest ->
             case urlRequest of
                 Browser.Internal url ->
-                    ( model
+                    ( { model | currentPath = currentPath url }
                     , Cmd.batch
                         [ Browser.Navigation.pushUrl model.key (Url.toString url)
                         , jumpToTop "main"
@@ -226,6 +227,24 @@ slug_ =
     Url.Parser.custom "SLUG" Just
 
 
+currentPath : Url.Url -> String
+currentPath url =
+    let
+        home : String
+        home =
+            Url.Builder.absolute [ Base.base ] []
+
+        -- I cannot use pattern matching with variables
+        -- home ->
+    in
+    case url.path of
+        "/dnd-list" ->
+            Url.Builder.absolute [ Base.base, "introduction", "groups" ] []
+
+        _ ->
+            url.path
+
+
 
 -- VIEW
 
@@ -238,9 +257,9 @@ view model =
             [ Html.Attributes.id "sidebar" ]
             [ cardView
             , Html.nav []
-                [ Html.map IntroductionMsg Introduction.Root.navigationView
-                , Html.map ConfigurationMsg Configuration.Root.navigationView
-                , Html.map GalleryMsg Gallery.Root.navigationView
+                [ Html.map IntroductionMsg (Introduction.Root.navigationView model.currentPath)
+                , Html.map ConfigurationMsg (Configuration.Root.navigationView model.currentPath)
+                , Html.map GalleryMsg (Gallery.Root.navigationView model.currentPath)
                 ]
             ]
         , Html.main_
