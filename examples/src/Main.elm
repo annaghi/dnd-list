@@ -39,13 +39,13 @@ main =
 type alias Model =
     { key : Browser.Navigation.Key
     , example : Example
-    , currentPath : String
+    , path : String
     }
 
 
 init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url key =
-    stepUrl url { key = key, example = NotFound, currentPath = currentPath url }
+    stepUrl url { key = key, example = NotFound, path = toPath url }
 
 
 type Example
@@ -79,7 +79,7 @@ update message model =
         LinkClicked urlRequest ->
             case urlRequest of
                 Browser.Internal url ->
-                    ( { model | currentPath = currentPath url }
+                    ( { model | path = toPath url }
                     , Cmd.batch
                         [ Browser.Navigation.pushUrl model.key (Url.toString url)
                         , jumpToTop "main"
@@ -227,8 +227,8 @@ slug_ =
     Url.Parser.custom "SLUG" Just
 
 
-currentPath : Url.Url -> String
-currentPath url =
+toPath : Url.Url -> String
+toPath url =
     case url.path of
         "/dnd-list" ->
             Url.Builder.absolute [ Base.base, "introduction", "groups" ] []
@@ -252,9 +252,9 @@ view model =
             [ Html.Attributes.id "sidebar" ]
             [ cardView
             , Html.nav []
-                [ Html.map IntroductionMsg (Introduction.Root.navigationView model.currentPath)
-                , Html.map ConfigurationMsg (Configuration.Root.navigationView model.currentPath)
-                , Html.map GalleryMsg (Gallery.Root.navigationView model.currentPath)
+                [ Html.map IntroductionMsg (Introduction.Root.navigationView model.path)
+                , Html.map ConfigurationMsg (Configuration.Root.navigationView model.path)
+                , Html.map GalleryMsg (Gallery.Root.navigationView model.path)
                 ]
             ]
         , Html.main_
