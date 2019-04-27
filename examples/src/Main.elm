@@ -229,15 +229,10 @@ slug_ =
 
 currentPath : Url.Url -> String
 currentPath url =
-    let
-        home : String
-        home =
-            Url.Builder.absolute [ Base.base ] []
-
-        -- I cannot use pattern matching with variables
-        -- home ->
-    in
     case url.path of
+        "/" ->
+            Url.Builder.absolute [ Base.base, "introduction", "groups" ] []
+
         "/dnd-list" ->
             Url.Builder.absolute [ Base.base, "introduction", "groups" ] []
 
