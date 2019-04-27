@@ -342,6 +342,8 @@ itemStyles color =
     ]
 
 
+{-| We can create more responsive auxiliary items using pseudo-classes.
+-}
 auxiliaryStyles : List (Html.Attribute msg)
 auxiliaryStyles =
     [ Html.Attributes.style "height" "auto"
