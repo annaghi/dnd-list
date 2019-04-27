@@ -33,18 +33,14 @@ type alias Item =
 
 preparedData : List Item
 preparedData =
-    [ Item 0 "C" blue
-    , Item 0 "II" green
-    , Item 0 "2" red
-    , Item 0 "I" green
-    , Item 0 "3" red
-    , Item 0 "III" green
-    , Item 0 "" transparent
-    , Item 1 "" transparent
-    , Item 2 "B" blue
-    , Item 2 "A" blue
-    , Item 2 "1" red
-    , Item 2 "" transparent
+    [ Item 0 "0" rust
+    , Item 0 "1" rust
+    , Item 0 "2" rust
+    , Item 0 "5" rust
+    , Item 0 "13" rust
+    , Item 1 "3" wood
+    , Item 1 "8" wood
+    , Item 1 "1" wood
     ]
 
 
@@ -159,7 +155,6 @@ view model =
     Html.section sectionStyles
         [ groupView model 0
         , groupView model 1
-        , groupView model 2
         , ghostView model
         ]
 
@@ -181,21 +176,11 @@ itemView model offset localIndex { group, value, color } =
 
         itemId : String
         itemId =
-            "footer-" ++ String.fromInt globalIndex
+            "insertbefore-" ++ String.fromInt globalIndex
     in
     case ( system.info model.dnd, maybeDragItem model ) of
         ( Just { dragIndex }, Just dragItem ) ->
-            if value == "" && group /= dragItem.group then
-                Html.div
-                    (Html.Attributes.id itemId :: auxiliaryItemStyles ++ system.dropEvents globalIndex itemId)
-                    []
-
-            else if value == "" && group == dragItem.group then
-                Html.div
-                    (Html.Attributes.id itemId :: auxiliaryItemStyles)
-                    []
-
-            else if globalIndex /= dragIndex then
+            if globalIndex /= dragIndex then
                 Html.div
                     (Html.Attributes.id itemId :: itemStyles color ++ system.dropEvents globalIndex itemId)
                     [ Html.text value ]
@@ -206,14 +191,14 @@ itemView model offset localIndex { group, value, color } =
                     []
 
         _ ->
-            if value == "" then
+            if color == wood then
                 Html.div
-                    (Html.Attributes.id itemId :: auxiliaryItemStyles)
-                    []
+                    (Html.Attributes.id itemId :: itemStyles color ++ cursorStyles ++ system.dragEvents globalIndex itemId)
+                    [ Html.text value ]
 
             else
                 Html.div
-                    (Html.Attributes.id itemId :: itemStyles color ++ cursorStyles ++ system.dragEvents globalIndex itemId)
+                    (Html.Attributes.id itemId :: itemStyles color)
                     [ Html.text value ]
 
 
@@ -257,29 +242,19 @@ maybeDragItem { dnd, items } =
 -- COLORS
 
 
-green : String
-green =
-    "#858c45"
+rust : String
+rust =
+    "#7b433d"
 
 
-red : String
-red =
-    "#8c4585"
-
-
-blue : String
-blue =
-    "#45858c"
+wood : String
+wood =
+    "#7b623d"
 
 
 gray : String
 gray =
     "dimgray"
-
-
-transparent : String
-transparent =
-    "transparent"
 
 
 
@@ -297,7 +272,6 @@ sectionStyles =
 groupStyles : List (Html.Attribute msg)
 groupStyles =
     [ Html.Attributes.style "display" "flex"
-    , Html.Attributes.style "justify-content" "end"
     , Html.Attributes.style "padding-bottom" "3em"
     ]
 
@@ -308,7 +282,6 @@ itemStyles color =
     , Html.Attributes.style "height" "50px"
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
-    , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "margin-right" "2em"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
@@ -320,16 +293,3 @@ itemStyles color =
 cursorStyles : List (Html.Attribute msg)
 cursorStyles =
     [ Html.Attributes.style "cursor" "pointer" ]
-
-
-auxiliaryItemStyles : List (Html.Attribute msg)
-auxiliaryItemStyles =
-    [ Html.Attributes.style "flex-grow" "1"
-    , Html.Attributes.style "box-sizing" "border-box"
-    , Html.Attributes.style "margin-right" "2em"
-    , Html.Attributes.style "width" "auto"
-    , Html.Attributes.style "height" "50px"
-    , Html.Attributes.style "min-width" "50px"
-    , Html.Attributes.style "border" "3px dashed dimgray"
-    , Html.Attributes.style "background-color" "transparent"
-    ]

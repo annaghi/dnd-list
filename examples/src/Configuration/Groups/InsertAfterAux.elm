@@ -1,4 +1,4 @@
-module Configuration.Groups.Swap exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
+module Configuration.Groups.InsertAfterAux exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList.Groups
@@ -33,15 +33,18 @@ type alias Item =
 
 preparedData : List Item
 preparedData =
-    [ Item 0 "2" red
+    [ Item 0 "" transparent
+    , Item 0 "2" red
     , Item 0 "B" blue
+    , Item 0 "A" blue
     , Item 0 "III" green
+    , Item 1 "" transparent
     , Item 1 "C" blue
     , Item 1 "1" red
     , Item 1 "I" green
-    , Item 2 "3" red
+    , Item 1 "3" red
+    , Item 2 "" transparent
     , Item 2 "II" green
-    , Item 2 "A" blue
     ]
 
 
@@ -56,7 +59,7 @@ config =
     , beforeUpdate = \_ _ list -> list
     , groups =
         { trigger = DnDList.Groups.OnDrag
-        , operation = DnDList.Groups.Swap
+        , operation = DnDList.Groups.InsertAfter
         , beforeUpdate = updateOnGroupChange
         , comparator = compareByGroup
         }
@@ -76,10 +79,6 @@ compareByGroup dragItem dropItem =
 updateOnGroupChange : Int -> Int -> List Item -> List Item
 updateOnGroupChange dragIndex dropIndex list =
     let
-        drag : List Item
-        drag =
-            list |> List.drop dragIndex |> List.take 1
-
         drop : List Item
         drop =
             list |> List.drop dropIndex |> List.take 1
@@ -92,12 +91,6 @@ updateOnGroupChange dragIndex dropIndex list =
                         (\dragItem dropItem -> { dragItem | group = dropItem.group })
                         [ item ]
                         drop
-
-                else if index == dropIndex then
-                    List.map2
-                        (\dragItem dropItem -> { dropItem | group = dragItem.group })
-                        drag
-                        [ item ]
 
                 else
                     [ item ]
@@ -188,11 +181,21 @@ itemView model offset localIndex { group, value, color } =
 
         itemId : String
         itemId =
-            "none-" ++ String.fromInt globalIndex
+            "headeraux-" ++ String.fromInt globalIndex
     in
-    case system.info model.dnd of
-        Just { dragIndex } ->
-            if globalIndex /= dragIndex then
+    case ( system.info model.dnd, maybeDragItem model ) of
+        ( Just { dragIndex }, Just dragItem ) ->
+            if value == "" && group /= dragItem.group then
+                Html.div
+                    (Html.Attributes.id itemId :: auxiliaryItemStyles ++ system.dropEvents globalIndex itemId)
+                    []
+
+            else if value == "" && group == dragItem.group then
+                Html.div
+                    (Html.Attributes.id itemId :: auxiliaryItemStyles)
+                    []
+
+            else if globalIndex /= dragIndex then
                 Html.div
                     (Html.Attributes.id itemId :: itemStyles color ++ system.dropEvents globalIndex itemId)
                     [ Html.text value ]
@@ -203,20 +206,20 @@ itemView model offset localIndex { group, value, color } =
                     []
 
         _ ->
-            Html.div
-                (Html.Attributes.id itemId :: itemStyles color ++ system.dragEvents globalIndex itemId)
-                [ Html.text value ]
+            if value == "" then
+                Html.div
+                    (Html.Attributes.id itemId :: auxiliaryItemStyles)
+                    []
+
+            else
+                Html.div
+                    (Html.Attributes.id itemId :: itemStyles color ++ system.dragEvents globalIndex itemId)
+                    [ Html.text value ]
 
 
 ghostView : Model -> Html.Html Msg
 ghostView model =
-    let
-        maybeDragItem : Maybe Item
-        maybeDragItem =
-            system.info model.dnd
-                |> Maybe.andThen (\{ dragIndex } -> model.items |> List.drop dragIndex |> List.head)
-    in
-    case maybeDragItem of
+    case maybeDragItem model of
         Just { value, color } ->
             Html.div
                 (itemStyles color ++ system.ghostStyles model.dnd)
@@ -244,6 +247,12 @@ calculateOffset index group list =
                 calculateOffset (index + 1) group xs
 
 
+maybeDragItem : Model -> Maybe Item
+maybeDragItem { dnd, items } =
+    system.info dnd
+        |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
+
+
 
 -- COLORS
 
@@ -268,6 +277,11 @@ gray =
     "dimgray"
 
 
+transparent : String
+transparent =
+    "transparent"
+
+
 
 -- STYLES
 
@@ -277,7 +291,6 @@ sectionStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-direction" "column"
     , Html.Attributes.style "width" "700px"
-    , Html.Attributes.style "align-items" "center"
     ]
 
 
@@ -300,4 +313,17 @@ itemStyles color =
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "background-color" color
+    ]
+
+
+auxiliaryItemStyles : List (Html.Attribute msg)
+auxiliaryItemStyles =
+    [ Html.Attributes.style "flex-grow" "1"
+    , Html.Attributes.style "box-sizing" "border-box"
+    , Html.Attributes.style "margin-right" "2em"
+    , Html.Attributes.style "width" "auto"
+    , Html.Attributes.style "height" "50px"
+    , Html.Attributes.style "min-width" "50px"
+    , Html.Attributes.style "border" "3px dashed dimgray"
+    , Html.Attributes.style "background-color" "transparent"
     ]
