@@ -230,10 +230,10 @@ slug_ =
 currentPath : Url.Url -> String
 currentPath url =
     case url.path of
-        "/" ->
+        "/dnd-list" ->
             Url.Builder.absolute [ Base.base, "introduction", "groups" ] []
 
-        "/dnd-list" ->
+        "/dnd-list/" ->
             Url.Builder.absolute [ Base.base, "introduction", "groups" ] []
 
         _ ->
