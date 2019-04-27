@@ -4623,20 +4623,22 @@ var elm$url$Url$Builder$absolute = F2(
 		return '/' + (A2(elm$core$String$join, '/', pathSegments) + elm$url$Url$Builder$toQuery(parameters));
 	});
 var author$project$Main$currentPath = function (url) {
-	var home = A2(
-		elm$url$Url$Builder$absolute,
-		_List_fromArray(
-			[author$project$Base$base]),
-		_List_Nil);
 	var _n0 = url.bT;
-	if (_n0 === '/dnd-list') {
-		return A2(
-			elm$url$Url$Builder$absolute,
-			_List_fromArray(
-				[author$project$Base$base, 'introduction', 'groups']),
-			_List_Nil);
-	} else {
-		return url.bT;
+	switch (_n0) {
+		case '/':
+			return A2(
+				elm$url$Url$Builder$absolute,
+				_List_fromArray(
+					[author$project$Base$base, 'introduction', 'groups']),
+				_List_Nil);
+		case '/dnd-list':
+			return A2(
+				elm$url$Url$Builder$absolute,
+				_List_fromArray(
+					[author$project$Base$base, 'introduction', 'groups']),
+				_List_Nil);
+		default:
+			return url.bT;
 	}
 };
 var author$project$Configuration$Groups$InsertAfter$Item = F3(
