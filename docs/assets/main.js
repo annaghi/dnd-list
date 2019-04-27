@@ -4625,13 +4625,13 @@ var elm$url$Url$Builder$absolute = F2(
 var author$project$Main$currentPath = function (url) {
 	var _n0 = url.bT;
 	switch (_n0) {
-		case '/':
+		case '/dnd-list':
 			return A2(
 				elm$url$Url$Builder$absolute,
 				_List_fromArray(
 					[author$project$Base$base, 'introduction', 'groups']),
 				_List_Nil);
-		case '/dnd-list':
+		case '/dnd-list/':
 			return A2(
 				elm$url$Url$Builder$absolute,
 				_List_fromArray(
