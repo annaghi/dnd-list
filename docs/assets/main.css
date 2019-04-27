@@ -149,6 +149,9 @@ a {
 nav a:hover {
   color: #a131c2;
 }
+nav a.is-active {
+  color: #a131c2;
+}
 
 .hljs-title {
   color: #177fd6;
@@ -161,6 +164,9 @@ section .link {
   color: #61aeee;
 }
 section .link:hover {
+  color: #c678dd;
+}
+section .link.is-active {
   color: #c678dd;
 }
 
