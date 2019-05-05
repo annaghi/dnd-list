@@ -44,10 +44,10 @@ blueData =
 
 redConfig : DnDList.Config String
 redConfig =
-    { movement = DnDList.Free
-    , trigger = DnDList.OnDrag
+    { beforeUpdate = \_ _ list -> list
+    , movement = DnDList.Free
+    , listen = DnDList.OnDrag
     , operation = DnDList.Swap
-    , beforeUpdate = \_ _ list -> list
     }
 
 
@@ -59,7 +59,7 @@ redSystem =
 blueConfig : DnDList.Config String
 blueConfig =
     { movement = DnDList.Free
-    , trigger = DnDList.OnDrag
+    , listen = DnDList.OnDrag
     , operation = DnDList.Swap
     , beforeUpdate = \_ _ list -> list
     }

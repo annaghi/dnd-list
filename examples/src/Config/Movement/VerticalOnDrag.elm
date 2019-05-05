@@ -1,9 +1,10 @@
-module Introduction.Margins exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
+module Config.Movement.VerticalOnDrag exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Html.Events
 
 
 
@@ -30,7 +31,8 @@ type alias Item =
 
 data : List Item
 data =
-    [ "A", "B", "C", "D" ]
+    List.range 1 7
+        |> List.map String.fromInt
 
 
 
@@ -40,7 +42,7 @@ data =
 config : DnDList.Config Item
 config =
     { beforeUpdate = \_ _ list -> list
-    , movement = DnDList.Free
+    , movement = DnDList.Vertical
     , listen = DnDList.OnDrag
     , operation = DnDList.Swap
     }
@@ -58,6 +60,7 @@ system =
 type alias Model =
     { dnd : DnDList.Model
     , items : List Item
+    , affected : List Int
     }
 
 
@@ -65,6 +68,7 @@ initialModel : Model
 initialModel =
     { dnd = system.model
     , items = data
+    , affected = []
     }
 
 
@@ -88,6 +92,7 @@ subscriptions model =
 
 type Msg
     = MyMsg DnDList.Msg
+    | ClearAffected
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -97,10 +102,26 @@ update message model =
             let
                 ( dnd, items ) =
                     system.update msg model.dnd model.items
+
+                affected : List Int
+                affected =
+                    case system.info dnd of
+                        Just { dragIndex, dropIndex } ->
+                            if dragIndex /= dropIndex then
+                                dragIndex :: dropIndex :: model.affected
+
+                            else
+                                model.affected
+
+                        _ ->
+                            model.affected
             in
-            ( { model | dnd = dnd, items = items }
+            ( { model | dnd = dnd, items = items, affected = affected }
             , system.commands model.dnd
             )
+
+        ClearAffected ->
+            ( { model | affected = [] }, Cmd.none )
 
 
 
@@ -109,46 +130,49 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section []
+    Html.section
+        [ Html.Events.onMouseDown ClearAffected ]
         [ model.items
-            |> List.indexedMap (itemView model.dnd)
+            |> List.indexedMap (itemView model.dnd model.affected)
             |> Html.div containerStyles
         , ghostView model.dnd model.items
         ]
 
 
-itemView : DnDList.Model -> Int -> Item -> Html.Html Msg
-itemView dnd index item =
+itemView : DnDList.Model -> List Int -> Int -> Item -> Html.Html Msg
+itemView dnd affected index item =
     let
         itemId : String
         itemId =
-            "id-" ++ item
+            "vrdrag-" ++ item
+
+        attrs : List (Html.Attribute msg)
+        attrs =
+            Html.Attributes.id itemId
+                :: itemStyles
+                ++ (if List.member index affected then
+                        affectedStyles
+
+                    else
+                        []
+                   )
     in
     case system.info dnd of
         Just { dragIndex } ->
             if dragIndex /= index then
                 Html.div
-                    [ Html.Attributes.style "margin" "2em" ]
-                    [ Html.div
-                        (Html.Attributes.id itemId :: itemStyles green ++ system.dropEvents index itemId)
-                        [ Html.text item ]
-                    ]
+                    (attrs ++ system.dropEvents index itemId)
+                    [ Html.text item ]
 
             else
                 Html.div
-                    [ Html.Attributes.style "margin" "2em" ]
-                    [ Html.div
-                        (Html.Attributes.id itemId :: itemStyles "dimgray")
-                        []
-                    ]
+                    (attrs ++ placeholderStyles)
+                    []
 
         Nothing ->
             Html.div
-                [ Html.Attributes.style "margin" "2em" ]
-                [ Html.div
-                    (Html.Attributes.id itemId :: itemStyles green ++ system.dragEvents index itemId)
-                    [ Html.text item ]
-                ]
+                (attrs ++ system.dragEvents index itemId)
+                [ Html.text item ]
 
 
 ghostView : DnDList.Model -> List Item -> Html.Html Msg
@@ -162,25 +186,11 @@ ghostView dnd items =
     case maybeDragItem of
         Just item ->
             Html.div
-                (itemStyles ghostGreen ++ system.ghostStyles dnd)
+                (itemStyles ++ ghostStyles ++ system.ghostStyles dnd)
                 [ Html.text item ]
 
         Nothing ->
             Html.text ""
-
-
-
--- COLORS
-
-
-green : String
-green =
-    "#3da565"
-
-
-ghostGreen : String
-ghostGreen =
-    "#2f804e"
 
 
 
@@ -190,21 +200,36 @@ ghostGreen =
 containerStyles : List (Html.Attribute msg)
 containerStyles =
     [ Html.Attributes.style "display" "flex"
-    , Html.Attributes.style "flex-wrap" "wrap"
-    , Html.Attributes.style "align-items" "center"
-    , Html.Attributes.style "justify-content" "center"
+    , Html.Attributes.style "flex-direction" "column"
     ]
 
 
-itemStyles : String -> List (Html.Attribute msg)
-itemStyles color =
-    [ Html.Attributes.style "width" "5rem"
-    , Html.Attributes.style "height" "5rem"
-    , Html.Attributes.style "background-color" color
+itemStyles : List (Html.Attribute msg)
+itemStyles =
+    [ Html.Attributes.style "background-color" "#aa1e9d"
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
+    , Html.Attributes.style "font-size" "1.2em"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
+    , Html.Attributes.style "margin" "0 0 1.5em 0"
+    , Html.Attributes.style "width" "50px"
+    , Html.Attributes.style "height" "50px"
     ]
+
+
+placeholderStyles : List (Html.Attribute msg)
+placeholderStyles =
+    [ Html.Attributes.style "background-color" "dimgray" ]
+
+
+affectedStyles : List (Html.Attribute msg)
+affectedStyles =
+    [ Html.Attributes.style "background-color" "#691361" ]
+
+
+ghostStyles : List (Html.Attribute msg)
+ghostStyles =
+    [ Html.Attributes.style "background-color" "#1e9daa" ]

@@ -4,7 +4,8 @@ import Base
 import Browser
 import Browser.Dom
 import Browser.Navigation
-import Configuration.Root
+import Config.Root
+import ConfigGroups.Root
 import Gallery.Root
 import Home
 import Html
@@ -52,7 +53,8 @@ type Example
     = NotFound
     | Home Home.Model
     | Introduction Introduction.Root.Model
-    | Configuration Configuration.Root.Model
+    | DnD Config.Root.Model
+    | ConfigGroups ConfigGroups.Root.Model
     | Gallery Gallery.Root.Model
 
 
@@ -66,17 +68,18 @@ type Msg
     | UrlChanged Url.Url
     | HomeMsg Home.Msg
     | IntroductionMsg Introduction.Root.Msg
-    | ConfigurationMsg Configuration.Root.Msg
+    | DnDMsg Config.Root.Msg
+    | DnDGroupsMsg ConfigGroups.Root.Msg
     | GalleryMsg Gallery.Root.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
-    case message of
-        NoOp ->
+    case ( message, model.example ) of
+        ( NoOp, _ ) ->
             ( model, Cmd.none )
 
-        LinkClicked urlRequest ->
+        ( LinkClicked urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
                     ( { model | path = toPath url }
@@ -91,40 +94,26 @@ update message model =
                     , Browser.Navigation.load href
                     )
 
-        UrlChanged url ->
+        ( UrlChanged url, _ ) ->
             stepUrl url model
 
-        HomeMsg msg ->
-            case model.example of
-                Home mo ->
-                    stepHome model (Home.update msg mo)
+        ( HomeMsg msg, Home mo ) ->
+            stepHome model (Home.update msg mo)
 
-                _ ->
-                    ( model, Cmd.none )
+        ( IntroductionMsg msg, Introduction mo ) ->
+            stepIntroduction model (Introduction.Root.update msg mo)
 
-        IntroductionMsg msg ->
-            case model.example of
-                Introduction mo ->
-                    stepIntroduction model (Introduction.Root.update msg mo)
+        ( DnDMsg msg, DnD mo ) ->
+            stepDnD model (Config.Root.update msg mo)
 
-                _ ->
-                    ( model, Cmd.none )
+        ( DnDGroupsMsg msg, ConfigGroups mo ) ->
+            stepDnDGroups model (ConfigGroups.Root.update msg mo)
 
-        ConfigurationMsg msg ->
-            case model.example of
-                Configuration mo ->
-                    stepConfiguration model (Configuration.Root.update msg mo)
+        ( GalleryMsg msg, Gallery mo ) ->
+            stepGallery model (Gallery.Root.update msg mo)
 
-                _ ->
-                    ( model, Cmd.none )
-
-        GalleryMsg msg ->
-            case model.example of
-                Gallery mo ->
-                    stepGallery model (Gallery.Root.update msg mo)
-
-                _ ->
-                    ( model, Cmd.none )
+        _ ->
+            ( model, Cmd.none )
 
 
 stepHome : Model -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg )
@@ -137,9 +126,14 @@ stepIntroduction model ( mo, cmds ) =
     ( { model | example = Introduction mo }, Cmd.map IntroductionMsg cmds )
 
 
-stepConfiguration : Model -> ( Configuration.Root.Model, Cmd Configuration.Root.Msg ) -> ( Model, Cmd Msg )
-stepConfiguration model ( mo, cmds ) =
-    ( { model | example = Configuration mo }, Cmd.map ConfigurationMsg cmds )
+stepDnD : Model -> ( Config.Root.Model, Cmd Config.Root.Msg ) -> ( Model, Cmd Msg )
+stepDnD model ( mo, cmds ) =
+    ( { model | example = DnD mo }, Cmd.map DnDMsg cmds )
+
+
+stepDnDGroups : Model -> ( ConfigGroups.Root.Model, Cmd ConfigGroups.Root.Msg ) -> ( Model, Cmd Msg )
+stepDnDGroups model ( mo, cmds ) =
+    ( { model | example = ConfigGroups mo }, Cmd.map DnDGroupsMsg cmds )
 
 
 stepGallery : Model -> ( Gallery.Root.Model, Cmd Gallery.Root.Msg ) -> ( Model, Cmd Msg )
@@ -163,8 +157,11 @@ subscriptions model =
         Introduction mo ->
             Sub.map IntroductionMsg (Introduction.Root.subscriptions mo)
 
-        Configuration mo ->
-            Sub.map ConfigurationMsg (Configuration.Root.subscriptions mo)
+        DnD mo ->
+            Sub.map DnDMsg (Config.Root.subscriptions mo)
+
+        ConfigGroups mo ->
+            Sub.map DnDGroupsMsg (ConfigGroups.Root.subscriptions mo)
 
         Gallery mo ->
             Sub.map GalleryMsg (Gallery.Root.subscriptions mo)
@@ -204,9 +201,14 @@ stepUrl url model =
                     (Url.Parser.s Base.base </> Url.Parser.s "introduction" </> slug_)
                 , Url.Parser.map
                     (\slug ->
-                        stepConfiguration model (Configuration.Root.init slug)
+                        stepDnD model (Config.Root.init slug)
                     )
-                    (Url.Parser.s Base.base </> Url.Parser.s "configuration" </> slug_)
+                    (Url.Parser.s Base.base </> Url.Parser.s "config" </> slug_)
+                , Url.Parser.map
+                    (\slug ->
+                        stepDnDGroups model (ConfigGroups.Root.init slug)
+                    )
+                    (Url.Parser.s Base.base </> Url.Parser.s "config-groups" </> slug_)
                 , Url.Parser.map
                     (\slug ->
                         stepGallery model (Gallery.Root.init slug)
@@ -229,15 +231,11 @@ slug_ =
 
 toPath : Url.Url -> String
 toPath url =
-    case url.path of
-        "/dnd-list" ->
-            Url.Builder.absolute [ Base.base, "introduction", "groups" ] []
+    if (url.path == "/" ++ Base.base) || (url.path == "/" ++ Base.base ++ "/") then
+        Url.Builder.absolute [ Base.base, "introduction", "groups" ] []
 
-        "/dnd-list/" ->
-            Url.Builder.absolute [ Base.base, "introduction", "groups" ] []
-
-        _ ->
-            url.path
+    else
+        url.path
 
 
 
@@ -253,7 +251,8 @@ view model =
             [ cardView
             , Html.nav []
                 [ Html.map IntroductionMsg (Introduction.Root.navigationView model.path)
-                , Html.map ConfigurationMsg (Configuration.Root.navigationView model.path)
+                , Html.map DnDMsg (Config.Root.navigationView model.path)
+                , Html.map DnDGroupsMsg (ConfigGroups.Root.navigationView model.path)
                 , Html.map GalleryMsg (Gallery.Root.navigationView model.path)
                 ]
             ]
@@ -272,10 +271,16 @@ view model =
                     , Html.map IntroductionMsg (Introduction.Root.codeView mo)
                     ]
 
-                Configuration mo ->
-                    [ Html.map ConfigurationMsg (Configuration.Root.headerView mo)
-                    , Html.map ConfigurationMsg (Configuration.Root.demoView mo)
-                    , Html.map ConfigurationMsg (Configuration.Root.codeView mo)
+                DnD mo ->
+                    [ Html.map DnDMsg (Config.Root.headerView mo)
+                    , Html.map DnDMsg (Config.Root.demoView mo)
+                    , Html.map DnDMsg (Config.Root.codeView mo)
+                    ]
+
+                ConfigGroups mo ->
+                    [ Html.map DnDGroupsMsg (ConfigGroups.Root.headerView mo)
+                    , Html.map DnDGroupsMsg (ConfigGroups.Root.demoView mo)
+                    , Html.map DnDGroupsMsg (ConfigGroups.Root.codeView mo)
                     ]
 
                 Gallery mo ->

@@ -45,10 +45,10 @@ data =
 
 config : DnDList.Config KeyedItem
 config =
-    { movement = DnDList.Free
-    , trigger = DnDList.OnDrag
+    { beforeUpdate = \_ _ list -> list
+    , movement = DnDList.Free
+    , listen = DnDList.OnDrag
     , operation = DnDList.Swap
-    , beforeUpdate = \_ _ list -> list
     }
 
 

@@ -66,10 +66,10 @@ data =
 
 config : DnDList.Config Item
 config =
-    { movement = DnDList.Free
-    , trigger = DnDList.OnDrop
+    { beforeUpdate = updateShapes
+    , movement = DnDList.Free
+    , listen = DnDList.OnDrop
     , operation = DnDList.Unaltered
-    , beforeUpdate = updateShapes
     }
 
 
@@ -81,20 +81,20 @@ system =
 updateShapes : Int -> Int -> List Item -> List Item
 updateShapes dragIndex dropIndex list =
     let
-        drag : List Item
-        drag =
+        drags : List Item
+        drags =
             list |> List.drop dragIndex |> List.take 1
 
-        drop : List Item
-        drop =
+        drops : List Item
+        drops =
             list |> List.drop dropIndex |> List.take 1
 
         fit : Bool
         fit =
             List.map2
                 (\dragItem dropItem -> dragItem.shape == dropItem.shape)
-                drag
-                drop
+                drags
+                drops
                 |> List.foldl (||) False
     in
     list
@@ -112,7 +112,7 @@ updateShapes dragIndex dropIndex list =
                                 , solved = True
                             }
                         )
-                        drag
+                        drags
                         [ item ]
 
                 else if index == dropIndex && not fit then
