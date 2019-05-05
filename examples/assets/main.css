@@ -115,6 +115,9 @@ pre {
   nav li:after {
     content: none;
   }
+  nav h4 {
+    margin: 0.8em 0 0;
+  }
   nav a {
     display: block;
     padding: 2px 0 2px 7px;
