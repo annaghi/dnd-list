@@ -57,16 +57,16 @@ url : Int -> String
 url id =
     case id of
         0 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDGroups/OperationsOnDrop/InsertAfter.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/ConfigGroups/OperationsOnDrop/InsertAfter.elm"
 
         1 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDGroups/OperationsOnDrop/InsertBefore.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/ConfigGroups/OperationsOnDrop/InsertBefore.elm"
 
         2 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDGroups/OperationsOnDrop/Rotate.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/ConfigGroups/OperationsOnDrop/Rotate.elm"
 
         3 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDGroups/OperationsOnDrop/Swap.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/ConfigGroups/OperationsOnDrop/Swap.elm"
 
         _ ->
             ""

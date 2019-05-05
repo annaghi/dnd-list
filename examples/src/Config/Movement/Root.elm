@@ -63,22 +63,22 @@ url : Int -> String
 url id =
     case id of
         0 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnD/Movement/FreeOnDrag.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Config/Movement/FreeOnDrag.elm"
 
         1 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnD/Movement/FreeOnDrop.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Config/Movement/FreeOnDrop.elm"
 
         2 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnD/Movement/HorizontalOnDrag.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Config/Movement/HorizontalOnDrag.elm"
 
         3 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnD/Movement/HorizontalOnDrop.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Config/Movement/HorizontalOnDrop.elm"
 
         4 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnD/Movement/VerticalOnDrag.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Config/Movement/VerticalOnDrag.elm"
 
         5 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnD/Movement/VerticalOnDrop.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Config/Movement/VerticalOnDrop.elm"
 
         _ ->
             ""
