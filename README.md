@@ -28,10 +28,20 @@ info : DnDList.Model -> Maybe Info
 
 ```elm
 pseudocode type alias Config a =
-    { movement : Free | Horizontal | Vertical
-    , trigger : OnDrag | OnDrop
-    , operation : InsertAfter | InsertBefore | RotateIn | RotateOut | Swap | Unaltered
-    , beforeUpdate : DragIndex -> DropIndex -> List a -> List a
+    { beforeUpdate : DragIndex -> DropIndex -> List a -> List a
+
+    , movement : Free
+               | Horizontal
+               | Vertical
+
+    , listen : OnDrag
+             | OnDrop
+
+    , operation : InsertAfter
+                | InsertBefore
+                | Rotate
+                | Swap
+                | Unaltered
     }
 ```
 
@@ -92,10 +102,10 @@ data =
 
 config : DnDList.Config Fruit
 config =
-    { movement = DnDList.Free
-    , trigger = DnDList.OnDrag
-    , operation = DnDList.RotateOut
-    , beforeUpdate = \_ _ list -> list
+    { beforeUpdate = \_ _ list -> list
+    , movement = DnDList.Free
+    , listen = DnDList.OnDrag
+    , operation = DnDList.Rotate
     }
 
 
