@@ -402,7 +402,7 @@ and what to render when there is no dragging:
             Nothing ->
                 -- Render when there is no dragging.
 
-Or you can extract the current drag source item from the `Info` object:
+Or you can determine the current drag source item using the `Info` object:
 
     maybeDragItem : DnDList.Model -> List Fruit -> Maybe Fruit
     maybeDragItem dnd items =

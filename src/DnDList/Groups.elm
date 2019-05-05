@@ -14,8 +14,12 @@ we will use it as an illustration throughout this page.
 
 This module is a modified version of the `DnDList` module.
 The `Config` was extended with a new field called `groups`, and the `movement` field was withdrawn.
-The internal sorting distinguishes between the operation performed on items from the _same group_,
-and the operation performed on items from _different groups_.
+
+With groupable items the drag source and the drop target items can belong to the _same group_ or to _different groups_.
+Similarly as we did using the `DnDList` module,
+we need to configure what sort operation to run on items from the _same group_.
+And now, using this module, we need to extend our configuration,
+and tell what (maybe a different) sort operation to run on items from _different groups_.
 
 
 # System
@@ -347,13 +351,13 @@ create config stepMsg =
     and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
 
   - `groups`: This setting is for the items from _different groups_,
-    when the drag source and the drop target belong to different sublists.
+    when the drag source and the drop target belong to different groups.
     To have a better understanding of how this works
     see [sorting between groups on drag](https://annaghi.github.io/dnd-list/config-groups/operations-drag)
     and [sorting between groups on drop](https://annaghi.github.io/dnd-list/config-groups/operations-drop).
       - `listen`: Same as the plain `listen` but applied on items from _different groups_.
       - `operation`: Same as the plain `operation` but applied on the items from _different groups_.
-      - `comparator`: You should provide this function, which determines if two items are from the same group.
+      - `comparator`: You should provide this function, which determines if two items are from different groups.
       - `setter`: You should provide this function, which updates the second item's group with the first item's group.
 
 This is our configuration with a void `beforeUpdate`:
@@ -457,7 +461,7 @@ and what to render when there is no dragging:
             Nothing ->
                 -- Render when there is no dragging.
 
-Or you can extract the current drag source item from the `Info` object:
+Or you can determine the current drag source item using the `Info` object:
 
     maybeDragItem : DnDList.Groups.Model -> List Item -> Maybe Item
     maybeDragItem dnd items =
