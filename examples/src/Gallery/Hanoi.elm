@@ -50,10 +50,10 @@ data =
 
 config : DnDList.Config Disk
 config =
-    { movement = DnDList.Free
-    , trigger = DnDList.OnDrop
+    { beforeUpdate = updateTower
+    , movement = DnDList.Free
+    , listen = DnDList.OnDrop
     , operation = DnDList.InsertAfter
-    , beforeUpdate = updateTower
     }
 
 
@@ -65,8 +65,8 @@ system =
 updateTower : Int -> Int -> List Disk -> List Disk
 updateTower dragIndex dropIndex list =
     let
-        drop : List Disk
-        drop =
+        drops : List Disk
+        drops =
             list |> List.drop dropIndex |> List.take 1
     in
     list
@@ -76,7 +76,7 @@ updateTower dragIndex dropIndex list =
                     List.map2
                         (\dragDisk dropDisk -> { dragDisk | tower = dropDisk.tower })
                         [ item ]
-                        drop
+                        drops
 
                 else
                     [ item ]

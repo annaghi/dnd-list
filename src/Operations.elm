@@ -1,77 +1,61 @@
-module Operations exposing (insertAfter, insertBefore, rotateIn, rotateOut, swap, unaltered)
+module Operations exposing
+    ( insertAfter
+    , insertBefore
+    , rotate
+    , swap
+    )
 
 
-insertAfter : (Int -> Int -> List a -> List a) -> Int -> Int -> List a -> List a
-insertAfter beforeUpdate dragIndex dropIndex list =
+insertAfter : Int -> Int -> List a -> List a
+insertAfter dragIndex dropIndex list =
     if dragIndex < dropIndex then
-        afterForward beforeUpdate dragIndex dropIndex list
+        afterForward dragIndex dropIndex list
 
-    else if dragIndex > dropIndex then
-        afterBackward beforeUpdate dragIndex dropIndex list
+    else if dropIndex < dragIndex then
+        afterBackward dragIndex dropIndex list
 
     else
         list
 
 
-insertBefore : (Int -> Int -> List a -> List a) -> Int -> Int -> List a -> List a
-insertBefore beforeUpdate dragIndex dropIndex list =
+insertBefore : Int -> Int -> List a -> List a
+insertBefore dragIndex dropIndex list =
     if dragIndex < dropIndex then
-        beforeForward beforeUpdate dragIndex dropIndex list
+        beforeForward dragIndex dropIndex list
 
-    else if dragIndex > dropIndex then
-        beforeBackward beforeUpdate dragIndex dropIndex list
+    else if dropIndex < dragIndex then
+        beforeBackward dragIndex dropIndex list
 
     else
         list
 
 
-rotateIn : (Int -> Int -> List a -> List a) -> Int -> Int -> List a -> List a
-rotateIn beforeUpdate dragIndex dropIndex list =
+rotate : Int -> Int -> List a -> List a
+rotate dragIndex dropIndex list =
     if dragIndex < dropIndex then
-        beforeForward beforeUpdate dragIndex dropIndex list
+        afterForward dragIndex dropIndex list
 
-    else if dragIndex > dropIndex then
-        afterBackward beforeUpdate dragIndex dropIndex list
+    else if dropIndex < dragIndex then
+        beforeBackward dragIndex dropIndex list
 
     else
         list
 
 
-rotateOut : (Int -> Int -> List a -> List a) -> Int -> Int -> List a -> List a
-rotateOut beforeUpdate dragIndex dropIndex list =
-    if dragIndex < dropIndex then
-        afterForward beforeUpdate dragIndex dropIndex list
-
-    else if dragIndex > dropIndex then
-        beforeBackward beforeUpdate dragIndex dropIndex list
-
-    else
-        list
-
-
-swap : (Int -> Int -> List a -> List a) -> Int -> Int -> List a -> List a
-swap beforeUpdate dragIndex dropIndex list =
+swap : Int -> Int -> List a -> List a
+swap dragIndex dropIndex list =
     if dragIndex /= dropIndex then
-        list |> beforeUpdate dragIndex dropIndex |> swapAt dragIndex dropIndex
+        swapAt dragIndex dropIndex list
 
     else
         list
 
 
-unaltered : (Int -> Int -> List a -> List a) -> Int -> Int -> List a -> List a
-unaltered beforeUpdate dragIndex dropIndex list =
-    if dragIndex /= dropIndex then
-        beforeUpdate dragIndex dropIndex list
-
-    else
-        list
-
-
-afterBackward : (Int -> Int -> List a -> List a) -> Int -> Int -> List a -> List a
-afterBackward fn i j list =
+afterBackward : Int -> Int -> List a -> List a
+afterBackward i j list =
     let
         ( beginning, rest ) =
-            list |> fn i j |> splitAt (j + 1)
+            splitAt (j + 1) list
 
         ( middle, end ) =
             splitAt (i - j - 1) rest
@@ -82,11 +66,11 @@ afterBackward fn i j list =
     beginning ++ head ++ middle ++ tail
 
 
-afterForward : (Int -> Int -> List a -> List a) -> Int -> Int -> List a -> List a
-afterForward fn i j list =
+afterForward : Int -> Int -> List a -> List a
+afterForward i j list =
     let
         ( beginning, rest ) =
-            list |> fn i j |> splitAt i
+            splitAt i list
 
         ( middle, end ) =
             splitAt (j - i + 1) rest
@@ -97,11 +81,11 @@ afterForward fn i j list =
     beginning ++ tail ++ head ++ end
 
 
-beforeBackward : (Int -> Int -> List a -> List a) -> Int -> Int -> List a -> List a
-beforeBackward fn i j list =
+beforeBackward : Int -> Int -> List a -> List a
+beforeBackward i j list =
     let
         ( beginning, rest ) =
-            list |> fn i j |> splitAt j
+            splitAt j list
 
         ( middle, end ) =
             splitAt (i - j) rest
@@ -112,11 +96,11 @@ beforeBackward fn i j list =
     beginning ++ head ++ middle ++ tail
 
 
-beforeForward : (Int -> Int -> List a -> List a) -> Int -> Int -> List a -> List a
-beforeForward fn i j list =
+beforeForward : Int -> Int -> List a -> List a
+beforeForward i j list =
     let
         ( beginning, rest ) =
-            list |> fn i j |> splitAt i
+            splitAt i list
 
         ( middle, end ) =
             splitAt (j - i) rest

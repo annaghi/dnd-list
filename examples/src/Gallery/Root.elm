@@ -27,9 +27,7 @@ import Url.Builder
 
 
 type alias Model =
-    { slug : String
-    , example : Example
-    }
+    Example
 
 
 type Example
@@ -42,29 +40,7 @@ type Example
 
 init : String -> ( Model, Cmd Msg )
 init slug =
-    ( { slug = slug, example = selectExample slug }, commands )
-
-
-selectExample : String -> Example
-selectExample slug =
-    case slug of
-        "hanoi" ->
-            Hanoi Gallery.Hanoi.initialModel
-
-        "puzzle" ->
-            Puzzle Gallery.Puzzle.initialModel
-
-        "shapes" ->
-            Shapes Gallery.Shapes.initialModel
-
-        "try-on" ->
-            TryOn Gallery.TryOn.initialModel
-
-        "taskboard" ->
-            TaskBoard Gallery.TaskBoard.initialModel
-
-        _ ->
-            Hanoi Gallery.Hanoi.initialModel
+    ( toExample slug, commands )
 
 
 
@@ -81,7 +57,7 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
-    case ( message, model.example ) of
+    case ( message, model ) of
         ( HanoiMsg msg, Hanoi mo ) ->
             stepHanoi model (Gallery.Hanoi.update msg mo)
 
@@ -103,27 +79,27 @@ update message model =
 
 stepHanoi : Model -> ( Gallery.Hanoi.Model, Cmd Gallery.Hanoi.Msg ) -> ( Model, Cmd Msg )
 stepHanoi model ( mo, cmds ) =
-    ( { model | example = Hanoi mo }, Cmd.map HanoiMsg cmds )
+    ( Hanoi mo, Cmd.map HanoiMsg cmds )
 
 
 stepPuzzle : Model -> ( Gallery.Puzzle.Model, Cmd Gallery.Puzzle.Msg ) -> ( Model, Cmd Msg )
 stepPuzzle model ( mo, cmds ) =
-    ( { model | example = Puzzle mo }, Cmd.map PuzzleMsg cmds )
+    ( Puzzle mo, Cmd.map PuzzleMsg cmds )
 
 
 stepShapes : Model -> ( Gallery.Shapes.Model, Cmd Gallery.Shapes.Msg ) -> ( Model, Cmd Msg )
 stepShapes model ( mo, cmds ) =
-    ( { model | example = Shapes mo }, Cmd.map ShapesMsg cmds )
+    ( Shapes mo, Cmd.map ShapesMsg cmds )
 
 
 stepTryOn : Model -> ( Gallery.TryOn.Model, Cmd Gallery.TryOn.Msg ) -> ( Model, Cmd Msg )
 stepTryOn model ( mo, cmds ) =
-    ( { model | example = TryOn mo }, Cmd.map TryOnMsg cmds )
+    ( TryOn mo, Cmd.map TryOnMsg cmds )
 
 
 stepTaskBoard : Model -> ( Gallery.TaskBoard.Model, Cmd Gallery.TaskBoard.Msg ) -> ( Model, Cmd Msg )
 stepTaskBoard model ( mo, cmds ) =
-    ( { model | example = TaskBoard mo }, Cmd.map TaskBoardMsg cmds )
+    ( TaskBoard mo, Cmd.map TaskBoardMsg cmds )
 
 
 
@@ -132,7 +108,7 @@ stepTaskBoard model ( mo, cmds ) =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.example of
+    case model of
         Hanoi mo ->
             Sub.map HanoiMsg (Gallery.Hanoi.subscriptions mo)
 
@@ -199,11 +175,11 @@ headerView model =
     let
         title : String
         title =
-            (info >> .title) model.example
+            (info >> .title) model
 
         description : String
         description =
-            (info >> .description) model.example
+            (info >> .description) model
     in
     Html.header []
         [ Html.h2 [] [ Html.text title ]
@@ -213,7 +189,7 @@ headerView model =
 
 demoView : Model -> Html.Html Msg
 demoView model =
-    case model.example of
+    case model of
         Hanoi mo ->
             Html.map HanoiMsg (Gallery.Hanoi.view mo)
 
@@ -232,7 +208,7 @@ demoView model =
 
 codeView : Model -> Html.Html Msg
 codeView model =
-    case model.example of
+    case model of
         Hanoi _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/Hanoi.elm"
 
@@ -256,6 +232,28 @@ toCode url =
 
 
 -- EXAMPLE INFO
+
+
+toExample : String -> Example
+toExample slug =
+    case slug of
+        "hanoi" ->
+            Hanoi Gallery.Hanoi.initialModel
+
+        "puzzle" ->
+            Puzzle Gallery.Puzzle.initialModel
+
+        "shapes" ->
+            Shapes Gallery.Shapes.initialModel
+
+        "try-on" ->
+            TryOn Gallery.TryOn.initialModel
+
+        "taskboard" ->
+            TaskBoard Gallery.TaskBoard.initialModel
+
+        _ ->
+            Hanoi Gallery.Hanoi.initialModel
 
 
 type alias Info =

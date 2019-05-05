@@ -57,10 +57,10 @@ data =
 
 config : DnDList.Config Item
 config =
-    { movement = DnDList.Free
-    , trigger = DnDList.OnDrop
+    { beforeUpdate = updateColor
+    , movement = DnDList.Free
+    , listen = DnDList.OnDrop
     , operation = DnDList.Unaltered
-    , beforeUpdate = updateColor
     }
 
 
@@ -72,8 +72,8 @@ system =
 updateColor : Int -> Int -> List Item -> List Item
 updateColor dragIndex dropIndex list =
     let
-        drag : List Item
-        drag =
+        drags : List Item
+        drags =
             list |> List.drop dragIndex |> List.take 1
     in
     list
@@ -82,7 +82,7 @@ updateColor dragIndex dropIndex list =
                 if index == dropIndex then
                     List.map2
                         (\dragItem dropItem -> { dropItem | color = dragItem.color })
-                        drag
+                        drags
                         [ item ]
 
                 else if index == dragIndex then
@@ -267,7 +267,7 @@ ghostView model =
             let
                 baseFontSize : Float
                 baseFontSize =
-                    16
+                    14
 
                 width : Int
                 width =

@@ -39,10 +39,10 @@ data =
 
 config : DnDList.Config Fruit
 config =
-    { movement = DnDList.Free
-    , trigger = DnDList.OnDrag
-    , operation = DnDList.RotateOut
-    , beforeUpdate = \_ _ list -> list
+    { beforeUpdate = \_ _ list -> list
+    , movement = DnDList.Free
+    , listen = DnDList.OnDrag
+    , operation = DnDList.Rotate
     }
 
 

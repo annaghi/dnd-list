@@ -1,4 +1,4 @@
-module Main exposing (main)
+module ConfigGroups.OperationsOnDrop.InsertBefore exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList.Groups
@@ -26,21 +26,25 @@ main =
 
 type alias Item =
     { group : Int
+    , value : String
     , color : String
     }
 
 
-gatheredByGroup : List Item
-gatheredByGroup =
-    [ { group = 0, color = yellow }
-    , { group = 0, color = blue }
-    , { group = 0, color = green }
-    , { group = 1, color = green }
-    , { group = 1, color = blue }
-    , { group = 1, color = yellow }
-    , { group = 2, color = blue }
-    , { group = 2, color = yellow }
-    , { group = 2, color = green }
+preparedData : List Item
+preparedData =
+    [ Item 0 "1" red
+    , Item 0 "" transparent
+    , Item 1 "2" blue
+    , Item 1 "3" blue
+    , Item 1 "4" blue
+    , Item 1 "" transparent
+    , Item 2 "5" green
+    , Item 2 "6" green
+    , Item 2 "7" green
+    , Item 2 "8" green
+    , Item 2 "9" green
+    , Item 2 "" transparent
     ]
 
 
@@ -51,20 +55,15 @@ gatheredByGroup =
 config : DnDList.Groups.Config Item
 config =
     { beforeUpdate = \_ _ list -> list
-    , listen = DnDList.Groups.OnDrag
-    , operation = DnDList.Groups.Swap
+    , listen = DnDList.Groups.OnDrop
+    , operation = DnDList.Groups.Unaltered
     , groups =
-        { listen = DnDList.Groups.OnDrag
-        , operation = DnDList.Groups.Swap
+        { listen = DnDList.Groups.OnDrop
+        , operation = DnDList.Groups.InsertBefore
         , comparator = comparator
         , setter = setter
         }
     }
-
-
-system : DnDList.Groups.System Item Msg
-system =
-    DnDList.Groups.create config MyMsg
 
 
 comparator : Item -> Item -> Bool
@@ -74,7 +73,12 @@ comparator item1 item2 =
 
 setter : Item -> Item -> Item
 setter item1 item2 =
-    { item2 | group = item2.group }
+    { item2 | group = item1.group }
+
+
+system : DnDList.Groups.System Item Msg
+system =
+    DnDList.Groups.create config MyMsg
 
 
 
@@ -90,7 +94,7 @@ type alias Model =
 initialModel : Model
 initialModel =
     { dnd = system.model
-    , items = gatheredByGroup
+    , items = preparedData
     }
 
 
@@ -124,10 +128,7 @@ update message model =
                 ( dnd, items ) =
                     system.update msg model.dnd model.items
             in
-            ( { model
-                | dnd = dnd
-                , items = items
-              }
+            ( { model | dnd = dnd, items = items }
             , system.commands model.dnd
             )
 
@@ -155,7 +156,7 @@ groupView model currentGroup =
 
 
 itemView : Model -> Int -> Int -> Item -> Html.Html Msg
-itemView model offset localIndex { group, color } =
+itemView model offset localIndex { group, value, color } =
     let
         globalIndex : Int
         globalIndex =
@@ -163,75 +164,49 @@ itemView model offset localIndex { group, color } =
 
         itemId : String
         itemId =
-            "id-" ++ String.fromInt globalIndex
-
-        ( width, height ) =
-            if group == 0 then
-                ( "120px", "60px" )
-
-            else if group == 2 then
-                ( "60px", "120px" )
-
-            else
-                ( "60px", "60px" )
+            "insertbefore-" ++ String.fromInt globalIndex
     in
-    case system.info model.dnd of
-        Just { dragIndex } ->
-            if globalIndex /= dragIndex then
+    case ( system.info model.dnd, maybeDragItem model ) of
+        ( Just { dragIndex }, Just dragItem ) ->
+            if value == "" && group /= dragItem.group then
                 Html.div
-                    (Html.Attributes.id itemId
-                        :: itemStyles color
-                        ++ [ Html.Attributes.style "width" width
-                           , Html.Attributes.style "height" height
-                           ]
-                        ++ system.dropEvents globalIndex itemId
-                    )
+                    (Html.Attributes.id itemId :: auxiliaryItemStyles ++ system.dropEvents globalIndex itemId)
                     []
 
+            else if value == "" && group == dragItem.group then
+                Html.div
+                    (Html.Attributes.id itemId :: auxiliaryItemStyles)
+                    []
+
+            else if globalIndex /= dragIndex then
+                Html.div
+                    (Html.Attributes.id itemId :: itemStyles color ++ system.dropEvents globalIndex itemId)
+                    [ Html.text value ]
+
             else
                 Html.div
-                    (Html.Attributes.id itemId
-                        :: itemStyles gray
-                        ++ [ Html.Attributes.style "width" width
-                           , Html.Attributes.style "height" height
-                           ]
-                    )
+                    (Html.Attributes.id itemId :: itemStyles gray)
                     []
 
         _ ->
-            Html.div
-                (Html.Attributes.id itemId
-                    :: itemStyles color
-                    ++ [ Html.Attributes.style "width" width
-                       , Html.Attributes.style "height" height
-                       ]
-                    ++ system.dragEvents globalIndex itemId
-                )
-                []
+            if value == "" then
+                Html.div
+                    (Html.Attributes.id itemId :: auxiliaryItemStyles)
+                    []
+
+            else
+                Html.div
+                    (Html.Attributes.id itemId :: itemStyles color ++ system.dragEvents globalIndex itemId)
+                    [ Html.text value ]
 
 
 ghostView : Model -> Html.Html Msg
 ghostView model =
-    case ( system.info model.dnd, maybeDragItem model.dnd model.items ) of
-        ( Just { dragIndex, dropElement }, Just { color } ) ->
-            let
-                width : String
-                width =
-                    dropElement.element.width |> round |> String.fromInt
-
-                height : String
-                height =
-                    dropElement.element.height |> round |> String.fromInt
-            in
+    case maybeDragItem model of
+        Just { value, color } ->
             Html.div
-                (itemStyles color
-                    ++ system.ghostStyles model.dnd
-                    ++ [ Html.Attributes.style "width" (width ++ "px")
-                       , Html.Attributes.style "height" (height ++ "px")
-                       , Html.Attributes.style "transition" "width 0.5s, height 0.5s"
-                       ]
-                )
-                []
+                (itemStyles color ++ system.ghostStyles model.dnd)
+                [ Html.text value ]
 
         _ ->
             Html.text ""
@@ -255,8 +230,8 @@ calculateOffset index group list =
                 calculateOffset (index + 1) group xs
 
 
-maybeDragItem : DnDList.Groups.Model -> List Item -> Maybe Item
-maybeDragItem dnd items =
+maybeDragItem : Model -> Maybe Item
+maybeDragItem { dnd, items } =
     system.info dnd
         |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
 
@@ -267,22 +242,27 @@ maybeDragItem dnd items =
 
 green : String
 green =
-    "#25D366"
+    "#757b3d"
 
 
-yellow : String
-yellow =
-    "#bfd325"
+red : String
+red =
+    "#8c4585"
 
 
 blue : String
 blue =
-    "#2592d3"
+    "#45858c"
 
 
 gray : String
 gray =
     "dimgray"
+
+
+transparent : String
+transparent =
+    "transparent"
 
 
 
@@ -292,25 +272,23 @@ gray =
 sectionStyles : List (Html.Attribute msg)
 sectionStyles =
     [ Html.Attributes.style "display" "flex"
-    , Html.Attributes.style "flex-wrap" "wrap"
     , Html.Attributes.style "flex-direction" "column"
-    , Html.Attributes.style "align-items" "center"
-    , Html.Attributes.style "padding-top" "2em"
+    , Html.Attributes.style "width" "800px"
     ]
 
 
 groupStyles : List (Html.Attribute msg)
 groupStyles =
     [ Html.Attributes.style "display" "flex"
-    , Html.Attributes.style "justify-content" "end"
+    , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "padding-bottom" "3em"
     ]
 
 
 itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
-    [ Html.Attributes.style "width" "60px"
-    , Html.Attributes.style "height" "60px"
+    [ Html.Attributes.style "width" "50px"
+    , Html.Attributes.style "height" "50px"
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
@@ -319,4 +297,17 @@ itemStyles color =
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "background-color" color
+    ]
+
+
+auxiliaryItemStyles : List (Html.Attribute msg)
+auxiliaryItemStyles =
+    [ Html.Attributes.style "flex-grow" "1"
+    , Html.Attributes.style "box-sizing" "border-box"
+    , Html.Attributes.style "margin-right" "2em"
+    , Html.Attributes.style "width" "auto"
+    , Html.Attributes.style "height" "50px"
+    , Html.Attributes.style "min-width" "50px"
+    , Html.Attributes.style "border" "3px dashed dimgray"
+    , Html.Attributes.style "background-color" "transparent"
     ]

@@ -1,4 +1,4 @@
-module Introduction.Groups exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
+module ConfigGroups.OperationsOnDrag.InsertBefore exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList.Groups
@@ -24,13 +24,8 @@ main =
 -- DATA
 
 
-type Group
-    = Left
-    | Right
-
-
 type alias Item =
-    { group : Group
+    { group : Int
     , value : String
     , color : String
     }
@@ -38,14 +33,18 @@ type alias Item =
 
 preparedData : List Item
 preparedData =
-    [ Item Left "C" blue
-    , Item Left "2" red
-    , Item Left "A" blue
-    , Item Left "footer" transparent
-    , Item Right "3" red
-    , Item Right "1" red
-    , Item Right "B" blue
-    , Item Right "footer" transparent
+    [ Item 1 "1" red
+    , Item 1 "2" red
+    , Item 1 "3" red
+    , Item 1 "4" red
+    , Item 1 "5" red
+    , Item 1 "" transparent
+    , Item 2 "6" blue
+    , Item 2 "7" blue
+    , Item 2 "8" blue
+    , Item 2 "" transparent
+    , Item 3 "9" green
+    , Item 3 "" transparent
     ]
 
 
@@ -57,7 +56,7 @@ config : DnDList.Groups.Config Item
 config =
     { beforeUpdate = \_ _ list -> list
     , listen = DnDList.Groups.OnDrag
-    , operation = DnDList.Groups.Rotate
+    , operation = DnDList.Groups.Unaltered
     , groups =
         { listen = DnDList.Groups.OnDrag
         , operation = DnDList.Groups.InsertBefore
@@ -141,23 +140,19 @@ update message model =
 view : Model -> Html.Html Msg
 view model =
     Html.section sectionStyles
-        [ groupView model Left lightRed
-        , groupView model Right lightBlue
-        , ghostView model.dnd model.items
+        [ groupView model 1
+        , groupView model 2
+        , groupView model 3
+        , ghostView model
         ]
 
 
-groupView : Model -> Group -> String -> Html.Html Msg
-groupView model group color =
-    let
-        items : List Item
-        items =
-            model.items
-                |> List.filter (\item -> item.group == group)
-    in
-    items
-        |> List.indexedMap (itemView model (calculateOffset 0 group model.items))
-        |> Html.div (groupStyles color)
+groupView : Model -> Int -> Html.Html Msg
+groupView model currentGroup =
+    model.items
+        |> List.filter (\{ group } -> group == currentGroup)
+        |> List.indexedMap (itemView model (calculateOffset 0 currentGroup model.items))
+        |> Html.div groupStyles
 
 
 itemView : Model -> Int -> Int -> Item -> Html.Html Msg
@@ -169,66 +164,51 @@ itemView model offset localIndex { group, value, color } =
 
         itemId : String
         itemId =
-            "id-" ++ String.fromInt globalIndex
+            "insertbefore-" ++ String.fromInt globalIndex
     in
-    case ( system.info model.dnd, maybeDragItem model.dnd model.items ) of
+    case ( system.info model.dnd, maybeDragItem model ) of
         ( Just { dragIndex }, Just dragItem ) ->
-            if color == transparent && value == "footer" && dragItem.group /= group then
+            if value == "" && group /= dragItem.group then
                 Html.div
-                    (Html.Attributes.id itemId
-                        :: auxiliaryStyles
-                        ++ system.dropEvents globalIndex itemId
-                    )
+                    (Html.Attributes.id itemId :: auxiliaryItemStyles ++ system.dropEvents globalIndex itemId)
                     []
 
-            else if color == transparent && value == "footer" && dragItem.group == group then
+            else if value == "" && group == dragItem.group then
                 Html.div
-                    (Html.Attributes.id itemId
-                        :: auxiliaryStyles
-                    )
+                    (Html.Attributes.id itemId :: auxiliaryItemStyles)
                     []
 
-            else if dragIndex /= globalIndex then
+            else if globalIndex /= dragIndex then
                 Html.div
-                    (Html.Attributes.id itemId
-                        :: itemStyles color
-                        ++ system.dropEvents globalIndex itemId
-                    )
+                    (Html.Attributes.id itemId :: itemStyles color ++ system.dropEvents globalIndex itemId)
                     [ Html.text value ]
 
             else
                 Html.div
-                    (Html.Attributes.id itemId
-                        :: itemStyles gray
-                    )
+                    (Html.Attributes.id itemId :: itemStyles gray)
                     []
 
         _ ->
-            if color == transparent && value == "footer" then
+            if value == "" then
                 Html.div
-                    (Html.Attributes.id itemId
-                        :: auxiliaryStyles
-                    )
+                    (Html.Attributes.id itemId :: auxiliaryItemStyles)
                     []
 
             else
                 Html.div
-                    (Html.Attributes.id itemId
-                        :: itemStyles color
-                        ++ system.dragEvents globalIndex itemId
-                    )
+                    (Html.Attributes.id itemId :: itemStyles color ++ system.dragEvents globalIndex itemId)
                     [ Html.text value ]
 
 
-ghostView : DnDList.Groups.Model -> List Item -> Html.Html Msg
-ghostView dnd items =
-    case maybeDragItem dnd items of
+ghostView : Model -> Html.Html Msg
+ghostView model =
+    case maybeDragItem model of
         Just { value, color } ->
             Html.div
-                (itemStyles color ++ system.ghostStyles dnd)
+                (itemStyles color ++ system.ghostStyles model.dnd)
                 [ Html.text value ]
 
-        Nothing ->
+        _ ->
             Html.text ""
 
 
@@ -236,7 +216,7 @@ ghostView dnd items =
 -- HELPERS
 
 
-calculateOffset : Int -> Group -> List Item -> Int
+calculateOffset : Int -> Int -> List Item -> Int
 calculateOffset index group list =
     case list of
         [] ->
@@ -250,8 +230,8 @@ calculateOffset index group list =
                 calculateOffset (index + 1) group xs
 
 
-maybeDragItem : DnDList.Groups.Model -> List Item -> Maybe Item
-maybeDragItem dnd items =
+maybeDragItem : Model -> Maybe Item
+maybeDragItem { dnd, items } =
     system.info dnd
         |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
 
@@ -260,24 +240,19 @@ maybeDragItem dnd items =
 -- COLORS
 
 
+green : String
+green =
+    "#757b3d"
+
+
 red : String
 red =
-    "#c30005"
+    "#8c4585"
 
 
 blue : String
 blue =
-    "#0067c3"
-
-
-lightRed : String
-lightRed =
-    "#ea9088"
-
-
-lightBlue : String
-lightBlue =
-    "#88b0ea"
+    "#45858c"
 
 
 gray : String
@@ -297,40 +272,42 @@ transparent =
 sectionStyles : List (Html.Attribute msg)
 sectionStyles =
     [ Html.Attributes.style "display" "flex"
-    , Html.Attributes.style "align-items" "top"
-    , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "align-items" "flex-start"
-    , Html.Attributes.style "height" "46rem"
+    , Html.Attributes.style "flex-direction" "column"
+    , Html.Attributes.style "width" "800px"
     ]
 
 
-groupStyles : String -> List (Html.Attribute msg)
-groupStyles color =
-    [ Html.Attributes.style "display" "table"
-    , Html.Attributes.style "background-color" color
-    , Html.Attributes.style "padding-top" "2rem"
+groupStyles : List (Html.Attribute msg)
+groupStyles =
+    [ Html.Attributes.style "display" "flex"
+    , Html.Attributes.style "justify-content" "center"
+    , Html.Attributes.style "padding-bottom" "3em"
     ]
 
 
 itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
-    [ Html.Attributes.style "width" "5rem"
-    , Html.Attributes.style "height" "5rem"
-    , Html.Attributes.style "background-color" color
+    [ Html.Attributes.style "width" "50px"
+    , Html.Attributes.style "height" "50px"
     , Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "color" "#ffffff"
+    , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
-    , Html.Attributes.style "margin" "0 auto 1rem auto"
+    , Html.Attributes.style "margin-right" "2em"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
+    , Html.Attributes.style "background-color" color
     ]
 
 
-{-| We can do much better with pseudo-classes.
--}
-auxiliaryStyles : List (Html.Attribute msg)
-auxiliaryStyles =
-    [ Html.Attributes.style "height" "1rem"
-    , Html.Attributes.style "width" "8rem"
+auxiliaryItemStyles : List (Html.Attribute msg)
+auxiliaryItemStyles =
+    [ Html.Attributes.style "flex-grow" "1"
+    , Html.Attributes.style "box-sizing" "border-box"
+    , Html.Attributes.style "margin-right" "2em"
+    , Html.Attributes.style "width" "auto"
+    , Html.Attributes.style "height" "50px"
+    , Html.Attributes.style "min-width" "50px"
+    , Html.Attributes.style "border" "3px dashed dimgray"
+    , Html.Attributes.style "background-color" "transparent"
     ]

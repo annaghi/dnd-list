@@ -31,9 +31,7 @@ import Url.Builder
 
 
 type alias Model =
-    { slug : String
-    , example : Example
-    }
+    Example
 
 
 type Example
@@ -50,41 +48,7 @@ type Example
 
 init : String -> ( Model, Cmd Msg )
 init slug =
-    ( { slug = slug, example = selectExample slug }, commands )
-
-
-selectExample : String -> Example
-selectExample slug =
-    case slug of
-        "basic" ->
-            Basic Introduction.Basic.initialModel
-
-        "basic-elm-ui" ->
-            BasicElmUI Introduction.BasicElmUI.initialModel
-
-        "handle" ->
-            Handle Introduction.Handle.initialModel
-
-        "keyed" ->
-            Keyed Introduction.Keyed.initialModel
-
-        "margins" ->
-            Margins Introduction.Margins.initialModel
-
-        "masonry" ->
-            Masonry Introduction.Masonry.initialModel
-
-        "resize" ->
-            Resize Introduction.Resize.initialModel
-
-        "independents" ->
-            Independents Introduction.Independents.initialModel
-
-        "groups" ->
-            Groups Introduction.Groups.initialModel
-
-        _ ->
-            Basic Introduction.Basic.initialModel
+    ( toExample slug, commands )
 
 
 
@@ -105,7 +69,7 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
-    case ( message, model.example ) of
+    case ( message, model ) of
         ( BasicMsg msg, Basic mo ) ->
             stepBasic model (Introduction.Basic.update msg mo)
 
@@ -139,47 +103,47 @@ update message model =
 
 stepBasic : Model -> ( Introduction.Basic.Model, Cmd Introduction.Basic.Msg ) -> ( Model, Cmd Msg )
 stepBasic model ( mo, cmds ) =
-    ( { model | example = Basic mo }, Cmd.map BasicMsg cmds )
+    ( Basic mo, Cmd.map BasicMsg cmds )
 
 
 stepBasicElmUI : Model -> ( Introduction.BasicElmUI.Model, Cmd Introduction.BasicElmUI.Msg ) -> ( Model, Cmd Msg )
 stepBasicElmUI model ( mo, cmds ) =
-    ( { model | example = BasicElmUI mo }, Cmd.map BasicElmUIMsg cmds )
+    ( BasicElmUI mo, Cmd.map BasicElmUIMsg cmds )
 
 
 stepHandle : Model -> ( Introduction.Handle.Model, Cmd Introduction.Handle.Msg ) -> ( Model, Cmd Msg )
 stepHandle model ( mo, cmds ) =
-    ( { model | example = Handle mo }, Cmd.map HandleMsg cmds )
+    ( Handle mo, Cmd.map HandleMsg cmds )
 
 
 stepKeyed : Model -> ( Introduction.Keyed.Model, Cmd Introduction.Keyed.Msg ) -> ( Model, Cmd Msg )
 stepKeyed model ( mo, cmds ) =
-    ( { model | example = Keyed mo }, Cmd.map KeyedMsg cmds )
+    ( Keyed mo, Cmd.map KeyedMsg cmds )
 
 
 stepMargins : Model -> ( Introduction.Margins.Model, Cmd Introduction.Margins.Msg ) -> ( Model, Cmd Msg )
 stepMargins model ( mo, cmds ) =
-    ( { model | example = Margins mo }, Cmd.map MarginsMsg cmds )
+    ( Margins mo, Cmd.map MarginsMsg cmds )
 
 
 stepMasonry : Model -> ( Introduction.Masonry.Model, Cmd Introduction.Masonry.Msg ) -> ( Model, Cmd Msg )
 stepMasonry model ( mo, cmds ) =
-    ( { model | example = Masonry mo }, Cmd.map MasonryMsg cmds )
+    ( Masonry mo, Cmd.map MasonryMsg cmds )
 
 
 stepResize : Model -> ( Introduction.Resize.Model, Cmd Introduction.Resize.Msg ) -> ( Model, Cmd Msg )
 stepResize model ( mo, cmds ) =
-    ( { model | example = Resize mo }, Cmd.map ResizeMsg cmds )
+    ( Resize mo, Cmd.map ResizeMsg cmds )
 
 
 stepIndependents : Model -> ( Introduction.Independents.Model, Cmd Introduction.Independents.Msg ) -> ( Model, Cmd Msg )
 stepIndependents model ( mo, cmds ) =
-    ( { model | example = Independents mo }, Cmd.map IndependentsMsg cmds )
+    ( Independents mo, Cmd.map IndependentsMsg cmds )
 
 
 stepGroups : Model -> ( Introduction.Groups.Model, Cmd Introduction.Groups.Msg ) -> ( Model, Cmd Msg )
 stepGroups model ( mo, cmds ) =
-    ( { model | example = Groups mo }, Cmd.map GroupsMsg cmds )
+    ( Groups mo, Cmd.map GroupsMsg cmds )
 
 
 
@@ -188,7 +152,7 @@ stepGroups model ( mo, cmds ) =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.example of
+    case model of
         Basic mo ->
             Sub.map BasicMsg (Introduction.Basic.subscriptions mo)
 
@@ -271,11 +235,11 @@ headerView model =
     let
         title : String
         title =
-            (info >> .title) model.example
+            (info >> .title) model
 
         description : String
         description =
-            (info >> .description) model.example
+            (info >> .description) model
     in
     Html.header []
         [ Html.h2 [] [ Html.text title ]
@@ -285,7 +249,7 @@ headerView model =
 
 demoView : Model -> Html.Html Msg
 demoView model =
-    case model.example of
+    case model of
         Basic mo ->
             Html.map BasicMsg (Introduction.Basic.view mo)
 
@@ -316,7 +280,7 @@ demoView model =
 
 codeView : Model -> Html.Html Msg
 codeView model =
-    case model.example of
+    case model of
         Basic _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Basic.elm"
 
@@ -352,6 +316,40 @@ toCode url =
 
 
 -- EXAMPLE INFO
+
+
+toExample : String -> Example
+toExample slug =
+    case slug of
+        "basic" ->
+            Basic Introduction.Basic.initialModel
+
+        "basic-elm-ui" ->
+            BasicElmUI Introduction.BasicElmUI.initialModel
+
+        "handle" ->
+            Handle Introduction.Handle.initialModel
+
+        "keyed" ->
+            Keyed Introduction.Keyed.initialModel
+
+        "margins" ->
+            Margins Introduction.Margins.initialModel
+
+        "masonry" ->
+            Masonry Introduction.Masonry.initialModel
+
+        "resize" ->
+            Resize Introduction.Resize.initialModel
+
+        "independents" ->
+            Independents Introduction.Independents.initialModel
+
+        "groups" ->
+            Groups Introduction.Groups.initialModel
+
+        _ ->
+            Basic Introduction.Basic.initialModel
 
 
 type alias Info =
@@ -415,5 +413,5 @@ info example =
         Groups _ ->
             { slug = "groups"
             , title = "Groupable items"
-            , description = "The list state invariant is that the list has to be gathered by the grouping property, and the auxiliary items have to preserve their places."
+            , description = "The list state invariant is that the list is gathered by the grouping property, and the auxiliary items preserve their places."
             }

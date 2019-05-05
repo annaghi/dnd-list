@@ -1,9 +1,10 @@
-module Introduction.Margins exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
+module Config.OperationsOnDrag.Unaltered exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Html.Events
 
 
 
@@ -25,12 +26,15 @@ main =
 
 
 type alias Item =
-    String
+    { value : String
+    , color : String
+    }
 
 
 data : List Item
 data =
-    [ "A", "B", "C", "D" ]
+    List.range 0 9
+        |> List.map (\i -> Item (String.fromInt i) baseColor)
 
 
 
@@ -39,16 +43,36 @@ data =
 
 config : DnDList.Config Item
 config =
-    { beforeUpdate = \_ _ list -> list
+    { beforeUpdate = updateColors
     , movement = DnDList.Free
     , listen = DnDList.OnDrag
-    , operation = DnDList.Swap
+    , operation = DnDList.Unaltered
     }
 
 
 system : DnDList.System Item Msg
 system =
     DnDList.create config MyMsg
+
+
+updateColors : Int -> Int -> List Item -> List Item
+updateColors dragIndex dropIndex items =
+    if dragIndex /= dropIndex then
+        List.indexedMap
+            (\i { value, color } ->
+                if i == dragIndex then
+                    Item value dragColor
+
+                else if i == dropIndex then
+                    Item value dropColor
+
+                else
+                    Item value color
+            )
+            items
+
+    else
+        items
 
 
 
@@ -88,6 +112,7 @@ subscriptions model =
 
 type Msg
     = MyMsg DnDList.Msg
+    | ResetColors
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -102,6 +127,11 @@ update message model =
             , system.commands model.dnd
             )
 
+        ResetColors ->
+            ( { model | items = List.map (\{ value } -> Item value baseColor) model.items }
+            , Cmd.none
+            )
+
 
 
 -- VIEW
@@ -109,7 +139,8 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section []
+    Html.section
+        [ Html.Events.onMouseDown ResetColors ]
         [ model.items
             |> List.indexedMap (itemView model.dnd)
             |> Html.div containerStyles
@@ -118,37 +149,37 @@ view model =
 
 
 itemView : DnDList.Model -> Int -> Item -> Html.Html Msg
-itemView dnd index item =
+itemView dnd index { value, color } =
     let
         itemId : String
         itemId =
-            "id-" ++ item
+            "unaltered-" ++ value
+
+        attrs : String -> List (Html.Attribute msg)
+        attrs color_ =
+            Html.Attributes.id itemId :: itemStyles color_
     in
     case system.info dnd of
-        Just { dragIndex } ->
-            if dragIndex /= index then
+        Just { dragIndex, dropIndex } ->
+            if dragIndex /= index && dropIndex /= index then
                 Html.div
-                    [ Html.Attributes.style "margin" "2em" ]
-                    [ Html.div
-                        (Html.Attributes.id itemId :: itemStyles green ++ system.dropEvents index itemId)
-                        [ Html.text item ]
-                    ]
+                    (attrs color ++ system.dropEvents index itemId)
+                    [ Html.text value ]
+
+            else if dragIndex /= index && dropIndex == index then
+                Html.div
+                    (attrs dropColor ++ system.dropEvents index itemId)
+                    [ Html.text value ]
 
             else
                 Html.div
-                    [ Html.Attributes.style "margin" "2em" ]
-                    [ Html.div
-                        (Html.Attributes.id itemId :: itemStyles "dimgray")
-                        []
-                    ]
+                    (attrs dropColor)
+                    []
 
-        Nothing ->
+        _ ->
             Html.div
-                [ Html.Attributes.style "margin" "2em" ]
-                [ Html.div
-                    (Html.Attributes.id itemId :: itemStyles green ++ system.dragEvents index itemId)
-                    [ Html.text item ]
-                ]
+                (attrs color ++ system.dragEvents index itemId)
+                [ Html.text value ]
 
 
 ghostView : DnDList.Model -> List Item -> Html.Html Msg
@@ -160,10 +191,10 @@ ghostView dnd items =
                 |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
     in
     case maybeDragItem of
-        Just item ->
+        Just { value } ->
             Html.div
-                (itemStyles ghostGreen ++ system.ghostStyles dnd)
-                [ Html.text item ]
+                (itemStyles dragColor ++ system.ghostStyles dnd)
+                [ Html.text value ]
 
         Nothing ->
             Html.text ""
@@ -173,14 +204,24 @@ ghostView dnd items =
 -- COLORS
 
 
-green : String
-green =
-    "#3da565"
+baseColor : String
+baseColor =
+    "dimgray"
 
 
-ghostGreen : String
-ghostGreen =
-    "#2f804e"
+dragColor : String
+dragColor =
+    "red"
+
+
+dropColor : String
+dropColor =
+    "green"
+
+
+affectedColor : String
+affectedColor =
+    "purple"
 
 
 
@@ -198,13 +239,13 @@ containerStyles =
 
 itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
-    [ Html.Attributes.style "width" "5rem"
-    , Html.Attributes.style "height" "5rem"
-    , Html.Attributes.style "background-color" color
-    , Html.Attributes.style "border-radius" "8px"
+    [ Html.Attributes.style "background-color" color
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
+    , Html.Attributes.style "margin" "0 1.5em 1.5em 0"
+    , Html.Attributes.style "width" "50px"
+    , Html.Attributes.style "height" "50px"
     ]

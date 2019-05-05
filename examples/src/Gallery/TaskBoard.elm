@@ -58,16 +58,26 @@ data =
 
 cardConfig : DnDList.Groups.Config Card
 cardConfig =
-    { trigger = DnDList.Groups.OnDrag
-    , operation = DnDList.Groups.RotateOut
-    , beforeUpdate = \_ _ list -> list
+    { beforeUpdate = \_ _ list -> list
+    , listen = DnDList.Groups.OnDrag
+    , operation = DnDList.Groups.Rotate
     , groups =
-        { trigger = DnDList.Groups.OnDrag
+        { listen = DnDList.Groups.OnDrag
         , operation = DnDList.Groups.InsertBefore
-        , beforeUpdate = updateOnActivityChange
-        , comparator = compareByActivity
+        , comparator = comparator
+        , setter = setter
         }
     }
+
+
+comparator : Card -> Card -> Bool
+comparator card1 card2 =
+    card1.activity == card2.activity
+
+
+setter : Card -> Card -> Card
+setter card1 card2 =
+    { card2 | activity = card1.activity }
 
 
 cardSystem : DnDList.Groups.System Card Msg
@@ -75,39 +85,12 @@ cardSystem =
     DnDList.Groups.create cardConfig CardMoved
 
 
-compareByActivity : Card -> Card -> Bool
-compareByActivity dragItem dropItem =
-    dragItem.activity == dropItem.activity
-
-
-updateOnActivityChange : Int -> Int -> List Card -> List Card
-updateOnActivityChange dragIndex dropIndex list =
-    let
-        drop : List Card
-        drop =
-            list |> List.drop dropIndex |> List.take 1
-    in
-    list
-        |> List.indexedMap
-            (\index item ->
-                if index == dragIndex then
-                    List.map2
-                        (\dragItem dropItem -> { dragItem | activity = dropItem.activity })
-                        [ item ]
-                        drop
-
-                else
-                    [ item ]
-            )
-        |> List.concat
-
-
 columnConfig : DnDList.Config (List Card)
 columnConfig =
-    { movement = DnDList.Free
-    , trigger = DnDList.OnDrag
-    , operation = DnDList.RotateOut
-    , beforeUpdate = \_ _ list -> list
+    { beforeUpdate = \_ _ list -> list
+    , movement = DnDList.Free
+    , listen = DnDList.OnDrag
+    , operation = DnDList.Rotate
     }
 
 
