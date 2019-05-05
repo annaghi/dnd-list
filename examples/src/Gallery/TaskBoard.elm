@@ -443,7 +443,7 @@ boardStyles =
     , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "margin" "0 auto"
     , Html.Attributes.style "min-height" "600px"
-    , Html.Attributes.style "padding" "3em"
+    , Html.Attributes.style "padding" "2em 0"
     ]
 
 
