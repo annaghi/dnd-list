@@ -188,11 +188,11 @@ info example =
         OperationsOnDrag _ ->
             { slug = "operations-drag"
             , title = "Operations on drag"
-            , description = "Compare the list operations without wings triggered on drag."
+            , description = "Compare the list operations with groups sorting on drag."
             }
 
         OperationsOnDrop _ ->
             { slug = "operations-drop"
             , title = "Operations on drop"
-            , description = "Compare the list operations without wings triggered on drop."
+            , description = "Compare the list operations with groups sorting on drop."
             }
