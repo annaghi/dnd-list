@@ -1,26 +1,26 @@
 module DnDList exposing
     ( System, create, Msg
     , Config
-    , Movement(..), Trigger(..), Operation(..)
+    , Movement(..), Listen(..), Operation(..)
     , Info
     , Model
     )
 
-{-| While dragging and dropping a list item, the mouse events and the list sorting are handled internally by this module.
+{-| While dragging and dropping a list item, the mouse events, the ghost element's positioning
+and the list sorting are handled internally by this module.
 Here is a [basic demo](https://annaghi.github.io/dnd-list/introduction/basic),
-we will refer to it throughout this page.
+we will use it as an illustration throughout this page.
 
-First, we need to create a `System` object which holds all the information related to the drag and drop features.
-Using this object we can wire up the internal model, subscriptions, commands, and update
-into our model, subscriptions, commands, and update respectively.
+The first step is to create a `System` object which holds all the information related to the drag and drop features.
+Using this object you can wire up the module's internal model, subscriptions, commands, and update
+into your model, subscriptions, commands, and update respectively.
 
-Second, when we write our `view` functions, we will need to bind the drag and drop events to the list items.
-These events are provided by the very same `System` object
-as well as the information about the drag source and the drop target items,
-which will allow us to style or track the affected items.
+Next, when you write your `view` functions, you will need to bind the drag and drop events to the list items,
+and also style them according to their current state.
+The `System` object gives you access to events and to detailed information about the drag source and drop target items.
 
-Finally, we need to render a ghost element to be used for dragging display.
-The `System` object gives us access to the ghost element's position styles too.
+Finally, you will need to render a ghost element to be used for dragging display.
+You can add position styling attributes to this element using the`System` object.
 
 
 # System
@@ -31,7 +31,7 @@ The `System` object gives us access to the ghost element's position styles too.
 # Config
 
 @docs Config
-@docs Movement, Trigger, Operation
+@docs Movement, Listen, Operation
 
 
 # Info
@@ -39,7 +39,7 @@ The `System` object gives us access to the ghost element's position styles too.
 @docs Info
 
 
-# System Fields
+# System fields
 
 
 ## model
@@ -49,7 +49,7 @@ The `System` object gives us access to the ghost element's position styles too.
 
 ## subscriptions
 
-`subscriptions` is a function to access the browser events during the drag.
+`subscriptions` is a function to access the browser events during the dragging.
 
     subscriptions : Model -> Sub Msg
     subscriptions model =
@@ -74,7 +74,7 @@ The `System` object gives us access to the ghost element's position styles too.
 
 ## update
 
-`update` is a function which returns an updated internal `Model` and the sorted list for our model.
+`update` is a function which returns an updated internal `Model` and the sorted list for your model.
 
     update : Msg -> Model -> ( Model, Cmd Msg )
     update message model =
@@ -168,22 +168,22 @@ The ghost element has absolute position relative to the viewport.
             Nothing ->
                 Html.text ""
 
-The following CSS will be generated:
+The following CSS will be added:
 
     {
         position: absolute;
         left: 0;
         top: 0;
-        transform: calculated from the dragElement and the mouse position;
-        height: the dragElement's height;
-        width: the dragElement's width;
+        transform: translate3d(the vector is calculated from the dragElement and the mouse position in pixels);
+        height: the dragElement's height in pixels;
+        width: the dragElement's width in pixels;
         pointer-events: none;
     }
 
 
 ## info
 
-See [Info](#info)
+See [Info](#info).
 
 -}
 
@@ -200,7 +200,7 @@ import Utils
 
 {-| Represents the internal model of the current drag and drop features.
 It will be `Nothing` if there is no ongoing dragging.
-We can set it in our model and initialize through the `System`'s `model` field.
+You should set it in your model and initialize through the `System`'s `model` field.
 
     type alias Model =
         { dnd : DnDList.Model
@@ -231,15 +231,15 @@ type alias State =
     }
 
 
-{-| A `System` encapsulates
+{-| A `System` encapsulates:
 
   - the internal model, subscriptions, commands, and update,
 
-  - the bindable events and styles,
+  - the bindable events and styles, and
 
-  - and the `Info` object.
+  - the `Info` object.
 
-For the details, see [Info](#info) and [System Fields](#system-fields).
+Later we will learn more about the [Info object](#info) and the [System fields](#system-fields).
 
 -}
 type alias System a msg =
@@ -273,56 +273,59 @@ Now the `System` is a wrapper type around the list item and our message types:
 
 -}
 create : Config a -> (Msg -> msg) -> System a msg
-create config message =
+create config stepMsg =
     { model = Model Nothing
-    , subscriptions = subscriptions message
-    , commands = commands message
+    , subscriptions = subscriptions stepMsg
+    , commands = commands stepMsg
     , update = update config
-    , dragEvents = dragEvents message
-    , dropEvents = dropEvents message
+    , dragEvents = dragEvents stepMsg
+    , dropEvents = dropEvents stepMsg
     , ghostStyles = ghostStyles config.movement
     , info = info
     }
 
 
-{-| Represents the `System` configuration.
+{-| Represents the `System`'s configuration.
 
-  - `movement`: Dragging can be constrained to horizontal or vertical axis only, or it can be set to free.
-    This [demo config](https://annaghi.github.io/dnd-list/configuration/movement) shows the different movements in action.
+  - `beforeUpdate`: This is a hook and gives you access to your list before it will be sorted.
+    The first number is the drag index, the second number is the drop index.
+    The [Towers of Hanoi](https://annaghi.github.io/dnd-list/gallery/hanoi) uses this hook to update the disks' `tower` attribute.
 
-  - `trigger`: Sorting can be triggered again and again while dragging over the drop target items,
-    or it can be triggered only once on that drop target where the mouse was finally released.
+  - `movement`: The dragging can be constrained to horizontal or vertical axis only, or it can be set to free.
+    This [demo config](https://annaghi.github.io/dnd-list/config/movement) shows the different movements in action.
+
+  - `listen`: The items can listen for drag events or for drop events.
+    In the first case the list will be sorted again and again while the mouse moves over the different drop target items.
+    In the second case the list will be sorted only once on that drop target where the mouse was finally released.
 
   - `operation`: Different kinds of sort operations can be performed on the list.
-    There are two comparisons - one for
-    [triggered on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
-    and one for [triggered on drop](https://annaghi.github.io/dnd-list/configuration/operations-drop).
+    You can start to analyze them with
+    [sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
+    and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
 
-  - `beforeUpdate`: This is a hook and gives us access to the list before the sort will be performed.
-
-Here is an example configuration with a void `beforeUpdate`:
+This is our configuration with a void `beforeUpdate`:
 
     config : DnDList.Config Fruit
     config =
-        { movement = DnDList.Free
-        , trigger = DnDList.OnDrag
-        , operation = DnDList.RotateOut
-        , beforeUpdate = \_ _ list -> list
+        { beforeUpdate = \_ _ list -> list
+        , movement = DnDList.Free
+        , listen = DnDList.OnDrag
+        , operation = DnDList.Rotate
         }
 
 -}
 type alias Config a =
-    { movement : Movement
-    , trigger : Trigger
+    { beforeUpdate : Int -> Int -> List a -> List a
+    , movement : Movement
+    , listen : Listen
     , operation : Operation
-    , beforeUpdate : Int -> Int -> List a -> List a
     }
 
 
 {-| Represents the mouse dragging movement.
-This [demo config](https://annaghi.github.io/dnd-list/configuration/movement) shows the different movements in action.
+This [demo config](https://annaghi.github.io/dnd-list/config/movement) shows the different movements in action.
 
-  - `Free` : The ghost element moves as the mouse moves.
+  - `Free` : The ghost element follows the mouse pointer.
 
   - `Horizontal` : The ghost element can only move horizontally.
 
@@ -335,32 +338,28 @@ type Movement
     | Vertical
 
 
-{-| Represents the event when the list will be sorted.
+{-| Represents the event for which the list sorting is available.
 
-  - `OnDrag`: Sorting is triggered when the ghost element moves over a drop target item.
+  - `OnDrag`: The list will be sorted when the ghost element is being dragged over a drop target item.
 
-  - `OnDrop`: Sorting is triggered when the ghost element is dropped on a drop target item.
+  - `OnDrop`: The list will be sorted when the ghost element is dropped on a drop target item.
 
 -}
-type Trigger
+type Listen
     = OnDrag
     | OnDrop
 
 
 {-| Represents the list sort operation.
 Detailed comparisons can be found here:
-[triggered on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
-and [triggered on drop](https://annaghi.github.io/dnd-list/configuration/operations-drop).
+[sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
+and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
 
   - `InsertAfter`: The drag source item will be inserted after the drop target item.
 
   - `InsertBefore`: The drag source item will be inserted before the drop target item.
 
-  - `RotateIn`: The items between the drag source and the drop target items will be circularly shifted,
-    excluding the drop target.
-
-  - `RotateOut`: The items between the drag source and the drop target items will be circularly shifted,
-    including the drop target.
+  - `Rotate`: The items between the drag source and the drop target items will be circularly shifted.
 
   - `Swap`: The drag source and the drop target items will be swapped.
 
@@ -370,8 +369,7 @@ and [triggered on drop](https://annaghi.github.io/dnd-list/configuration/operati
 type Operation
     = InsertAfter
     | InsertBefore
-    | RotateIn
-    | RotateOut
+    | Rotate
     | Swap
     | Unaltered
 
@@ -391,11 +389,12 @@ It is accessible through the `System`'s `info` field.
 
   - `dropElement`: Information about the drop target as an HTML element, see `Browser.Dom.Element`.
 
-We can check the `Info` object to decide what to render when there is an ongoing dragging,
+You can check the `Info` object to decide what to render when there is an ongoing dragging,
 and what to render when there is no dragging:
 
     itemView : DnDList.Model -> Int -> Fruit -> Html.Html Msg
     itemView dnd index item =
+        ...
         case system.info dnd of
             Just _ ->
                 -- Render when there is an ongoing dragging.
@@ -403,7 +402,7 @@ and what to render when there is no dragging:
             Nothing ->
                 -- Render when there is no dragging.
 
-Or we can get e.g. the drag source item:
+Or you can extract the current drag source item from the `Info` object:
 
     maybeDragItem : DnDList.Model -> List Fruit -> Maybe Fruit
     maybeDragItem dnd items =
@@ -427,8 +426,8 @@ type alias Info =
 
 
 subscriptions : (Msg -> msg) -> Model -> Sub msg
-subscriptions wrap (Model state) =
-    case state of
+subscriptions stepMsg (Model model) =
+    case model of
         Nothing ->
             Sub.none
 
@@ -436,51 +435,52 @@ subscriptions wrap (Model state) =
             Sub.batch
                 [ Browser.Events.onMouseMove
                     (Json.Decode.map2 Utils.Position Utils.pageX Utils.pageY
-                        |> Json.Decode.map (wrap << Drag)
+                        |> Json.Decode.map (stepMsg << Drag)
                     )
                 , Browser.Events.onMouseUp
-                    (Json.Decode.succeed (wrap DragEnd))
+                    (Json.Decode.succeed (stepMsg DragEnd))
                 ]
 
 
 commands : (Msg -> msg) -> Model -> Cmd msg
-commands wrap model =
+commands stepMsg model =
     Cmd.batch
-        [ dragElementCommands wrap model
-        , dropElementCommands wrap model
+        [ dragElementCommands stepMsg model
+        , dropElementCommands stepMsg model
         ]
 
 
 dragElementCommands : (Msg -> msg) -> Model -> Cmd msg
-dragElementCommands wrap (Model state) =
-    case state of
+dragElementCommands stepMsg (Model model) =
+    case model of
         Nothing ->
             Cmd.none
 
-        Just s ->
-            case s.dragElement of
+        Just state ->
+            case state.dragElement of
                 Nothing ->
-                    Task.attempt (wrap << GotDragElement) (Browser.Dom.getElement s.dragElementId)
+                    Task.attempt (stepMsg << GotDragElement) (Browser.Dom.getElement state.dragElementId)
 
                 _ ->
                     Cmd.none
 
 
 dropElementCommands : (Msg -> msg) -> Model -> Cmd msg
-dropElementCommands wrap (Model state) =
-    case state of
+dropElementCommands stepMsg (Model model) =
+    case model of
         Nothing ->
             Cmd.none
 
-        Just s ->
-            if s.dragCounter == 0 then
-                Task.attempt (wrap << GotDropElement) (Browser.Dom.getElement s.dropElementId)
+        Just state ->
+            if state.dragCounter == 0 then
+                Task.attempt (stepMsg << GotDropElement) (Browser.Dom.getElement state.dropElementId)
 
             else
                 Cmd.none
 
 
-{-| Internal message type. It should be wrapped within our message constructor.
+{-| Internal message type.
+It should be wrapped within our message constructor:
 
     type Msg
         = MyMsg DnDList.Msg
@@ -498,7 +498,7 @@ type Msg
 
 
 update : Config a -> Msg -> Model -> List a -> ( Model, List a )
-update { operation, trigger, beforeUpdate } msg (Model state) list =
+update { beforeUpdate, listen, operation } msg (Model model) list =
     case msg of
         DragStart dragIndex dragElementId xy ->
             ( Model <|
@@ -517,47 +517,55 @@ update { operation, trigger, beforeUpdate } msg (Model state) list =
             )
 
         Drag xy ->
-            ( state
-                |> Maybe.map (\s -> { s | currentPosition = xy, dragCounter = s.dragCounter + 1 })
+            ( model
+                |> Maybe.map (\state -> { state | currentPosition = xy, dragCounter = state.dragCounter + 1 })
                 |> Model
             , list
             )
 
         DragOver dropIndex dropElementId ->
-            ( state
-                |> Maybe.map (\s -> { s | dropIndex = dropIndex, dropElementId = dropElementId })
+            ( model
+                |> Maybe.map (\state -> { state | dropIndex = dropIndex, dropElementId = dropElementId })
                 |> Model
             , list
             )
 
         DragEnter dropIndex ->
-            case ( state, trigger ) of
-                ( Just s, OnDrag ) ->
-                    if s.dragCounter > 1 && s.dragIndex /= dropIndex then
-                        onDragUpdate dropIndex s operation beforeUpdate list
+            case ( model, listen ) of
+                ( Just state, OnDrag ) ->
+                    if state.dragCounter > 1 && state.dragIndex /= dropIndex then
+                        ( Model (Just (stateUpdate operation dropIndex state))
+                        , list
+                            |> beforeUpdate state.dragIndex dropIndex
+                            |> listUpdate operation state.dragIndex dropIndex
+                        )
 
                     else
-                        ( Model state, list )
+                        ( Model model, list )
 
                 _ ->
-                    ( state
-                        |> Maybe.map (\s -> { s | dragCounter = 0 })
+                    ( model
+                        |> Maybe.map (\state -> { state | dragCounter = 0 })
                         |> Model
                     , list
                     )
 
         DragLeave ->
-            ( state
-                |> Maybe.map (\s -> { s | dropIndex = s.dragIndex })
+            ( model
+                |> Maybe.map (\state -> { state | dropIndex = state.dragIndex })
                 |> Model
             , list
             )
 
         DragEnd ->
-            case ( state, trigger ) of
-                ( Just s, OnDrop ) ->
-                    if s.dragIndex /= s.dropIndex then
-                        onDropUpdate s operation beforeUpdate list
+            case ( model, listen ) of
+                ( Just state, OnDrop ) ->
+                    if state.dragIndex /= state.dropIndex then
+                        ( Model Nothing
+                        , list
+                            |> beforeUpdate state.dragIndex state.dropIndex
+                            |> listUpdate operation state.dragIndex state.dropIndex
+                        )
 
                     else
                         ( Model Nothing, list )
@@ -566,163 +574,126 @@ update { operation, trigger, beforeUpdate } msg (Model state) list =
                     ( Model Nothing, list )
 
         GotDragElement (Err _) ->
-            ( Model state, list )
+            ( Model model, list )
 
         GotDragElement (Ok dragElement) ->
-            ( state
-                |> Maybe.map (\s -> { s | dragElement = Just dragElement, dropElement = Just dragElement })
+            ( model
+                |> Maybe.map (\state -> { state | dragElement = Just dragElement, dropElement = Just dragElement })
                 |> Model
             , list
             )
 
         GotDropElement (Err _) ->
-            ( Model state, list )
+            ( Model model, list )
 
         GotDropElement (Ok dropElement) ->
-            ( state
-                |> Maybe.map (\s -> { s | dropElement = Just dropElement })
+            ( model
+                |> Maybe.map (\state -> { state | dropElement = Just dropElement })
                 |> Model
             , list
             )
 
 
-onDragUpdate : Int -> State -> Operation -> (Int -> Int -> List a -> List a) -> List a -> ( Model, List a )
-onDragUpdate dropIndex s operation beforeUpdate list =
+stateUpdate : Operation -> Int -> State -> State
+stateUpdate operation dropIndex state =
     case operation of
         InsertAfter ->
-            ( Model
-                (Just
-                    { s
-                        | dragIndex =
-                            if s.dragIndex > dropIndex then
-                                dropIndex + 1
+            { state
+                | dragIndex =
+                    if dropIndex < state.dragIndex then
+                        dropIndex + 1
 
-                            else
-                                dropIndex
-                        , dragCounter = 0
-                    }
-                )
-            , Operations.insertAfter beforeUpdate s.dragIndex dropIndex list
-            )
+                    else
+                        dropIndex
+                , dragCounter = 0
+            }
 
         InsertBefore ->
-            ( Model <|
-                Just
-                    { s
-                        | dragIndex =
-                            if s.dragIndex < dropIndex then
-                                dropIndex - 1
+            { state
+                | dragIndex =
+                    if state.dragIndex < dropIndex then
+                        dropIndex - 1
 
-                            else
-                                dropIndex
-                        , dragCounter = 0
-                    }
-            , Operations.insertBefore beforeUpdate s.dragIndex dropIndex list
-            )
+                    else
+                        dropIndex
+                , dragCounter = 0
+            }
 
-        RotateIn ->
-            ( Model
-                (Just
-                    { s
-                        | dragIndex =
-                            if s.dragIndex < dropIndex then
-                                dropIndex - 1
-
-                            else if s.dragIndex > dropIndex then
-                                dropIndex + 1
-
-                            else
-                                dropIndex
-                        , dragCounter = 0
-                    }
-                )
-            , Operations.rotateIn beforeUpdate s.dragIndex dropIndex list
-            )
-
-        RotateOut ->
-            ( Model (Just { s | dragIndex = dropIndex, dragCounter = 0 })
-            , Operations.rotateOut beforeUpdate s.dragIndex dropIndex list
-            )
+        Rotate ->
+            { state | dragIndex = dropIndex, dragCounter = 0 }
 
         Swap ->
-            ( Model (Just { s | dragIndex = dropIndex, dragCounter = 0 })
-            , Operations.swap beforeUpdate s.dragIndex dropIndex list
-            )
+            { state | dragIndex = dropIndex, dragCounter = 0 }
 
         Unaltered ->
-            ( Model (Just { s | dragCounter = 0 })
-            , Operations.unaltered beforeUpdate s.dragIndex dropIndex list
-            )
+            { state | dragCounter = 0 }
 
 
-onDropUpdate : State -> Operation -> (Int -> Int -> List a -> List a) -> List a -> ( Model, List a )
-onDropUpdate s operation beforeUpdate list =
+listUpdate : Operation -> Int -> Int -> List a -> List a
+listUpdate operation dragIndex dropIndex list =
     case operation of
         InsertAfter ->
-            ( Model Nothing, Operations.insertAfter beforeUpdate s.dragIndex s.dropIndex list )
+            Operations.insertAfter dragIndex dropIndex list
 
         InsertBefore ->
-            ( Model Nothing, Operations.insertBefore beforeUpdate s.dragIndex s.dropIndex list )
+            Operations.insertBefore dragIndex dropIndex list
 
-        RotateIn ->
-            ( Model Nothing, Operations.rotateIn beforeUpdate s.dragIndex s.dropIndex list )
-
-        RotateOut ->
-            ( Model Nothing, Operations.rotateOut beforeUpdate s.dragIndex s.dropIndex list )
+        Rotate ->
+            Operations.rotate dragIndex dropIndex list
 
         Swap ->
-            ( Model Nothing, Operations.swap beforeUpdate s.dragIndex s.dropIndex list )
+            Operations.swap dragIndex dropIndex list
 
         Unaltered ->
-            ( Model Nothing, Operations.unaltered beforeUpdate s.dragIndex s.dropIndex list )
+            list
 
 
 dragEvents : (Msg -> msg) -> Int -> String -> List (Html.Attribute msg)
-dragEvents wrap dragIndex dragElementId =
+dragEvents stepMsg dragIndex dragElementId =
     [ Html.Events.preventDefaultOn "mousedown"
         (Json.Decode.map2 Utils.Position Utils.pageX Utils.pageY
-            |> Json.Decode.map (wrap << DragStart dragIndex dragElementId)
+            |> Json.Decode.map (stepMsg << DragStart dragIndex dragElementId)
             |> Json.Decode.map (\msg -> ( msg, True ))
         )
     ]
 
 
 dropEvents : (Msg -> msg) -> Int -> String -> List (Html.Attribute msg)
-dropEvents wrap dropIndex dropElementId =
-    [ Html.Events.onMouseOver (wrap (DragOver dropIndex dropElementId))
-    , Html.Events.onMouseEnter (wrap (DragEnter dropIndex))
-    , Html.Events.onMouseLeave (wrap DragLeave)
+dropEvents stepMsg dropIndex dropElementId =
+    [ Html.Events.onMouseOver (stepMsg (DragOver dropIndex dropElementId))
+    , Html.Events.onMouseEnter (stepMsg (DragEnter dropIndex))
+    , Html.Events.onMouseLeave (stepMsg DragLeave)
     ]
 
 
 info : Model -> Maybe Info
-info (Model state) =
+info (Model model) =
     Maybe.andThen
-        (\s ->
+        (\state ->
             Maybe.map2
                 (\dragElement dropElement ->
-                    { dragIndex = s.dragIndex
-                    , dropIndex = s.dropIndex
-                    , dragElementId = s.dragElementId
-                    , dropElementId = s.dropElementId
+                    { dragIndex = state.dragIndex
+                    , dropIndex = state.dropIndex
+                    , dragElementId = state.dragElementId
+                    , dropElementId = state.dropElementId
                     , dragElement = dragElement
                     , dropElement = dropElement
                     }
                 )
-                s.dragElement
-                s.dropElement
+                state.dragElement
+                state.dropElement
         )
-        state
+        model
 
 
 ghostStyles : Movement -> Model -> List (Html.Attribute msg)
-ghostStyles movement (Model state) =
-    case state of
+ghostStyles movement (Model model) =
+    case model of
         Nothing ->
             []
 
-        Just s ->
-            case s.dragElement of
+        Just state ->
+            case state.dragElement of
                 Just { element } ->
                     case movement of
                         Horizontal ->
@@ -731,7 +702,7 @@ ghostStyles movement (Model state) =
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "transform" <|
                                 Utils.translate
-                                    (round (s.currentPosition.x - s.startPosition.x + element.x))
+                                    (round (state.currentPosition.x - state.startPosition.x + element.x))
                                     (round element.y)
                             , Html.Attributes.style "height" (Utils.px (round element.height))
                             , Html.Attributes.style "width" (Utils.px (round element.width))
@@ -745,7 +716,7 @@ ghostStyles movement (Model state) =
                             , Html.Attributes.style "transform" <|
                                 Utils.translate
                                     (round element.x)
-                                    (round (s.currentPosition.y - s.startPosition.y + element.y))
+                                    (round (state.currentPosition.y - state.startPosition.y + element.y))
                             , Html.Attributes.style "height" (Utils.px (round element.height))
                             , Html.Attributes.style "width" (Utils.px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"
@@ -757,8 +728,8 @@ ghostStyles movement (Model state) =
                             , Html.Attributes.style "top" "0"
                             , Html.Attributes.style "transform" <|
                                 Utils.translate
-                                    (round (s.currentPosition.x - s.startPosition.x + element.x))
-                                    (round (s.currentPosition.y - s.startPosition.y + element.y))
+                                    (round (state.currentPosition.x - state.startPosition.x + element.x))
+                                    (round (state.currentPosition.y - state.startPosition.y + element.y))
                             , Html.Attributes.style "height" (Utils.px (round element.height))
                             , Html.Attributes.style "width" (Utils.px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"

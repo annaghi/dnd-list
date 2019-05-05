@@ -1,18 +1,19 @@
 module DnDList.Groups exposing
     ( System, create, Msg
     , Config
-    , Trigger(..), Operation(..)
+    , Listen(..), Operation(..)
     , Info
     , Model
     )
 
 {-| If the list is groupable by a certain property, the items can be transferred between those groups.
-Instead of using drop zones, this module requires the list to be prepared with auxiliary items.
+Instead of using drop zones, this module requires the list to be gathered by the grouping property
+and possibly prepared with auxiliary items.
 Here is a [demo with groups](https://annaghi.github.io/dnd-list/introduction/groups),
-we will refer to it throughout this page.
+we will use it as an illustration throughout this page.
 
 This module is a modified version of the `DnDList` module.
-The `Config` is extended with a new field called `groups`, and the `movement` field is diminished.
+The `Config` was extended with a new field called `groups`, and the `movement` field was withdrawn.
 The internal sorting distinguishes between the operation performed on items from the _same group_,
 and the operation performed on items from _different groups_.
 
@@ -25,7 +26,7 @@ and the operation performed on items from _different groups_.
 # Config
 
 @docs Config
-@docs Trigger, Operation
+@docs Listen, Operation
 
 
 # Info
@@ -33,7 +34,7 @@ and the operation performed on items from _different groups_.
 @docs Info
 
 
-# System Fields
+# System fields
 
 
 ## model
@@ -43,7 +44,7 @@ and the operation performed on items from _different groups_.
 
 ## subscriptions
 
-`subscriptions` is a function to access the browser events during the drag.
+`subscriptions` is a function to access the browser events during the dragging.
 
     subscriptions : Model -> Sub Msg
     subscriptions model =
@@ -68,7 +69,7 @@ and the operation performed on items from _different groups_.
 
 ## update
 
-`update` is a function which returns an updated internal `Model` and the sorted list for our model.
+`update` is a function which returns an updated internal `Model` and the sorted list for your model.
 
     update : Msg -> Model -> ( Model, Cmd Msg )
     update message model =
@@ -103,7 +104,7 @@ and the operation performed on items from _different groups_.
                 -- Render when there is an ongoing dragging.
 
             _ ->
-                if value == "" then
+                if color == transparent && value == "footer" then
                     Html.div
                         (Html.Attributes.id itemId
                             :: auxiliaryStyles
@@ -136,7 +137,7 @@ and the operation performed on items from _different groups_.
         in
         case ( system.info model.dnd, maybeDragItem model.dnd model.items ) of
             ( Just { dragIndex }, Just dragItem ) ->
-                if value == "" && dragItem.group /= group then
+                if color == transparent && value == "footer" && dragItem.group /= group then
                     Html.div
                         (Html.Attributes.id itemId
                             :: auxiliaryStyles
@@ -144,7 +145,7 @@ and the operation performed on items from _different groups_.
                         )
                         []
 
-                else if value == "" && dragItem.group == group then
+                else if color == transparent && value == "footer" && dragItem.group == group then
                     Html.div
                         (Html.Attributes.id itemId
                             :: auxiliaryStyles
@@ -186,22 +187,22 @@ The ghost element has absolute position relative to the viewport.
             Nothing ->
                 Html.text ""
 
-The following CSS will be generated:
+The following CSS will be added:
 
     {
         position: absolute;
         left: 0;
         top: 0;
-        transform: calculated from the dragElement and the mouse position;
-        height: the dragElement's height;
-        width: the dragElement's width;
+        transform: translate3d(the vector is calculated from the dragElement and the mouse position in pixels);
+        height: the dragElement's height in pixels;
+        width: the dragElement's width in pixels;
         pointer-events: none;
     }
 
 
 ## info
 
-See [Info](#info)
+See [Info](#info).
 
 -}
 
@@ -218,7 +219,7 @@ import Utils
 
 {-| Represents the internal model of the current drag and drop features.
 It will be `Nothing` if there is no ongoing dragging.
-We can set it in our model and initialize through the `System`'s `model` field.
+You should set it in your model and initialize through the `System`'s `model` field.
 
     type alias Model =
         { dnd : DnDList.Groups.Model
@@ -249,15 +250,15 @@ type alias State =
     }
 
 
-{-| A `System` encapsulates
+{-| A `System` encapsulates:
 
   - the internal model, subscriptions, commands, and update,
 
-  - the bindable events and styles,
+  - the bindable events and styles, and
 
-  - and the `Info` object.
+  - the `Info` object.
 
-For the details, see [Info](#info) and [System Fields](#system-fields).
+Later we will learn more about the [Info object](#info) and the [System fields](#system-fields).
 
 -}
 type alias System a msg =
@@ -293,21 +294,20 @@ and a list which is gathered by these groups and prepared with auxiliary items:
         [ Item Left "C" blue
         , Item Left "2" red
         , Item Left "A" blue
-        , Item Left "" transparent
+        , Item Left "footer" transparent
         , Item Right "3" red
-        , Item Right "B" blue
         , Item Right "1" red
-        , Item Right "" transparent
+        , Item Right "B" blue
+        , Item Right "footer" transparent
         ]
 
-The auxiliary items (the `transparent` ones) separate the groups
-and they can be considered as header or footer of a particular group.
+The auxiliary items separate the groups and they can be considered as header or footer of a particular group.
 In this case they are footers.
 
 The sort operations were designed with the following list state invariant in mind:
 
-  - the items are gathered by the grouping property
-  - the auxiliary items keep their places (headers or footers)
+  - the items are gathered by the grouping property, and
+  - the auxiliary items keep their places (headers, footers).
 
 And now the `System` is a wrapper type around the list item and our message types:
 
@@ -317,107 +317,104 @@ And now the `System` is a wrapper type around the list item and our message type
 
 -}
 create : Config a -> (Msg -> msg) -> System a msg
-create config message =
+create config stepMsg =
     { model = Model Nothing
-    , subscriptions = subscriptions message
-    , commands = commands message
+    , subscriptions = subscriptions stepMsg
+    , commands = commands stepMsg
     , update = update config
-    , dragEvents = dragEvents message
-    , dropEvents = dropEvents message
+    , dragEvents = dragEvents stepMsg
+    , dropEvents = dropEvents stepMsg
     , ghostStyles = ghostStyles
     , info = info
     }
 
 
-{-| Represents the `System` configuration.
+{-| Represents the `System`'s configuration.
 
-  - `trigger`: This setting is for the items from the _same group_.
-    Sorting can be triggered again and again while dragging over the drop target items,
-    or it can be triggered only once on that drop target where the mouse was finally released.
+  - `beforeUpdate`: This is a hook and gives you access to your list before it will be sorted.
+    The first number is the drag index, the second number is the drop index.
+    The [Towers of Hanoi](https://annaghi.github.io/dnd-list/gallery/hanoi) uses this hook to update the disks' `tower` attribute.
+
+  - `listen`: This setting is for the items from the _same group_.
+    The items can listen for drag events or for drop events.
+    In the first case the list will be sorted again and again while the mouse moves over the different drop target items.
+    In the second case the list will be sorted only once on that drop target where the mouse was finally released.
 
   - `operation`: This setting is for the items from the _same group_.
     Different kinds of sort operations can be performed on the list.
-    There are two comparisons - one for
-    [triggered on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
-    and one for [triggered on drop](https://annaghi.github.io/dnd-list/configuration/operations-drop).
+    You can start to analyze them with
+    [sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
+    and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
 
-  - `beforeUpdate`: This is a hook and gives us access to the list
-    before the sort will be performed on the items from the _same group_.
-
-  - `groups`: This setting is for the items from _different groups_.
+  - `groups`: This setting is for the items from _different groups_,
+    when the drag source and the drop target belong to different sublists.
     To have a better understanding of how this works
-    see [groups configurations](https://annaghi.github.io/dnd-list/configuration/groups).
-      - `trigger`: Same as the plain `trigger` but applied on items from _different groups_.
+    see [sorting between groups on drag](https://annaghi.github.io/dnd-list/config-groups/operations-drag)
+    and [sorting between groups on drop](https://annaghi.github.io/dnd-list/config-groups/operations-drop).
+      - `listen`: Same as the plain `listen` but applied on items from _different groups_.
       - `operation`: Same as the plain `operation` but applied on the items from _different groups_.
-      - `beforeUpdate`: Same as the plain `beforeUpdate` but applied on the items from _different groups_.
-      - `comparator`: Function which compares two items by the grouping property.
+      - `comparator`: You should provide this function, which determines if two items are from the same group.
+      - `setter`: You should provide this function, which updates the second item's group with the first item's group.
 
-Here is an example configuration:
+This is our configuration with a void `beforeUpdate`:
 
     config : DnDList.Groups.Config Item
     config =
-        { trigger = DnDList.Groups.OnDrag
-        , operation = DnDList.Groups.RotateOut
-        , beforeUpdate = \_ _ list -> list
+        { beforeUpdate = \_ _ list -> list
+        , listen = DnDList.Groups.OnDrag
+        , operation = DnDList.Groups.Rotate
         , groups =
-            { trigger = DnDList.Groups.OnDrag
+            { listen = DnDList.Groups.OnDrag
             , operation = DnDList.Groups.InsertBefore
-            , beforeUpdate = updateOnGroupChange
-            , comparator = compareByGroup
+            , comparator = comparator
+            , setter = setter
             }
         }
 
-    compareByGroup : Item -> Item -> Bool
-    compareByGroup dragItem dropItem =
-        -- Check items whether they are in different groups.
+    comparator : Item -> Item -> Bool
+    comparator item1 item2 =
+        item1.group == item2.group
 
-
-    updateOnGroupChange : Int -> Int -> List Item -> List Item
-    updateOnGroupChange dragIndex dropIndex list =
-        -- The drag source item is on its way toward
-        -- transferring to another group,
-        -- so we need to update its group field.
+    setter : Item -> Item -> Item
+    setter item1 item2 =
+        { item2 | group = item1.group }
 
 -}
 type alias Config a =
-    { trigger : Trigger
+    { beforeUpdate : Int -> Int -> List a -> List a
+    , listen : Listen
     , operation : Operation
-    , beforeUpdate : Int -> Int -> List a -> List a
     , groups :
-        { trigger : Trigger
+        { listen : Listen
         , operation : Operation
-        , beforeUpdate : Int -> Int -> List a -> List a
         , comparator : a -> a -> Bool
+        , setter : a -> a -> a
         }
     }
 
 
-{-| Represents the event when the list will be sorted.
+{-| Represents the event for which the list sorting is available.
 
-  - `OnDrag`: Sorting is triggered when the ghost element moves over a drop target item.
+  - `OnDrag`: The list will be sorted when the ghost element is being dragged over a drop target item.
 
-  - `OnDrop`: Sorting is triggered when the ghost element is dropped on a drop target item.
+  - `OnDrop`: The list will be sorted when the ghost element is dropped on a drop target item.
 
 -}
-type Trigger
+type Listen
     = OnDrag
     | OnDrop
 
 
 {-| Represents the list sort operation.
 Detailed comparisons can be found here:
-[triggered on drag](https://annaghi.github.io/dnd-list/configuration/operations-drag)
-and [triggered on drop](https://annaghi.github.io/dnd-list/configuration/operations-drop).
+[sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
+and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
 
   - `InsertAfter`: The drag source item will be inserted after the drop target item.
 
   - `InsertBefore`: The drag source item will be inserted before the drop target item.
 
-  - `RotateIn`: The items between the drag source and the drop target items will be circularly shifted,
-    excluding the drop target.
-
-  - `RotateOut`: The items between the drag source and the drop target items will be circularly shifted,
-    including the drop target.
+  - `Rotate`: The items between the drag source and the drop target items will be circularly shifted.
 
   - `Swap`: The drag source and the drop target items will be swapped.
 
@@ -427,8 +424,7 @@ and [triggered on drop](https://annaghi.github.io/dnd-list/configuration/operati
 type Operation
     = InsertAfter
     | InsertBefore
-    | RotateIn
-    | RotateOut
+    | Rotate
     | Swap
     | Unaltered
 
@@ -448,11 +444,12 @@ It is accessible through the `System`'s `info` field.
 
   - `dropElement`: Information about the drop target as an HTML element, see `Browser.Dom.Element`.
 
-We can check the `Info` object to decide what to render when there is an ongoing dragging,
+You can check the `Info` object to decide what to render when there is an ongoing dragging,
 and what to render when there is no dragging:
 
     itemView : Model -> ... -> Html.Html Msg
     itemView model ... =
+        ...
         case system.info model.dnd of
             Just _ ->
                 -- Render when there is an ongoing dragging.
@@ -460,7 +457,7 @@ and what to render when there is no dragging:
             Nothing ->
                 -- Render when there is no dragging.
 
-Or we can get e.g. the drag source item:
+Or you can extract the current drag source item from the `Info` object:
 
     maybeDragItem : DnDList.Groups.Model -> List Item -> Maybe Item
     maybeDragItem dnd items =
@@ -484,8 +481,8 @@ type alias Info =
 
 
 subscriptions : (Msg -> msg) -> Model -> Sub msg
-subscriptions wrap (Model state) =
-    case state of
+subscriptions stepMsg (Model model) =
+    case model of
         Nothing ->
             Sub.none
 
@@ -493,51 +490,52 @@ subscriptions wrap (Model state) =
             Sub.batch
                 [ Browser.Events.onMouseMove
                     (Json.Decode.map2 Utils.Position Utils.pageX Utils.pageY
-                        |> Json.Decode.map (wrap << Drag)
+                        |> Json.Decode.map (stepMsg << Drag)
                     )
                 , Browser.Events.onMouseUp
-                    (Json.Decode.succeed (wrap DragEnd))
+                    (Json.Decode.succeed (stepMsg DragEnd))
                 ]
 
 
 commands : (Msg -> msg) -> Model -> Cmd msg
-commands wrap model =
+commands stepMsg model =
     Cmd.batch
-        [ dragElementCommands wrap model
-        , dropElementCommands wrap model
+        [ dragElementCommands stepMsg model
+        , dropElementCommands stepMsg model
         ]
 
 
 dragElementCommands : (Msg -> msg) -> Model -> Cmd msg
-dragElementCommands wrap (Model state) =
-    case state of
+dragElementCommands stepMsg (Model model) =
+    case model of
         Nothing ->
             Cmd.none
 
-        Just s ->
-            case s.dragElement of
+        Just state ->
+            case state.dragElement of
                 Nothing ->
-                    Task.attempt (wrap << GotDragElement) (Browser.Dom.getElement s.dragElementId)
+                    Task.attempt (stepMsg << GotDragElement) (Browser.Dom.getElement state.dragElementId)
 
                 _ ->
                     Cmd.none
 
 
 dropElementCommands : (Msg -> msg) -> Model -> Cmd msg
-dropElementCommands wrap (Model state) =
-    case state of
+dropElementCommands stepMsg (Model model) =
+    case model of
         Nothing ->
             Cmd.none
 
-        Just s ->
-            if s.dragCounter == 0 then
-                Task.attempt (wrap << GotDropElement) (Browser.Dom.getElement s.dropElementId)
+        Just state ->
+            if state.dragCounter == 0 then
+                Task.attempt (stepMsg << GotDropElement) (Browser.Dom.getElement state.dropElementId)
 
             else
                 Cmd.none
 
 
-{-| Internal message type. It should be wrapped within our message constructor.
+{-| Internal message type.
+It should be wrapped within our message constructor:
 
     type Msg
         = MyMsg DnDList.Groups.Msg
@@ -555,7 +553,7 @@ type Msg
 
 
 update : Config a -> Msg -> Model -> List a -> ( Model, List a )
-update { operation, trigger, beforeUpdate, groups } msg (Model state) list =
+update { beforeUpdate, listen, operation, groups } msg (Model model) list =
     case msg of
         DragStart dragIndex dragElementId xy ->
             ( Model <|
@@ -574,54 +572,73 @@ update { operation, trigger, beforeUpdate, groups } msg (Model state) list =
             )
 
         Drag xy ->
-            ( state
-                |> Maybe.map (\s -> { s | currentPosition = xy, dragCounter = s.dragCounter + 1 })
+            ( model
+                |> Maybe.map (\state -> { state | currentPosition = xy, dragCounter = state.dragCounter + 1 })
                 |> Model
             , list
             )
 
         DragOver dropIndex dropElementId ->
-            ( state
-                |> Maybe.map (\s -> { s | dropIndex = dropIndex, dropElementId = dropElementId })
+            ( model
+                |> Maybe.map (\state -> { state | dropIndex = dropIndex, dropElementId = dropElementId })
                 |> Model
             , list
             )
 
         DragEnter dropIndex ->
-            case state of
-                Just s ->
-                    if s.dragCounter > 1 && s.dragIndex /= dropIndex then
-                        if trigger == OnDrag && equalGroups groups.comparator s.dragIndex dropIndex list then
-                            onDragUpdate dropIndex s operation beforeUpdate list
+            case model of
+                Just state ->
+                    if state.dragCounter > 1 && state.dragIndex /= dropIndex then
+                        if listen == OnDrag && equalGroups groups.comparator state.dragIndex dropIndex list then
+                            ( Model (Just (stateUpdate operation dropIndex state))
+                            , list
+                                |> beforeUpdate state.dragIndex dropIndex
+                                |> sublistUpdate operation state.dragIndex dropIndex
+                            )
 
-                        else if groups.trigger == OnDrag && not (equalGroups groups.comparator s.dragIndex dropIndex list) then
-                            onDragUpdate dropIndex s groups.operation groups.beforeUpdate list
+                        else if groups.listen == OnDrag && not (equalGroups groups.comparator state.dragIndex dropIndex list) then
+                            ( Model
+                                (Just
+                                    (stateUpdate groups.operation dropIndex state)
+                                )
+                            , list
+                                |> beforeUpdate state.dragIndex dropIndex
+                                |> listUpdate groups.operation groups.comparator groups.setter state.dragIndex dropIndex
+                            )
 
                         else
-                            ( Model (Just { s | dragCounter = 0 }), list )
+                            ( Model (Just { state | dragCounter = 0 }), list )
 
                     else
-                        ( Model state, list )
+                        ( Model model, list )
 
                 _ ->
-                    ( Model state, list )
+                    ( Model model, list )
 
         DragLeave ->
-            ( state
-                |> Maybe.map (\s -> { s | dropIndex = s.dragIndex })
+            ( model
+                |> Maybe.map (\state -> { state | dropIndex = state.dragIndex })
                 |> Model
             , list
             )
 
         DragEnd ->
-            case state of
-                Just s ->
-                    if s.dragIndex /= s.dropIndex then
-                        if trigger == OnDrop && equalGroups groups.comparator s.dragIndex s.dropIndex list then
-                            onDropUpdate s operation beforeUpdate list
+            case model of
+                Just state ->
+                    if state.dragIndex /= state.dropIndex then
+                        if listen == OnDrop && equalGroups groups.comparator state.dragIndex state.dropIndex list then
+                            ( Model Nothing
+                            , list
+                                |> beforeUpdate state.dragIndex state.dropIndex
+                                |> sublistUpdate operation state.dragIndex state.dropIndex
+                            )
 
-                        else if groups.trigger == OnDrop && not (equalGroups groups.comparator s.dragIndex s.dropIndex list) then
-                            onDropUpdate s groups.operation groups.beforeUpdate list
+                        else if groups.listen == OnDrop && not (equalGroups groups.comparator state.dragIndex state.dropIndex list) then
+                            ( Model Nothing
+                            , list
+                                |> beforeUpdate state.dragIndex state.dropIndex
+                                |> listUpdate groups.operation groups.comparator groups.setter state.dragIndex state.dropIndex
+                            )
 
                         else
                             ( Model Nothing, list )
@@ -633,137 +650,229 @@ update { operation, trigger, beforeUpdate, groups } msg (Model state) list =
                     ( Model Nothing, list )
 
         GotDragElement (Err _) ->
-            ( Model state, list )
+            ( Model model, list )
 
         GotDragElement (Ok dragElement) ->
-            ( state
-                |> Maybe.map (\s -> { s | dragElement = Just dragElement, dropElement = Just dragElement })
+            ( model
+                |> Maybe.map (\state -> { state | dragElement = Just dragElement, dropElement = Just dragElement })
                 |> Model
             , list
             )
 
         GotDropElement (Err _) ->
-            ( Model state, list )
+            ( Model model, list )
 
         GotDropElement (Ok dropElement) ->
-            ( state
-                |> Maybe.map (\s -> { s | dropElement = Just dropElement })
+            ( model
+                |> Maybe.map (\state -> { state | dropElement = Just dropElement })
                 |> Model
             , list
             )
 
 
-onDragUpdate : Int -> State -> Operation -> (Int -> Int -> List a -> List a) -> List a -> ( Model, List a )
-onDragUpdate dropIndex s operation beforeUpdate list =
+stateUpdate : Operation -> Int -> State -> State
+stateUpdate operation dropIndex state =
     case operation of
         InsertAfter ->
-            ( Model
-                (Just
-                    { s
-                        | dragIndex =
-                            if s.dragIndex > dropIndex then
-                                dropIndex + 1
+            { state
+                | dragIndex =
+                    if dropIndex < state.dragIndex then
+                        dropIndex + 1
 
-                            else
-                                dropIndex
-                        , dragCounter = 0
-                    }
-                )
-            , Operations.insertAfter beforeUpdate s.dragIndex dropIndex list
-            )
+                    else
+                        dropIndex
+                , dragCounter = 0
+            }
 
         InsertBefore ->
-            ( Model <|
-                Just
-                    { s
-                        | dragIndex =
-                            if s.dragIndex < dropIndex then
-                                dropIndex - 1
+            { state
+                | dragIndex =
+                    if state.dragIndex < dropIndex then
+                        dropIndex - 1
 
-                            else
-                                dropIndex
-                        , dragCounter = 0
-                    }
-            , Operations.insertBefore beforeUpdate s.dragIndex dropIndex list
-            )
+                    else
+                        dropIndex
+                , dragCounter = 0
+            }
 
-        RotateIn ->
-            ( Model
-                (Just
-                    { s
-                        | dragIndex =
-                            if s.dragIndex < dropIndex then
-                                dropIndex - 1
-
-                            else if s.dragIndex > dropIndex then
-                                dropIndex + 1
-
-                            else
-                                dropIndex
-                        , dragCounter = 0
-                    }
-                )
-            , Operations.rotateIn beforeUpdate s.dragIndex dropIndex list
-            )
-
-        RotateOut ->
-            ( Model (Just { s | dragIndex = dropIndex, dragCounter = 0 })
-            , Operations.rotateOut beforeUpdate s.dragIndex dropIndex list
-            )
+        Rotate ->
+            { state | dragIndex = dropIndex, dragCounter = 0 }
 
         Swap ->
-            ( Model (Just { s | dragIndex = dropIndex, dragCounter = 0 })
-            , Operations.swap beforeUpdate s.dragIndex dropIndex list
-            )
+            { state | dragIndex = dropIndex, dragCounter = 0 }
 
         Unaltered ->
-            ( Model (Just { s | dragCounter = 0 })
-            , Operations.unaltered beforeUpdate s.dragIndex dropIndex list
-            )
+            { state | dragCounter = 0 }
 
 
-onDropUpdate : State -> Operation -> (Int -> Int -> List a -> List a) -> List a -> ( Model, List a )
-onDropUpdate s operation beforeUpdate list =
+sublistUpdate : Operation -> Int -> Int -> List a -> List a
+sublistUpdate operation dragIndex dropIndex list =
     case operation of
         InsertAfter ->
-            ( Model Nothing, Operations.insertAfter beforeUpdate s.dragIndex s.dropIndex list )
+            Operations.insertAfter dragIndex dropIndex list
 
         InsertBefore ->
-            ( Model Nothing, Operations.insertBefore beforeUpdate s.dragIndex s.dropIndex list )
+            Operations.insertBefore dragIndex dropIndex list
 
-        RotateIn ->
-            ( Model Nothing, Operations.rotateIn beforeUpdate s.dragIndex s.dropIndex list )
-
-        RotateOut ->
-            ( Model Nothing, Operations.rotateOut beforeUpdate s.dragIndex s.dropIndex list )
+        Rotate ->
+            Operations.rotate dragIndex dropIndex list
 
         Swap ->
-            ( Model Nothing, Operations.swap beforeUpdate s.dragIndex s.dropIndex list )
+            Operations.swap dragIndex dropIndex list
 
         Unaltered ->
-            ( Model Nothing, Operations.unaltered beforeUpdate s.dragIndex s.dropIndex list )
+            list
+
+
+listUpdate : Operation -> (a -> a -> Bool) -> (a -> a -> a) -> Int -> Int -> List a -> List a
+listUpdate operation comparator setter dragIndex dropIndex list =
+    let
+        dragGroupUpdate : List a -> List a
+        dragGroupUpdate l =
+            l
+                |> List.indexedMap
+                    (\index item ->
+                        if index == dragIndex then
+                            List.map2 setter (drops dropIndex list) [ item ]
+
+                        else
+                            [ item ]
+                    )
+                |> List.concat
+
+        dragAndDropGroupUpdate : List a -> List a
+        dragAndDropGroupUpdate l =
+            l
+                |> List.indexedMap
+                    (\index item ->
+                        if index == dragIndex then
+                            List.map2 setter (drops dropIndex list) [ item ]
+
+                        else if index == dropIndex then
+                            List.map2 setter (drags dragIndex list) [ item ]
+
+                        else
+                            [ item ]
+                    )
+                |> List.concat
+
+        sublist : List a -> List a
+        sublist l =
+            l
+                |> List.indexedMap Tuple.pair
+                |> List.foldl
+                    (\( index, item ) acc ->
+                        if equalGroups comparator index 0 l then
+                            item :: acc
+
+                        else
+                            acc
+                    )
+                    []
+
+        bubbleGroupRecursive : List a -> List a
+        bubbleGroupRecursive l =
+            case l of
+                [] ->
+                    []
+
+                [ x ] ->
+                    [ x ]
+
+                x :: xs ->
+                    let
+                        sl : List a
+                        sl =
+                            sublist l
+                    in
+                    if sl /= [] then
+                        (sl |> List.drop 1 |> List.reverse)
+                            ++ List.map2 (\prev next -> setter next prev)
+                                (List.take 1 sl)
+                                (xs |> List.drop (List.length sl - 1) |> List.take 1)
+                            ++ bubbleGroupRecursive
+                                (List.map2 (\prev next -> setter prev next)
+                                    (List.take 1 sl)
+                                    (xs |> List.drop (List.length sl - 1) |> List.take 1)
+                                    ++ List.drop (List.length sl) xs
+                                )
+
+                    else
+                        x :: xs
+
+        groupUpdate : Int -> Int -> (List a -> List a) -> List a -> List a
+        groupUpdate i j fn l =
+            let
+                beginning : List a
+                beginning =
+                    List.take i l
+
+                middle : List a
+                middle =
+                    l
+                        |> List.drop i
+                        |> List.take (j - i + 1)
+
+                end : List a
+                end =
+                    List.drop (j + 1) l
+            in
+            beginning ++ fn middle ++ end
+    in
+    case operation of
+        InsertAfter ->
+            list
+                |> dragGroupUpdate
+                |> Operations.insertAfter dragIndex dropIndex
+
+        InsertBefore ->
+            list
+                |> dragGroupUpdate
+                |> Operations.insertBefore dragIndex dropIndex
+
+        Rotate ->
+            if dragIndex < dropIndex then
+                list
+                    |> groupUpdate dragIndex dropIndex (List.reverse >> bubbleGroupRecursive >> List.reverse)
+                    |> Operations.rotate dragIndex dropIndex
+
+            else if dropIndex < dragIndex then
+                list
+                    |> groupUpdate dropIndex dragIndex bubbleGroupRecursive
+                    |> Operations.rotate dragIndex dropIndex
+
+            else
+                list
+
+        Swap ->
+            list
+                |> dragAndDropGroupUpdate
+                |> Operations.swap dragIndex dropIndex
+
+        Unaltered ->
+            list
 
 
 dragEvents : (Msg -> msg) -> Int -> String -> List (Html.Attribute msg)
-dragEvents wrap dragIndex dragElementId =
+dragEvents stepMsg dragIndex dragElementId =
     [ Html.Events.preventDefaultOn "mousedown"
         (Json.Decode.map2 Utils.Position Utils.pageX Utils.pageY
-            |> Json.Decode.map (wrap << DragStart dragIndex dragElementId)
+            |> Json.Decode.map (stepMsg << DragStart dragIndex dragElementId)
             |> Json.Decode.map (\msg -> ( msg, True ))
         )
     ]
 
 
 dropEvents : (Msg -> msg) -> Int -> String -> List (Html.Attribute msg)
-dropEvents wrap dropIndex dropElementId =
-    [ Html.Events.onMouseOver (wrap (DragOver dropIndex dropElementId))
-    , Html.Events.onMouseEnter (wrap (DragEnter dropIndex))
-    , Html.Events.onMouseLeave (wrap DragLeave)
+dropEvents stepMsg dropIndex dropElementId =
+    [ Html.Events.onMouseOver (stepMsg (DragOver dropIndex dropElementId))
+    , Html.Events.onMouseEnter (stepMsg (DragEnter dropIndex))
+    , Html.Events.onMouseLeave (stepMsg DragLeave)
     ]
 
 
 info : Model -> Maybe Info
-info (Model state) =
+info (Model model) =
     Maybe.andThen
         (\s ->
             Maybe.map2
@@ -779,25 +888,25 @@ info (Model state) =
                 s.dragElement
                 s.dropElement
         )
-        state
+        model
 
 
 ghostStyles : Model -> List (Html.Attribute msg)
-ghostStyles (Model state) =
-    case state of
+ghostStyles (Model model) =
+    case model of
         Nothing ->
             []
 
-        Just s ->
-            case s.dragElement of
+        Just state ->
+            case state.dragElement of
                 Just { element } ->
                     [ Html.Attributes.style "position" "absolute"
                     , Html.Attributes.style "left" "0"
                     , Html.Attributes.style "top" "0"
                     , Html.Attributes.style "transform" <|
                         Utils.translate
-                            (round (s.currentPosition.x - s.startPosition.x + element.x))
-                            (round (s.currentPosition.y - s.startPosition.y + element.y))
+                            (round (state.currentPosition.x - state.startPosition.x + element.x))
+                            (round (state.currentPosition.y - state.startPosition.y + element.y))
                     , Html.Attributes.style "height" (Utils.px (round element.height))
                     , Html.Attributes.style "width" (Utils.px (round element.width))
                     , Html.Attributes.style "pointer-events" "none"
@@ -809,22 +918,20 @@ ghostStyles (Model state) =
 
 equalGroups : (a -> a -> Bool) -> Int -> Int -> List a -> Bool
 equalGroups comparator dragIndex dropIndex list =
-    let
-        drag : List a
-        drag =
-            list |> List.drop dragIndex |> List.take 1
+    List.map2
+        (\dragItem dropItem ->
+            comparator dragItem dropItem
+        )
+        (drags dragIndex list)
+        (drops dropIndex list)
+        |> List.foldl (||) False
 
-        drop : List a
-        drop =
-            list |> List.drop dropIndex |> List.take 1
 
-        result : List Bool
-        result =
-            List.map2
-                (\dragItem dropItem ->
-                    comparator dragItem dropItem
-                )
-                drag
-                drop
-    in
-    List.foldl (||) False result
+drags : Int -> List a -> List a
+drags dragIndex list =
+    list |> List.drop dragIndex |> List.take 1
+
+
+drops : Int -> List a -> List a
+drops dropIndex list =
+    list |> List.drop dropIndex |> List.take 1
