@@ -1,6 +1,6 @@
 html {
   font-family: "Open Sans", sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   height: 100%;
 }
 body {
@@ -65,8 +65,8 @@ nav li:last-child:after {
   opacity: 1;
   margin: 0;
 }
-nav a {
-  padding-left: 7px;
+nav h4 {
+  margin: 0.5em 0;
 }
 
 /* Main panel */
@@ -92,7 +92,6 @@ section .link {
   display: table;
   margin-right: 1em;
   padding: 0px 14px 6px 14px;
-  width: 110px;
 }
 
 /* Highlight.js */
@@ -118,7 +117,7 @@ pre {
   }
   nav a {
     display: block;
-    padding: 2px 0 2px 15px;
+    padding: 2px 0 2px 7px;
   }
 }
 
@@ -137,7 +136,10 @@ pre {
     flex: 1 0 0px;
   }
   #sidebar {
-    flex: 0 0 330px;
+    flex: 0 0 280px;
+  }
+  section .link {
+    width: 110px;
   }
 }
 
