@@ -50,14 +50,14 @@ gatheredByGroup =
 
 config : DnDList.Groups.Config Item
 config =
-    { trigger = DnDList.Groups.OnDrag
+    { beforeUpdate = \_ _ list -> list
+    , listen = DnDList.Groups.OnDrag
     , operation = DnDList.Groups.Swap
-    , beforeUpdate = \_ _ list -> list
     , groups =
-        { trigger = DnDList.Groups.OnDrag
+        { listen = DnDList.Groups.OnDrag
         , operation = DnDList.Groups.Swap
-        , beforeUpdate = updateOnGroupChange
-        , comparator = compareByGroup
+        , comparator = comparator
+        , setter = setter
         }
     }
 
@@ -67,41 +67,14 @@ system =
     DnDList.Groups.create config MyMsg
 
 
-compareByGroup : Item -> Item -> Bool
-compareByGroup dragItem dropItem =
-    dragItem.group == dropItem.group
+comparator : Item -> Item -> Bool
+comparator item1 item2 =
+    item1.group == item2.group
 
 
-updateOnGroupChange : Int -> Int -> List Item -> List Item
-updateOnGroupChange dragIndex dropIndex list =
-    let
-        drag : List Item
-        drag =
-            list |> List.drop dragIndex |> List.take 1
-
-        drop : List Item
-        drop =
-            list |> List.drop dropIndex |> List.take 1
-    in
-    list
-        |> List.indexedMap
-            (\index item ->
-                if index == dragIndex then
-                    List.map2
-                        (\dragItem dropItem -> { dragItem | group = dropItem.group })
-                        [ item ]
-                        drop
-
-                else if index == dropIndex then
-                    List.map2
-                        (\dragItem dropItem -> { dropItem | group = dragItem.group })
-                        drag
-                        [ item ]
-
-                else
-                    [ item ]
-            )
-        |> List.concat
+setter : Item -> Item -> Item
+setter item1 item2 =
+    { item2 | group = item2.group }
 
 
 
