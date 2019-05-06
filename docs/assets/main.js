@@ -14753,9 +14753,9 @@ var author$project$Config$Root$info = function (example) {
 		case 0:
 			return {aB: 'The behavior of the Free, Horizontal only and Vertical only drag movements with Swap list operation.', aF: 'movement', P: 'Movement'};
 		case 1:
-			return {aB: 'Compare the list operations without wings triggered on drag.', aF: 'operations-drag', P: 'Operations on drag'};
+			return {aB: 'Compare the list operations sorting on drag.', aF: 'operations-drag', P: 'Operations on drag'};
 		default:
-			return {aB: 'Compare the list operations without wings triggered on drop.', aF: 'operations-drop', P: 'Operations on drop'};
+			return {aB: 'Compare the list operations sorting on drop.', aF: 'operations-drop', P: 'Operations on drop'};
 	}
 };
 var elm$html$Html$h2 = _VirtualDom_node('h2');
@@ -16519,9 +16519,9 @@ var author$project$ConfigGroups$Root$demoView = function (model) {
 };
 var author$project$ConfigGroups$Root$info = function (example) {
 	if (!example.$) {
-		return {aB: 'Compare the list operations without wings triggered on drag.', aF: 'operations-drag', P: 'Operations on drag'};
+		return {aB: 'Compare the list operations with groups sorting on drag.', aF: 'operations-drag', P: 'Operations on drag'};
 	} else {
-		return {aB: 'Compare the list operations without wings triggered on drop.', aF: 'operations-drop', P: 'Operations on drop'};
+		return {aB: 'Compare the list operations with groups sorting on drop.', aF: 'operations-drop', P: 'Operations on drop'};
 	}
 };
 var author$project$ConfigGroups$Root$headerView = function (model) {
@@ -17365,7 +17365,7 @@ var author$project$Gallery$TaskBoard$boardStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center'),
 		A2(elm$html$Html$Attributes$style, 'margin', '0 auto'),
 		A2(elm$html$Html$Attributes$style, 'min-height', '600px'),
-		A2(elm$html$Html$Attributes$style, 'padding', '3em')
+		A2(elm$html$Html$Attributes$style, 'padding', '2em 0')
 	]);
 var author$project$Gallery$TaskBoard$cardStyles = function (color) {
 	return _List_fromArray(
@@ -23915,7 +23915,8 @@ var author$project$Introduction$Groups$sectionStyles = _List_fromArray(
 		A2(elm$html$Html$Attributes$style, 'align-items', 'top'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center'),
 		A2(elm$html$Html$Attributes$style, 'align-items', 'flex-start'),
-		A2(elm$html$Html$Attributes$style, 'height', '46rem')
+		A2(elm$html$Html$Attributes$style, 'padding-top', '2rem'),
+		A2(elm$html$Html$Attributes$style, 'height', '41rem')
 	]);
 var author$project$Introduction$Groups$view = function (model) {
 	return A2(
