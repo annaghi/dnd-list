@@ -300,7 +300,8 @@ sectionStyles =
     , Html.Attributes.style "align-items" "top"
     , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "align-items" "flex-start"
-    , Html.Attributes.style "height" "46rem"
+    , Html.Attributes.style "padding-top" "2rem"
+    , Html.Attributes.style "height" "41rem"
     ]
 
 

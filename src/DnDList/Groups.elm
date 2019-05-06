@@ -14,8 +14,12 @@ we will use it as an illustration throughout this page.
 
 This module is a modified version of the `DnDList` module.
 The `Config` was extended with a new field called `groups`, and the `movement` field was withdrawn.
-The internal sorting distinguishes between the operation performed on items from the _same group_,
-and the operation performed on items from _different groups_.
+
+With groupable items the drag source and the drop target items can belong to the _same group_ or to _different groups_.
+So now the internal sorting distinguishes between these two cases and we need to configure:
+
+  - what operation to run when moving items within the same group, and
+  - what operation to run when transferring items between different groups.
 
 
 # System
@@ -333,28 +337,28 @@ create config stepMsg =
 
   - `beforeUpdate`: This is a hook and gives you access to your list before it will be sorted.
     The first number is the drag index, the second number is the drop index.
-    The [Towers of Hanoi](https://annaghi.github.io/dnd-list/gallery/hanoi) uses this hook to update the disks' `tower` attribute.
+    The [Towers of Hanoi](https://annaghi.github.io/dnd-list/gallery/hanoi) uses this hook to update the disks' `tower` property.
 
-  - `listen`: This setting is for the items from the _same group_.
+  - `listen`: This setting is for the operation performing on the _same group_.
     The items can listen for drag events or for drop events.
     In the first case the list will be sorted again and again while the mouse moves over the different drop target items.
     In the second case the list will be sorted only once on that drop target where the mouse was finally released.
 
-  - `operation`: This setting is for the items from the _same group_.
+  - `operation`: This setting is for the operation performing on the _same group_.
     Different kinds of sort operations can be performed on the list.
     You can start to analyze them with
     [sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
     and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
 
-  - `groups`: This setting is for the items from _different groups_,
-    when the drag source and the drop target belong to different sublists.
+  - `groups`: This setting is for the operation performing on _different groups_,
+    when the drag source and the drop target belong to different groups.
     To have a better understanding of how this works
     see [sorting between groups on drag](https://annaghi.github.io/dnd-list/config-groups/operations-drag)
     and [sorting between groups on drop](https://annaghi.github.io/dnd-list/config-groups/operations-drop).
-      - `listen`: Same as the plain `listen` but applied on items from _different groups_.
-      - `operation`: Same as the plain `operation` but applied on the items from _different groups_.
-      - `comparator`: You should provide this function, which determines if two items are from the same group.
-      - `setter`: You should provide this function, which updates the second item's group with the first item's group.
+      - `listen`: Same as the plain `listen` but applied when transferring items between groups.
+      - `operation`: Same as the plain `operation` but applied when transferring items between groups.
+      - `comparator`: You should provide this function, which determines if two items are from different groups.
+      - `setter`: You should provide this function, which updates the second item's group by the first item's group.
 
 This is our configuration with a void `beforeUpdate`:
 
@@ -457,7 +461,7 @@ and what to render when there is no dragging:
             Nothing ->
                 -- Render when there is no dragging.
 
-Or you can extract the current drag source item from the `Info` object:
+Or you can determine the current drag source item using the `Info` object:
 
     maybeDragItem : DnDList.Groups.Model -> List Item -> Maybe Item
     maybeDragItem dnd items =
