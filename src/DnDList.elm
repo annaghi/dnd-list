@@ -443,40 +443,35 @@ subscriptions stepMsg (Model model) =
 
 
 commands : (Msg -> msg) -> Model -> Cmd msg
-commands stepMsg model =
-    Cmd.batch
-        [ dragElementCommands stepMsg model
-        , dropElementCommands stepMsg model
-        ]
-
-
-dragElementCommands : (Msg -> msg) -> Model -> Cmd msg
-dragElementCommands stepMsg (Model model) =
+commands stepMsg (Model model) =
     case model of
         Nothing ->
             Cmd.none
 
         Just state ->
-            case state.dragElement of
-                Nothing ->
-                    Task.attempt (stepMsg << GotDragElement) (Browser.Dom.getElement state.dragElementId)
-
-                _ ->
-                    Cmd.none
+            Cmd.batch
+                [ dragElementCommands stepMsg state
+                , dropElementCommands stepMsg state
+                ]
 
 
-dropElementCommands : (Msg -> msg) -> Model -> Cmd msg
-dropElementCommands stepMsg (Model model) =
-    case model of
+dragElementCommands : (Msg -> msg) -> State -> Cmd msg
+dragElementCommands stepMsg state =
+    case state.dragElement of
         Nothing ->
+            Task.attempt (stepMsg << GotDragElement) (Browser.Dom.getElement state.dragElementId)
+
+        _ ->
             Cmd.none
 
-        Just state ->
-            if state.dragCounter == 0 then
-                Task.attempt (stepMsg << GotDropElement) (Browser.Dom.getElement state.dropElementId)
 
-            else
-                Cmd.none
+dropElementCommands : (Msg -> msg) -> State -> Cmd msg
+dropElementCommands stepMsg state =
+    if state.dragCounter == 0 then
+        Task.attempt (stepMsg << GotDropElement) (Browser.Dom.getElement state.dropElementId)
+
+    else
+        Cmd.none
 
 
 {-| Internal message type.
