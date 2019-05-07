@@ -149,13 +149,8 @@ view model =
 
 groupView : Model -> Group -> String -> Html.Html Msg
 groupView model group color =
-    let
-        items : List Item
-        items =
-            model.items
-                |> List.filter (\item -> item.group == group)
-    in
-    items
+    model.items
+        |> List.filter (\item -> item.group == group)
         |> List.indexedMap (itemView model (calculateOffset 0 group model.items))
         |> Html.div (groupStyles color)
 

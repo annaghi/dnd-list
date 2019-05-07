@@ -4,6 +4,7 @@ import Browser
 import DnDList.Groups
 import Html
 import Html.Attributes
+import Html.Events
 
 
 
@@ -27,20 +28,21 @@ main =
 type alias Item =
     { group : Int
     , value : String
+    , color : String
     }
 
 
 gatheredData : List Item
 gatheredData =
-    [ Item 1 "1"
-    , Item 2 "2"
-    , Item 2 "3"
-    , Item 2 "4"
-    , Item 3 "5"
-    , Item 3 "6"
-    , Item 3 "7"
-    , Item 3 "8"
-    , Item 3 "9"
+    [ Item 1 "1" baseColor
+    , Item 2 "2" baseColor
+    , Item 2 "3" baseColor
+    , Item 2 "4" baseColor
+    , Item 3 "5" baseColor
+    , Item 3 "6" baseColor
+    , Item 3 "7" baseColor
+    , Item 3 "8" baseColor
+    , Item 3 "9" baseColor
     ]
 
 
@@ -50,7 +52,7 @@ gatheredData =
 
 config : DnDList.Groups.Config Item
 config =
-    { beforeUpdate = \_ _ list -> list
+    { beforeUpdate = beforeUpdate
     , listen = DnDList.Groups.OnDrop
     , operation = DnDList.Groups.Unaltered
     , groups =
@@ -75,6 +77,46 @@ setter item1 item2 =
 system : DnDList.Groups.System Item Msg
 system =
     DnDList.Groups.create config MyMsg
+
+
+beforeUpdate : Int -> Int -> List Item -> List Item
+beforeUpdate dragIndex dropIndex items =
+    if dragIndex < dropIndex then
+        List.indexedMap
+            (\i item ->
+                if i == dragIndex then
+                    { item | color = dragColor }
+
+                else if i == dropIndex then
+                    { item | color = dropColor }
+
+                else if dragIndex < i && i < dropIndex then
+                    { item | color = affectedColor }
+
+                else
+                    { item | color = baseColor }
+            )
+            items
+
+    else if dragIndex > dropIndex then
+        List.indexedMap
+            (\i item ->
+                if i == dragIndex then
+                    { item | color = dragColor }
+
+                else if i == dropIndex then
+                    { item | color = dropColor }
+
+                else if dropIndex < i && i < dragIndex then
+                    { item | color = affectedColor }
+
+                else
+                    { item | color = baseColor }
+            )
+            items
+
+    else
+        items
 
 
 
@@ -114,6 +156,7 @@ subscriptions model =
 
 type Msg
     = MyMsg DnDList.Groups.Msg
+    | ResetColors
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -128,6 +171,11 @@ update message model =
             , system.commands model.dnd
             )
 
+        ResetColors ->
+            ( { model | items = List.map (\{ group, value } -> Item group value baseColor) model.items }
+            , Cmd.none
+            )
+
 
 
 -- VIEW
@@ -135,24 +183,25 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section sectionStyles
-        [ groupView model 1 red
-        , groupView model 2 blue
-        , groupView model 3 green
+    Html.section
+        (Html.Events.onMouseDown ResetColors :: sectionStyles)
+        [ groupView model 1
+        , groupView model 2
+        , groupView model 3
         , ghostView model
         ]
 
 
-groupView : Model -> Int -> String -> Html.Html Msg
-groupView model currentGroup bgColor =
+groupView : Model -> Int -> Html.Html Msg
+groupView model currentGroup =
     model.items
         |> List.filter (\{ group } -> group == currentGroup)
         |> List.indexedMap (itemView model (calculateOffset 0 currentGroup model.items))
-        |> Html.div (groupStyles bgColor)
+        |> Html.div groupStyles
 
 
 itemView : Model -> Int -> Int -> Item -> Html.Html Msg
-itemView model offset localIndex { group, value } =
+itemView model offset localIndex { group, value, color } =
     let
         globalIndex : Int
         globalIndex =
@@ -163,20 +212,25 @@ itemView model offset localIndex { group, value } =
             "rotate-" ++ String.fromInt globalIndex
     in
     case system.info model.dnd of
-        Just { dragIndex } ->
-            if globalIndex /= dragIndex then
+        Just { dragIndex, dropIndex } ->
+            if globalIndex /= dragIndex && globalIndex /= dropIndex then
                 Html.div
-                    (Html.Attributes.id itemId :: itemStyles dark ++ system.dropEvents globalIndex itemId)
+                    (Html.Attributes.id itemId :: itemStyles color ++ system.dropEvents globalIndex itemId)
+                    [ Html.text value ]
+
+            else if globalIndex /= dragIndex && globalIndex == dropIndex then
+                Html.div
+                    (Html.Attributes.id itemId :: itemStyles dropColor ++ system.dropEvents globalIndex itemId)
                     [ Html.text value ]
 
             else
                 Html.div
-                    (Html.Attributes.id itemId :: itemStyles gray)
+                    (Html.Attributes.id itemId :: itemStyles dropColor)
                     []
 
         _ ->
             Html.div
-                (Html.Attributes.id itemId :: itemStyles dark ++ system.dragEvents globalIndex itemId)
+                (Html.Attributes.id itemId :: itemStyles color ++ system.dragEvents globalIndex itemId)
                 [ Html.text value ]
 
 
@@ -185,7 +239,7 @@ ghostView model =
     case maybeDragItem model of
         Just { value } ->
             Html.div
-                (itemStyles dark ++ system.ghostStyles model.dnd)
+                (itemStyles dragColor ++ system.ghostStyles model.dnd)
                 [ Html.text value ]
 
         _ ->
@@ -220,34 +274,24 @@ maybeDragItem { dnd, items } =
 -- COLORS
 
 
-green : String
-green =
-    "#757b3d"
+baseColor : String
+baseColor =
+    "dimgray"
 
 
-red : String
-red =
-    "#8c4585"
+dragColor : String
+dragColor =
+    "red"
 
 
-blue : String
-blue =
-    "#45858c"
+dropColor : String
+dropColor =
+    "green"
 
 
-dark : String
-dark =
-    "#292929"
-
-
-gray : String
-gray =
-    "#333333"
-
-
-transparent : String
-transparent =
-    "transparent"
+affectedColor : String
+affectedColor =
+    "purple"
 
 
 
@@ -258,16 +302,18 @@ sectionStyles : List (Html.Attribute msg)
 sectionStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-direction" "column"
+    , Html.Attributes.style "margin-right" "1em"
     , Html.Attributes.style "width" "800px"
     ]
 
 
-groupStyles : String -> List (Html.Attribute msg)
-groupStyles color =
+groupStyles : List (Html.Attribute msg)
+groupStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "padding" "1em 0"
-    , Html.Attributes.style "background-color" color
+    , Html.Attributes.style "border" "1px solid #b7b7b7"
+    , Html.Attributes.style "margin-bottom" "2em"
+    , Html.Attributes.style "padding" "2em 0 2em 2em"
     ]
 
 
@@ -275,7 +321,6 @@ itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
     [ Html.Attributes.style "width" "50px"
     , Html.Attributes.style "height" "50px"
-    , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "margin-right" "2em"
