@@ -1,4 +1,4 @@
-module Gallery.Puzzle exposing (Model, Msg, commands, init, initialModel, main, subscriptions, update, view)
+module Gallery.Puzzle exposing (Model, Msg, commands, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList.Groups

@@ -5250,41 +5250,47 @@ var elm$core$Task$attempt = F2(
 					task)));
 	});
 var author$project$DnDList$dragElementCommands = F2(
-	function (stepMsg, state) {
-		var _n0 = state.I;
-		if (_n0.$ === 1) {
-			return A2(
-				elm$core$Task$attempt,
-				A2(elm$core$Basics$composeL, stepMsg, author$project$DnDList$GotDragElement),
-				elm$browser$Browser$Dom$getElement(state.aj));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
-	});
-var author$project$DnDList$GotDropElement = function (a) {
-	return {$: 7, a: a};
-};
-var author$project$DnDList$dropElementCommands = F2(
-	function (stepMsg, state) {
-		return (!state.i) ? A2(
-			elm$core$Task$attempt,
-			A2(elm$core$Basics$composeL, stepMsg, author$project$DnDList$GotDropElement),
-			elm$browser$Browser$Dom$getElement(state.W)) : elm$core$Platform$Cmd$none;
-	});
-var author$project$DnDList$commands = F2(
 	function (stepMsg, _n0) {
 		var model = _n0;
 		if (model.$ === 1) {
 			return elm$core$Platform$Cmd$none;
 		} else {
 			var state = model.a;
-			return elm$core$Platform$Cmd$batch(
-				_List_fromArray(
-					[
-						A2(author$project$DnDList$dragElementCommands, stepMsg, state),
-						A2(author$project$DnDList$dropElementCommands, stepMsg, state)
-					]));
+			var _n2 = state.I;
+			if (_n2.$ === 1) {
+				return A2(
+					elm$core$Task$attempt,
+					A2(elm$core$Basics$composeL, stepMsg, author$project$DnDList$GotDragElement),
+					elm$browser$Browser$Dom$getElement(state.aj));
+			} else {
+				return elm$core$Platform$Cmd$none;
+			}
 		}
+	});
+var author$project$DnDList$GotDropElement = function (a) {
+	return {$: 7, a: a};
+};
+var author$project$DnDList$dropElementCommands = F2(
+	function (stepMsg, _n0) {
+		var model = _n0;
+		if (model.$ === 1) {
+			return elm$core$Platform$Cmd$none;
+		} else {
+			var state = model.a;
+			return (!state.i) ? A2(
+				elm$core$Task$attempt,
+				A2(elm$core$Basics$composeL, stepMsg, author$project$DnDList$GotDropElement),
+				elm$browser$Browser$Dom$getElement(state.W)) : elm$core$Platform$Cmd$none;
+		}
+	});
+var author$project$DnDList$commands = F2(
+	function (stepMsg, model) {
+		return elm$core$Platform$Cmd$batch(
+			_List_fromArray(
+				[
+					A2(author$project$DnDList$dragElementCommands, stepMsg, model),
+					A2(author$project$DnDList$dropElementCommands, stepMsg, model)
+				]));
 	});
 var author$project$DnDList$DragStart = F3(
 	function (a, b, c) {
@@ -7093,41 +7099,47 @@ var author$project$DnDList$Groups$GotDragElement = function (a) {
 	return {$: 6, a: a};
 };
 var author$project$DnDList$Groups$dragElementCommands = F2(
-	function (stepMsg, state) {
-		var _n0 = state.I;
-		if (_n0.$ === 1) {
-			return A2(
-				elm$core$Task$attempt,
-				A2(elm$core$Basics$composeL, stepMsg, author$project$DnDList$Groups$GotDragElement),
-				elm$browser$Browser$Dom$getElement(state.aj));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
-	});
-var author$project$DnDList$Groups$GotDropElement = function (a) {
-	return {$: 7, a: a};
-};
-var author$project$DnDList$Groups$dropElementCommands = F2(
-	function (stepMsg, state) {
-		return (!state.i) ? A2(
-			elm$core$Task$attempt,
-			A2(elm$core$Basics$composeL, stepMsg, author$project$DnDList$Groups$GotDropElement),
-			elm$browser$Browser$Dom$getElement(state.W)) : elm$core$Platform$Cmd$none;
-	});
-var author$project$DnDList$Groups$commands = F2(
 	function (stepMsg, _n0) {
 		var model = _n0;
 		if (model.$ === 1) {
 			return elm$core$Platform$Cmd$none;
 		} else {
 			var state = model.a;
-			return elm$core$Platform$Cmd$batch(
-				_List_fromArray(
-					[
-						A2(author$project$DnDList$Groups$dragElementCommands, stepMsg, state),
-						A2(author$project$DnDList$Groups$dropElementCommands, stepMsg, state)
-					]));
+			var _n2 = state.I;
+			if (_n2.$ === 1) {
+				return A2(
+					elm$core$Task$attempt,
+					A2(elm$core$Basics$composeL, stepMsg, author$project$DnDList$Groups$GotDragElement),
+					elm$browser$Browser$Dom$getElement(state.aj));
+			} else {
+				return elm$core$Platform$Cmd$none;
+			}
 		}
+	});
+var author$project$DnDList$Groups$GotDropElement = function (a) {
+	return {$: 7, a: a};
+};
+var author$project$DnDList$Groups$dropElementCommands = F2(
+	function (stepMsg, _n0) {
+		var model = _n0;
+		if (model.$ === 1) {
+			return elm$core$Platform$Cmd$none;
+		} else {
+			var state = model.a;
+			return (!state.i) ? A2(
+				elm$core$Task$attempt,
+				A2(elm$core$Basics$composeL, stepMsg, author$project$DnDList$Groups$GotDropElement),
+				elm$browser$Browser$Dom$getElement(state.W)) : elm$core$Platform$Cmd$none;
+		}
+	});
+var author$project$DnDList$Groups$commands = F2(
+	function (stepMsg, model) {
+		return elm$core$Platform$Cmd$batch(
+			_List_fromArray(
+				[
+					A2(author$project$DnDList$Groups$dragElementCommands, stepMsg, model),
+					A2(author$project$DnDList$Groups$dropElementCommands, stepMsg, model)
+				]));
 	});
 var author$project$DnDList$Groups$DragStart = F3(
 	function (a, b, c) {

@@ -1,4 +1,4 @@
-module Config.Movement.FreeOnDrag exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
+module Config.Movement.FreeOnDrag exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList

@@ -1,4 +1,4 @@
-module Introduction.Masonry exposing (Model, Msg, commands, init, initialModel, main, subscriptions, update, view)
+module Introduction.Masonry exposing (Model, Msg, commands, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList
