@@ -4,6 +4,7 @@ import Browser
 import DnDList.Groups
 import Html
 import Html.Attributes
+import Html.Events
 
 
 
@@ -33,15 +34,15 @@ type alias Item =
 
 gatheredData : List Item
 gatheredData =
-    [ Item 1 "6" blue
-    , Item 1 "2" red
-    , Item 1 "1" red
-    , Item 2 "7" green
-    , Item 2 "4" blue
-    , Item 2 "9" green
-    , Item 3 "3" red
-    , Item 3 "5" blue
-    , Item 3 "8" green
+    [ Item 1 "1" baseColor
+    , Item 2 "2" baseColor
+    , Item 2 "3" baseColor
+    , Item 2 "4" baseColor
+    , Item 3 "5" baseColor
+    , Item 3 "6" baseColor
+    , Item 3 "7" baseColor
+    , Item 3 "8" baseColor
+    , Item 3 "9" baseColor
     ]
 
 
@@ -51,7 +52,7 @@ gatheredData =
 
 config : DnDList.Groups.Config Item
 config =
-    { beforeUpdate = \_ _ list -> list
+    { beforeUpdate = beforeUpdate
     , listen = DnDList.Groups.OnDrop
     , operation = DnDList.Groups.Unaltered
     , groups =
@@ -76,6 +77,26 @@ setter item1 item2 =
 system : DnDList.Groups.System Item Msg
 system =
     DnDList.Groups.create config MyMsg
+
+
+beforeUpdate : Int -> Int -> List Item -> List Item
+beforeUpdate dragIndex dropIndex items =
+    if dragIndex /= dropIndex then
+        List.indexedMap
+            (\i item ->
+                if i == dropIndex then
+                    { item | color = dropColor }
+
+                else if i == dragIndex then
+                    { item | color = dragColor }
+
+                else
+                    { item | color = baseColor }
+            )
+            items
+
+    else
+        items
 
 
 
@@ -115,6 +136,7 @@ subscriptions model =
 
 type Msg
     = MyMsg DnDList.Groups.Msg
+    | ResetColors
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -129,6 +151,11 @@ update message model =
             , system.commands model.dnd
             )
 
+        ResetColors ->
+            ( { model | items = List.map (\{ group, value } -> Item group value baseColor) model.items }
+            , Cmd.none
+            )
+
 
 
 -- VIEW
@@ -136,7 +163,8 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section sectionStyles
+    Html.section
+        (Html.Events.onMouseDown ResetColors :: sectionStyles)
         [ groupView model 1
         , groupView model 2
         , groupView model 3
@@ -164,15 +192,20 @@ itemView model offset localIndex { group, value, color } =
             "swap-" ++ String.fromInt globalIndex
     in
     case system.info model.dnd of
-        Just { dragIndex } ->
-            if globalIndex /= dragIndex then
+        Just { dragIndex, dropIndex } ->
+            if globalIndex /= dragIndex && globalIndex /= dropIndex then
                 Html.div
                     (Html.Attributes.id itemId :: itemStyles color ++ system.dropEvents globalIndex itemId)
                     [ Html.text value ]
 
+            else if globalIndex /= dragIndex && globalIndex == dropIndex then
+                Html.div
+                    (Html.Attributes.id itemId :: itemStyles dropColor ++ system.dropEvents globalIndex itemId)
+                    [ Html.text value ]
+
             else
                 Html.div
-                    (Html.Attributes.id itemId :: itemStyles gray)
+                    (Html.Attributes.id itemId :: itemStyles dropColor)
                     []
 
         _ ->
@@ -184,9 +217,9 @@ itemView model offset localIndex { group, value, color } =
 ghostView : Model -> Html.Html Msg
 ghostView model =
     case maybeDragItem model of
-        Just { value, color } ->
+        Just { value } ->
             Html.div
-                (itemStyles color ++ system.ghostStyles model.dnd)
+                (itemStyles dragColor ++ system.ghostStyles model.dnd)
                 [ Html.text value ]
 
         _ ->
@@ -221,29 +254,24 @@ maybeDragItem { dnd, items } =
 -- COLORS
 
 
-green : String
-green =
-    "#757b3d"
-
-
-red : String
-red =
-    "#8c4585"
-
-
-blue : String
-blue =
-    "#45858c"
-
-
-gray : String
-gray =
+baseColor : String
+baseColor =
     "dimgray"
 
 
-transparent : String
-transparent =
-    "transparent"
+dragColor : String
+dragColor =
+    "red"
+
+
+dropColor : String
+dropColor =
+    "green"
+
+
+affectedColor : String
+affectedColor =
+    "purple"
 
 
 
@@ -254,6 +282,7 @@ sectionStyles : List (Html.Attribute msg)
 sectionStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-direction" "column"
+    , Html.Attributes.style "margin-right" "1em"
     , Html.Attributes.style "width" "800px"
     ]
 
@@ -262,7 +291,9 @@ groupStyles : List (Html.Attribute msg)
 groupStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "padding-bottom" "3em"
+    , Html.Attributes.style "border" "1px solid #b7b7b7"
+    , Html.Attributes.style "margin-bottom" "2em"
+    , Html.Attributes.style "padding" "2em 0 2em 2em"
     ]
 
 
@@ -270,7 +301,6 @@ itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
     [ Html.Attributes.style "width" "50px"
     , Html.Attributes.style "height" "50px"
-    , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "margin-right" "2em"
@@ -278,17 +308,4 @@ itemStyles color =
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "background-color" color
-    ]
-
-
-auxiliaryItemStyles : List (Html.Attribute msg)
-auxiliaryItemStyles =
-    [ Html.Attributes.style "flex-grow" "1"
-    , Html.Attributes.style "box-sizing" "border-box"
-    , Html.Attributes.style "margin-right" "2em"
-    , Html.Attributes.style "width" "auto"
-    , Html.Attributes.style "height" "50px"
-    , Html.Attributes.style "min-width" "50px"
-    , Html.Attributes.style "border" "3px dashed dimgray"
-    , Html.Attributes.style "background-color" "transparent"
     ]

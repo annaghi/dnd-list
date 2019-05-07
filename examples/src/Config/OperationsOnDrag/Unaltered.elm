@@ -43,7 +43,7 @@ data =
 
 config : DnDList.Config Item
 config =
-    { beforeUpdate = updateColors
+    { beforeUpdate = beforeUpdate
     , movement = DnDList.Free
     , listen = DnDList.OnDrag
     , operation = DnDList.Unaltered
@@ -55,8 +55,8 @@ system =
     DnDList.create config MyMsg
 
 
-updateColors : Int -> Int -> List Item -> List Item
-updateColors dragIndex dropIndex items =
+beforeUpdate : Int -> Int -> List Item -> List Item
+beforeUpdate dragIndex dropIndex items =
     if dragIndex /= dropIndex then
         List.indexedMap
             (\i { value, color } ->
@@ -154,31 +154,27 @@ itemView dnd index { value, color } =
         itemId : String
         itemId =
             "unaltered-" ++ value
-
-        attrs : String -> List (Html.Attribute msg)
-        attrs color_ =
-            Html.Attributes.id itemId :: itemStyles color_
     in
     case system.info dnd of
         Just { dragIndex, dropIndex } ->
-            if dragIndex /= index && dropIndex /= index then
+            if index /= dragIndex && index /= dropIndex then
                 Html.div
-                    (attrs color ++ system.dropEvents index itemId)
+                    (Html.Attributes.id itemId :: itemStyles color ++ system.dropEvents index itemId)
                     [ Html.text value ]
 
-            else if dragIndex /= index && dropIndex == index then
+            else if index /= dragIndex && index == dropIndex then
                 Html.div
-                    (attrs dropColor ++ system.dropEvents index itemId)
+                    (Html.Attributes.id itemId :: itemStyles dropColor ++ system.dropEvents index itemId)
                     [ Html.text value ]
 
             else
                 Html.div
-                    (attrs dropColor)
+                    (Html.Attributes.id itemId :: itemStyles dropColor)
                     []
 
         _ ->
             Html.div
-                (attrs color ++ system.dragEvents index itemId)
+                (Html.Attributes.id itemId :: itemStyles color ++ system.dragEvents index itemId)
                 [ Html.text value ]
 
 
@@ -217,11 +213,6 @@ dragColor =
 dropColor : String
 dropColor =
     "green"
-
-
-affectedColor : String
-affectedColor =
-    "purple"
 
 
 

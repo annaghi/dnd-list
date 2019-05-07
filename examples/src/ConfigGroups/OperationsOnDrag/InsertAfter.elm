@@ -4,6 +4,7 @@ import Browser
 import DnDList.Groups
 import Html
 import Html.Attributes
+import Html.Events
 
 
 
@@ -34,17 +35,17 @@ type alias Item =
 preparedData : List Item
 preparedData =
     [ Item 1 "" transparent
-    , Item 1 "1" red
-    , Item 1 "2" red
-    , Item 1 "3" red
-    , Item 1 "4" red
-    , Item 1 "5" red
+    , Item 1 "1" baseColor
+    , Item 1 "2" baseColor
+    , Item 1 "3" baseColor
+    , Item 1 "4" baseColor
+    , Item 1 "5" baseColor
     , Item 2 "" transparent
-    , Item 2 "6" blue
-    , Item 2 "7" blue
-    , Item 2 "8" blue
+    , Item 2 "6" baseColor
+    , Item 2 "7" baseColor
+    , Item 2 "8" baseColor
     , Item 3 "" transparent
-    , Item 3 "9" green
+    , Item 3 "9" baseColor
     ]
 
 
@@ -54,7 +55,7 @@ preparedData =
 
 config : DnDList.Groups.Config Item
 config =
-    { beforeUpdate = \_ _ list -> list
+    { beforeUpdate = beforeUpdate
     , listen = DnDList.Groups.OnDrag
     , operation = DnDList.Groups.Unaltered
     , groups =
@@ -79,6 +80,46 @@ setter item1 item2 =
 system : DnDList.Groups.System Item Msg
 system =
     DnDList.Groups.create config MyMsg
+
+
+beforeUpdate : Int -> Int -> List Item -> List Item
+beforeUpdate dragIndex dropIndex items =
+    if dragIndex < dropIndex then
+        List.indexedMap
+            (\i item ->
+                if i == dragIndex then
+                    { item | color = dragColor }
+
+                else if i == dropIndex then
+                    { item | color = dropColor }
+
+                else if dragIndex < i && i < dropIndex then
+                    { item | color = affectedColor }
+
+                else
+                    item
+            )
+            items
+
+    else if dragIndex > dropIndex then
+        List.indexedMap
+            (\i item ->
+                if i == dragIndex then
+                    { item | color = dragColor }
+
+                else if i == dropIndex then
+                    { item | color = dropColor }
+
+                else if dropIndex < i && i < dragIndex then
+                    { item | color = affectedColor }
+
+                else
+                    item
+            )
+            items
+
+    else
+        items
 
 
 
@@ -118,6 +159,7 @@ subscriptions model =
 
 type Msg
     = MyMsg DnDList.Groups.Msg
+    | ResetColors
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -132,6 +174,11 @@ update message model =
             , system.commands model.dnd
             )
 
+        ResetColors ->
+            ( { model | items = List.map (\{ group, value } -> Item group value baseColor) model.items }
+            , Cmd.none
+            )
+
 
 
 -- VIEW
@@ -139,7 +186,8 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section sectionStyles
+    Html.section
+        (Html.Events.onMouseDown ResetColors :: sectionStyles)
         [ groupView model 1
         , groupView model 2
         , groupView model 3
@@ -167,7 +215,7 @@ itemView model offset localIndex { group, value, color } =
             "insertafter-" ++ String.fromInt globalIndex
     in
     case ( system.info model.dnd, maybeDragItem model ) of
-        ( Just { dragIndex }, Just dragItem ) ->
+        ( Just { dragIndex, dropIndex }, Just dragItem ) ->
             if value == "" && group /= dragItem.group then
                 Html.div
                     (Html.Attributes.id itemId :: auxiliaryItemStyles ++ system.dropEvents globalIndex itemId)
@@ -178,14 +226,19 @@ itemView model offset localIndex { group, value, color } =
                     (Html.Attributes.id itemId :: auxiliaryItemStyles)
                     []
 
-            else if globalIndex /= dragIndex then
+            else if globalIndex /= dragIndex && globalIndex /= dropIndex then
                 Html.div
                     (Html.Attributes.id itemId :: itemStyles color ++ system.dropEvents globalIndex itemId)
                     [ Html.text value ]
 
+            else if globalIndex /= dragIndex && globalIndex == dropIndex then
+                Html.div
+                    (Html.Attributes.id itemId :: itemStyles dropColor ++ system.dropEvents globalIndex itemId)
+                    [ Html.text value ]
+
             else
                 Html.div
-                    (Html.Attributes.id itemId :: itemStyles gray)
+                    (Html.Attributes.id itemId :: itemStyles dropColor)
                     []
 
         _ ->
@@ -203,9 +256,9 @@ itemView model offset localIndex { group, value, color } =
 ghostView : Model -> Html.Html Msg
 ghostView model =
     case maybeDragItem model of
-        Just { value, color } ->
+        Just { value } ->
             Html.div
-                (itemStyles color ++ system.ghostStyles model.dnd)
+                (itemStyles dragColor ++ system.ghostStyles model.dnd)
                 [ Html.text value ]
 
         _ ->
@@ -240,24 +293,24 @@ maybeDragItem { dnd, items } =
 -- COLORS
 
 
-green : String
-green =
-    "#757b3d"
-
-
-red : String
-red =
-    "#8c4585"
-
-
-blue : String
-blue =
-    "#45858c"
-
-
-gray : String
-gray =
+baseColor : String
+baseColor =
     "dimgray"
+
+
+dragColor : String
+dragColor =
+    "red"
+
+
+dropColor : String
+dropColor =
+    "green"
+
+
+affectedColor : String
+affectedColor =
+    "purple"
 
 
 transparent : String
@@ -273,6 +326,7 @@ sectionStyles : List (Html.Attribute msg)
 sectionStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-direction" "column"
+    , Html.Attributes.style "margin-right" "1em"
     , Html.Attributes.style "width" "800px"
     ]
 
@@ -281,7 +335,9 @@ groupStyles : List (Html.Attribute msg)
 groupStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "padding-bottom" "3em"
+    , Html.Attributes.style "border" "1px solid #b7b7b7"
+    , Html.Attributes.style "margin-bottom" "2em"
+    , Html.Attributes.style "padding" "2em 0 2em 2em"
     ]
 
 
@@ -289,7 +345,6 @@ itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
     [ Html.Attributes.style "width" "50px"
     , Html.Attributes.style "height" "50px"
-    , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "margin-right" "2em"
