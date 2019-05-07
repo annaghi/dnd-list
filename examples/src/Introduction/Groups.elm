@@ -1,4 +1,4 @@
-module Introduction.Groups exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
+module Introduction.Groups exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList.Groups

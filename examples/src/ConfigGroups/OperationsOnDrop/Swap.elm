@@ -1,4 +1,4 @@
-module ConfigGroups.OperationsOnDrop.Swap exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
+module ConfigGroups.OperationsOnDrop.Swap exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList.Groups

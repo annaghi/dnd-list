@@ -1,4 +1,4 @@
-module Config.Movement.VerticalOnDrop exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
+module Config.Movement.VerticalOnDrop exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList

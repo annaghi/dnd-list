@@ -1,4 +1,4 @@
-module Gallery.Hanoi exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
+module Gallery.Hanoi exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList
