@@ -34,10 +34,8 @@ suite =
                     n =
                         List.length list - 1
                 in
-                list
-                    |> Operations.insertAfter dragIndex dropIndex
-                    |> Expect.equal
-                        (list |> List.reverse |> Operations.insertBefore (n - dragIndex) (n - dropIndex) |> List.reverse)
+                Operations.insertAfter dragIndex dropIndex list
+                    |> Expect.equal ((List.reverse >> Operations.insertBefore (n - dragIndex) (n - dropIndex) >> List.reverse) list)
         , Test.fuzz triple "insertBefore == inverse insertAfter" <|
             \{ list, dragIndex, dropIndex } ->
                 let
@@ -45,9 +43,8 @@ suite =
                     n =
                         List.length list - 1
                 in
-                list
-                    |> Operations.insertBefore dragIndex dropIndex
-                    |> Expect.equal (list |> List.reverse |> Operations.insertAfter (n - dragIndex) (n - dropIndex) |> List.reverse)
+                Operations.insertBefore dragIndex dropIndex list
+                    |> Expect.equal ((List.reverse >> Operations.insertAfter (n - dragIndex) (n - dropIndex) >> List.reverse) list)
         , Test.fuzz triple "rotate == inverse rotate" <|
             \{ list, dragIndex, dropIndex } ->
                 let
@@ -55,13 +52,11 @@ suite =
                     n =
                         List.length list - 1
                 in
-                list
-                    |> Operations.rotate dragIndex dropIndex
-                    |> Expect.equal (list |> List.reverse |> Operations.rotate (n - dragIndex) (n - dropIndex) |> List.reverse)
+                Operations.rotate dragIndex dropIndex list
+                    |> Expect.equal ((List.reverse >> Operations.rotate (n - dragIndex) (n - dropIndex) >> List.reverse) list)
         , Test.fuzz triple "swap i j == swap j i" <|
             \{ list, dragIndex, dropIndex } ->
-                list
-                    |> Operations.swap dragIndex dropIndex
+                Operations.swap dragIndex dropIndex list
                     |> Expect.equal (Operations.swap dropIndex dragIndex list)
         ]
 
