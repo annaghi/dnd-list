@@ -24311,14 +24311,18 @@ var author$project$Introduction$Groups$calculateOffset = F3(
 var author$project$Introduction$Groups$groupStyles = function (color) {
 	return _List_fromArray(
 		[
-			A2(elm$html$Html$Attributes$style, 'display', 'table'),
+			A2(elm$html$Html$Attributes$style, 'display', 'flex'),
+			A2(elm$html$Html$Attributes$style, 'flex-direction', 'column'),
 			A2(elm$html$Html$Attributes$style, 'background-color', color),
-			A2(elm$html$Html$Attributes$style, 'padding-top', '2rem')
+			A2(elm$html$Html$Attributes$style, 'padding-top', '2rem'),
+			A2(elm$html$Html$Attributes$style, 'min-height', '19rem')
 		]);
 };
 var author$project$Introduction$Groups$auxiliaryStyles = _List_fromArray(
 	[
-		A2(elm$html$Html$Attributes$style, 'height', '1rem'),
+		A2(elm$html$Html$Attributes$style, 'flex-grow', '1'),
+		A2(elm$html$Html$Attributes$style, 'height', 'auto'),
+		A2(elm$html$Html$Attributes$style, 'min-height', '1rem'),
 		A2(elm$html$Html$Attributes$style, 'width', '8rem')
 	]);
 var author$project$Introduction$Groups$gray = 'dimgray';
