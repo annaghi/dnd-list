@@ -302,9 +302,11 @@ sectionStyles =
 
 groupStyles : String -> List (Html.Attribute msg)
 groupStyles color =
-    [ Html.Attributes.style "display" "table"
+    [ Html.Attributes.style "display" "flex"
+    , Html.Attributes.style "flex-direction" "column"
     , Html.Attributes.style "background-color" color
     , Html.Attributes.style "padding-top" "2rem"
+    , Html.Attributes.style "min-height" "19rem"
     ]
 
 
@@ -327,6 +329,8 @@ itemStyles color =
 -}
 auxiliaryStyles : List (Html.Attribute msg)
 auxiliaryStyles =
-    [ Html.Attributes.style "height" "1rem"
+    [ Html.Attributes.style "flex-grow" "1"
+    , Html.Attributes.style "height" "auto"
+    , Html.Attributes.style "min-height" "1rem"
     , Html.Attributes.style "width" "8rem"
     ]
