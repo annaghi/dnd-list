@@ -1,7 +1,7 @@
 {
   "scripts": {
     "watch": "cd examples && elm-live src/Main.elm --pushstate --port=8081 --dir=. --open -- --output=assets/main.js --debug",
-    "watch:dev": "cd dev && elm-live Main.elm --port=8082 --dir=. --open -- --debug",
+    "watch:exp": "cd experiments && elm-live Main.elm --port=8082 --dir=. --open -- --debug",
     "watch:doc": "elm-doc-preview",
     "test": "elm-test && npm run build",
     "build": "npm run format && rm -rf docs/assets && npm run optimize && (elm diff || true) && cp -a examples/assets docs",

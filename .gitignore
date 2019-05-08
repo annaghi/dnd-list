@@ -13,11 +13,11 @@ docs.json
 # elm-make generated files
 examples/**/main.js
 
-# development files
-dev/*
-!dev/README.md
-!dev/Main.elm
-!dev/elm.json
+# experiments
+experiments/*
+!experiments/README.md
+!experiments/Main.elm
+!experiments/elm.json
 
 # node modules
 node_modules
