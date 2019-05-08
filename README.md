@@ -1,4 +1,4 @@
-[![Latest Version](https://img.shields.io/elm-package/v/annaghi/dnd-list.svg?label=version)](https://package.elm-lang.org/packages/annaghi/dnd-list/latest/)
+[![Latest Version](https://img.shields.io/elm-package/v/annaghi/dnd-list.svg?label=version)](https://package.elm-lang.org/packages/annaghi/dnd-list/latest/) [![Build Status](https://travis-ci.org/annaghi/dnd-list.svg?branch=master)](https://travis-ci.org/annaghi/dnd-list)
 
 # DnD List
 
