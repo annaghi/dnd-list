@@ -170,7 +170,7 @@ towerView model currentTower =
 
 
 diskView : Model -> Maybe Disk -> Int -> Int -> Disk -> Html.Html Msg
-diskView model maybeTopDisk_ offset localIndex { tower, width, startColor, solvedColor } =
+diskView model maybeTopDisk_ offset localIndex { width, startColor, solvedColor } =
     let
         globalIndex : Int
         globalIndex =

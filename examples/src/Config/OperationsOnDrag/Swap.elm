@@ -210,11 +210,6 @@ dropColor =
     "green"
 
 
-affectedColor : String
-affectedColor =
-    "purple"
-
-
 
 -- STYLES
 

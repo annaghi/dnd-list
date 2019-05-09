@@ -86,7 +86,7 @@ type Msg
     = LinkClicked Int
     | InsertAfterMsg Config.OperationsOnDrop.InsertAfter.Msg
     | InsertBeforeMsg Config.OperationsOnDrop.InsertBefore.Msg
-    | RotateIncludeMsg Config.OperationsOnDrop.Rotate.Msg
+    | RotateMsg Config.OperationsOnDrop.Rotate.Msg
     | SwapMsg Config.OperationsOnDrop.Swap.Msg
     | UnalteredMsg Config.OperationsOnDrop.Unaltered.Msg
 
@@ -108,8 +108,8 @@ update message model =
                             ( InsertBeforeMsg msg, InsertBefore mo ) ->
                                 stepInsertBefore (Config.OperationsOnDrop.InsertBefore.update msg mo)
 
-                            ( RotateIncludeMsg msg, Rotate mo ) ->
-                                stepRotateInclude (Config.OperationsOnDrop.Rotate.update msg mo)
+                            ( RotateMsg msg, Rotate mo ) ->
+                                stepRotate (Config.OperationsOnDrop.Rotate.update msg mo)
 
                             ( SwapMsg msg, Swap mo ) ->
                                 stepSwap (Config.OperationsOnDrop.Swap.update msg mo)
@@ -134,9 +134,9 @@ stepInsertBefore ( mo, cmds ) =
     ( InsertBefore mo, Cmd.map InsertBeforeMsg cmds )
 
 
-stepRotateInclude : ( Config.OperationsOnDrop.Rotate.Model, Cmd Config.OperationsOnDrop.Rotate.Msg ) -> ( Example, Cmd Msg )
-stepRotateInclude ( mo, cmds ) =
-    ( Rotate mo, Cmd.map RotateIncludeMsg cmds )
+stepRotate : ( Config.OperationsOnDrop.Rotate.Model, Cmd Config.OperationsOnDrop.Rotate.Msg ) -> ( Example, Cmd Msg )
+stepRotate ( mo, cmds ) =
+    ( Rotate mo, Cmd.map RotateMsg cmds )
 
 
 stepSwap : ( Config.OperationsOnDrop.Swap.Model, Cmd Config.OperationsOnDrop.Swap.Msg ) -> ( Example, Cmd Msg )
@@ -166,7 +166,7 @@ subscriptions model =
                         Sub.map InsertBeforeMsg (Config.OperationsOnDrop.InsertBefore.subscriptions mo)
 
                     Rotate mo ->
-                        Sub.map RotateIncludeMsg (Config.OperationsOnDrop.Rotate.subscriptions mo)
+                        Sub.map RotateMsg (Config.OperationsOnDrop.Rotate.subscriptions mo)
 
                     Swap mo ->
                         Sub.map SwapMsg (Config.OperationsOnDrop.Swap.subscriptions mo)
@@ -190,11 +190,6 @@ view model =
 
 demoWrapperView : Int -> Int -> Example -> Html.Html Msg
 demoWrapperView currentId id example =
-    let
-        title : String
-        title =
-            (info >> .title) example
-    in
     Html.div
         [ Html.Attributes.style "display" "flex"
         , Html.Attributes.style "flex-wrap" "wrap"
@@ -206,7 +201,7 @@ demoWrapperView currentId id example =
             [ Html.Attributes.classList [ ( "link", True ), ( "is-active", id == currentId ) ]
             , Html.Events.onClick (LinkClicked id)
             ]
-            [ Html.text title ]
+            [ Html.text (info example) ]
         ]
 
 
@@ -220,7 +215,7 @@ demoView example =
             Html.map InsertBeforeMsg (Config.OperationsOnDrop.InsertBefore.view mo)
 
         Rotate mo ->
-            Html.map RotateIncludeMsg (Config.OperationsOnDrop.Rotate.view mo)
+            Html.map RotateMsg (Config.OperationsOnDrop.Rotate.view mo)
 
         Swap mo ->
             Html.map SwapMsg (Config.OperationsOnDrop.Swap.view mo)
@@ -234,23 +229,23 @@ demoView example =
 
 
 type alias Info =
-    { title : String }
+    String
 
 
 info : Example -> Info
 info example =
     case example of
         InsertAfter _ ->
-            { title = "Insert after" }
+            "Insert after"
 
         InsertBefore _ ->
-            { title = "Insert before" }
+            "Insert before"
 
         Rotate _ ->
-            { title = "Rotate" }
+            "Rotate"
 
         Swap _ ->
-            { title = "Swap" }
+            "Swap"
 
         Unaltered _ ->
-            { title = "Unaltered" }
+            "Unaltered"

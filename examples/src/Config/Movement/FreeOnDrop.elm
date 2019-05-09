@@ -108,7 +108,7 @@ update message model =
                     case system.info dnd of
                         Just { dragIndex, dropIndex } ->
                             if dragIndex /= dropIndex then
-                                dragIndex :: dropIndex :: []
+                                [ dragIndex, dropIndex ]
 
                             else
                                 []

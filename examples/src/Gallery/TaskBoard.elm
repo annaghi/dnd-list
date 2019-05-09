@@ -391,7 +391,7 @@ getActivity cards =
         [] ->
             Heading "" ""
 
-        card :: rest ->
+        card :: _ ->
             case card.activity of
                 ToDo ->
                     Heading "To Do" blue

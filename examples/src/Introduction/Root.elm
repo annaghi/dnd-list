@@ -71,78 +71,78 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
     case ( message, model ) of
         ( BasicMsg msg, Basic mo ) ->
-            stepBasic model (Introduction.Basic.update msg mo)
+            stepBasic (Introduction.Basic.update msg mo)
 
         ( BasicElmUIMsg msg, BasicElmUI mo ) ->
-            stepBasicElmUI model (Introduction.BasicElmUI.update msg mo)
+            stepBasicElmUI (Introduction.BasicElmUI.update msg mo)
 
         ( HandleMsg msg, Handle mo ) ->
-            stepHandle model (Introduction.Handle.update msg mo)
+            stepHandle (Introduction.Handle.update msg mo)
 
         ( KeyedMsg msg, Keyed mo ) ->
-            stepKeyed model (Introduction.Keyed.update msg mo)
+            stepKeyed (Introduction.Keyed.update msg mo)
 
         ( MarginsMsg msg, Margins mo ) ->
-            stepMargins model (Introduction.Margins.update msg mo)
+            stepMargins (Introduction.Margins.update msg mo)
 
         ( MasonryMsg msg, Masonry mo ) ->
-            stepMasonry model (Introduction.Masonry.update msg mo)
+            stepMasonry (Introduction.Masonry.update msg mo)
 
         ( ResizeMsg msg, Resize mo ) ->
-            stepResize model (Introduction.Resize.update msg mo)
+            stepResize (Introduction.Resize.update msg mo)
 
         ( IndependentsMsg msg, Independents mo ) ->
-            stepIndependents model (Introduction.Independents.update msg mo)
+            stepIndependents (Introduction.Independents.update msg mo)
 
         ( GroupsMsg msg, Groups mo ) ->
-            stepGroups model (Introduction.Groups.update msg mo)
+            stepGroups (Introduction.Groups.update msg mo)
 
         _ ->
             ( model, Cmd.none )
 
 
-stepBasic : Model -> ( Introduction.Basic.Model, Cmd Introduction.Basic.Msg ) -> ( Model, Cmd Msg )
-stepBasic model ( mo, cmds ) =
+stepBasic : ( Introduction.Basic.Model, Cmd Introduction.Basic.Msg ) -> ( Model, Cmd Msg )
+stepBasic ( mo, cmds ) =
     ( Basic mo, Cmd.map BasicMsg cmds )
 
 
-stepBasicElmUI : Model -> ( Introduction.BasicElmUI.Model, Cmd Introduction.BasicElmUI.Msg ) -> ( Model, Cmd Msg )
-stepBasicElmUI model ( mo, cmds ) =
+stepBasicElmUI : ( Introduction.BasicElmUI.Model, Cmd Introduction.BasicElmUI.Msg ) -> ( Model, Cmd Msg )
+stepBasicElmUI ( mo, cmds ) =
     ( BasicElmUI mo, Cmd.map BasicElmUIMsg cmds )
 
 
-stepHandle : Model -> ( Introduction.Handle.Model, Cmd Introduction.Handle.Msg ) -> ( Model, Cmd Msg )
-stepHandle model ( mo, cmds ) =
+stepHandle : ( Introduction.Handle.Model, Cmd Introduction.Handle.Msg ) -> ( Model, Cmd Msg )
+stepHandle ( mo, cmds ) =
     ( Handle mo, Cmd.map HandleMsg cmds )
 
 
-stepKeyed : Model -> ( Introduction.Keyed.Model, Cmd Introduction.Keyed.Msg ) -> ( Model, Cmd Msg )
-stepKeyed model ( mo, cmds ) =
+stepKeyed : ( Introduction.Keyed.Model, Cmd Introduction.Keyed.Msg ) -> ( Model, Cmd Msg )
+stepKeyed ( mo, cmds ) =
     ( Keyed mo, Cmd.map KeyedMsg cmds )
 
 
-stepMargins : Model -> ( Introduction.Margins.Model, Cmd Introduction.Margins.Msg ) -> ( Model, Cmd Msg )
-stepMargins model ( mo, cmds ) =
+stepMargins : ( Introduction.Margins.Model, Cmd Introduction.Margins.Msg ) -> ( Model, Cmd Msg )
+stepMargins ( mo, cmds ) =
     ( Margins mo, Cmd.map MarginsMsg cmds )
 
 
-stepMasonry : Model -> ( Introduction.Masonry.Model, Cmd Introduction.Masonry.Msg ) -> ( Model, Cmd Msg )
-stepMasonry model ( mo, cmds ) =
+stepMasonry : ( Introduction.Masonry.Model, Cmd Introduction.Masonry.Msg ) -> ( Model, Cmd Msg )
+stepMasonry ( mo, cmds ) =
     ( Masonry mo, Cmd.map MasonryMsg cmds )
 
 
-stepResize : Model -> ( Introduction.Resize.Model, Cmd Introduction.Resize.Msg ) -> ( Model, Cmd Msg )
-stepResize model ( mo, cmds ) =
+stepResize : ( Introduction.Resize.Model, Cmd Introduction.Resize.Msg ) -> ( Model, Cmd Msg )
+stepResize ( mo, cmds ) =
     ( Resize mo, Cmd.map ResizeMsg cmds )
 
 
-stepIndependents : Model -> ( Introduction.Independents.Model, Cmd Introduction.Independents.Msg ) -> ( Model, Cmd Msg )
-stepIndependents model ( mo, cmds ) =
+stepIndependents : ( Introduction.Independents.Model, Cmd Introduction.Independents.Msg ) -> ( Model, Cmd Msg )
+stepIndependents ( mo, cmds ) =
     ( Independents mo, Cmd.map IndependentsMsg cmds )
 
 
-stepGroups : Model -> ( Introduction.Groups.Model, Cmd Introduction.Groups.Msg ) -> ( Model, Cmd Msg )
-stepGroups model ( mo, cmds ) =
+stepGroups : ( Introduction.Groups.Model, Cmd Introduction.Groups.Msg ) -> ( Model, Cmd Msg )
+stepGroups ( mo, cmds ) =
     ( Groups mo, Cmd.map GroupsMsg cmds )
 
 

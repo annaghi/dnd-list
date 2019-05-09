@@ -6,7 +6,6 @@ import Html
 import Html.Attributes
 import Svg
 import Svg.Attributes
-import Svg.Events
 
 
 
