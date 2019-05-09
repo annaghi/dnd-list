@@ -92,36 +92,43 @@ So now the internal sorting distinguishes between these two cases and we need to
 
 `dragEvents` is a function which wraps all the events up for the drag source items.
 
-    itemView : Model -> Int -> Int -> Item -> Html.Html Msg
-    itemView model offset localIndex { group, value, color } =
-        let
-            globalIndex : Int
-            globalIndex =
-                offset + localIndex
+This and the following example will show us how to use auxiliary items and think about them in two different ways:
 
-            itemId : String
-            itemId =
-                "id-" ++ String.fromInt globalIndex
-        in
-        case ( system.info model.dnd, maybeDragItem model.dnd model.items ) of
-            ( Just _, Just _ ) ->
-                -- Render when there is an ongoing dragging.
+  - as ordinary list items from the list operation point of view, and
+  - as specially styled elements from the HTML design point of view.
 
-            _ ->
-                if color == transparent && value == "footer" then
-                    Html.div
-                        (Html.Attributes.id itemId
-                            :: auxiliaryStyles
-                        )
-                        []
+```
+itemView : Model -> Int -> Int -> Item -> Html.Html Msg
+itemView model offset localIndex { group, value, color } =
+    let
+        globalIndex : Int
+        globalIndex =
+            offset + localIndex
 
-                else
-                    Html.div
-                        (Html.Attributes.id itemId
-                            :: itemStyles color
-                            ++ system.dragEvents globalIndex itemId
-                        )
-                        [ Html.text value ]
+        itemId : String
+        itemId =
+            "id-" ++ String.fromInt globalIndex
+    in
+    case ( system.info model.dnd, maybeDragItem model.dnd model.items ) of
+        ( Just _, Just _ ) ->
+            -- Render when there is an ongoing dragging.
+
+        _ ->
+            if color == transparent && value == "footer" then
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: auxiliaryStyles
+                    )
+                    []
+
+            else
+                Html.div
+                    (Html.Attributes.id itemId
+                        :: itemStyles color
+                        ++ system.dragEvents globalIndex itemId
+                    )
+                    [ Html.text value ]
+```
 
 
 ## dropEvents
@@ -502,40 +509,35 @@ subscriptions stepMsg (Model model) =
 
 
 commands : (Msg -> msg) -> Model -> Cmd msg
-commands stepMsg model =
-    Cmd.batch
-        [ dragElementCommands stepMsg model
-        , dropElementCommands stepMsg model
-        ]
-
-
-dragElementCommands : (Msg -> msg) -> Model -> Cmd msg
-dragElementCommands stepMsg (Model model) =
+commands stepMsg (Model model) =
     case model of
         Nothing ->
             Cmd.none
 
         Just state ->
-            case state.dragElement of
-                Nothing ->
-                    Task.attempt (stepMsg << GotDragElement) (Browser.Dom.getElement state.dragElementId)
-
-                _ ->
-                    Cmd.none
+            Cmd.batch
+                [ dragElementCommands stepMsg state
+                , dropElementCommands stepMsg state
+                ]
 
 
-dropElementCommands : (Msg -> msg) -> Model -> Cmd msg
-dropElementCommands stepMsg (Model model) =
-    case model of
+dragElementCommands : (Msg -> msg) -> State -> Cmd msg
+dragElementCommands stepMsg state =
+    case state.dragElement of
         Nothing ->
+            Task.attempt (stepMsg << GotDragElement) (Browser.Dom.getElement state.dragElementId)
+
+        _ ->
             Cmd.none
 
-        Just state ->
-            if state.dragCounter == 0 then
-                Task.attempt (stepMsg << GotDropElement) (Browser.Dom.getElement state.dropElementId)
 
-            else
-                Cmd.none
+dropElementCommands : (Msg -> msg) -> State -> Cmd msg
+dropElementCommands stepMsg state =
+    if state.dragCounter == 0 then
+        Task.attempt (stepMsg << GotDropElement) (Browser.Dom.getElement state.dropElementId)
+
+    else
+        Cmd.none
 
 
 {-| Internal message type.
@@ -601,10 +603,7 @@ update { beforeUpdate, listen, operation, groups } msg (Model model) list =
                             )
 
                         else if groups.listen == OnDrag && not (equalGroups groups.comparator state.dragIndex dropIndex list) then
-                            ( Model
-                                (Just
-                                    (stateUpdate groups.operation dropIndex state)
-                                )
+                            ( Model (Just (stateUpdate groups.operation dropIndex state))
                             , list
                                 |> beforeUpdate state.dragIndex dropIndex
                                 |> listUpdate groups.operation groups.comparator groups.setter state.dragIndex dropIndex
