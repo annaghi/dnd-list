@@ -59,46 +59,46 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
     case ( message, model ) of
         ( HanoiMsg msg, Hanoi mo ) ->
-            stepHanoi model (Gallery.Hanoi.update msg mo)
+            stepHanoi (Gallery.Hanoi.update msg mo)
 
         ( PuzzleMsg msg, Puzzle mo ) ->
-            stepPuzzle model (Gallery.Puzzle.update msg mo)
+            stepPuzzle (Gallery.Puzzle.update msg mo)
 
         ( ShapesMsg msg, Shapes mo ) ->
-            stepShapes model (Gallery.Shapes.update msg mo)
+            stepShapes (Gallery.Shapes.update msg mo)
 
         ( TryOnMsg msg, TryOn mo ) ->
-            stepTryOn model (Gallery.TryOn.update msg mo)
+            stepTryOn (Gallery.TryOn.update msg mo)
 
         ( TaskBoardMsg msg, TaskBoard mo ) ->
-            stepTaskBoard model (Gallery.TaskBoard.update msg mo)
+            stepTaskBoard (Gallery.TaskBoard.update msg mo)
 
         _ ->
             ( model, Cmd.none )
 
 
-stepHanoi : Model -> ( Gallery.Hanoi.Model, Cmd Gallery.Hanoi.Msg ) -> ( Model, Cmd Msg )
-stepHanoi model ( mo, cmds ) =
+stepHanoi : ( Gallery.Hanoi.Model, Cmd Gallery.Hanoi.Msg ) -> ( Model, Cmd Msg )
+stepHanoi ( mo, cmds ) =
     ( Hanoi mo, Cmd.map HanoiMsg cmds )
 
 
-stepPuzzle : Model -> ( Gallery.Puzzle.Model, Cmd Gallery.Puzzle.Msg ) -> ( Model, Cmd Msg )
-stepPuzzle model ( mo, cmds ) =
+stepPuzzle : ( Gallery.Puzzle.Model, Cmd Gallery.Puzzle.Msg ) -> ( Model, Cmd Msg )
+stepPuzzle ( mo, cmds ) =
     ( Puzzle mo, Cmd.map PuzzleMsg cmds )
 
 
-stepShapes : Model -> ( Gallery.Shapes.Model, Cmd Gallery.Shapes.Msg ) -> ( Model, Cmd Msg )
-stepShapes model ( mo, cmds ) =
+stepShapes : ( Gallery.Shapes.Model, Cmd Gallery.Shapes.Msg ) -> ( Model, Cmd Msg )
+stepShapes ( mo, cmds ) =
     ( Shapes mo, Cmd.map ShapesMsg cmds )
 
 
-stepTryOn : Model -> ( Gallery.TryOn.Model, Cmd Gallery.TryOn.Msg ) -> ( Model, Cmd Msg )
-stepTryOn model ( mo, cmds ) =
+stepTryOn : ( Gallery.TryOn.Model, Cmd Gallery.TryOn.Msg ) -> ( Model, Cmd Msg )
+stepTryOn ( mo, cmds ) =
     ( TryOn mo, Cmd.map TryOnMsg cmds )
 
 
-stepTaskBoard : Model -> ( Gallery.TaskBoard.Model, Cmd Gallery.TaskBoard.Msg ) -> ( Model, Cmd Msg )
-stepTaskBoard model ( mo, cmds ) =
+stepTaskBoard : ( Gallery.TaskBoard.Model, Cmd Gallery.TaskBoard.Msg ) -> ( Model, Cmd Msg )
+stepTaskBoard ( mo, cmds ) =
     ( TaskBoard mo, Cmd.map TaskBoardMsg cmds )
 
 

@@ -70,7 +70,7 @@ type alias Triple =
 
 tripleGenerator : Random.Generator Triple
 tripleGenerator =
-    Random.int 0 20
+    Random.int 0 30
         |> Random.andThen
             (\n ->
                 Random.map3 Triple

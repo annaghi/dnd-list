@@ -199,8 +199,8 @@ colorView model index item =
             Html.div
                 (Html.Attributes.id itemId
                     :: itemStyles width height item.color
-                    ++ [ Html.Attributes.style "cursor" "pointer" ]
-                    ++ system.dragEvents index itemId
+                    ++ Html.Attributes.style "cursor" "pointer"
+                    :: system.dragEvents index itemId
                 )
                 []
 
@@ -247,8 +247,8 @@ sizeView model offset localIndex item =
                 Html.div
                     (Html.Attributes.id itemId
                         :: itemStyles width height item.color
-                        ++ [ Html.Attributes.style "cursor" "pointer" ]
-                        ++ system.dragEvents globalIndex itemId
+                        ++ Html.Attributes.style "cursor" "pointer"
+                        :: system.dragEvents globalIndex itemId
                     )
                     []
 
@@ -263,7 +263,7 @@ sizeView model offset localIndex item =
 ghostView : Model -> Html.Html Msg
 ghostView model =
     case ( system.info model.dnd, maybeDragItem model ) of
-        ( Just { dragIndex, dropElement }, Just { color } ) ->
+        ( Just { dropElement }, Just { color } ) ->
             let
                 baseFontSize : Float
                 baseFontSize =

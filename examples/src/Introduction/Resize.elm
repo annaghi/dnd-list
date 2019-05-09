@@ -190,7 +190,7 @@ itemView model index ( color, spot ) =
 ghostView : Model -> Html.Html Msg
 ghostView model =
     case ( system.info model.dnd, maybeDragItem model ) of
-        ( Just { dragIndex, dropElement }, Just color ) ->
+        ( Just { dropElement }, Just color ) ->
             let
                 width : Int
                 width =

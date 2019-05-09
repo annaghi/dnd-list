@@ -181,7 +181,7 @@ groupView model currentGroup =
 
 
 itemView : Model -> Int -> Int -> Item -> Html.Html Msg
-itemView model offset localIndex { group, value, color } =
+itemView model offset localIndex { value, color } =
     let
         globalIndex : Int
         globalIndex =
@@ -262,11 +262,6 @@ dragColor =
 dropColor : String
 dropColor =
     "green"
-
-
-affectedColor : String
-affectedColor =
-    "purple"
 
 
 

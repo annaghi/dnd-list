@@ -233,10 +233,6 @@ demoWrapperView offset currentId id example =
         globalId : Int
         globalId =
             offset + id
-
-        title : String
-        title =
-            (info >> .title) example
     in
     Html.div
         [ Html.Attributes.style "display" "flex"
@@ -248,7 +244,7 @@ demoWrapperView offset currentId id example =
             [ Html.Attributes.classList [ ( "link", True ), ( "is-active", globalId == currentId ) ]
             , Html.Events.onClick (LinkClicked globalId)
             ]
-            [ Html.text title ]
+            [ Html.text (info example) ]
         ]
 
 
@@ -279,26 +275,26 @@ demoView example =
 
 
 type alias Info =
-    { title : String }
+    String
 
 
 info : Example -> Info
 info example =
     case example of
         FreeOnDrag _ ->
-            { title = "Free on drag" }
+            "Free on drag"
 
         FreeOnDrop _ ->
-            { title = "Free on drop" }
+            "Free on drop"
 
         HorizontalOnDrag _ ->
-            { title = "Horizontal on drag" }
+            "Horizontal on drag"
 
         HorizontalOnDrop _ ->
-            { title = "Horizontal on drop" }
+            "Horizontal on drop"
 
         VerticalOnDrag _ ->
-            { title = "Vertical on drag" }
+            "Vertical on drag"
 
         VerticalOnDrop _ ->
-            { title = "Vertical on drop" }
+            "Vertical on drop"

@@ -256,7 +256,7 @@ itemView model offset localIndex { group, value, color } =
 ghostView : Model -> Html.Html Msg
 ghostView model =
     case maybeDragItem model of
-        Just { value, color } ->
+        Just { value } ->
             Html.div
                 (itemStyles dragColor ++ system.ghostStyles model.dnd)
                 [ Html.text value ]

@@ -50,22 +50,22 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
     case ( message, model ) of
         ( OperationsOnDragMsg msg, OperationsOnDrag mo ) ->
-            stepOperationsOnDrag model (ConfigGroups.OperationsOnDrag.Root.update msg mo)
+            stepOperationsOnDrag (ConfigGroups.OperationsOnDrag.Root.update msg mo)
 
         ( OperationsOnDropMsg msg, OperationsOnDrop mo ) ->
-            stepOperationsOnDrop model (ConfigGroups.OperationsOnDrop.Root.update msg mo)
+            stepOperationsOnDrop (ConfigGroups.OperationsOnDrop.Root.update msg mo)
 
         _ ->
             ( model, Cmd.none )
 
 
-stepOperationsOnDrag : Model -> ( ConfigGroups.OperationsOnDrag.Root.Model, Cmd ConfigGroups.OperationsOnDrag.Root.Msg ) -> ( Model, Cmd Msg )
-stepOperationsOnDrag model ( mo, cmds ) =
+stepOperationsOnDrag : ( ConfigGroups.OperationsOnDrag.Root.Model, Cmd ConfigGroups.OperationsOnDrag.Root.Msg ) -> ( Model, Cmd Msg )
+stepOperationsOnDrag ( mo, cmds ) =
     ( OperationsOnDrag mo, Cmd.map OperationsOnDragMsg cmds )
 
 
-stepOperationsOnDrop : Model -> ( ConfigGroups.OperationsOnDrop.Root.Model, Cmd ConfigGroups.OperationsOnDrop.Root.Msg ) -> ( Model, Cmd Msg )
-stepOperationsOnDrop model ( mo, cmds ) =
+stepOperationsOnDrop : ( ConfigGroups.OperationsOnDrop.Root.Model, Cmd ConfigGroups.OperationsOnDrop.Root.Msg ) -> ( Model, Cmd Msg )
+stepOperationsOnDrop ( mo, cmds ) =
     ( OperationsOnDrop mo, Cmd.map OperationsOnDropMsg cmds )
 
 
