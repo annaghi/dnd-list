@@ -93,23 +93,30 @@ You can add position styling attributes to this element using the`System` object
 
 `dragEvents` is a function which wraps all the events up for the drag source items.
 
-    itemView : DnDList.Model -> Int -> Fruit -> Html.Html Msg
-    itemView dnd index item =
-        let
-            itemId : String
-            itemId =
-                "id-" ++ item
-        in
-        case system.info dnd of
-            Just _ ->
-                -- Render when there is an ongoing dragging.
+This and the following example will show us how to use auxiliary items and think about them in two different ways:
 
-            Nothing ->
-                Html.p
-                    (Html.Attributes.id itemId
-                        :: system.dragEvents index itemId
-                    )
-                    [ Html.text item ]
+  - as ordinary list items from the list operation point of view, and
+  - as specially styled elements from the HTML design point of view.
+
+```
+  itemView : DnDList.Model -> Int -> Fruit -> Html.Html Msg
+  itemView dnd index item =
+      let
+          itemId : String
+          itemId =
+              "id-" ++ item
+      in
+      case system.info dnd of
+          Just _ ->
+              -- Render when there is an ongoing dragging.
+
+          Nothing ->
+              Html.p
+                  (Html.Attributes.id itemId
+                      :: system.dragEvents index itemId
+                  )
+                  [ Html.text item ]
+```
 
 
 ## dropEvents
