@@ -803,8 +803,8 @@ listUpdate operation comparator setter dragIndex dropIndex list =
                     else
                         x :: xs
 
-        groupUpdate : Int -> Int -> (List a -> List a) -> List a -> List a
-        groupUpdate i j fn l =
+        groupUpdate : (List a -> List a) -> Int -> Int -> List a -> List a
+        groupUpdate fn i j l =
             let
                 beginning : List a
                 beginning =
@@ -836,12 +836,12 @@ listUpdate operation comparator setter dragIndex dropIndex list =
         Rotate ->
             if dragIndex < dropIndex then
                 list
-                    |> groupUpdate dragIndex dropIndex (List.reverse >> bubbleGroupRecursive >> List.reverse)
+                    |> groupUpdate (List.reverse >> bubbleGroupRecursive >> List.reverse) dragIndex dropIndex
                     |> Operations.rotate dragIndex dropIndex
 
             else if dropIndex < dragIndex then
                 list
-                    |> groupUpdate dropIndex dragIndex bubbleGroupRecursive
+                    |> groupUpdate bubbleGroupRecursive dropIndex dragIndex
                     |> Operations.rotate dragIndex dropIndex
 
             else
