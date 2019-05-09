@@ -15317,9 +15317,9 @@ var author$project$ConfigGroups$OperationsOnDrag$InsertAfter$groupStyles = _List
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center'),
-		A2(elm$html$Html$Attributes$style, 'border', '1px solid #b7b7b7'),
 		A2(elm$html$Html$Attributes$style, 'margin-bottom', '2em'),
-		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em')
+		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em'),
+		A2(elm$html$Html$Attributes$style, 'background-color', '#222222')
 	]);
 var author$project$ConfigGroups$OperationsOnDrag$InsertAfter$auxiliaryItemStyles = _List_fromArray(
 	[
@@ -15522,9 +15522,9 @@ var author$project$ConfigGroups$OperationsOnDrag$InsertBefore$groupStyles = _Lis
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center'),
-		A2(elm$html$Html$Attributes$style, 'border', '1px solid #b7b7b7'),
 		A2(elm$html$Html$Attributes$style, 'margin-bottom', '2em'),
-		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em')
+		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em'),
+		A2(elm$html$Html$Attributes$style, 'background-color', '#222222')
 	]);
 var author$project$ConfigGroups$OperationsOnDrag$InsertBefore$auxiliaryItemStyles = _List_fromArray(
 	[
@@ -15727,9 +15727,9 @@ var author$project$ConfigGroups$OperationsOnDrag$Rotate$groupStyles = _List_from
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center'),
-		A2(elm$html$Html$Attributes$style, 'border', '1px solid #b7b7b7'),
 		A2(elm$html$Html$Attributes$style, 'margin-bottom', '2em'),
-		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em')
+		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em'),
+		A2(elm$html$Html$Attributes$style, 'background-color', '#222222')
 	]);
 var author$project$ConfigGroups$OperationsOnDrag$Rotate$itemView = F4(
 	function (model, offset, localIndex, _n0) {
@@ -15886,9 +15886,9 @@ var author$project$ConfigGroups$OperationsOnDrag$Swap$groupStyles = _List_fromAr
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center'),
-		A2(elm$html$Html$Attributes$style, 'border', '1px solid #b7b7b7'),
 		A2(elm$html$Html$Attributes$style, 'margin-bottom', '2em'),
-		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em')
+		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em'),
+		A2(elm$html$Html$Attributes$style, 'background-color', '#222222')
 	]);
 var author$project$ConfigGroups$OperationsOnDrag$Swap$itemView = F4(
 	function (model, offset, localIndex, _n0) {
@@ -16133,9 +16133,9 @@ var author$project$ConfigGroups$OperationsOnDrop$InsertAfter$groupStyles = _List
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center'),
-		A2(elm$html$Html$Attributes$style, 'border', '1px solid #b7b7b7'),
 		A2(elm$html$Html$Attributes$style, 'margin-bottom', '2em'),
-		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em')
+		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em'),
+		A2(elm$html$Html$Attributes$style, 'background-color', '#222222')
 	]);
 var author$project$ConfigGroups$OperationsOnDrop$InsertAfter$auxiliaryItemStyles = _List_fromArray(
 	[
@@ -16338,9 +16338,9 @@ var author$project$ConfigGroups$OperationsOnDrop$InsertBefore$groupStyles = _Lis
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center'),
-		A2(elm$html$Html$Attributes$style, 'border', '1px solid #b7b7b7'),
 		A2(elm$html$Html$Attributes$style, 'margin-bottom', '2em'),
-		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em')
+		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em'),
+		A2(elm$html$Html$Attributes$style, 'background-color', '#222222')
 	]);
 var author$project$ConfigGroups$OperationsOnDrop$InsertBefore$auxiliaryItemStyles = _List_fromArray(
 	[
@@ -16543,9 +16543,9 @@ var author$project$ConfigGroups$OperationsOnDrop$Rotate$groupStyles = _List_from
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center'),
-		A2(elm$html$Html$Attributes$style, 'border', '1px solid #b7b7b7'),
 		A2(elm$html$Html$Attributes$style, 'margin-bottom', '2em'),
-		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em')
+		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em'),
+		A2(elm$html$Html$Attributes$style, 'background-color', '#222222')
 	]);
 var author$project$ConfigGroups$OperationsOnDrop$Rotate$itemView = F4(
 	function (model, offset, localIndex, _n0) {
@@ -16713,9 +16713,9 @@ var author$project$ConfigGroups$OperationsOnDrop$Swap$groupStyles = _List_fromAr
 	[
 		A2(elm$html$Html$Attributes$style, 'display', 'flex'),
 		A2(elm$html$Html$Attributes$style, 'justify-content', 'center'),
-		A2(elm$html$Html$Attributes$style, 'border', '1px solid #b7b7b7'),
 		A2(elm$html$Html$Attributes$style, 'margin-bottom', '2em'),
-		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em')
+		A2(elm$html$Html$Attributes$style, 'padding', '2em 0 2em 2em'),
+		A2(elm$html$Html$Attributes$style, 'background-color', '#222222')
 	]);
 var author$project$ConfigGroups$OperationsOnDrop$Swap$itemView = F4(
 	function (model, offset, localIndex, _n0) {

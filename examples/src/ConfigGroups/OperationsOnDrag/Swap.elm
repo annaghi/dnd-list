@@ -281,9 +281,9 @@ groupStyles : List (Html.Attribute msg)
 groupStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "border" "1px solid #b7b7b7"
     , Html.Attributes.style "margin-bottom" "2em"
     , Html.Attributes.style "padding" "2em 0 2em 2em"
+    , Html.Attributes.style "background-color" "#222222"
     ]
 
 
