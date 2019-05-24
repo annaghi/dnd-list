@@ -903,7 +903,7 @@ ghostStyles (Model model) =
         Just state ->
             case state.dragElement of
                 Just { element } ->
-                    [ Html.Attributes.style "position" "absolute"
+                    [ Html.Attributes.style "position" "fixed"
                     , Html.Attributes.style "left" "0"
                     , Html.Attributes.style "top" "0"
                     , Html.Attributes.style "transform" <|

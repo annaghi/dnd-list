@@ -699,7 +699,7 @@ ghostStyles movement (Model model) =
                 Just { element } ->
                     case movement of
                         Horizontal ->
-                            [ Html.Attributes.style "position" "absolute"
+                            [ Html.Attributes.style "position" "fixed"
                             , Html.Attributes.style "top" "0"
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "transform" <|
@@ -712,7 +712,7 @@ ghostStyles movement (Model model) =
                             ]
 
                         Vertical ->
-                            [ Html.Attributes.style "position" "absolute"
+                            [ Html.Attributes.style "position" "fixed"
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "top" "0"
                             , Html.Attributes.style "transform" <|
@@ -725,7 +725,7 @@ ghostStyles movement (Model model) =
                             ]
 
                         Free ->
-                            [ Html.Attributes.style "position" "absolute"
+                            [ Html.Attributes.style "position" "fixed"
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "top" "0"
                             , Html.Attributes.style "transform" <|
