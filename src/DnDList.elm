@@ -22,6 +22,17 @@ The `System` object gives you access to events and to detailed information about
 Finally, you will need to render a ghost element to be used for dragging display.
 You can add position styling attributes to this element using the`System` object.
 
+&nbsp;
+
+
+## DragIndex & DropIndex
+
+    type alias DragIndex =
+        Int
+
+    type alias DropIndex =
+        Int
+
 
 # System
 
@@ -199,10 +210,10 @@ import Browser.Events
 import Html
 import Html.Attributes
 import Html.Events
+import Internal.Common.Operations
+import Internal.Common.Utils
 import Json.Decode
-import Operations
 import Task
-import Utils
 
 
 {-| Represents the internal model of the current drag and drop features.
@@ -226,11 +237,11 @@ type Model
 
 
 type alias State =
-    { dragIndex : Int
-    , dropIndex : Int
+    { dragIndex : DragIndex
+    , dropIndex : DropIndex
     , dragCounter : Int
-    , startPosition : Utils.Position
-    , currentPosition : Utils.Position
+    , startPosition : Internal.Common.Utils.Position
+    , currentPosition : Internal.Common.Utils.Position
     , dragElementId : String
     , dropElementId : String
     , dragElement : Maybe Browser.Dom.Element
@@ -254,8 +265,8 @@ type alias System a msg =
     , subscriptions : Model -> Sub msg
     , commands : Model -> Cmd msg
     , update : Msg -> Model -> List a -> ( Model, List a )
-    , dragEvents : Int -> String -> List (Html.Attribute msg)
-    , dropEvents : Int -> String -> List (Html.Attribute msg)
+    , dragEvents : DragIndex -> String -> List (Html.Attribute msg)
+    , dropEvents : DropIndex -> String -> List (Html.Attribute msg)
     , ghostStyles : Model -> List (Html.Attribute msg)
     , info : Model -> Maybe Info
     }
@@ -322,7 +333,7 @@ This is our configuration with a void `beforeUpdate`:
 
 -}
 type alias Config a =
-    { beforeUpdate : Int -> Int -> List a -> List a
+    { beforeUpdate : DragIndex -> DropIndex -> List a -> List a
     , movement : Movement
     , listen : Listen
     , operation : Operation
@@ -432,6 +443,26 @@ type alias Info =
     }
 
 
+info : Model -> Maybe Info
+info (Model model) =
+    Maybe.andThen
+        (\state ->
+            Maybe.map2
+                (\dragElement dropElement ->
+                    { dragIndex = state.dragIndex
+                    , dropIndex = state.dropIndex
+                    , dragElementId = state.dragElementId
+                    , dropElementId = state.dropElementId
+                    , dragElement = dragElement
+                    , dropElement = dropElement
+                    }
+                )
+                state.dragElement
+                state.dropElement
+        )
+        model
+
+
 subscriptions : (Msg -> msg) -> Model -> Sub msg
 subscriptions stepMsg (Model model) =
     case model of
@@ -441,7 +472,7 @@ subscriptions stepMsg (Model model) =
         Just _ ->
             Sub.batch
                 [ Browser.Events.onMouseMove
-                    (Json.Decode.map2 Utils.Position Utils.pageX Utils.pageY
+                    (Json.Decode.map2 Internal.Common.Utils.Position Internal.Common.Utils.pageX Internal.Common.Utils.pageY
                         |> Json.Decode.map (stepMsg << Drag)
                     )
                 , Browser.Events.onMouseUp
@@ -489,8 +520,8 @@ It should be wrapped within our message constructor:
 
 -}
 type Msg
-    = DragStart Int String Utils.Position
-    | Drag Utils.Position
+    = DragStart Int String Internal.Common.Utils.Position
+    | Drag Internal.Common.Utils.Position
     | DragOver Int String
     | DragEnter Int
     | DragLeave
@@ -635,57 +666,37 @@ listUpdate : Operation -> Int -> Int -> List a -> List a
 listUpdate operation dragIndex dropIndex list =
     case operation of
         InsertAfter ->
-            Operations.insertAfter dragIndex dropIndex list
+            Internal.Common.Operations.insertAfter dragIndex dropIndex list
 
         InsertBefore ->
-            Operations.insertBefore dragIndex dropIndex list
+            Internal.Common.Operations.insertBefore dragIndex dropIndex list
 
         Rotate ->
-            Operations.rotate dragIndex dropIndex list
+            Internal.Common.Operations.rotate dragIndex dropIndex list
 
         Swap ->
-            Operations.swap dragIndex dropIndex list
+            Internal.Common.Operations.swap dragIndex dropIndex list
 
         Unaltered ->
             list
 
 
-dragEvents : (Msg -> msg) -> Int -> String -> List (Html.Attribute msg)
+dragEvents : (Msg -> msg) -> DragIndex -> String -> List (Html.Attribute msg)
 dragEvents stepMsg dragIndex dragElementId =
     [ Html.Events.preventDefaultOn "mousedown"
-        (Json.Decode.map2 Utils.Position Utils.pageX Utils.pageY
+        (Json.Decode.map2 Internal.Common.Utils.Position Internal.Common.Utils.pageX Internal.Common.Utils.pageY
             |> Json.Decode.map (stepMsg << DragStart dragIndex dragElementId)
             |> Json.Decode.map (\msg -> ( msg, True ))
         )
     ]
 
 
-dropEvents : (Msg -> msg) -> Int -> String -> List (Html.Attribute msg)
+dropEvents : (Msg -> msg) -> DropIndex -> String -> List (Html.Attribute msg)
 dropEvents stepMsg dropIndex dropElementId =
     [ Html.Events.onMouseOver (stepMsg (DragOver dropIndex dropElementId))
     , Html.Events.onMouseEnter (stepMsg (DragEnter dropIndex))
     , Html.Events.onMouseLeave (stepMsg DragLeave)
     ]
-
-
-info : Model -> Maybe Info
-info (Model model) =
-    Maybe.andThen
-        (\state ->
-            Maybe.map2
-                (\dragElement dropElement ->
-                    { dragIndex = state.dragIndex
-                    , dropIndex = state.dropIndex
-                    , dragElementId = state.dragElementId
-                    , dropElementId = state.dropElementId
-                    , dragElement = dragElement
-                    , dropElement = dropElement
-                    }
-                )
-                state.dragElement
-                state.dropElement
-        )
-        model
 
 
 ghostStyles : Movement -> Model -> List (Html.Attribute msg)
@@ -703,11 +714,11 @@ ghostStyles movement (Model model) =
                             , Html.Attributes.style "top" "0"
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "transform" <|
-                                Utils.translate
+                                Internal.Common.Utils.translate
                                     (round (state.currentPosition.x - state.startPosition.x + element.x))
                                     (round element.y)
-                            , Html.Attributes.style "height" (Utils.px (round element.height))
-                            , Html.Attributes.style "width" (Utils.px (round element.width))
+                            , Html.Attributes.style "height" (Internal.Common.Utils.px (round element.height))
+                            , Html.Attributes.style "width" (Internal.Common.Utils.px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"
                             ]
 
@@ -716,11 +727,11 @@ ghostStyles movement (Model model) =
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "top" "0"
                             , Html.Attributes.style "transform" <|
-                                Utils.translate
+                                Internal.Common.Utils.translate
                                     (round element.x)
                                     (round (state.currentPosition.y - state.startPosition.y + element.y))
-                            , Html.Attributes.style "height" (Utils.px (round element.height))
-                            , Html.Attributes.style "width" (Utils.px (round element.width))
+                            , Html.Attributes.style "height" (Internal.Common.Utils.px (round element.height))
+                            , Html.Attributes.style "width" (Internal.Common.Utils.px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"
                             ]
 
@@ -729,13 +740,21 @@ ghostStyles movement (Model model) =
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "top" "0"
                             , Html.Attributes.style "transform" <|
-                                Utils.translate
+                                Internal.Common.Utils.translate
                                     (round (state.currentPosition.x - state.startPosition.x + element.x))
                                     (round (state.currentPosition.y - state.startPosition.y + element.y))
-                            , Html.Attributes.style "height" (Utils.px (round element.height))
-                            , Html.Attributes.style "width" (Utils.px (round element.width))
+                            , Html.Attributes.style "height" (Internal.Common.Utils.px (round element.height))
+                            , Html.Attributes.style "width" (Internal.Common.Utils.px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"
                             ]
 
                 _ ->
                     []
+
+
+type alias DragIndex =
+    Int
+
+
+type alias DropIndex =
+    Int
