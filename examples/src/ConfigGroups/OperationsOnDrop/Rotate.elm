@@ -302,7 +302,6 @@ sectionStyles : List (Html.Attribute msg)
 sectionStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-direction" "column"
-    , Html.Attributes.style "margin-right" "1em"
     , Html.Attributes.style "width" "800px"
     ]
 
@@ -311,9 +310,7 @@ groupStyles : List (Html.Attribute msg)
 groupStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "margin-bottom" "2em"
-    , Html.Attributes.style "padding" "2em 0 2em 2em"
-    , Html.Attributes.style "background-color" "#222222"
+    , Html.Attributes.style "padding-bottom" "4rem"
     ]
 
 
@@ -323,7 +320,7 @@ itemStyles color =
     , Html.Attributes.style "height" "50px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
-    , Html.Attributes.style "margin-right" "2em"
+    , Html.Attributes.style "margin-right" "1.5rem"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
