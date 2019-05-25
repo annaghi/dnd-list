@@ -15,13 +15,13 @@ create : DnDList.Config a -> Msg -> DnDList.System a Msg
 ```elm
 update: DnDList.Msg -> DnDList.Model -> List a -> ( DnDList.Model, List a )
 
-dragEvents : Int -> String -> List (Html.Attribute Msg)
+dragEvents : DragIndex -> String -> List (Html.Attribute Msg)
 
-dropEvents : Int -> String -> List (Html.Attribute Msg)
+dropEvents : DropIndex -> String -> List (Html.Attribute Msg)
 
 ghostStyles : DnDList.Model -> List (Html.Attribute Msg)
 
-info : DnDList.Model -> Maybe Info
+info : DnDList.Model -> Maybe DnDList.Info
 ```
 
 ## Config
