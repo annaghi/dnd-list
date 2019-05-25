@@ -17,7 +17,7 @@ main,
   flex-direction: column;
 }
 #sidebar {
-  padding: 0 2.5em;
+  padding: 0 2.5rem;
 }
 
 a {
@@ -34,15 +34,15 @@ h4 {
 /* Card */
 
 #sidebar header h1 {
-  font-size: 2.4em;
+  font-size: 2.4rem;
 }
 
 /* Navigation panel */
 nav {
-  padding-bottom: 3em;
+  padding-bottom: 3rem;
 }
 nav h4 {
-  margin-bottom: 0.2em;
+  margin-bottom: 0.2rem;
 }
 nav p {
   line-height: 1.5;
@@ -58,7 +58,7 @@ nav ul {
 nav li:after {
   content: " •";
   opacity: 0.5;
-  margin: 0px 0.3em;
+  margin: 0px 0.3rem;
 }
 nav li:last-child:after {
   content: "";
@@ -66,31 +66,31 @@ nav li:last-child:after {
   margin: 0;
 }
 nav h4 {
-  margin: 0.5em 0;
+  margin: 0.5rem 0;
 }
 
 /* Main panel */
 
 main header {
   overflow: auto;
-  padding: 0 3em 3em 3em;
+  padding: 0 3rem 3rem 3rem;
 }
 main header h2 {
-  margin-top: 1.5em;
+  margin-top: 2.4rem;
 }
 main header p {
-  margin-top: 1.8em;
+  margin-top: 2rem;
   margin-bottom: 0;
 }
 
 main > section {
-  margin: 6em auto;
-  padding: 0 3em;
+  margin: 6rem auto;
+  padding: 0 3rem;
 }
 section .link {
   cursor: pointer;
   display: table;
-  margin-right: 1em;
+  margin-right: 1rem;
   padding: 0px 14px 6px 14px;
 }
 
@@ -99,7 +99,7 @@ section .link {
 .hljs {
   font: normal 10pt Consolas, Monaco, monospace;
   line-height: 1.5;
-  padding: 3em 0 5em 3em;
+  padding: 3rem 0 5rem 3rem;
 }
 
 pre {
@@ -116,11 +116,11 @@ pre {
     content: none;
   }
   nav h4 {
-    margin: 0.2em 0 0;
+    margin: 0.2rem 0 0;
   }
   nav a {
     display: block;
-    padding: 2px 0 2px 7px;
+    padding: 2px 0 2px 14px;
   }
 }
 
@@ -142,7 +142,7 @@ pre {
     flex: 0 0 280px;
   }
   section .link {
-    width: 110px;
+    width: 140px;
   }
 }
 
