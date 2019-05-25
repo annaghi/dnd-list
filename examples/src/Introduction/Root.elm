@@ -10,7 +10,6 @@ module Introduction.Root exposing
     , update
     )
 
-import Base
 import CustomElement
 import Html
 import Html.Attributes
@@ -23,6 +22,7 @@ import Introduction.Keyed
 import Introduction.Margins
 import Introduction.Masonry
 import Introduction.Resize
+import Path
 import Url.Builder
 
 
@@ -219,7 +219,7 @@ linkView currentPath example =
     let
         path : String
         path =
-            Url.Builder.absolute [ Base.base, "introduction", (info >> .slug) example ] []
+            Url.Builder.absolute [ Path.rootPath, "introduction", (info >> .slug) example ] []
     in
     Html.li []
         [ Html.a

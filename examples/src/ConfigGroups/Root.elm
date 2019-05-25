@@ -10,12 +10,12 @@ module ConfigGroups.Root exposing
     , update
     )
 
-import Base
 import ConfigGroups.OperationsOnDrag.Root
 import ConfigGroups.OperationsOnDrop.Root
 import CustomElement
 import Html
 import Html.Attributes
+import Path
 import Url.Builder
 
 
@@ -105,7 +105,7 @@ linkView currentPath example =
     let
         path : String
         path =
-            Url.Builder.absolute [ Base.base, "config-groups", (info >> .slug) example ] []
+            Url.Builder.absolute [ Path.rootPath, "config-groups", (info >> .slug) example ] []
     in
     Html.li []
         [ Html.a

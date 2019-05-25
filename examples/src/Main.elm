@@ -1,6 +1,5 @@
 module Main exposing (main)
 
-import Base
 import Browser
 import Browser.Dom
 import Browser.Navigation
@@ -11,6 +10,7 @@ import Home
 import Html
 import Html.Attributes
 import Introduction.Root
+import Path
 import Task
 import Url
 import Url.Builder
@@ -193,27 +193,27 @@ stepUrl url model =
                     Url.Parser.top
                 , Url.Parser.map
                     (stepIntroduction model (Introduction.Root.init "groups"))
-                    (Url.Parser.s Base.base)
+                    (Url.Parser.s Path.rootPath)
                 , Url.Parser.map
                     (\slug ->
                         stepIntroduction model (Introduction.Root.init slug)
                     )
-                    (Url.Parser.s Base.base </> Url.Parser.s "introduction" </> slug_)
+                    (Url.Parser.s Path.rootPath </> Url.Parser.s "introduction" </> slug_)
                 , Url.Parser.map
                     (\slug ->
                         stepConfig model (Config.Root.init slug)
                     )
-                    (Url.Parser.s Base.base </> Url.Parser.s "config" </> slug_)
+                    (Url.Parser.s Path.rootPath </> Url.Parser.s "config" </> slug_)
                 , Url.Parser.map
                     (\slug ->
                         stepConfigGroups model (ConfigGroups.Root.init slug)
                     )
-                    (Url.Parser.s Base.base </> Url.Parser.s "config-groups" </> slug_)
+                    (Url.Parser.s Path.rootPath </> Url.Parser.s "config-groups" </> slug_)
                 , Url.Parser.map
                     (\slug ->
                         stepGallery model (Gallery.Root.init slug)
                     )
-                    (Url.Parser.s Base.base </> Url.Parser.s "gallery" </> slug_)
+                    (Url.Parser.s Path.rootPath </> Url.Parser.s "gallery" </> slug_)
                 ]
     in
     case Url.Parser.parse parser url of
@@ -231,8 +231,8 @@ slug_ =
 
 toPath : Url.Url -> String
 toPath url =
-    if (url.path == "/" ++ Base.base) || (url.path == "/" ++ Base.base ++ "/") then
-        Url.Builder.absolute [ Base.base, "introduction", "groups" ] []
+    if (url.path == "/" ++ Path.rootPath) || (url.path == "/" ++ Path.rootPath ++ "/") then
+        Url.Builder.absolute [ Path.rootPath, "introduction", "groups" ] []
 
     else
         url.path
@@ -298,7 +298,7 @@ cardView =
     Html.header []
         [ Html.h1 []
             [ Html.a
-                [ Html.Attributes.href (Url.Builder.absolute [ Base.base ] []) ]
+                [ Html.Attributes.href (Url.Builder.absolute [ Path.rootPath ] []) ]
                 [ Html.text "dnd-list" ]
             ]
         , Html.div []

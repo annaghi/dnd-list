@@ -10,7 +10,6 @@ module Gallery.Root exposing
     , update
     )
 
-import Base
 import CustomElement
 import Gallery.Hanoi
 import Gallery.Puzzle
@@ -19,6 +18,7 @@ import Gallery.TaskBoard
 import Gallery.TryOn
 import Html
 import Html.Attributes
+import Path
 import Url.Builder
 
 
@@ -159,7 +159,7 @@ linkView currentPath example =
     let
         path : String
         path =
-            Url.Builder.absolute [ Base.base, "gallery", (info >> .slug) example ] []
+            Url.Builder.absolute [ Path.rootPath, "gallery", (info >> .slug) example ] []
     in
     Html.li []
         [ Html.a
