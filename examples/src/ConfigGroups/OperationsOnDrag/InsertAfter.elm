@@ -36,15 +36,15 @@ preparedData : List Item
 preparedData =
     [ Item 1 "" transparent
     , Item 1 "1" baseColor
-    , Item 1 "2" baseColor
-    , Item 1 "3" baseColor
-    , Item 1 "4" baseColor
-    , Item 1 "5" baseColor
     , Item 2 "" transparent
-    , Item 2 "6" baseColor
-    , Item 2 "7" baseColor
-    , Item 2 "8" baseColor
+    , Item 2 "2" baseColor
+    , Item 2 "3" baseColor
+    , Item 2 "4" baseColor
     , Item 3 "" transparent
+    , Item 3 "5" baseColor
+    , Item 3 "6" baseColor
+    , Item 3 "7" baseColor
+    , Item 3 "8" baseColor
     , Item 3 "9" baseColor
     ]
 
@@ -326,7 +326,6 @@ sectionStyles : List (Html.Attribute msg)
 sectionStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-direction" "column"
-    , Html.Attributes.style "margin-right" "1em"
     , Html.Attributes.style "width" "800px"
     ]
 
@@ -335,9 +334,7 @@ groupStyles : List (Html.Attribute msg)
 groupStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "margin-bottom" "2em"
-    , Html.Attributes.style "padding" "2em 0 2em 2em"
-    , Html.Attributes.style "background-color" "#222222"
+    , Html.Attributes.style "padding-bottom" "4rem"
     ]
 
 
@@ -347,7 +344,7 @@ itemStyles color =
     , Html.Attributes.style "height" "50px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
-    , Html.Attributes.style "margin-right" "2em"
+    , Html.Attributes.style "margin-right" "1.5rem"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
@@ -359,10 +356,10 @@ auxiliaryItemStyles : List (Html.Attribute msg)
 auxiliaryItemStyles =
     [ Html.Attributes.style "flex-grow" "1"
     , Html.Attributes.style "box-sizing" "border-box"
-    , Html.Attributes.style "margin-right" "2em"
+    , Html.Attributes.style "margin-right" "1.5rem"
     , Html.Attributes.style "width" "auto"
     , Html.Attributes.style "height" "50px"
     , Html.Attributes.style "min-width" "50px"
-    , Html.Attributes.style "border" "3px dashed dimgray"
+    , Html.Attributes.style "border" "3px dashed gray"
     , Html.Attributes.style "background-color" "transparent"
     ]

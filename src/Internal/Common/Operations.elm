@@ -1,4 +1,4 @@
-module Operations exposing
+module Internal.Common.Operations exposing
     ( insertAfter
     , insertBefore
     , rotate

@@ -4,6 +4,8 @@ import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Svg
+import Svg.Attributes
 
 
 
@@ -31,23 +33,22 @@ type Property
 
 type alias Item =
     { property : Property
-    , width : Int
-    , height : Int
+    , size : Int
     , color : Color
     }
 
 
 data : List Item
 data =
-    [ Item Color 1 1 papayaWhip
-    , Item Color 1 1 pink
-    , Item Color 1 1 violet
-    , Item Color 1 1 lavender
-    , Item Size 1 2 gray
-    , Item Size 2 2 gray
-    , Item Size 1 3 gray
-    , Item Size 2 3 gray
-    , Item Size 3 3 gray
+    [ Item Color 1 khaki
+    , Item Color 1 yellowGreen
+    , Item Color 1 oliveDrab
+    , Item Color 1 olive
+    , Item Size 1 gray
+    , Item Size 2 gray
+    , Item Size 3 gray
+    , Item Size 4 gray
+    , Item Size 5 gray
     ]
 
 
@@ -174,33 +175,33 @@ view model =
 colorView : Model -> Int -> Item -> Html.Html Msg
 colorView model index item =
     let
-        itemId : String
-        itemId =
+        id : String
+        id =
             "color-" ++ String.fromInt index
 
         width : Int
         width =
-            item.width * 5
+            item.size * 4
 
         height : Int
         height =
-            item.height * 5
+            item.size * 4
     in
     case system.info model.dnd of
         Just _ ->
             Html.div
-                (Html.Attributes.id itemId
-                    :: itemStyles width height item.color
+                (Html.Attributes.id id
+                    :: colorStyles width height item.color
                     ++ [ Html.Attributes.style "cursor" "pointer" ]
                 )
                 []
 
         _ ->
             Html.div
-                (Html.Attributes.id itemId
-                    :: itemStyles width height item.color
+                (Html.Attributes.id id
+                    :: colorStyles width height item.color
                     ++ Html.Attributes.style "cursor" "pointer"
-                    :: system.dragEvents index itemId
+                    :: system.dragEvents index id
                 )
                 []
 
@@ -212,52 +213,36 @@ sizeView model offset localIndex item =
         globalIndex =
             offset + localIndex
 
-        itemId : String
-        itemId =
+        id : String
+        id =
             "size-" ++ String.fromInt localIndex
 
         width : Int
         width =
-            item.width * 4
+            item.size * 50
 
         height : Int
         height =
-            item.height * 4
+            item.size * 50
     in
     case system.info model.dnd of
         Just { dragIndex } ->
             if dragIndex /= globalIndex then
-                Html.div
-                    (Html.Attributes.id itemId
-                        :: itemStyles width height item.color
-                        ++ system.dropEvents globalIndex itemId
-                    )
-                    []
+                Html.div wrapperStyles
+                    [ svgView width height item.color (Html.Attributes.id id :: system.dropEvents globalIndex id) ]
 
             else
-                Html.div
-                    (Html.Attributes.id itemId
-                        :: itemStyles width height gray
-                        ++ system.dropEvents globalIndex itemId
-                    )
-                    []
+                Html.div wrapperStyles
+                    [ svgView width height gray (Html.Attributes.id id :: system.dropEvents globalIndex id) ]
 
         _ ->
             if item.color /= gray then
-                Html.div
-                    (Html.Attributes.id itemId
-                        :: itemStyles width height item.color
-                        ++ Html.Attributes.style "cursor" "pointer"
-                        :: system.dragEvents globalIndex itemId
-                    )
-                    []
+                Html.div wrapperStyles
+                    [ svgView width height item.color (Html.Attributes.id id :: Html.Attributes.style "cursor" "pointer" :: system.dragEvents globalIndex id) ]
 
             else
-                Html.div
-                    (Html.Attributes.id itemId
-                        :: itemStyles width height item.color
-                    )
-                    []
+                Html.div wrapperStyles
+                    [ svgView width height item.color [ Html.Attributes.id id ] ]
 
 
 ghostView : Model -> Html.Html Msg
@@ -277,18 +262,35 @@ ghostView model =
                 height =
                     round (dropElement.element.height / baseFontSize)
             in
-            Html.div
-                (itemStyles width height color
-                    ++ system.ghostStyles model.dnd
+            svgView width
+                height
+                color
+                (system.ghostStyles model.dnd
                     ++ [ Html.Attributes.style "width" (String.fromInt width ++ "rem")
                        , Html.Attributes.style "height" (String.fromInt height ++ "rem")
                        , Html.Attributes.style "transition" "width 0.5s, height 0.5s"
                        ]
                 )
-                []
 
         _ ->
             Html.text ""
+
+
+svgView : Int -> Int -> String -> List (Html.Attribute Msg) -> Html.Html Msg
+svgView width height color dnd =
+    Svg.svg
+        ([ Svg.Attributes.width (String.fromInt width)
+         , Svg.Attributes.height (String.fromInt height)
+         , Svg.Attributes.viewBox "0 0 295.526 295.526"
+         ]
+            ++ dnd
+        )
+        [ Svg.g
+            [ Svg.Attributes.fill color ]
+            [ Svg.path [ Svg.Attributes.d "M147.763,44.074c12.801,0,23.858-8.162,27.83-20.169c-7.578,2.086-17.237,3.345-27.83,3.345c-10.592,0-20.251-1.259-27.828-3.345C123.905,35.911,134.961,44.074,147.763,44.074z" ] []
+            , Svg.path [ Svg.Attributes.d "M295.158,58.839c-0.608-1.706-1.873-3.109-3.521-3.873l-56.343-26.01c-11.985-4.06-24.195-7.267-36.524-9.611c-0.434-0.085-0.866-0.126-1.292-0.126c-3.052,0-5.785,2.107-6.465,5.197c-4.502,19.82-22.047,34.659-43.251,34.659c-21.203,0-38.749-14.838-43.25-34.659c-0.688-3.09-3.416-5.197-6.466-5.197c-0.426,0-0.858,0.041-1.292,0.126c-12.328,2.344-24.538,5.551-36.542,9.611L3.889,54.965c-1.658,0.764-2.932,2.167-3.511,3.873c-0.599,1.726-0.491,3.589,0.353,5.217l24.46,48.272c1.145,2.291,3.474,3.666,5.938,3.666c0.636,0,1.281-0.092,1.917-0.283l27.167-8.052v161.97c0,3.678,3.001,6.678,6.689,6.678h161.723c3.678,0,6.67-3.001,6.67-6.678V107.66l27.186,8.052c0.636,0.191,1.28,0.283,1.915,0.283c2.459,0,4.779-1.375,5.94-3.666l24.469-48.272C295.629,62.428,295.747,60.565,295.158,58.839z" ] []
+            ]
+        ]
 
 
 
@@ -309,24 +311,24 @@ type alias Color =
     String
 
 
-lavender : Color
-lavender =
-    "#956dbd"
+khaki : Color
+khaki =
+    "#BDB76B"
 
 
-violet : Color
-violet =
-    "#d291bc"
+yellowGreen : Color
+yellowGreen =
+    "#9ACD32"
 
 
-pink : Color
-pink =
-    "#fec8d8"
+oliveDrab : Color
+oliveDrab =
+    "#6B8E23"
 
 
-papayaWhip : Color
-papayaWhip =
-    "#ffead3"
+olive : Color
+olive =
+    "#808000"
 
 
 gray : Color
@@ -343,7 +345,7 @@ sectionStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "padding-top" "3rem"
+    , Html.Attributes.style "padding-top" "2rem"
     ]
 
 
@@ -366,11 +368,20 @@ sizeGroupStyles =
     ]
 
 
-itemStyles : Int -> Int -> String -> List (Html.Attribute msg)
-itemStyles width height color =
+colorStyles : Int -> Int -> String -> List (Html.Attribute msg)
+colorStyles width height color =
     [ Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "margin" "0 3rem 3rem 0"
     , Html.Attributes.style "background-color" color
     , Html.Attributes.style "width" (String.fromInt width ++ "rem")
     , Html.Attributes.style "height" (String.fromInt height ++ "rem")
+    ]
+
+
+wrapperStyles : List (Html.Attribute msg)
+wrapperStyles =
+    [ Html.Attributes.style "display" "flex"
+    , Html.Attributes.style "align-items" "center"
+    , Html.Attributes.style "justify-content" "center"
+    , Html.Attributes.style "margin-right" "2rem"
     ]

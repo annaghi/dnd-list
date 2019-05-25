@@ -1,4 +1,4 @@
-module Utils exposing (Position, pageX, pageY, px, translate)
+module Internal.Common.Utils exposing (Position, pageX, pageY, px, translate)
 
 import Json.Decode
 

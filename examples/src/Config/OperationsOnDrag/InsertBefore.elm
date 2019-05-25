@@ -33,7 +33,7 @@ type alias Item =
 
 data : List Item
 data =
-    List.range 0 9
+    List.range 1 9
         |> List.map (\i -> Item (String.fromInt i) baseColor)
 
 
