@@ -17451,7 +17451,7 @@ var author$project$Gallery$Knight$squareView = F4(
 					A2(
 						elm$url$Url$Builder$absolute,
 						_List_fromArray(
-							['assets', 'images', 'gallery', 'pegasus.png']),
+							[author$project$Path$rootPath, 'assets', 'images', 'gallery', 'pegasus.png']),
 						_List_Nil)),
 					A2(elm$html$Html$Attributes$style, 'z-index', '9')
 				]),
