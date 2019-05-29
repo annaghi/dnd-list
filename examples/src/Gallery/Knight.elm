@@ -5,6 +5,7 @@ import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Path
 import Url.Builder
 
 
@@ -191,7 +192,7 @@ squareView dnd solved index5 ( index8, square ) =
         knight =
             if solved then
                 Html.img
-                    [ Html.Attributes.src <| Url.Builder.absolute [ "assets", "images", "gallery", "pegasus.png" ] []
+                    [ Html.Attributes.src <| Url.Builder.absolute [ Path.rootPath, "assets", "images", "gallery", "pegasus.png" ] []
                     , Html.Attributes.style "z-index" "9"
                     ]
                     []
