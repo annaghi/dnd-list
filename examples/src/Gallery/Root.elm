@@ -12,6 +12,7 @@ module Gallery.Root exposing
 
 import CustomElement
 import Gallery.Hanoi
+import Gallery.Knight
 import Gallery.Puzzle
 import Gallery.Shapes
 import Gallery.TaskBoard
@@ -34,6 +35,7 @@ type Example
     = Hanoi Gallery.Hanoi.Model
     | Puzzle Gallery.Puzzle.Model
     | Shapes Gallery.Shapes.Model
+    | Knight Gallery.Knight.Model
     | TryOn Gallery.TryOn.Model
     | TaskBoard Gallery.TaskBoard.Model
 
@@ -51,6 +53,7 @@ type Msg
     = HanoiMsg Gallery.Hanoi.Msg
     | PuzzleMsg Gallery.Puzzle.Msg
     | ShapesMsg Gallery.Shapes.Msg
+    | KnightMsg Gallery.Knight.Msg
     | TryOnMsg Gallery.TryOn.Msg
     | TaskBoardMsg Gallery.TaskBoard.Msg
 
@@ -66,6 +69,9 @@ update message model =
 
         ( ShapesMsg msg, Shapes mo ) ->
             stepShapes (Gallery.Shapes.update msg mo)
+
+        ( KnightMsg msg, Knight mo ) ->
+            stepKnight (Gallery.Knight.update msg mo)
 
         ( TryOnMsg msg, TryOn mo ) ->
             stepTryOn (Gallery.TryOn.update msg mo)
@@ -90,6 +96,11 @@ stepPuzzle ( mo, cmds ) =
 stepShapes : ( Gallery.Shapes.Model, Cmd Gallery.Shapes.Msg ) -> ( Model, Cmd Msg )
 stepShapes ( mo, cmds ) =
     ( Shapes mo, Cmd.map ShapesMsg cmds )
+
+
+stepKnight : ( Gallery.Knight.Model, Cmd Gallery.Knight.Msg ) -> ( Model, Cmd Msg )
+stepKnight ( mo, cmds ) =
+    ( Knight mo, Cmd.map KnightMsg cmds )
 
 
 stepTryOn : ( Gallery.TryOn.Model, Cmd Gallery.TryOn.Msg ) -> ( Model, Cmd Msg )
@@ -117,6 +128,9 @@ subscriptions model =
 
         Shapes mo ->
             Sub.map ShapesMsg (Gallery.Shapes.subscriptions mo)
+
+        Knight mo ->
+            Sub.map KnightMsg (Gallery.Knight.subscriptions mo)
 
         TryOn mo ->
             Sub.map TryOnMsg (Gallery.TryOn.subscriptions mo)
@@ -146,6 +160,7 @@ navigationView currentPath =
         , [ Hanoi Gallery.Hanoi.initialModel
           , Puzzle Gallery.Puzzle.initialModel
           , Shapes Gallery.Shapes.initialModel
+          , Knight Gallery.Knight.initialModel
           , TryOn Gallery.TryOn.initialModel
           , TaskBoard Gallery.TaskBoard.initialModel
           ]
@@ -199,6 +214,9 @@ demoView model =
         Shapes mo ->
             Html.map ShapesMsg (Gallery.Shapes.view mo)
 
+        Knight mo ->
+            Html.map KnightMsg (Gallery.Knight.view mo)
+
         TryOn mo ->
             Html.map TryOnMsg (Gallery.TryOn.view mo)
 
@@ -217,6 +235,9 @@ codeView model =
 
         Shapes _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/Shapes.elm"
+
+        Knight _ ->
+            toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/Knight.elm"
 
         TryOn _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/TryOn.elm"
@@ -246,6 +267,9 @@ toExample slug =
         "shapes" ->
             Shapes Gallery.Shapes.initialModel
 
+        "knight" ->
+            Knight Gallery.Knight.initialModel
+
         "try-on" ->
             TryOn Gallery.TryOn.initialModel
 
@@ -269,7 +293,7 @@ info example =
         Hanoi _ ->
             { slug = "hanoi"
             , title = "Towers of Hanoi"
-            , description = "Plain list with auxiliary items."
+            , description = "Flat list with auxiliary items."
             }
 
         Puzzle _ ->
@@ -280,14 +304,20 @@ info example =
 
         Shapes _ ->
             { slug = "shapes"
-            , title = "Geometric shapes + SVG"
-            , description = "Plain list with the Unaltered operation and beforeUpdate."
+            , title = "Geometric shapes"
+            , description = "Flat list with the Unaltered operation and beforeUpdate."
+            }
+
+        Knight _ ->
+            { slug = "knight"
+            , title = "Knight's tour"
+            , description = "Flat list with Swap. The top-left 5 × 5 sub-board is diced from the original 8 × 8 board."
             }
 
         TryOn _ ->
             { slug = "try-on"
             , title = "Try on"
-            , description = "Plain list with info.targetElement."
+            , description = "Flat list with info.targetElement."
             }
 
         TaskBoard _ ->
