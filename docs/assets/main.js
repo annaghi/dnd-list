@@ -8522,10 +8522,10 @@ var author$project$Gallery$Hanoi$Disk = F4(
 var author$project$Gallery$Hanoi$data = _List_fromArray(
 	[
 		A4(author$project$Gallery$Hanoi$Disk, 0, 300, 'transparent', 'transparent'),
-		A4(author$project$Gallery$Hanoi$Disk, 1, 60, '#c07e00', '#fbe300'),
-		A4(author$project$Gallery$Hanoi$Disk, 1, 120, '#c06d00', '#fbce00'),
-		A4(author$project$Gallery$Hanoi$Disk, 1, 180, '#c05d00', '#fbb900'),
-		A4(author$project$Gallery$Hanoi$Disk, 1, 240, '#c04d00', '#fba400'),
+		A4(author$project$Gallery$Hanoi$Disk, 0, 60, '#c07e00', '#fbe300'),
+		A4(author$project$Gallery$Hanoi$Disk, 0, 120, '#c06d00', '#fbce00'),
+		A4(author$project$Gallery$Hanoi$Disk, 0, 180, '#c05d00', '#fbb900'),
+		A4(author$project$Gallery$Hanoi$Disk, 0, 240, '#c04d00', '#fba400'),
 		A4(author$project$Gallery$Hanoi$Disk, 1, 300, 'transparent', 'transparent'),
 		A4(author$project$Gallery$Hanoi$Disk, 2, 300, 'transparent', 'transparent')
 	]);
