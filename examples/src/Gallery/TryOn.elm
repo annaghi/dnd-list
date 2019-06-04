@@ -32,23 +32,24 @@ type Property
 
 
 type alias Item =
-    { property : Property
+    { id : String
+    , property : Property
     , size : Int
-    , color : Color
+    , color : String
     }
 
 
 data : List Item
 data =
-    [ Item Color 1 khaki
-    , Item Color 1 yellowGreen
-    , Item Color 1 oliveDrab
-    , Item Color 1 olive
-    , Item Size 1 gray
-    , Item Size 2 gray
-    , Item Size 3 gray
-    , Item Size 4 gray
-    , Item Size 5 gray
+    [ Item "id-1" Color 1 "#2ba218"
+    , Item "id-2" Color 1 "#70a218"
+    , Item "id-3" Color 1 "#a28f18"
+    , Item "id-4" Color 1 "#a24b18"
+    , Item "id-5" Size 1 "dimgray"
+    , Item "id-6" Size 2 "dimgray"
+    , Item "id-7" Size 3 "dimgray"
+    , Item "id-8" Size 4 "dimgray"
+    , Item "id-9" Size 5 "dimgray"
     ]
 
 
@@ -89,7 +90,7 @@ updateColor dragIndex dropIndex list =
                 else if index == dragIndex then
                     case item.property of
                         Size ->
-                            [ { item | color = gray } ]
+                            [ { item | color = "dimgray" } ]
 
                         _ ->
                             [ item ]
@@ -233,10 +234,10 @@ sizeView model offset localIndex item =
 
             else
                 Html.div wrapperStyles
-                    [ svgView width height gray (Html.Attributes.id id :: system.dropEvents globalIndex id) ]
+                    [ svgView width height "dimgray" (Html.Attributes.id id :: system.dropEvents globalIndex id) ]
 
         _ ->
-            if item.color /= gray then
+            if item.color /= "dimgray" then
                 Html.div wrapperStyles
                     [ svgView width height item.color (Html.Attributes.id id :: Html.Attributes.style "cursor" "pointer" :: system.dragEvents globalIndex id) ]
 
@@ -301,39 +302,6 @@ maybeDragItem : Model -> Maybe Item
 maybeDragItem { dnd, items } =
     system.info dnd
         |> Maybe.andThen (\{ dragIndex } -> items |> List.drop dragIndex |> List.head)
-
-
-
--- COLORS
-
-
-type alias Color =
-    String
-
-
-khaki : Color
-khaki =
-    "#BDB76B"
-
-
-yellowGreen : Color
-yellowGreen =
-    "#9ACD32"
-
-
-oliveDrab : Color
-oliveDrab =
-    "#6B8E23"
-
-
-olive : Color
-olive =
-    "#808000"
-
-
-gray : Color
-gray =
-    "dimgray"
 
 
 

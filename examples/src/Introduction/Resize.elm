@@ -30,11 +30,11 @@ type alias Color =
 
 data : List Color
 data =
-    [ green
-    , yellow
+    [ yellow
+    , pink
     , blue
+    , green
     , orange
-    , red
     ]
 
 
@@ -231,29 +231,29 @@ maybeDragItem { dnd, colors } =
 -- COLORS
 
 
-yellow : Color
-yellow =
-    "#cddc39"
+pink : Color
+pink =
+    "#c151a7"
 
 
 blue : Color
 blue =
-    "#2592d3"
-
-
-green : Color
-green =
-    "#25D366"
+    "#0696c5"
 
 
 orange : Color
 orange =
-    "#dc9a39"
+    "#e9513e"
 
 
-red : Color
-red =
-    "#dc4839"
+green : Color
+green =
+    "#768402"
+
+
+yellow : Color
+yellow =
+    "#efa500"
 
 
 gray : Color
