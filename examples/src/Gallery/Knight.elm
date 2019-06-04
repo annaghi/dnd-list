@@ -70,7 +70,7 @@ config : DnDList.Config Square
 config =
     { beforeUpdate = beforeUpdate
     , movement = DnDList.Free
-    , listen = DnDList.OnDrag
+    , listen = DnDList.OnDrop
     , operation = DnDList.Swap
     }
 
