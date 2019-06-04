@@ -8522,10 +8522,10 @@ var author$project$Gallery$Hanoi$Disk = F4(
 var author$project$Gallery$Hanoi$data = _List_fromArray(
 	[
 		A4(author$project$Gallery$Hanoi$Disk, 0, 300, 'transparent', 'transparent'),
-		A4(author$project$Gallery$Hanoi$Disk, 0, 60, '#c07e00', '#fbe300'),
-		A4(author$project$Gallery$Hanoi$Disk, 0, 120, '#c06d00', '#fbce00'),
-		A4(author$project$Gallery$Hanoi$Disk, 0, 180, '#c05d00', '#fbb900'),
-		A4(author$project$Gallery$Hanoi$Disk, 0, 240, '#c04d00', '#fba400'),
+		A4(author$project$Gallery$Hanoi$Disk, 0, 60, '#e85332', '#ffed47'),
+		A4(author$project$Gallery$Hanoi$Disk, 0, 120, '#e8323e', '#ffde47'),
+		A4(author$project$Gallery$Hanoi$Disk, 0, 180, '#e8326c', '#ffce47'),
+		A4(author$project$Gallery$Hanoi$Disk, 0, 240, '#e8329a', '#ffbf47'),
 		A4(author$project$Gallery$Hanoi$Disk, 1, 300, 'transparent', 'transparent'),
 		A4(author$project$Gallery$Hanoi$Disk, 2, 300, 'transparent', 'transparent')
 	]);
@@ -8576,7 +8576,7 @@ var author$project$Gallery$Knight$beforeUpdate = F3(
 				}),
 			squares);
 	});
-var author$project$Gallery$Knight$config = {cr: author$project$Gallery$Knight$beforeUpdate, c8: 0, dc: 0, dk: 3};
+var author$project$Gallery$Knight$config = {cr: author$project$Gallery$Knight$beforeUpdate, c8: 1, dc: 0, dk: 3};
 var author$project$Gallery$Knight$system = A2(author$project$DnDList$create, author$project$Gallery$Knight$config, elm$core$Basics$identity);
 var author$project$Gallery$Knight$initialModel = {H: author$project$Gallery$Knight$system.db, aG: false, at: author$project$Gallery$Knight$squares5x5};
 var author$project$Gallery$Puzzle$MyMsg = function (a) {
@@ -8754,27 +8754,22 @@ var author$project$Gallery$TaskBoard$data = _List_fromArray(
 	]);
 var author$project$Gallery$TaskBoard$initialModel = {u: author$project$Gallery$TaskBoard$cardSystem.db, v: author$project$Gallery$TaskBoard$data, w: author$project$Gallery$TaskBoard$columnSystem.db};
 var author$project$Gallery$TryOn$Color = 0;
-var author$project$Gallery$TryOn$Item = F3(
-	function (property, size, color) {
-		return {aQ: color, aC: property, aE: size};
+var author$project$Gallery$TryOn$Item = F4(
+	function (id, property, size, color) {
+		return {aQ: color, al: id, aC: property, aE: size};
 	});
 var author$project$Gallery$TryOn$Size = 1;
-var author$project$Gallery$TryOn$gray = 'dimgray';
-var author$project$Gallery$TryOn$khaki = '#BDB76B';
-var author$project$Gallery$TryOn$olive = '#808000';
-var author$project$Gallery$TryOn$oliveDrab = '#6B8E23';
-var author$project$Gallery$TryOn$yellowGreen = '#9ACD32';
 var author$project$Gallery$TryOn$data = _List_fromArray(
 	[
-		A3(author$project$Gallery$TryOn$Item, 0, 1, author$project$Gallery$TryOn$khaki),
-		A3(author$project$Gallery$TryOn$Item, 0, 1, author$project$Gallery$TryOn$yellowGreen),
-		A3(author$project$Gallery$TryOn$Item, 0, 1, author$project$Gallery$TryOn$oliveDrab),
-		A3(author$project$Gallery$TryOn$Item, 0, 1, author$project$Gallery$TryOn$olive),
-		A3(author$project$Gallery$TryOn$Item, 1, 1, author$project$Gallery$TryOn$gray),
-		A3(author$project$Gallery$TryOn$Item, 1, 2, author$project$Gallery$TryOn$gray),
-		A3(author$project$Gallery$TryOn$Item, 1, 3, author$project$Gallery$TryOn$gray),
-		A3(author$project$Gallery$TryOn$Item, 1, 4, author$project$Gallery$TryOn$gray),
-		A3(author$project$Gallery$TryOn$Item, 1, 5, author$project$Gallery$TryOn$gray)
+		A4(author$project$Gallery$TryOn$Item, 'id-1', 0, 1, '#2ba218'),
+		A4(author$project$Gallery$TryOn$Item, 'id-2', 0, 1, '#70a218'),
+		A4(author$project$Gallery$TryOn$Item, 'id-3', 0, 1, '#a28f18'),
+		A4(author$project$Gallery$TryOn$Item, 'id-4', 0, 1, '#a24b18'),
+		A4(author$project$Gallery$TryOn$Item, 'id-5', 1, 1, 'dimgray'),
+		A4(author$project$Gallery$TryOn$Item, 'id-6', 1, 2, 'dimgray'),
+		A4(author$project$Gallery$TryOn$Item, 'id-7', 1, 3, 'dimgray'),
+		A4(author$project$Gallery$TryOn$Item, 'id-8', 1, 4, 'dimgray'),
+		A4(author$project$Gallery$TryOn$Item, 'id-9', 1, 5, 'dimgray')
 	]);
 var author$project$Gallery$TryOn$MyMsg = elm$core$Basics$identity;
 var author$project$Gallery$TryOn$updateColor = F3(
@@ -8808,7 +8803,7 @@ var author$project$Gallery$TryOn$updateColor = F3(
 										[
 											_Utils_update(
 											item,
-											{aQ: author$project$Gallery$TryOn$gray})
+											{aQ: 'dimgray'})
 										]);
 								} else {
 									return _List_fromArray(
@@ -9055,13 +9050,13 @@ var author$project$Introduction$Masonry$config = {
 };
 var author$project$Introduction$Masonry$system = A2(author$project$DnDList$create, author$project$Introduction$Masonry$config, author$project$Introduction$Masonry$MyMsg);
 var author$project$Introduction$Masonry$initialModel = {H: author$project$Introduction$Masonry$system.db, am: _List_Nil};
-var author$project$Introduction$Resize$blue = '#2592d3';
-var author$project$Introduction$Resize$green = '#25D366';
-var author$project$Introduction$Resize$orange = '#dc9a39';
-var author$project$Introduction$Resize$red = '#dc4839';
-var author$project$Introduction$Resize$yellow = '#cddc39';
+var author$project$Introduction$Resize$blue = '#0696c5';
+var author$project$Introduction$Resize$green = '#768402';
+var author$project$Introduction$Resize$orange = '#e9513e';
+var author$project$Introduction$Resize$pink = '#c151a7';
+var author$project$Introduction$Resize$yellow = '#efa500';
 var author$project$Introduction$Resize$data = _List_fromArray(
-	[author$project$Introduction$Resize$green, author$project$Introduction$Resize$yellow, author$project$Introduction$Resize$blue, author$project$Introduction$Resize$orange, author$project$Introduction$Resize$red]);
+	[author$project$Introduction$Resize$yellow, author$project$Introduction$Resize$pink, author$project$Introduction$Resize$blue, author$project$Introduction$Resize$green, author$project$Introduction$Resize$orange]);
 var author$project$Introduction$Resize$MyMsg = elm$core$Basics$identity;
 var author$project$Introduction$Resize$config = {
 	cr: F3(
@@ -18554,14 +18549,14 @@ var author$project$Gallery$TryOn$sizeView = F4(
 						author$project$Gallery$TryOn$svgView,
 						width,
 						height,
-						author$project$Gallery$TryOn$gray,
+						'dimgray',
 						A2(
 							elm$core$List$cons,
 							elm$html$Html$Attributes$id(id),
 							A2(author$project$Gallery$TryOn$system.cP, globalIndex, id)))
 					]));
 		} else {
-			return (!_Utils_eq(item.aQ, author$project$Gallery$TryOn$gray)) ? A2(
+			return (item.aQ !== 'dimgray') ? A2(
 				elm$html$Html$div,
 				author$project$Gallery$TryOn$wrapperStyles,
 				_List_fromArray(
