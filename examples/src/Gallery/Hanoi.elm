@@ -35,10 +35,10 @@ type alias Disk =
 data : List Disk
 data =
     [ Disk 0 300 "transparent" "transparent"
-    , Disk 0 60 "#c07e00" "#fbe300"
-    , Disk 0 120 "#c06d00" "#fbce00"
-    , Disk 0 180 "#c05d00" "#fbb900"
-    , Disk 0 240 "#c04d00" "#fba400"
+    , Disk 0 60 "#e85332" "#ffed47"
+    , Disk 0 120 "#e8323e" "#ffde47"
+    , Disk 0 180 "#e8326c" "#ffce47"
+    , Disk 0 240 "#e8329a" "#ffbf47"
     , Disk 1 300 "transparent" "transparent"
     , Disk 2 300 "transparent" "transparent"
     ]
