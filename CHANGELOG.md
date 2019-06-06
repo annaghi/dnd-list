@@ -16,7 +16,7 @@ type alias ZoneElementId = String
 
 When it is not confusing we omit the `DnDList` module name.
 
-## [Unreleased] -
+## [Unreleased]
 
 ### New
 
@@ -34,9 +34,9 @@ When it is not confusing we omit the `DnDList` module name.
 - Add pipeline function `withGroups`.
 - Add pipeline function `withZones`.
 
-- Add `zoneEvents` function to `System`.
-- Add `group` argument to `dragEvents`, and reorder its arguments too.
-- Add `group` argument to `dropEvents`, and reorder its arguments too.
+* Add `zoneEvents` function to `System`.
+* Add `group` argument to `dragEvents`, and reorder its arguments too.
+* Add `group` argument to `dropEvents`, and reorder its arguments too.
 
 ### Changed
 
