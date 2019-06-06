@@ -24,7 +24,7 @@ When it is not confusing we omit the `DnDList` module name.
 
 - Introduce Pipeline Pattern in `Config`.
 - Change `Config` type alias to type.
-- Add default `config`.
+- Add `config` with default options.
 - Add pipeline function `withBeforeSort`.
 - Add pipeline function `withMovement`.
 - Add pipeline function `withFlat`.
