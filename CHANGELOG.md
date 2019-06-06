@@ -20,7 +20,7 @@ When it is not confusing we omit the `DnDList` module name.
 
 ### New
 
-- Transfer groupable items between different groups using independent drop zone elements too
+- Transfer groupable items between different groups using independent drop zone elements too.
 - List state invariant: none
 
 ### Added
@@ -82,6 +82,29 @@ config =
 ```
 
 ```elm
+type Config group item = Config
+    { beforeSort : DragIndex -> DropIndex -> List item -> List item
+    , movement : Movement
+    , flat :
+        { listen = Listen
+        , operation = Operation
+        }
+    , groups : Maybe
+        { listen = Listen
+        , operation = Operation
+        , comparator = item -> item -> Bool
+        , setter = item -> item -> item
+        }
+    , zones : Maybe
+        { listen = Listen
+        , operation = Operation
+        , comparator = group -> item -> Bool
+        , setter = group -> item -> item
+        }
+    }
+```
+
+```elm
 withBeforeSort :
     (DragIndex -> DropIndex -> List item -> List item)
     -> Config group item
@@ -116,29 +139,6 @@ withZones :
     }
     -> Config group item
     -> Config group item
-```
-
-```elm
-type Config group item = Config
-    { beforeSort : DragIndex -> DropIndex -> List item -> List item
-    , movement : Movement
-    , flat :
-        { listen = Listen
-        , operation = Operation
-        }
-    , groups : Maybe
-        { listen = Listen
-        , operation = Operation
-        , comparator = item -> item -> Bool
-        , setter = item -> item -> item
-        }
-    , zones : Maybe
-        { listen = Listen
-        , operation = Operation
-        , comparator = group -> item -> Bool
-        , setter = group -> item -> item
-        }
-    }
 ```
 
 ```elm
@@ -410,7 +410,7 @@ type alias Config Msg =
 
 ### New
 
-- Move items in flat lists
+- Move items in flat lists.
 - List state invariant: none
 
 ### Added
