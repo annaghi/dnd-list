@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Meaningful type aliases
+#### Meaningful type aliases
 
 We are using the following type aliases throughout this document for the purposes of better understanding.
 
@@ -45,9 +45,9 @@ When it is not confusing we omit the `DnDList` module name.
 * Remove `commands` from `System` and return `Cmd Msg` in `update` instead.
 * Totally reorganize `update` function.
 
-```elm
-DnDList
+### API
 
+```elm
 create : Msg group -> DnDList.Config group item -> DnDList.System Msg group item
 ```
 
@@ -183,20 +183,16 @@ type alias Info group =
 * Rename `Draggable` type to `Model`.
 * Rename `draggable` field to `model` in `System`.
 
-```elm
-DnDList
+### API
 
+#### DnDList module
+
+```elm
 create : DnDList.Config item -> Msg -> DnDList.System Msg item
 ```
 
 ```elm
-DnDList.Groups
-
-create : DnDList.Groups.Config item -> Msg -> DnDList.Groups.System Msg item
-```
-
-```elm
-system in DnDList
+system
 
 model : DnDList.Model
 update : DnDList.Msg -> DnDList.Model -> List item -> ( DnDList.Model, List item )
@@ -209,7 +205,33 @@ info : DnDList.Model -> Maybe DnDList.Info
 ```
 
 ```elm
-system in DnDList.Groups
+type alias DnDList.Config item =
+    { beforeUpdate : DragIndex -> DropIndex -> List item -> List item
+    , movement : DnDList.Movement
+    , listen : DnDList.Listen
+    , operation : DnDList.Operation
+    }
+```
+
+```elm
+type alias Info =
+    { dragIndex : Int
+    , dropIndex : Int
+    , dragElementId : String
+    , dropElementId : String
+    , dragElement : Browser.Dom.Element
+    , dropElement : Browser.Dom.Element
+    }
+```
+
+#### DnDList.Groups module
+
+```elm
+create : DnDList.Groups.Config item -> Msg -> DnDList.Groups.System Msg item
+```
+
+```elm
+system
 
 model : DnDList.Groups.Model
 update : DnDList.Groups.Msg -> DnDList.Groups.Model -> List item -> ( DnDList.Groups.Model, List item )
@@ -219,15 +241,6 @@ dragEvents : DragIndex -> DragElementId -> List (Html.Attribute Msg)
 dropEvents : DropIndex -> DropElementId -> List (Html.Attribute Msg)
 ghostStyles : DnDList.Groups.Model -> List (Html.Attribute Msg)
 info : DnDList.Groups.Model -> Maybe DnDList.Groups.Info
-```
-
-```elm
-type alias DnDList.Config item =
-    { beforeUpdate : DragIndex -> DropIndex -> List item -> List item
-    , movement : DnDList.Movement
-    , listen : DnDList.Listen
-    , operation : DnDList.Operation
-    }
 ```
 
 ```elm
@@ -274,9 +287,9 @@ type alias Info =
 
 - Rename `draggedIndex` field to `dragIndex` in `System`.
 
-```elm
-DnDList
+### API
 
+```elm
 create : DnDList.Config Msg -> DnDList.System Msg item
 ```
 
@@ -310,9 +323,9 @@ type alias Config Msg =
 
 * Rename `events` field to `message` in `Config`.
 
-```elm
-DnDList
+### API
 
+```elm
 create : DnDList.Config Msg -> DnDList.System Msg item
 ```
 
@@ -345,9 +358,9 @@ type alias Config Msg =
 - Add the removed `Msg` from `create` to `Config` as a field called `events`.
 - Move `Movement` argument from `draggedStyles` to `Config` as a field called `movement`.
 
-```elm
-DnDList
+### API
 
+```elm
 create : DnDList.Config Msg -> DnDList.System Msg
 update : DnDList.Msg -> DnDList.Draggable -> List item -> ( DnDList.Draggable, List item )
 getDragIndex : DnDList.Draggable -> Maybe DragIndex
@@ -404,9 +417,9 @@ type alias Config Msg =
 
 - Add module called `DnDList`.
 
-```elm
-DnDList
+### API
 
+```elm
 create : Msg -> DnDList.System Msg
 update : DnDList.Msg -> DnDList.Draggable -> List item -> ( DnDList.Draggable, List item )
 getDragIndex : DnDList.Draggable -> Maybe DragIndex
