@@ -2,8 +2,6 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## Meaningful type aliases
 
 We are using the following type aliases throughout this document for the purposes of better understanding.
@@ -19,6 +17,11 @@ type alias ZoneElementId = String
 When it is not confusing we omit the `DnDList` module name.
 
 ## [Unreleased] -
+
+### New
+
+- Transfer groupable items between different groups using independent drop zone elements too
+- List state invariant: none
 
 ### Added
 
@@ -154,15 +157,24 @@ type alias Info group =
 
 ## [5.0.0] - 2019-05-06
 
+### New
+
+- Transfer groupable items between different groups using only list items as drop elements.
+- List state invariant:
+  - the list is gathered by the grouping property
+  - if there are auxiliary items, they are keep their header or footer places
+
 ### Added
 
-- Introduce `Info` type alias with a lot of useful fields.
-- Add `info` field to `System`.
-- Move `dragIndex` field from `System` to `Info` as a field called `dragIndex`.
+- Add new module `DnDList.Groups`.
 
-* Add `beforeUpdate` field to `Config`.
-* Add `listen` field to `Config`.
-* Add `operation` field to `Config`.
+* Introduce `Info` type alias with a lot of useful fields.
+* Add `info` field to `System`.
+* Move `dragIndex` field from `System` to `Info` as a field called `dragIndex`.
+
+- Add `beforeUpdate` field to `Config`.
+- Add `listen` field to `Config`.
+- Add `operation` field to `Config`.
 
 ### Changed
 
@@ -178,7 +190,13 @@ create : DnDList.Config item -> Msg -> DnDList.System Msg item
 ```
 
 ```elm
-system
+DnDList.Groups
+
+create : DnDList.Groups.Config item -> Msg -> DnDList.Groups.System Msg item
+```
+
+```elm
+system in DnDList
 
 model : DnDList.Model
 update : DnDList.Msg -> DnDList.Model -> List item -> ( DnDList.Model, List item )
@@ -191,11 +209,38 @@ info : DnDList.Model -> Maybe DnDList.Info
 ```
 
 ```elm
-type alias Config item =
+system in DnDList.Groups
+
+model : DnDList.Groups.Model
+update : DnDList.Groups.Msg -> DnDList.Groups.Model -> List item -> ( DnDList.Groups.Model, List item )
+subscriptions : DnDList.Groups.Model -> Sub Msg
+commands : DnDList.Groups.Model -> Cmd Msg
+dragEvents : DragIndex -> DragElementId -> List (Html.Attribute Msg)
+dropEvents : DropIndex -> DropElementId -> List (Html.Attribute Msg)
+ghostStyles : DnDList.Groups.Model -> List (Html.Attribute Msg)
+info : DnDList.Groups.Model -> Maybe DnDList.Groups.Info
+```
+
+```elm
+type alias DnDList.Config item =
     { beforeUpdate : DragIndex -> DropIndex -> List item -> List item
-    , movement : Movement
-    , listen : Listen
-    , operation : Operation
+    , movement : DnDList.Movement
+    , listen : DnDList.Listen
+    , operation : DnDList.Operation
+    }
+```
+
+```elm
+type alias DnDList.Groups.Config item =
+    { beforeUpdate : DragIndex -> DropIndex -> List item -> List item
+    , listen : DnDList.Groups.Listen
+    , operation : DnDList.Groups.Operation
+    , groups :
+        { listen : DnDList.Groups.Listen
+        , operation : DnDList.Groups.Operation
+        , comparator : a -> a -> Bool
+        , setter : a -> a -> a
+        }
     }
 ```
 
@@ -212,7 +257,7 @@ type alias Info =
 
 ## [4.0.2] - 2019-03-07
 
-### Fix
+### Fixed
 
 - Instead of `Int` use `Float` when extracting mouse position.
 - Delete `preventDefault` from `mouseover` because it has no default action.
@@ -330,7 +375,7 @@ type alias Config Msg =
 
 ### Docs
 
-- New example was added using `mdgriffith/elm-ui`.
+- Add example using `mdgriffith/elm-ui`.
 
 ## [1.0.3] - 2019-02-14
 
@@ -350,7 +395,14 @@ type alias Config Msg =
 
 ## [1.0.0] - 2019-02-08
 
+### New
+
+- Move items in flat lists
+- List state invariant: none
+
 ### Added
+
+- Add module called `DnDList`.
 
 ```elm
 DnDList
