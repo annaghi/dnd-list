@@ -17478,7 +17478,7 @@ var author$project$Gallery$Knight$squareView = F4(
 					author$project$Gallery$Knight$squareStyles(color)),
 				_List_fromArray(
 					[
-						elm$html$Html$text('×')
+						elm$html$Html$text('○')
 					])) : A2(
 				elm$html$Html$div,
 				A2(
