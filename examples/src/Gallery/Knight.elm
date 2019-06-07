@@ -210,7 +210,7 @@ squareView dnd solved index5 ( index8, square ) =
             else if dragIndex == index5 then
                 Html.div
                     (Html.Attributes.id id :: squareStyles color)
-                    [ Html.text "×" ]
+                    [ Html.text "○" ]
 
             else
                 Html.div
