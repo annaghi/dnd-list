@@ -2,6 +2,7 @@ module DnDList exposing
     ( System, create, Msg
     , Config
     , Movement(..), Listen(..), Operation(..)
+    , DragPosition
     , Info
     , Model
     )
@@ -43,6 +44,11 @@ You can add position styling attributes to this element using the`System` object
 
 @docs Config
 @docs Movement, Listen, Operation
+
+
+# DragPosition
+
+@docs DragPosition
 
 
 # Info
@@ -269,6 +275,7 @@ type alias System a msg =
     , dropEvents : DropIndex -> String -> List (Html.Attribute msg)
     , ghostStyles : Model -> List (Html.Attribute msg)
     , info : Model -> Maybe Info
+    , position : Model -> Maybe DragPosition
     }
 
 
@@ -300,6 +307,7 @@ create config stepMsg =
     , dropEvents = dropEvents stepMsg
     , ghostStyles = ghostStyles config.movement
     , info = info
+    , position = position
     }
 
 
@@ -461,6 +469,61 @@ info (Model model) =
                 state.dropElement
         )
         model
+
+
+{-| Represents position information about the element being dragged.
+It is accessible through the `System`'s `position` field.
+
+  - `startPosition`: The x, y position of the element when dragging started
+
+  - `currentPosition`: The x, y position of the element now
+
+This might be useful if you need more control over generating styles for
+the dragged "ghost" element. (e.g. Adding an offset to the position:)
+
+    type alias Offset =
+        { x : Int
+        , y : Int
+        }
+
+    customGhostStyle : DnDList.Model -> DnDList.Info -> Offset -> List (Html.Attribute msg)
+    customGhostStyle dnd { element } offset =
+        let
+            px : Int -> String
+            px x =
+                String.fromInt x ++ "px"
+
+            translate : Int -> Int -> String
+            translate x y =
+                "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"
+        in
+        case system.position dnd of
+            Just { currentPosition, startPosition } ->
+                [ Html.Attribute.style "transform" <|
+                    translate
+                        (round element.x + offset.x)
+                        (round (currentPosition.y - startPosition.y + element.y) + offset.y)
+                ]
+
+            Nothing ->
+                []
+
+-}
+type alias DragPosition =
+    { startPosition : Internal.Common.Utils.Position
+    , currentPosition : Internal.Common.Utils.Position
+    }
+
+
+position : Model -> Maybe DragPosition
+position (Model model) =
+    model
+        |> Maybe.map
+            (\state ->
+                { startPosition = state.startPosition
+                , currentPosition = state.currentPosition
+                }
+            )
 
 
 subscriptions : (Msg -> msg) -> Model -> Sub msg
