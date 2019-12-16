@@ -708,45 +708,37 @@ ghostStyles movement (Model model) =
         Just state ->
             case state.dragElement of
                 Just { element } ->
-                    case movement of
-                        Horizontal ->
+                    let
+                        baseStyles =
                             [ Html.Attributes.style "position" "absolute"
                             , Html.Attributes.style "top" "0"
                             , Html.Attributes.style "left" "0"
-                            , Html.Attributes.style "transform" <|
-                                Internal.Common.Utils.translate
-                                    (round (state.currentPosition.x - state.startPosition.x + element.x))
-                                    (round element.y)
                             , Html.Attributes.style "height" (Internal.Common.Utils.px (round element.height))
                             , Html.Attributes.style "width" (Internal.Common.Utils.px (round element.width))
                             , Html.Attributes.style "pointer-events" "none"
                             ]
 
-                        Vertical ->
-                            [ Html.Attributes.style "position" "absolute"
-                            , Html.Attributes.style "left" "0"
-                            , Html.Attributes.style "top" "0"
-                            , Html.Attributes.style "transform" <|
-                                Internal.Common.Utils.translate
-                                    (round element.x)
-                                    (round (state.currentPosition.y - state.startPosition.y + element.y))
-                            , Html.Attributes.style "height" (Internal.Common.Utils.px (round element.height))
-                            , Html.Attributes.style "width" (Internal.Common.Utils.px (round element.width))
-                            , Html.Attributes.style "pointer-events" "none"
-                            ]
+                        transform =
+                            case movement of
+                                Horizontal ->
+                                    Html.Attributes.style "transform" <|
+                                        Internal.Common.Utils.translate
+                                            (round (state.currentPosition.x - state.startPosition.x + element.x))
+                                            (round element.y)
 
-                        Free ->
-                            [ Html.Attributes.style "position" "absolute"
-                            , Html.Attributes.style "left" "0"
-                            , Html.Attributes.style "top" "0"
-                            , Html.Attributes.style "transform" <|
-                                Internal.Common.Utils.translate
-                                    (round (state.currentPosition.x - state.startPosition.x + element.x))
-                                    (round (state.currentPosition.y - state.startPosition.y + element.y))
-                            , Html.Attributes.style "height" (Internal.Common.Utils.px (round element.height))
-                            , Html.Attributes.style "width" (Internal.Common.Utils.px (round element.width))
-                            , Html.Attributes.style "pointer-events" "none"
-                            ]
+                                Vertical ->
+                                    Html.Attributes.style "transform" <|
+                                        Internal.Common.Utils.translate
+                                            (round element.x)
+                                            (round (state.currentPosition.y - state.startPosition.y + element.y))
+
+                                Free ->
+                                    Html.Attributes.style "transform" <|
+                                        Internal.Common.Utils.translate
+                                            (round (state.currentPosition.x - state.startPosition.x + element.x))
+                                            (round (state.currentPosition.y - state.startPosition.y + element.y))
+                    in
+                    transform :: baseStyles
 
                 _ ->
                     []
