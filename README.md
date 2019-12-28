@@ -20,12 +20,8 @@ dragEvents : DragIndex -> DragElementId -> List (Html.Attribute Msg)
 dropEvents : DropIndex -> DropElementId -> List (Html.Attribute Msg)
 
 ghostStyles : DnDList.Model -> List (Html.Attribute Msg)
-```
 
-```elm
 info : DnDList.Model -> Maybe DnDList.Info
-
-position: DnDList.Model -> Maybe DnDList.DragPosition
 ```
 
 ## Config
