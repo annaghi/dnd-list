@@ -2,7 +2,6 @@ module DnDList exposing
     ( System, create, Msg
     , Config
     , Movement(..), Listen(..), Operation(..)
-    , DragPosition
     , Info
     , Model
     )
@@ -26,13 +25,24 @@ You can add position styling attributes to this element using the`System` object
 &nbsp;
 
 
-## DragIndex & DropIndex
+## Meaningful type aliases
 
     type alias DragIndex =
         Int
 
     type alias DropIndex =
         Int
+
+    type alias DragElementId =
+        String
+
+    type alias DropElementId =
+        String
+
+    type alias Position =
+        { x : Float
+        , y : Float
+        }
 
 
 # System
@@ -44,11 +54,6 @@ You can add position styling attributes to this element using the`System` object
 
 @docs Config
 @docs Movement, Listen, Operation
-
-
-# DragPosition
-
-@docs DragPosition
 
 
 # Info
@@ -195,7 +200,7 @@ The ghost element has absolute position relative to the viewport.
 The following CSS will be added:
 
     {
-        position: absolute;
+        position: fixed;
         left: 0;
         top: 0;
         transform: translate3d(the vector is calculated from the dragElement and the mouse position in pixels);
@@ -246,10 +251,10 @@ type alias State =
     { dragIndex : DragIndex
     , dropIndex : DropIndex
     , dragCounter : Int
-    , startPosition : Internal.Common.Utils.Position
-    , currentPosition : Internal.Common.Utils.Position
-    , dragElementId : String
-    , dropElementId : String
+    , startPosition : Position
+    , currentPosition : Position
+    , dragElementId : DragElementId
+    , dropElementId : DropElementId
     , dragElement : Maybe Browser.Dom.Element
     , dropElement : Maybe Browser.Dom.Element
     }
@@ -271,11 +276,10 @@ type alias System a msg =
     , subscriptions : Model -> Sub msg
     , commands : Model -> Cmd msg
     , update : Msg -> Model -> List a -> ( Model, List a )
-    , dragEvents : DragIndex -> String -> List (Html.Attribute msg)
-    , dropEvents : DropIndex -> String -> List (Html.Attribute msg)
+    , dragEvents : DragIndex -> DragElementId -> List (Html.Attribute msg)
+    , dropEvents : DropIndex -> DropElementId -> List (Html.Attribute msg)
     , ghostStyles : Model -> List (Html.Attribute msg)
     , info : Model -> Maybe Info
-    , position : Model -> Maybe DragPosition
     }
 
 
@@ -307,7 +311,6 @@ create config stepMsg =
     , dropEvents = dropEvents stepMsg
     , ghostStyles = ghostStyles config.movement
     , info = info
-    , position = position
     }
 
 
@@ -415,6 +418,10 @@ It is accessible through the `System`'s `info` field.
 
   - `dropElement`: Information about the drop target as an HTML element, see `Browser.Dom.Element`.
 
+  - `startPosition`: The x, y position of the ghost element when dragging started.
+
+  - `currentPosition`: The x, y position of the ghost element now.
+
 You can check the `Info` object to decide what to render when there is an ongoing dragging,
 and what to render when there is no dragging:
 
@@ -440,46 +447,8 @@ Or you can determine the current drag source item using the `Info` object:
                         |> List.head
                 )
 
--}
-type alias Info =
-    { dragIndex : Int
-    , dropIndex : Int
-    , dragElementId : String
-    , dropElementId : String
-    , dragElement : Browser.Dom.Element
-    , dropElement : Browser.Dom.Element
-    }
-
-
-info : Model -> Maybe Info
-info (Model model) =
-    Maybe.andThen
-        (\state ->
-            Maybe.map2
-                (\dragElement dropElement ->
-                    { dragIndex = state.dragIndex
-                    , dropIndex = state.dropIndex
-                    , dragElementId = state.dragElementId
-                    , dropElementId = state.dropElementId
-                    , dragElement = dragElement
-                    , dropElement = dropElement
-                    }
-                )
-                state.dragElement
-                state.dropElement
-        )
-        model
-
-
-{-| Represents position information about the element being dragged.
-It is accessible through the `System`'s `position` field.
-
-  - `startPosition`: The x, y position of the element when dragging started
-
-  - `currentPosition`: The x, y position of the element now
-
-This might be useful if you need more control over generating styles for
-the dragged "ghost" element. (e.g. Adding an offset to the position:)
+Or you can control over generating styles for the dragged ghost element.
+For example adding an offset to the position:
 
     type alias Offset =
         { x : Int
@@ -497,7 +466,7 @@ the dragged "ghost" element. (e.g. Adding an offset to the position:)
             translate x y =
                 "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"
         in
-        case system.position dnd of
+        case system.info dnd of
             Just { currentPosition, startPosition } ->
                 [ Html.Attribute.style "transform" <|
                     translate
@@ -509,21 +478,38 @@ the dragged "ghost" element. (e.g. Adding an offset to the position:)
                 []
 
 -}
-type alias DragPosition =
-    { startPosition : Internal.Common.Utils.Position
-    , currentPosition : Internal.Common.Utils.Position
+type alias Info =
+    { dragIndex : DragIndex
+    , dropIndex : DropIndex
+    , dragElementId : DragElementId
+    , dropElementId : DropElementId
+    , dragElement : Browser.Dom.Element
+    , dropElement : Browser.Dom.Element
+    , startPosition : Position
+    , currentPosition : Position
     }
 
 
-position : Model -> Maybe DragPosition
-position (Model model) =
-    model
-        |> Maybe.map
-            (\state ->
-                { startPosition = state.startPosition
-                , currentPosition = state.currentPosition
-                }
-            )
+info : Model -> Maybe Info
+info (Model model) =
+    Maybe.andThen
+        (\state ->
+            Maybe.map2
+                (\dragElement dropElement ->
+                    { dragIndex = state.dragIndex
+                    , dropIndex = state.dropIndex
+                    , dragElementId = state.dragElementId
+                    , dropElementId = state.dropElementId
+                    , dragElement = dragElement
+                    , dropElement = dropElement
+                    , startPosition = state.startPosition
+                    , currentPosition = state.currentPosition
+                    }
+                )
+                state.dragElement
+                state.dropElement
+        )
+        model
 
 
 subscriptions : (Msg -> msg) -> Model -> Sub msg
@@ -535,7 +521,7 @@ subscriptions stepMsg (Model model) =
         Just _ ->
             Sub.batch
                 [ Browser.Events.onMouseMove
-                    (Json.Decode.map2 Internal.Common.Utils.Position Internal.Common.Utils.pageX Internal.Common.Utils.pageY
+                    (Internal.Common.Utils.decodeCoordinates
                         |> Json.Decode.map (stepMsg << Drag)
                     )
                 , Browser.Events.onMouseUp
@@ -583,10 +569,10 @@ It should be wrapped within our message constructor:
 
 -}
 type Msg
-    = DragStart Int String Internal.Common.Utils.Position
-    | Drag Internal.Common.Utils.Position
-    | DragOver Int String
-    | DragEnter Int
+    = DragStart DragIndex DragElementId Position
+    | Drag Position
+    | DragOver DropIndex DropElementId
+    | DragEnter DropIndex
     | DragLeave
     | DragEnd
     | GotDragElement (Result Browser.Dom.Error Browser.Dom.Element)
@@ -690,7 +676,7 @@ update { beforeUpdate, listen, operation } msg (Model model) list =
             )
 
 
-stateUpdate : Operation -> Int -> State -> State
+stateUpdate : Operation -> DropIndex -> State -> State
 stateUpdate operation dropIndex state =
     case operation of
         InsertAfter ->
@@ -725,7 +711,7 @@ stateUpdate operation dropIndex state =
             { state | dragCounter = 0 }
 
 
-listUpdate : Operation -> Int -> Int -> List a -> List a
+listUpdate : Operation -> DragIndex -> DropIndex -> List a -> List a
 listUpdate operation dragIndex dropIndex list =
     case operation of
         InsertAfter ->
@@ -744,17 +730,17 @@ listUpdate operation dragIndex dropIndex list =
             list
 
 
-dragEvents : (Msg -> msg) -> DragIndex -> String -> List (Html.Attribute msg)
+dragEvents : (Msg -> msg) -> DragIndex -> DragElementId -> List (Html.Attribute msg)
 dragEvents stepMsg dragIndex dragElementId =
     [ Html.Events.preventDefaultOn "mousedown"
-        (Json.Decode.map2 Internal.Common.Utils.Position Internal.Common.Utils.pageX Internal.Common.Utils.pageY
+        (Internal.Common.Utils.decodeCoordinatesWithButtonCheck
             |> Json.Decode.map (stepMsg << DragStart dragIndex dragElementId)
             |> Json.Decode.map (\msg -> ( msg, True ))
         )
     ]
 
 
-dropEvents : (Msg -> msg) -> DropIndex -> String -> List (Html.Attribute msg)
+dropEvents : (Msg -> msg) -> DropIndex -> DropElementId -> List (Html.Attribute msg)
 dropEvents stepMsg dropIndex dropElementId =
     [ Html.Events.onMouseOver (stepMsg (DragOver dropIndex dropElementId))
     , Html.Events.onMouseEnter (stepMsg (DragEnter dropIndex))
@@ -773,7 +759,7 @@ ghostStyles movement (Model model) =
                 Just { element } ->
                     let
                         baseStyles =
-                            [ Html.Attributes.style "position" "absolute"
+                            [ Html.Attributes.style "position" "fixed"
                             , Html.Attributes.style "top" "0"
                             , Html.Attributes.style "left" "0"
                             , Html.Attributes.style "height" (Internal.Common.Utils.px (round element.height))
@@ -813,3 +799,17 @@ type alias DragIndex =
 
 type alias DropIndex =
     Int
+
+
+type alias DragElementId =
+    String
+
+
+type alias DropElementId =
+    String
+
+
+type alias Position =
+    { x : Float
+    , y : Float
+    }
