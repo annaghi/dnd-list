@@ -15,13 +15,17 @@ create : DnDList.Config a -> Msg -> DnDList.System a Msg
 ```elm
 update: DnDList.Msg -> DnDList.Model -> List a -> ( DnDList.Model, List a )
 
-dragEvents : DragIndex -> String -> List (Html.Attribute Msg)
+dragEvents : DragIndex -> DragElementId -> List (Html.Attribute Msg)
 
-dropEvents : DropIndex -> String -> List (Html.Attribute Msg)
+dropEvents : DropIndex -> DropElementId -> List (Html.Attribute Msg)
 
 ghostStyles : DnDList.Model -> List (Html.Attribute Msg)
+```
 
+```elm
 info : DnDList.Model -> Maybe DnDList.Info
+
+position: DnDList.Model -> Maybe DnDList.DragPosition
 ```
 
 ## Config
@@ -55,6 +59,8 @@ type alias Info =
     , dropElementId : String
     , dragElement : Browser.Dom.Element
     , dropElement : Browser.Dom.Element
+    , startPosition : { x : Float, y : Float }
+    , currentPosition : { x : Float, y : Float }
     }
 ```
 
