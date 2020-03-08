@@ -6,6 +6,13 @@ Drag and Drop for sortable lists in Elm web apps with mouse support.
 
 [Demos and Sources](https://annaghi.github.io/dnd-list/)
 
+## Development
+
+```bash
+$ npm install -g elm elm-live
+$ npm run watch
+```
+
 ## Basic API
 
 ```elm
@@ -59,6 +66,8 @@ type alias Info =
     , currentPosition : { x : Float, y : Float }
     }
 ```
+
+
 
 ## Example
 
@@ -225,6 +234,12 @@ ghostView dnd items =
         Nothing ->
             Html.text ""
 ```
+
+## Real Projects
+
+[Risk Register](https://marketplace.atlassian.com/apps/1213146/risk-register?hosting=server&tab=overview) by ProjectBalm is a risk management add-on for Atlassian Jira.  
+*dnd-list* is used in the risk model editor for re-ordering risk levels, and is even used to re-order the rows and columns of the risk matrix.
+
 
 ## Credits
 

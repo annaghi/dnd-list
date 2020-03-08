@@ -189,10 +189,10 @@ stepUrl url model =
         parser =
             Url.Parser.oneOf
                 [ Url.Parser.map
-                    (stepIntroduction model (Introduction.Root.init "groups"))
+                    (stepGallery model (Gallery.Root.init "hanoi"))
                     Url.Parser.top
                 , Url.Parser.map
-                    (stepIntroduction model (Introduction.Root.init "groups"))
+                    (stepGallery model (Gallery.Root.init "hanoi"))
                     (Url.Parser.s Path.rootPath)
                 , Url.Parser.map
                     (\slug ->
@@ -232,7 +232,7 @@ slug_ =
 toPath : Url.Url -> String
 toPath url =
     if (url.path == "/" ++ Path.rootPath) || (url.path == "/" ++ Path.rootPath ++ "/") then
-        Url.Builder.absolute [ Path.rootPath, "introduction", "groups" ] []
+        Url.Builder.absolute [ Path.rootPath, "gallery", "hanoi" ] []
 
     else
         url.path
