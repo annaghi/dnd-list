@@ -1,7 +1,7 @@
 class ElmCodeElement extends HTMLElement {
   constructor() {
     super();
-    this._elm = { href: "" };
+    this._elm = { href: '' };
   }
 
   get href() {
@@ -29,8 +29,8 @@ class ElmCodeElement extends HTMLElement {
           this._code.parentNode.removeChild(this._code);
         }
 
-        this._pre = document.createElement("pre");
-        this._code = document.createElement("code");
+        this._pre = document.createElement('pre');
+        this._code = document.createElement('code');
         this._code.innerHTML = source;
         this._pre.appendChild(this._code);
         this.appendChild(this._pre);
@@ -41,11 +41,11 @@ class ElmCodeElement extends HTMLElement {
 
   connectedCallback() {
     setTimeout(() => {
-      if (this._elm.href !== "") {
+      if (this._elm.href !== '') {
         this._highlight();
       }
     });
   }
 }
 
-window.customElements.define("elm-code", ElmCodeElement);
+window.customElements.define('elm-code', ElmCodeElement);
