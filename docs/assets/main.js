@@ -9160,11 +9160,11 @@ var $elm$url$Url$Parser$State = F5(
 	});
 var $elm$url$Url$Parser$mapState = F2(
 	function (func, _v0) {
-		var visited = _v0.al;
-		var unvisited = _v0.X;
-		var params = _v0.ai;
-		var frag = _v0.ae;
 		var value = _v0.aB;
+		var frag = _v0.ae;
+		var params = _v0.ai;
+		var unvisited = _v0.X;
+		var visited = _v0.al;
 		return A5(
 			$elm$url$Url$Parser$State,
 			visited,
@@ -9177,11 +9177,11 @@ var $elm$url$Url$Parser$map = F2(
 	function (subValue, _v0) {
 		var parseArg = _v0;
 		return function (_v1) {
-			var visited = _v1.al;
-			var unvisited = _v1.X;
-			var params = _v1.ai;
-			var frag = _v1.ae;
 			var value = _v1.aB;
+			var frag = _v1.ae;
+			var params = _v1.ai;
+			var unvisited = _v1.X;
+			var visited = _v1.al;
 			return A2(
 				$elm$core$List$map,
 				$elm$url$Url$Parser$mapState(value),
@@ -9727,11 +9727,11 @@ var $elm$url$Url$Parser$parse = F2(
 var $author$project$Path$rootPath = 'dnd-list';
 var $elm$url$Url$Parser$s = function (str) {
 	return function (_v0) {
-		var visited = _v0.al;
-		var unvisited = _v0.X;
-		var params = _v0.ai;
-		var frag = _v0.ae;
 		var value = _v0.aB;
+		var frag = _v0.ae;
+		var params = _v0.ai;
+		var unvisited = _v0.X;
+		var visited = _v0.al;
 		if (!unvisited.b) {
 			return _List_Nil;
 		} else {
@@ -9764,11 +9764,11 @@ var $elm$url$Url$Parser$slash = F2(
 var $elm$url$Url$Parser$custom = F2(
 	function (tipe, stringToSomething) {
 		return function (_v0) {
-			var visited = _v0.al;
-			var unvisited = _v0.X;
-			var params = _v0.ai;
-			var frag = _v0.ae;
 			var value = _v0.aB;
+			var frag = _v0.ae;
+			var params = _v0.ai;
+			var unvisited = _v0.X;
+			var visited = _v0.al;
 			if (!unvisited.b) {
 				return _List_Nil;
 			} else {
@@ -9878,16 +9878,16 @@ var $author$project$Main$stepUrl = F2(
 					A2(
 					$elm$url$Url$Parser$map,
 					A2(
-						$author$project$Main$stepIntroduction,
+						$author$project$Main$stepGallery,
 						model,
-						$author$project$Introduction$Root$init('groups')),
+						$author$project$Gallery$Root$init('hanoi')),
 					$elm$url$Url$Parser$top),
 					A2(
 					$elm$url$Url$Parser$map,
 					A2(
-						$author$project$Main$stepIntroduction,
+						$author$project$Main$stepGallery,
 						model,
-						$author$project$Introduction$Root$init('groups')),
+						$author$project$Gallery$Root$init('hanoi')),
 					$elm$url$Url$Parser$s($author$project$Path$rootPath)),
 					A2(
 					$elm$url$Url$Parser$map,
@@ -9985,7 +9985,7 @@ var $author$project$Main$toPath = function (url) {
 	return (_Utils_eq(url.z, '/' + $author$project$Path$rootPath) || _Utils_eq(url.z, '/' + ($author$project$Path$rootPath + '/'))) ? A2(
 		$elm$url$Url$Builder$absolute,
 		_List_fromArray(
-			[$author$project$Path$rootPath, 'introduction', 'groups']),
+			[$author$project$Path$rootPath, 'gallery', 'hanoi']),
 		_List_Nil) : url.z;
 };
 var $author$project$Main$init = F3(
