@@ -67,8 +67,6 @@ type alias Info =
     }
 ```
 
-
-
 ## Example
 
 ```elm
@@ -237,9 +235,8 @@ ghostView dnd items =
 
 ## Real Projects
 
-[Risk Register](https://marketplace.atlassian.com/apps/1213146/risk-register?hosting=server&tab=overview) by ProjectBalm is a risk management add-on for Atlassian Jira.  
-*dnd-list* is used in the risk model editor for re-ordering risk levels, and is even used to re-order the rows and columns of the risk matrix.
-
+- [Risk Register](https://marketplace.atlassian.com/apps/1213146/risk-register?hosting=server&tab=overview) by ProjectBalm is a risk management add-on for Atlassian Jira.  
+  _dnd-list_ is used in the risk model editor for re-ordering risk levels, and is even used to re-order the rows and columns of the risk matrix.
 
 ## Credits
 
