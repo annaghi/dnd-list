@@ -6,14 +6,14 @@ Drag and Drop for sortable lists in Elm web apps with mouse support.
 
 [Demos and Sources](https://annaghi.github.io/dnd-list/)
 
-## Development
+### Development
 
 ```bash
 $ npm install -g elm elm-live
 $ npm run watch
 ```
 
-## Basic API
+### Basic API
 
 ```elm
 create : DnDList.Config a -> Msg -> DnDList.System a Msg
@@ -31,7 +31,7 @@ ghostStyles : DnDList.Model -> List (Html.Attribute Msg)
 info : DnDList.Model -> Maybe DnDList.Info
 ```
 
-## Config
+### Config
 
 ```elm
 pseudocode type alias Config a =
@@ -52,7 +52,7 @@ pseudocode type alias Config a =
     }
 ```
 
-## Info
+### Info
 
 ```elm
 type alias Info =
@@ -67,7 +67,7 @@ type alias Info =
     }
 ```
 
-## Example
+### Example
 
 ```elm
 module Main exposing (main)
