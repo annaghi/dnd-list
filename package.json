@@ -6,7 +6,7 @@
     "analyse": "cd examples && elm-analyse --serve --port=8083",
     "test": "elm-test && npm run build",
     "build": "npm run format && rm -rf docs/assets && npm run optimize && (elm diff || true) && cp -a examples/assets docs",
-    "format": "elm-format .",
+    "format": "elm-format --validate .",
     "optimize": "cd examples && elm make src/Main.elm --optimize --output=assets/main.js"
   },
   "devDependencies": {
