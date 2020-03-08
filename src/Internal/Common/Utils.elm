@@ -9,24 +9,14 @@ type alias Position =
     }
 
 
-px : Int -> String
-px n =
-    String.fromInt n ++ "px"
+decodeCoordinatesWithButtonCheck : Json.Decode.Decoder Position
+decodeCoordinatesWithButtonCheck =
+    decodeMainMouseButton decodeCoordinates
 
 
-translate : Int -> Int -> String
-translate x y =
-    "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"
-
-
-pageX : Json.Decode.Decoder Float
-pageX =
-    Json.Decode.field "pageX" Json.Decode.float
-
-
-pageY : Json.Decode.Decoder Float
-pageY =
-    Json.Decode.field "pageY" Json.Decode.float
+decodeCoordinates : Json.Decode.Decoder Position
+decodeCoordinates =
+    Json.Decode.map2 Position pageX pageY
 
 
 decodeMainMouseButton : Json.Decode.Decoder a -> Json.Decode.Decoder a
@@ -42,11 +32,21 @@ decodeMainMouseButton decoder =
             )
 
 
-decodeCoordinates : Json.Decode.Decoder Position
-decodeCoordinates =
-    Json.Decode.map2 Position pageX pageY
+pageX : Json.Decode.Decoder Float
+pageX =
+    Json.Decode.field "pageX" Json.Decode.float
 
 
-decodeCoordinatesWithButtonCheck : Json.Decode.Decoder Position
-decodeCoordinatesWithButtonCheck =
-    decodeMainMouseButton decodeCoordinates
+pageY : Json.Decode.Decoder Float
+pageY =
+    Json.Decode.field "pageY" Json.Decode.float
+
+
+translate : Int -> Int -> String
+translate x y =
+    "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"
+
+
+px : Int -> String
+px n =
+    String.fromInt n ++ "px"
