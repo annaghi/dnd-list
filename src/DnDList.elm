@@ -90,7 +90,7 @@ You can add position styling attributes to this element using the`System` object
                     updatedModel = ...
                 in
                 ( updatedModel
-                , system.commands model.dnd
+                , system.commands updatedModel
                 )
 
 
@@ -107,7 +107,7 @@ You can add position styling attributes to this element using the`System` object
                         system.update msg model.dnd model.items
                 in
                 ( { model | dnd = dnd, items = items }
-                , system.commands model.dnd
+                , system.commands dnd
                 )
 
 

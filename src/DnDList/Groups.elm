@@ -89,7 +89,7 @@ So now the internal sorting distinguishes between these two cases and we need to
                     updatedModel = ...
                 in
                 ( updatedModel
-                , system.commands model.dnd
+                , system.commands updatedModel
                 )
 
 
@@ -106,7 +106,7 @@ So now the internal sorting distinguishes between these two cases and we need to
                         system.update msg model.dnd model.items
                 in
                 ( { model | dnd = dnd, items = items }
-                , system.commands model.dnd
+                , system.commands dnd
                 )
 
 
