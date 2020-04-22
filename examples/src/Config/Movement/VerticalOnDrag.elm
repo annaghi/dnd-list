@@ -117,7 +117,7 @@ update message model =
                             model.affected
             in
             ( { model | dnd = dnd, items = items, affected = affected }
-            , system.commands model.dnd
+            , system.commands dnd
             )
 
         ClearAffected ->

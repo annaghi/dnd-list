@@ -3,6 +3,7 @@ module Introduction.BasicElmUI exposing (Model, Msg, initialModel, main, subscri
 import Browser
 import DnDList
 import Element
+import Element.Font
 import Html
 import Html.Attributes
 
@@ -100,7 +101,7 @@ update message model =
                     system.update msg model.dnd model.items
             in
             ( { model | dnd = dnd, items = items }
-            , system.commands model.dnd
+            , system.commands dnd
             )
 
 
@@ -134,19 +135,23 @@ itemView dnd index item =
         Just { dragIndex } ->
             if dragIndex /= index then
                 Element.el
-                    (Element.htmlAttribute (Html.Attributes.id itemId)
+                    (Element.Font.color (Element.rgb 1 1 1)
+                        :: Element.htmlAttribute (Html.Attributes.id itemId)
                         :: List.map Element.htmlAttribute (system.dropEvents index itemId)
                     )
                     (Element.text item)
 
             else
                 Element.el
-                    [ Element.htmlAttribute (Html.Attributes.id itemId) ]
+                    [ Element.Font.color (Element.rgb 1 1 1)
+                    , Element.htmlAttribute (Html.Attributes.id itemId)
+                    ]
                     (Element.text "[---------]")
 
         Nothing ->
             Element.el
-                (Element.htmlAttribute (Html.Attributes.id itemId)
+                (Element.Font.color (Element.rgb 1 1 1)
+                    :: Element.htmlAttribute (Html.Attributes.id itemId)
                     :: List.map Element.htmlAttribute (system.dragEvents index itemId)
                 )
                 (Element.text item)
@@ -163,7 +168,9 @@ ghostView dnd items =
     case maybeDragItem of
         Just item ->
             Element.el
-                (List.map Element.htmlAttribute (system.ghostStyles dnd))
+                (Element.Font.color (Element.rgb 1 1 1)
+                    :: List.map Element.htmlAttribute (system.ghostStyles dnd)
+                )
                 (Element.text item)
 
         Nothing ->

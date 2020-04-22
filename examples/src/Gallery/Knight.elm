@@ -150,7 +150,7 @@ update message model =
                     (squares |> List.filter (\square -> square == "×") |> List.length) == 24
             in
             ( { model | squares = squares, solved = solved, dnd = dnd }
-            , system.commands model.dnd
+            , system.commands dnd
             )
 
 

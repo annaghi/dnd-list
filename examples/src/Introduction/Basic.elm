@@ -99,7 +99,7 @@ update message model =
                     system.update msg model.dnd model.items
             in
             ( { model | dnd = dnd, items = items }
-            , system.commands model.dnd
+            , system.commands dnd
             )
 
 

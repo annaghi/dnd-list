@@ -193,10 +193,6 @@ main header {
   background-color: #f2f2f2;
   color: #333;
 }
-main section,
-.font-color-0-0-0-255 {
-  color: white !important;
-}
 
 .hljs {
   background-color: #f2f2f2;

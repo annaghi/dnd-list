@@ -129,7 +129,7 @@ update message model =
                 | redDnD = redDnD
                 , reds = reds
               }
-            , redSystem.commands model.redDnD
+            , redSystem.commands redDnD
             )
 
         BlueMsg msg ->
@@ -141,7 +141,7 @@ update message model =
                 | blueDnD = blueDnD
                 , blues = blues
               }
-            , blueSystem.commands model.blueDnD
+            , blueSystem.commands blueDnD
             )
 
 

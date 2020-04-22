@@ -123,7 +123,7 @@ update message model =
                 | dnd = dnd
                 , colors = colors
               }
-            , system.commands model.dnd
+            , system.commands dnd
             )
 
 

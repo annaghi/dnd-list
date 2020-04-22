@@ -6,7 +6,7 @@ Drag and Drop for sortable lists in Elm web apps with mouse support.
 
 [Demos and Sources](https://annaghi.github.io/dnd-list/)
 
-### Development
+### Examples
 
 ```bash
 $ npm install -g elm elm-live
@@ -171,7 +171,7 @@ update message model =
                     system.update msg model.dnd model.items
             in
             ( { model | dnd = dnd, items = items }
-            , system.commands model.dnd
+            , system.commands dnd
             )
 
 

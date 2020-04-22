@@ -156,7 +156,7 @@ update message model =
                 | cardDnD = cardDnD
                 , cards = cards
               }
-            , cardSystem.commands model.cardDnD
+            , cardSystem.commands cardDnD
             )
 
         ColumnMoved msg ->
@@ -168,7 +168,7 @@ update message model =
                 | columnDnD = columnDnD
                 , cards = List.concat columns
               }
-            , columnSystem.commands model.columnDnD
+            , columnSystem.commands columnDnD
             )
 
 

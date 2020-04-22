@@ -138,7 +138,7 @@ update message model =
                     disks |> List.take 3 |> List.all (\disk -> disk.startColor == "transparent")
             in
             ( { model | dnd = dnd, disks = disks, solved = solved }
-            , system.commands model.dnd
+            , system.commands dnd
             )
 
 
