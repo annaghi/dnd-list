@@ -227,6 +227,32 @@ import Json.Decode
 import Task
 
 
+
+-- TYPES
+
+
+type alias DragIndex =
+    Int
+
+
+type alias DropIndex =
+    Int
+
+
+type alias DragElementId =
+    String
+
+
+type alias DropElementId =
+    String
+
+
+type alias Position =
+    { x : Float
+    , y : Float
+    }
+
+
 {-| Represents the internal model of the current drag and drop features.
 It will be `Nothing` if there is no ongoing dragging.
 You should set it in your model and initialize through the `System`'s `model` field.
@@ -250,9 +276,10 @@ type Model
 type alias State =
     { dragIndex : DragIndex
     , dropIndex : DropIndex
-    , dragCounter : Int
+    , moveCounter : Int
     , startPosition : Position
     , currentPosition : Position
+    , translateVector : Position
     , dragElementId : DragElementId
     , dropElementId : DropElementId
     , dragElement : Maybe Browser.Dom.Element
@@ -271,11 +298,10 @@ type alias State =
 Later we will learn more about the [Info object](#info) and the [System fields](#system-fields).
 
 -}
-type alias System a msg =
+type alias System item msg =
     { model : Model
     , subscriptions : Model -> Sub msg
-    , commands : Model -> Cmd msg
-    , update : Msg -> Model -> List a -> ( Model, List a )
+    , update : Msg -> Model -> List item -> ( List item, Model, Cmd msg )
     , dragEvents : DragIndex -> DragElementId -> List (Html.Attribute msg)
     , dropEvents : DropIndex -> DropElementId -> List (Html.Attribute msg)
     , ghostStyles : Model -> List (Html.Attribute msg)
@@ -301,14 +327,13 @@ Now the `System` is a wrapper type around the list item and our message types:
         DnDList.create config MyMsg
 
 -}
-create : Config a -> (Msg -> msg) -> System a msg
-create config stepMsg =
+create : Config item -> (Msg -> msg) -> System item msg
+create config toMsg =
     { model = Model Nothing
-    , subscriptions = subscriptions stepMsg
-    , commands = commands stepMsg
-    , update = update config
-    , dragEvents = dragEvents stepMsg
-    , dropEvents = dropEvents stepMsg
+    , subscriptions = subscriptions toMsg
+    , update = update config toMsg
+    , dragEvents = dragEvents toMsg
+    , dropEvents = dropEvents toMsg
     , ghostStyles = ghostStyles config.movement
     , info = info
     }
@@ -343,8 +368,8 @@ This is our configuration with a void `beforeUpdate`:
         }
 
 -}
-type alias Config a =
-    { beforeUpdate : DragIndex -> DropIndex -> List a -> List a
+type alias Config item =
+    { beforeUpdate : DragIndex -> DropIndex -> List item -> List item
     , movement : Movement
     , listen : Listen
     , operation : Operation
@@ -513,52 +538,18 @@ info (Model model) =
 
 
 subscriptions : (Msg -> msg) -> Model -> Sub msg
-subscriptions stepMsg (Model model) =
-    case model of
-        Nothing ->
-            Sub.none
-
-        Just _ ->
-            Sub.batch
-                [ Browser.Events.onMouseMove
-                    (Internal.Common.Utils.decodeCoordinates
-                        |> Json.Decode.map (stepMsg << Drag)
-                    )
-                , Browser.Events.onMouseUp
-                    (Json.Decode.succeed (stepMsg DragEnd))
-                ]
-
-
-commands : (Msg -> msg) -> Model -> Cmd msg
-commands stepMsg (Model model) =
-    case model of
-        Nothing ->
-            Cmd.none
-
-        Just state ->
-            Cmd.batch
-                [ dragElementCommands stepMsg state
-                , dropElementCommands stepMsg state
-                ]
-
-
-dragElementCommands : (Msg -> msg) -> State -> Cmd msg
-dragElementCommands stepMsg state =
-    case state.dragElement of
-        Nothing ->
-            Task.attempt (stepMsg << GotDragElement) (Browser.Dom.getElement state.dragElementId)
-
-        _ ->
-            Cmd.none
-
-
-dropElementCommands : (Msg -> msg) -> State -> Cmd msg
-dropElementCommands stepMsg state =
-    if state.dragCounter == 0 then
-        Task.attempt (stepMsg << GotDropElement) (Browser.Dom.getElement state.dropElementId)
+subscriptions toMsg (Model model) =
+    if model /= Nothing then
+        Sub.batch
+            [ Browser.Events.onMouseMove
+                (Internal.Common.Utils.decodeCoordinates |> Json.Decode.map (MoveDocument >> InBetweenMsg >> toMsg))
+            , Browser.Events.onMouseUp
+                (Json.Decode.succeed (UpDocument |> toMsg))
+            , Browser.Events.onAnimationFrameDelta (always Tick >> InBetweenMsg >> toMsg)
+            ]
 
     else
-        Cmd.none
+        Sub.none
 
 
 {-| Internal message type.
@@ -569,110 +560,146 @@ It should be wrapped within our message constructor:
 
 -}
 type Msg
-    = DragStart DragIndex DragElementId Position
-    | Drag Position
-    | DragOver DropIndex DropElementId
-    | DragEnter DropIndex
-    | DragLeave
-    | DragEnd
-    | GotDragElement (Result Browser.Dom.Error Browser.Dom.Element)
-    | GotDropElement (Result Browser.Dom.Error Browser.Dom.Element)
+    = DownDragItem DragIndex DragElementId Position
+    | InBetweenMsg InBetweenMsg
+    | UpDocument
 
 
-update : Config a -> Msg -> Model -> List a -> ( Model, List a )
-update { beforeUpdate, listen, operation } msg (Model model) list =
+type InBetweenMsg
+    = MoveDocument Position
+    | OverDropItem DropIndex DropElementId
+    | EnterDropItem
+    | LeaveDropItem
+    | GotDragItem (Result Browser.Dom.Error Browser.Dom.Element)
+    | GotDropItem (Result Browser.Dom.Error Browser.Dom.Element)
+    | Tick
+
+
+update : Config item -> (Msg -> msg) -> Msg -> Model -> List item -> ( List item, Model, Cmd msg )
+update config toMsg msg (Model model) list =
     case msg of
-        DragStart dragIndex dragElementId xy ->
-            ( Model <|
+        DownDragItem dragIndex dragElementId xy ->
+            ( list
+            , Model <|
                 Just
                     { dragIndex = dragIndex
                     , dropIndex = dragIndex
-                    , dragCounter = 0
+                    , moveCounter = 0
                     , startPosition = xy
                     , currentPosition = xy
+                    , translateVector = Position 0 0
                     , dragElementId = dragElementId
                     , dropElementId = dragElementId
                     , dragElement = Nothing
                     , dropElement = Nothing
                     }
-            , list
+            , Cmd.none
             )
 
-        Drag xy ->
-            ( model
-                |> Maybe.map (\state -> { state | currentPosition = xy, dragCounter = state.dragCounter + 1 })
-                |> Model
-            , list
-            )
+        InBetweenMsg inBetweenMsg ->
+            case model of
+                Just state ->
+                    let
+                        ( newList, newState, newCmd ) =
+                            inBetweenUpdate config list inBetweenMsg state
+                    in
+                    ( newList, Model (Just newState), Cmd.map (InBetweenMsg >> toMsg) newCmd )
 
-        DragOver dropIndex dropElementId ->
-            ( model
-                |> Maybe.map (\state -> { state | dropIndex = dropIndex, dropElementId = dropElementId })
-                |> Model
-            , list
-            )
+                Nothing ->
+                    ( list, Model Nothing, Cmd.none )
 
-        DragEnter dropIndex ->
-            case ( model, listen ) of
-                ( Just state, OnDrag ) ->
-                    if state.dragCounter > 1 && state.dragIndex /= dropIndex then
-                        ( Model (Just (stateUpdate operation dropIndex state))
-                        , list
-                            |> beforeUpdate state.dragIndex dropIndex
-                            |> listUpdate operation state.dragIndex dropIndex
-                        )
-
-                    else
-                        ( Model model, list )
-
-                _ ->
-                    ( model
-                        |> Maybe.map (\state -> { state | dragCounter = 0 })
-                        |> Model
-                    , list
-                    )
-
-        DragLeave ->
-            ( model
-                |> Maybe.map (\state -> { state | dropIndex = state.dragIndex })
-                |> Model
-            , list
-            )
-
-        DragEnd ->
-            case ( model, listen ) of
+        UpDocument ->
+            case ( model, config.listen ) of
                 ( Just state, OnDrop ) ->
                     if state.dragIndex /= state.dropIndex then
-                        ( Model Nothing
-                        , list
-                            |> beforeUpdate state.dragIndex state.dropIndex
-                            |> listUpdate operation state.dragIndex state.dropIndex
+                        ( list
+                            |> config.beforeUpdate state.dragIndex state.dropIndex
+                            |> listUpdate config.operation state.dragIndex state.dropIndex
+                        , Model Nothing
+                        , Cmd.none
                         )
 
                     else
-                        ( Model Nothing, list )
+                        ( list, Model Nothing, Cmd.none )
 
                 _ ->
-                    ( Model Nothing, list )
+                    ( list, Model Nothing, Cmd.none )
 
-        GotDragElement (Err _) ->
-            ( Model model, list )
 
-        GotDragElement (Ok dragElement) ->
-            ( model
-                |> Maybe.map (\state -> { state | dragElement = Just dragElement, dropElement = Just dragElement })
-                |> Model
-            , list
+inBetweenUpdate : Config item -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd InBetweenMsg )
+inBetweenUpdate config list msg state =
+    case msg of
+        MoveDocument xy ->
+            ( list
+            , { state | currentPosition = xy, moveCounter = state.moveCounter + 1 }
+            , case state.dragElement of
+                Nothing ->
+                    Task.attempt GotDragItem (Browser.Dom.getElement state.dragElementId)
+
+                _ ->
+                    Cmd.none
             )
 
-        GotDropElement (Err _) ->
-            ( Model model, list )
+        OverDropItem dropIndex dropElementId ->
+            ( list
+            , { state | dropIndex = dropIndex, dropElementId = dropElementId }
+            , if state.moveCounter == 0 then
+                Task.attempt GotDropItem (Browser.Dom.getElement state.dropElementId)
 
-        GotDropElement (Ok dropElement) ->
-            ( model
-                |> Maybe.map (\state -> { state | dropElement = Just dropElement })
-                |> Model
-            , list
+              else
+                Cmd.none
+            )
+
+        EnterDropItem ->
+            if state.moveCounter > 1 && state.dragIndex /= state.dropIndex then
+                case config.listen of
+                    OnDrag ->
+                        ( list
+                            |> config.beforeUpdate state.dragIndex state.dropIndex
+                            |> listUpdate config.operation state.dragIndex state.dropIndex
+                        , stateUpdate config.operation state.dropIndex state
+                        , Cmd.none
+                        )
+
+                    OnDrop ->
+                        ( list, { state | moveCounter = 0 }, Cmd.none )
+
+            else
+                ( list, state, Cmd.none )
+
+        LeaveDropItem ->
+            ( list
+            , { state | dropIndex = state.dragIndex }
+            , Cmd.none
+            )
+
+        GotDragItem (Err _) ->
+            ( list, state, Cmd.none )
+
+        GotDragItem (Ok dragElement) ->
+            ( list
+            , { state | dragElement = Just dragElement, dropElement = Just dragElement }
+            , Cmd.none
+            )
+
+        GotDropItem (Err _) ->
+            ( list, state, Cmd.none )
+
+        GotDropItem (Ok dropElement) ->
+            ( list
+            , { state | dropElement = Just dropElement }
+            , Cmd.none
+            )
+
+        Tick ->
+            ( list
+            , { state
+                | translateVector =
+                    Position
+                        (state.currentPosition.x - state.startPosition.x)
+                        (state.currentPosition.y - state.startPosition.y)
+              }
+            , Cmd.none
             )
 
 
@@ -687,7 +714,7 @@ stateUpdate operation dropIndex state =
 
                     else
                         dropIndex
-                , dragCounter = 0
+                , moveCounter = 0
             }
 
         InsertBefore ->
@@ -698,20 +725,20 @@ stateUpdate operation dropIndex state =
 
                     else
                         dropIndex
-                , dragCounter = 0
+                , moveCounter = 0
             }
 
         Rotate ->
-            { state | dragIndex = dropIndex, dragCounter = 0 }
+            { state | dragIndex = dropIndex, moveCounter = 0 }
 
         Swap ->
-            { state | dragIndex = dropIndex, dragCounter = 0 }
+            { state | dragIndex = dropIndex, moveCounter = 0 }
 
         Unaltered ->
-            { state | dragCounter = 0 }
+            { state | moveCounter = 0 }
 
 
-listUpdate : Operation -> DragIndex -> DropIndex -> List a -> List a
+listUpdate : Operation -> DragIndex -> DropIndex -> List item -> List item
 listUpdate operation dragIndex dropIndex list =
     case operation of
         InsertAfter ->
@@ -731,85 +758,66 @@ listUpdate operation dragIndex dropIndex list =
 
 
 dragEvents : (Msg -> msg) -> DragIndex -> DragElementId -> List (Html.Attribute msg)
-dragEvents stepMsg dragIndex dragElementId =
+dragEvents toMsg dragIndex dragElementId =
     [ Html.Events.preventDefaultOn "mousedown"
         (Internal.Common.Utils.decodeCoordinatesWithButtonCheck
-            |> Json.Decode.map (stepMsg << DragStart dragIndex dragElementId)
+            |> Json.Decode.map (DownDragItem dragIndex dragElementId >> toMsg)
             |> Json.Decode.map (\msg -> ( msg, True ))
         )
     ]
 
 
 dropEvents : (Msg -> msg) -> DropIndex -> DropElementId -> List (Html.Attribute msg)
-dropEvents stepMsg dropIndex dropElementId =
-    [ Html.Events.onMouseOver (stepMsg (DragOver dropIndex dropElementId))
-    , Html.Events.onMouseEnter (stepMsg (DragEnter dropIndex))
-    , Html.Events.onMouseLeave (stepMsg DragLeave)
+dropEvents toMsg dropIndex dropElementId =
+    [ Html.Events.onMouseOver (OverDropItem dropIndex dropElementId |> InBetweenMsg |> toMsg)
+    , Html.Events.onMouseEnter (EnterDropItem |> InBetweenMsg |> toMsg)
+    , Html.Events.onMouseLeave (LeaveDropItem |> InBetweenMsg |> toMsg)
     ]
 
 
 ghostStyles : Movement -> Model -> List (Html.Attribute msg)
 ghostStyles movement (Model model) =
     case model of
-        Nothing ->
-            []
-
         Just state ->
             case state.dragElement of
-                Just { element } ->
-                    let
-                        baseStyles =
-                            [ Html.Attributes.style "position" "fixed"
-                            , Html.Attributes.style "top" "0"
-                            , Html.Attributes.style "left" "0"
-                            , Html.Attributes.style "height" (Internal.Common.Utils.px (round element.height))
-                            , Html.Attributes.style "width" (Internal.Common.Utils.px (round element.width))
-                            , Html.Attributes.style "pointer-events" "none"
-                            ]
-
-                        transform =
-                            case movement of
-                                Horizontal ->
-                                    Html.Attributes.style "transform" <|
-                                        Internal.Common.Utils.translate
-                                            (round (state.currentPosition.x - state.startPosition.x + element.x))
-                                            (round element.y)
-
-                                Vertical ->
-                                    Html.Attributes.style "transform" <|
-                                        Internal.Common.Utils.translate
-                                            (round element.x)
-                                            (round (state.currentPosition.y - state.startPosition.y + element.y))
-
-                                Free ->
-                                    Html.Attributes.style "transform" <|
-                                        Internal.Common.Utils.translate
-                                            (round (state.currentPosition.x - state.startPosition.x + element.x))
-                                            (round (state.currentPosition.y - state.startPosition.y + element.y))
-                    in
-                    transform :: baseStyles
+                Just dragElement ->
+                    transform movement state.translateVector dragElement :: baseStyles dragElement
 
                 _ ->
                     []
 
-
-type alias DragIndex =
-    Int
-
-
-type alias DropIndex =
-    Int
+        Nothing ->
+            []
 
 
-type alias DragElementId =
-    String
+transform : Movement -> Position -> Browser.Dom.Element -> Html.Attribute msg
+transform movement { x, y } { element } =
+    case movement of
+        Horizontal ->
+            Html.Attributes.style "transform" <|
+                Internal.Common.Utils.translate
+                    (round (x + element.x))
+                    (round element.y)
+
+        Vertical ->
+            Html.Attributes.style "transform" <|
+                Internal.Common.Utils.translate
+                    (round element.x)
+                    (round (y + element.y))
+
+        Free ->
+            Html.Attributes.style "transform" <|
+                Internal.Common.Utils.translate
+                    (round (x + element.x))
+                    (round (y + element.y))
 
 
-type alias DropElementId =
-    String
-
-
-type alias Position =
-    { x : Float
-    , y : Float
-    }
+baseStyles : Browser.Dom.Element -> List (Html.Attribute msg)
+baseStyles { element } =
+    [ Html.Attributes.style "position" "fixed"
+    , Html.Attributes.style "top" "0"
+    , Html.Attributes.style "left" "0"
+    , Html.Attributes.style "height" (Internal.Common.Utils.px (round element.height))
+    , Html.Attributes.style "width" (Internal.Common.Utils.px (round element.width))
+    , Html.Attributes.style "pointer-events" "none"
+    ]
