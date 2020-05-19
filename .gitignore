@@ -10,17 +10,13 @@ docs.json
 # VS Code settings
 .vscode
 
-# IntelliJ IDEA settigns
+# IntelliJ IDEA settings
 .idea
 
 # elm-make generated files
 examples/**/main.js
 
 # experiments
-experiments/*
-!experiments/README.md
-!experiments/Main.elm
-!experiments/elm.json
-
+experiments/index.html
 # node modules
 node_modules
