@@ -1,12 +1,7 @@
-module Internal.Common.Utils exposing (decodeCoordinates, decodeCoordinatesWithButtonCheck, px, translate)
+module Internal.Decoders exposing (decodeCoordinates, decodeCoordinatesWithButtonCheck)
 
+import Internal.Types exposing (Position)
 import Json.Decode
-
-
-type alias Position =
-    { x : Float
-    , y : Float
-    }
 
 
 decodeCoordinatesWithButtonCheck : Json.Decode.Decoder Position
@@ -40,13 +35,3 @@ pageX =
 pageY : Json.Decode.Decoder Float
 pageY =
     Json.Decode.field "pageY" Json.Decode.float
-
-
-translate : Int -> Int -> String
-translate x y =
-    "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"
-
-
-px : Int -> String
-px n =
-    String.fromInt n ++ "px"

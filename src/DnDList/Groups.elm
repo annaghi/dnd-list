@@ -244,9 +244,10 @@ import Browser.Events
 import Html
 import Html.Attributes
 import Html.Events
-import Internal.Common.Operations
-import Internal.Common.Utils
+import Internal.Decoders
 import Internal.Groups
+import Internal.Operations
+import Internal.Types exposing (..)
 import Json.Decode
 import Task
 
@@ -274,9 +275,10 @@ type Model
 type alias State =
     { dragIndex : DragIndex
     , dropIndex : DropIndex
-    , dragCounter : Int
+    , moveCounter : Int
     , startPosition : Position
     , currentPosition : Position
+    , translateVector : Position
     , dragElementId : DragElementId
     , dropElementId : DropElementId
     , dragElement : Maybe Browser.Dom.Element
@@ -295,11 +297,10 @@ type alias State =
 Later we will learn more about the [Info object](#info) and the [System fields](#system-fields).
 
 -}
-type alias System a msg =
+type alias System item msg =
     { model : Model
     , subscriptions : Model -> Sub msg
-    , commands : Model -> Cmd msg
-    , update : Msg -> Model -> List a -> ( Model, List a )
+    , update : Msg -> Model -> List item -> ( List item, Model, Cmd msg )
     , dragEvents : DragIndex -> DragElementId -> List (Html.Attribute msg)
     , dropEvents : DropIndex -> DropElementId -> List (Html.Attribute msg)
     , ghostStyles : Model -> List (Html.Attribute msg)
@@ -350,14 +351,13 @@ And now the `System` is a wrapper type around the list item and our message type
         DnDList.Groups.create config MyMsg
 
 -}
-create : Config a -> (Msg -> msg) -> System a msg
-create config stepMsg =
+create : Config item -> (Msg -> msg) -> System item msg
+create config toMsg =
     { model = Model Nothing
-    , subscriptions = subscriptions stepMsg
-    , commands = commands stepMsg
-    , update = update config
-    , dragEvents = dragEvents stepMsg
-    , dropEvents = dropEvents stepMsg
+    , subscriptions = subscriptions toMsg
+    , update = update config toMsg
+    , dragEvents = dragEvents toMsg
+    , dropEvents = dropEvents toMsg
     , ghostStyles = ghostStyles
     , info = info
     }
@@ -414,15 +414,15 @@ This is our configuration with a void `beforeUpdate`:
         { item2 | group = item1.group }
 
 -}
-type alias Config a =
-    { beforeUpdate : DragIndex -> DropIndex -> List a -> List a
+type alias Config item =
+    { beforeUpdate : DragIndex -> DropIndex -> List item -> List item
     , listen : Listen
     , operation : Operation
     , groups :
         { listen : Listen
         , operation : Operation
-        , comparator : a -> a -> Bool
-        , setter : a -> a -> a
+        , comparator : item -> item -> Bool
+        , setter : item -> item -> item
         }
     }
 
@@ -572,55 +572,6 @@ info (Model model) =
         model
 
 
-subscriptions : (Msg -> msg) -> Model -> Sub msg
-subscriptions stepMsg (Model model) =
-    case model of
-        Nothing ->
-            Sub.none
-
-        Just _ ->
-            Sub.batch
-                [ Browser.Events.onMouseMove
-                    (Internal.Common.Utils.decodeCoordinates
-                        |> Json.Decode.map (stepMsg << Drag)
-                    )
-                , Browser.Events.onMouseUp
-                    (Json.Decode.succeed (stepMsg DragEnd))
-                ]
-
-
-commands : (Msg -> msg) -> Model -> Cmd msg
-commands stepMsg (Model model) =
-    case model of
-        Nothing ->
-            Cmd.none
-
-        Just state ->
-            Cmd.batch
-                [ dragElementCommands stepMsg state
-                , dropElementCommands stepMsg state
-                ]
-
-
-dragElementCommands : (Msg -> msg) -> State -> Cmd msg
-dragElementCommands stepMsg state =
-    case state.dragElement of
-        Nothing ->
-            Task.attempt (stepMsg << GotDragElement) (Browser.Dom.getElement state.dragElementId)
-
-        _ ->
-            Cmd.none
-
-
-dropElementCommands : (Msg -> msg) -> State -> Cmd msg
-dropElementCommands stepMsg state =
-    if state.dragCounter == 0 then
-        Task.attempt (stepMsg << GotDropElement) (Browser.Dom.getElement state.dropElementId)
-
-    else
-        Cmd.none
-
-
 {-| Internal message type.
 It should be wrapped within our message constructor:
 
@@ -629,138 +580,190 @@ It should be wrapped within our message constructor:
 
 -}
 type Msg
-    = DragStart DragIndex DragElementId Position
-    | Drag Position
-    | DragOver DropIndex DropElementId
-    | DragEnter DropIndex
-    | DragLeave
-    | DragEnd
-    | GotDragElement (Result Browser.Dom.Error Browser.Dom.Element)
-    | GotDropElement (Result Browser.Dom.Error Browser.Dom.Element)
+    = DownDragItem DragIndex DragElementId Position
+    | InBetweenMsg InBetweenMsg
+    | UpDocument
 
 
-update : Config a -> Msg -> Model -> List a -> ( Model, List a )
-update { beforeUpdate, listen, operation, groups } msg (Model model) list =
+type InBetweenMsg
+    = MoveDocument Position
+    | OverDropItem DropIndex DropElementId
+    | EnterDropItem
+    | LeaveDropItem
+    | GotDragItem (Result Browser.Dom.Error Browser.Dom.Element)
+    | GotDropItem (Result Browser.Dom.Error Browser.Dom.Element)
+    | Tick
+
+
+subscriptions : (Msg -> msg) -> Model -> Sub msg
+subscriptions toMsg (Model model) =
+    if model /= Nothing then
+        Sub.batch
+            [ Browser.Events.onMouseMove
+                (Internal.Decoders.decodeCoordinates |> Json.Decode.map (MoveDocument >> InBetweenMsg >> toMsg))
+            , Browser.Events.onMouseUp
+                (Json.Decode.succeed (UpDocument |> toMsg))
+            , Browser.Events.onAnimationFrameDelta (always Tick >> InBetweenMsg >> toMsg)
+            ]
+
+    else
+        Sub.none
+
+
+update : Config item -> (Msg -> msg) -> Msg -> Model -> List item -> ( List item, Model, Cmd msg )
+update config toMsg msg (Model model) list =
     case msg of
-        DragStart dragIndex dragElementId xy ->
-            ( Model <|
+        DownDragItem dragIndex dragElementId xy ->
+            ( list
+            , Model <|
                 Just
                     { dragIndex = dragIndex
                     , dropIndex = dragIndex
-                    , dragCounter = 0
+                    , moveCounter = 0
                     , startPosition = xy
                     , currentPosition = xy
+                    , translateVector = Position 0 0
                     , dragElementId = dragElementId
                     , dropElementId = dragElementId
                     , dragElement = Nothing
                     , dropElement = Nothing
                     }
-            , list
+            , Cmd.none
             )
 
-        Drag xy ->
-            ( model
-                |> Maybe.map (\state -> { state | currentPosition = xy, dragCounter = state.dragCounter + 1 })
-                |> Model
-            , list
-            )
-
-        DragOver dropIndex dropElementId ->
-            ( model
-                |> Maybe.map (\state -> { state | dropIndex = dropIndex, dropElementId = dropElementId })
-                |> Model
-            , list
-            )
-
-        DragEnter dropIndex ->
+        InBetweenMsg inBetweenMsg ->
             case model of
                 Just state ->
-                    if state.dragCounter > 1 && state.dragIndex /= dropIndex then
-                        let
-                            equalGroups : Bool
-                            equalGroups =
-                                Internal.Groups.equalGroups groups.comparator state.dragIndex dropIndex list
-                        in
-                        if listen == OnDrag && equalGroups then
-                            ( Model (Just (stateUpdate operation dropIndex state))
-                            , list
-                                |> beforeUpdate state.dragIndex dropIndex
-                                |> sublistUpdate operation state.dragIndex dropIndex
-                            )
+                    let
+                        ( newList, newState, newCmd ) =
+                            inBetweenUpdate config list inBetweenMsg state
+                    in
+                    ( newList, Model (Just newState), Cmd.map (InBetweenMsg >> toMsg) newCmd )
 
-                        else if groups.listen == OnDrag && not equalGroups then
-                            ( Model (Just (stateUpdate groups.operation dropIndex state))
-                            , list
-                                |> beforeUpdate state.dragIndex dropIndex
-                                |> listUpdate groups.operation groups.comparator groups.setter state.dragIndex dropIndex
-                            )
+                Nothing ->
+                    ( list, Model Nothing, Cmd.none )
 
-                        else
-                            ( Model (Just { state | dragCounter = 0 }), list )
-
-                    else
-                        ( Model model, list )
-
-                _ ->
-                    ( Model model, list )
-
-        DragLeave ->
-            ( model
-                |> Maybe.map (\state -> { state | dropIndex = state.dragIndex })
-                |> Model
-            , list
-            )
-
-        DragEnd ->
+        UpDocument ->
             case model of
                 Just state ->
                     if state.dragIndex /= state.dropIndex then
                         let
                             equalGroups : Bool
                             equalGroups =
-                                Internal.Groups.equalGroups groups.comparator state.dragIndex state.dropIndex list
+                                Internal.Groups.equalGroups config.groups.comparator state.dragIndex state.dropIndex list
                         in
-                        if listen == OnDrop && equalGroups then
-                            ( Model Nothing
-                            , list
-                                |> beforeUpdate state.dragIndex state.dropIndex
-                                |> sublistUpdate operation state.dragIndex state.dropIndex
+                        if config.listen == OnDrop && equalGroups then
+                            ( list
+                                |> config.beforeUpdate state.dragIndex state.dropIndex
+                                |> sublistUpdate config.operation state.dragIndex state.dropIndex
+                            , Model Nothing
+                            , Cmd.none
                             )
 
-                        else if groups.listen == OnDrop && not equalGroups then
-                            ( Model Nothing
-                            , list
-                                |> beforeUpdate state.dragIndex state.dropIndex
-                                |> listUpdate groups.operation groups.comparator groups.setter state.dragIndex state.dropIndex
+                        else if config.groups.listen == OnDrop && not equalGroups then
+                            ( list
+                                |> config.beforeUpdate state.dragIndex state.dropIndex
+                                |> listUpdate config.groups.operation config.groups.comparator config.groups.setter state.dragIndex state.dropIndex
+                            , Model Nothing
+                            , Cmd.none
                             )
 
                         else
-                            ( Model Nothing, list )
+                            ( list, Model Nothing, Cmd.none )
 
                     else
-                        ( Model Nothing, list )
+                        ( list, Model Nothing, Cmd.none )
 
                 _ ->
-                    ( Model Nothing, list )
+                    ( list, Model Nothing, Cmd.none )
 
-        GotDragElement (Err _) ->
-            ( Model model, list )
 
-        GotDragElement (Ok dragElement) ->
-            ( model
-                |> Maybe.map (\state -> { state | dragElement = Just dragElement, dropElement = Just dragElement })
-                |> Model
-            , list
+inBetweenUpdate : Config item -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd InBetweenMsg )
+inBetweenUpdate config list msg state =
+    case msg of
+        MoveDocument xy ->
+            ( list
+            , { state | currentPosition = xy, moveCounter = state.moveCounter + 1 }
+            , case state.dragElement of
+                Nothing ->
+                    Task.attempt GotDragItem (Browser.Dom.getElement state.dragElementId)
+
+                _ ->
+                    Cmd.none
             )
 
-        GotDropElement (Err _) ->
-            ( Model model, list )
+        OverDropItem dropIndex dropElementId ->
+            ( list
+            , { state | dropIndex = dropIndex, dropElementId = dropElementId }
+            , if state.moveCounter == 0 then
+                Task.attempt GotDropItem (Browser.Dom.getElement state.dropElementId)
 
-        GotDropElement (Ok dropElement) ->
-            ( model
-                |> Maybe.map (\state -> { state | dropElement = Just dropElement })
-                |> Model
-            , list
+              else
+                Cmd.none
+            )
+
+        EnterDropItem ->
+            if state.moveCounter > 1 && state.dragIndex /= state.dropIndex then
+                let
+                    equalGroups : Bool
+                    equalGroups =
+                        Internal.Groups.equalGroups config.groups.comparator state.dragIndex state.dropIndex list
+                in
+                if config.listen == OnDrag && equalGroups then
+                    ( list
+                        |> config.beforeUpdate state.dragIndex state.dropIndex
+                        |> sublistUpdate config.operation state.dragIndex state.dropIndex
+                    , stateUpdate config.operation state.dropIndex state
+                    , Cmd.none
+                    )
+
+                else if config.groups.listen == OnDrag && not equalGroups then
+                    ( list
+                        |> config.beforeUpdate state.dragIndex state.dropIndex
+                        |> listUpdate config.groups.operation config.groups.comparator config.groups.setter state.dragIndex state.dropIndex
+                    , stateUpdate config.groups.operation state.dropIndex state
+                    , Cmd.none
+                    )
+
+                else
+                    ( list, { state | moveCounter = 0 }, Cmd.none )
+
+            else
+                ( list, state, Cmd.none )
+
+        LeaveDropItem ->
+            ( list
+            , { state | dropIndex = state.dragIndex }
+            , Cmd.none
+            )
+
+        GotDragItem (Err _) ->
+            ( list, state, Cmd.none )
+
+        GotDragItem (Ok dragElement) ->
+            ( list
+            , { state | dragElement = Just dragElement, dropElement = Just dragElement }
+            , Cmd.none
+            )
+
+        GotDropItem (Err _) ->
+            ( list, state, Cmd.none )
+
+        GotDropItem (Ok dropElement) ->
+            ( list
+            , { state | dropElement = Just dropElement }
+            , Cmd.none
+            )
+
+        Tick ->
+            ( list
+            , { state
+                | translateVector =
+                    Position
+                        (state.currentPosition.x - state.startPosition.x)
+                        (state.currentPosition.y - state.startPosition.y)
+              }
+            , Cmd.none
             )
 
 
@@ -775,7 +778,7 @@ stateUpdate operation dropIndex state =
 
                     else
                         dropIndex
-                , dragCounter = 0
+                , moveCounter = 0
             }
 
         InsertBefore ->
@@ -786,61 +789,61 @@ stateUpdate operation dropIndex state =
 
                     else
                         dropIndex
-                , dragCounter = 0
+                , moveCounter = 0
             }
 
         Rotate ->
-            { state | dragIndex = dropIndex, dragCounter = 0 }
+            { state | dragIndex = dropIndex, moveCounter = 0 }
 
         Swap ->
-            { state | dragIndex = dropIndex, dragCounter = 0 }
+            { state | dragIndex = dropIndex, moveCounter = 0 }
 
         Unaltered ->
-            { state | dragCounter = 0 }
+            { state | moveCounter = 0 }
 
 
-sublistUpdate : Operation -> DragIndex -> DropIndex -> List a -> List a
+sublistUpdate : Operation -> DragIndex -> DropIndex -> List item -> List item
 sublistUpdate operation dragIndex dropIndex list =
     case operation of
         InsertAfter ->
-            Internal.Common.Operations.insertAfter dragIndex dropIndex list
+            Internal.Operations.insertAfter dragIndex dropIndex list
 
         InsertBefore ->
-            Internal.Common.Operations.insertBefore dragIndex dropIndex list
+            Internal.Operations.insertBefore dragIndex dropIndex list
 
         Rotate ->
-            Internal.Common.Operations.rotate dragIndex dropIndex list
+            Internal.Operations.rotate dragIndex dropIndex list
 
         Swap ->
-            Internal.Common.Operations.swap dragIndex dropIndex list
+            Internal.Operations.swap dragIndex dropIndex list
 
         Unaltered ->
             list
 
 
-listUpdate : Operation -> (a -> a -> Bool) -> (a -> a -> a) -> DragIndex -> DropIndex -> List a -> List a
+listUpdate : Operation -> (item -> item -> Bool) -> (item -> item -> item) -> DragIndex -> DropIndex -> List item -> List item
 listUpdate operation comparator setter dragIndex dropIndex list =
     case operation of
         InsertAfter ->
             list
                 |> Internal.Groups.dragGroupUpdate setter dragIndex dropIndex
-                |> Internal.Common.Operations.insertAfter dragIndex dropIndex
+                |> Internal.Operations.insertAfter dragIndex dropIndex
 
         InsertBefore ->
             list
                 |> Internal.Groups.dragGroupUpdate setter dragIndex dropIndex
-                |> Internal.Common.Operations.insertBefore dragIndex dropIndex
+                |> Internal.Operations.insertBefore dragIndex dropIndex
 
         Rotate ->
             if dragIndex < dropIndex then
                 list
                     |> Internal.Groups.allGroupUpdate (List.reverse >> Internal.Groups.bubbleGroupRecursive comparator setter >> List.reverse) dragIndex dropIndex
-                    |> Internal.Common.Operations.rotate dragIndex dropIndex
+                    |> Internal.Operations.rotate dragIndex dropIndex
 
             else if dropIndex < dragIndex then
                 list
                     |> Internal.Groups.allGroupUpdate (Internal.Groups.bubbleGroupRecursive comparator setter) dropIndex dragIndex
-                    |> Internal.Common.Operations.rotate dragIndex dropIndex
+                    |> Internal.Operations.rotate dragIndex dropIndex
 
             else
                 list
@@ -848,72 +851,77 @@ listUpdate operation comparator setter dragIndex dropIndex list =
         Swap ->
             list
                 |> Internal.Groups.dragAndDropGroupUpdate setter dragIndex dropIndex
-                |> Internal.Common.Operations.swap dragIndex dropIndex
+                |> Internal.Operations.swap dragIndex dropIndex
 
         Unaltered ->
             list
 
 
+
+-- EVENTS
+
+
 dragEvents : (Msg -> msg) -> DragIndex -> DragElementId -> List (Html.Attribute msg)
-dragEvents stepMsg dragIndex dragElementId =
+dragEvents toMsg dragIndex dragElementId =
     [ Html.Events.preventDefaultOn "mousedown"
-        (Internal.Common.Utils.decodeCoordinatesWithButtonCheck
-            |> Json.Decode.map (stepMsg << DragStart dragIndex dragElementId)
+        (Internal.Decoders.decodeCoordinatesWithButtonCheck
+            |> Json.Decode.map (DownDragItem dragIndex dragElementId >> toMsg)
             |> Json.Decode.map (\msg -> ( msg, True ))
         )
     ]
 
 
 dropEvents : (Msg -> msg) -> DropIndex -> DropElementId -> List (Html.Attribute msg)
-dropEvents stepMsg dropIndex dropElementId =
-    [ Html.Events.onMouseOver (stepMsg (DragOver dropIndex dropElementId))
-    , Html.Events.onMouseEnter (stepMsg (DragEnter dropIndex))
-    , Html.Events.onMouseLeave (stepMsg DragLeave)
+dropEvents toMsg dropIndex dropElementId =
+    [ Html.Events.onMouseOver (OverDropItem dropIndex dropElementId |> InBetweenMsg |> toMsg)
+    , Html.Events.onMouseEnter (EnterDropItem |> InBetweenMsg |> toMsg)
+    , Html.Events.onMouseLeave (LeaveDropItem |> InBetweenMsg |> toMsg)
     ]
+
+
+
+-- STYLES
 
 
 ghostStyles : Model -> List (Html.Attribute msg)
 ghostStyles (Model model) =
     case model of
-        Nothing ->
-            []
-
         Just state ->
             case state.dragElement of
-                Just { element } ->
-                    [ Html.Attributes.style "position" "fixed"
-                    , Html.Attributes.style "left" "0"
-                    , Html.Attributes.style "top" "0"
-                    , Html.Attributes.style "transform" <|
-                        Internal.Common.Utils.translate
-                            (round (state.currentPosition.x - state.startPosition.x + element.x))
-                            (round (state.currentPosition.y - state.startPosition.y + element.y))
-                    , Html.Attributes.style "height" (Internal.Common.Utils.px (round element.height))
-                    , Html.Attributes.style "width" (Internal.Common.Utils.px (round element.width))
-                    , Html.Attributes.style "pointer-events" "none"
-                    ]
+                Just dragElement ->
+                    transform state.translateVector dragElement :: baseStyles dragElement
 
                 _ ->
                     []
 
-
-type alias DragIndex =
-    Int
-
-
-type alias DropIndex =
-    Int
+        Nothing ->
+            []
 
 
-type alias DragElementId =
-    String
+transform : Position -> Browser.Dom.Element -> Html.Attribute msg
+transform { x, y } { element } =
+    Html.Attributes.style "transform" <|
+        translate
+            (round (x + element.x))
+            (round (y + element.y))
 
 
-type alias DropElementId =
-    String
+baseStyles : Browser.Dom.Element -> List (Html.Attribute msg)
+baseStyles { element } =
+    [ Html.Attributes.style "position" "fixed"
+    , Html.Attributes.style "top" "0"
+    , Html.Attributes.style "left" "0"
+    , Html.Attributes.style "height" (px (round element.height))
+    , Html.Attributes.style "width" (px (round element.width))
+    , Html.Attributes.style "pointer-events" "none"
+    ]
 
 
-type alias Position =
-    { x : Float
-    , y : Float
-    }
+translate : Int -> Int -> String
+translate x y =
+    "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"
+
+
+px : Int -> String
+px n =
+    String.fromInt n ++ "px"

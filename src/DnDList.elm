@@ -221,36 +221,11 @@ import Browser.Events
 import Html
 import Html.Attributes
 import Html.Events
-import Internal.Common.Operations
-import Internal.Common.Utils
+import Internal.Decoders
+import Internal.Operations
+import Internal.Types exposing (..)
 import Json.Decode
 import Task
-
-
-
--- TYPES
-
-
-type alias DragIndex =
-    Int
-
-
-type alias DropIndex =
-    Int
-
-
-type alias DragElementId =
-    String
-
-
-type alias DropElementId =
-    String
-
-
-type alias Position =
-    { x : Float
-    , y : Float
-    }
 
 
 {-| Represents the internal model of the current drag and drop features.
@@ -537,21 +512,6 @@ info (Model model) =
         model
 
 
-subscriptions : (Msg -> msg) -> Model -> Sub msg
-subscriptions toMsg (Model model) =
-    if model /= Nothing then
-        Sub.batch
-            [ Browser.Events.onMouseMove
-                (Internal.Common.Utils.decodeCoordinates |> Json.Decode.map (MoveDocument >> InBetweenMsg >> toMsg))
-            , Browser.Events.onMouseUp
-                (Json.Decode.succeed (UpDocument |> toMsg))
-            , Browser.Events.onAnimationFrameDelta (always Tick >> InBetweenMsg >> toMsg)
-            ]
-
-    else
-        Sub.none
-
-
 {-| Internal message type.
 It should be wrapped within our message constructor:
 
@@ -573,6 +533,21 @@ type InBetweenMsg
     | GotDragItem (Result Browser.Dom.Error Browser.Dom.Element)
     | GotDropItem (Result Browser.Dom.Error Browser.Dom.Element)
     | Tick
+
+
+subscriptions : (Msg -> msg) -> Model -> Sub msg
+subscriptions toMsg (Model model) =
+    if model /= Nothing then
+        Sub.batch
+            [ Browser.Events.onMouseMove
+                (Internal.Decoders.decodeCoordinates |> Json.Decode.map (MoveDocument >> InBetweenMsg >> toMsg))
+            , Browser.Events.onMouseUp
+                (Json.Decode.succeed (UpDocument |> toMsg))
+            , Browser.Events.onAnimationFrameDelta (always Tick >> InBetweenMsg >> toMsg)
+            ]
+
+    else
+        Sub.none
 
 
 update : Config item -> (Msg -> msg) -> Msg -> Model -> List item -> ( List item, Model, Cmd msg )
@@ -742,25 +717,29 @@ listUpdate : Operation -> DragIndex -> DropIndex -> List item -> List item
 listUpdate operation dragIndex dropIndex list =
     case operation of
         InsertAfter ->
-            Internal.Common.Operations.insertAfter dragIndex dropIndex list
+            Internal.Operations.insertAfter dragIndex dropIndex list
 
         InsertBefore ->
-            Internal.Common.Operations.insertBefore dragIndex dropIndex list
+            Internal.Operations.insertBefore dragIndex dropIndex list
 
         Rotate ->
-            Internal.Common.Operations.rotate dragIndex dropIndex list
+            Internal.Operations.rotate dragIndex dropIndex list
 
         Swap ->
-            Internal.Common.Operations.swap dragIndex dropIndex list
+            Internal.Operations.swap dragIndex dropIndex list
 
         Unaltered ->
             list
 
 
+
+-- EVENTS
+
+
 dragEvents : (Msg -> msg) -> DragIndex -> DragElementId -> List (Html.Attribute msg)
 dragEvents toMsg dragIndex dragElementId =
     [ Html.Events.preventDefaultOn "mousedown"
-        (Internal.Common.Utils.decodeCoordinatesWithButtonCheck
+        (Internal.Decoders.decodeCoordinatesWithButtonCheck
             |> Json.Decode.map (DownDragItem dragIndex dragElementId >> toMsg)
             |> Json.Decode.map (\msg -> ( msg, True ))
         )
@@ -773,6 +752,10 @@ dropEvents toMsg dropIndex dropElementId =
     , Html.Events.onMouseEnter (EnterDropItem |> InBetweenMsg |> toMsg)
     , Html.Events.onMouseLeave (LeaveDropItem |> InBetweenMsg |> toMsg)
     ]
+
+
+
+-- STYLES
 
 
 ghostStyles : Movement -> Model -> List (Html.Attribute msg)
@@ -795,19 +778,19 @@ transform movement { x, y } { element } =
     case movement of
         Horizontal ->
             Html.Attributes.style "transform" <|
-                Internal.Common.Utils.translate
+                translate
                     (round (x + element.x))
                     (round element.y)
 
         Vertical ->
             Html.Attributes.style "transform" <|
-                Internal.Common.Utils.translate
+                translate
                     (round element.x)
                     (round (y + element.y))
 
         Free ->
             Html.Attributes.style "transform" <|
-                Internal.Common.Utils.translate
+                translate
                     (round (x + element.x))
                     (round (y + element.y))
 
@@ -817,7 +800,17 @@ baseStyles { element } =
     [ Html.Attributes.style "position" "fixed"
     , Html.Attributes.style "top" "0"
     , Html.Attributes.style "left" "0"
-    , Html.Attributes.style "height" (Internal.Common.Utils.px (round element.height))
-    , Html.Attributes.style "width" (Internal.Common.Utils.px (round element.width))
+    , Html.Attributes.style "height" (px (round element.height))
+    , Html.Attributes.style "width" (px (round element.width))
     , Html.Attributes.style "pointer-events" "none"
     ]
+
+
+translate : Int -> Int -> String
+translate x y =
+    "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"
+
+
+px : Int -> String
+px n =
+    String.fromInt n ++ "px"
