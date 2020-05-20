@@ -1,9 +1,12 @@
 module DnDList exposing
-    ( System, create, Msg
-    , Config
-    , Movement(..), Listen(..), Operation(..)
-    , Info
+    ( Config, config
+    , freeMovement, horizontalMovement, verticalMovement
+    , listenOnDrag, listenOnDrop
+    , withInsertAfter, withInsertBefore, withRotate, withSwap, withUnaltered
+    , hookItemsBeforeListUpdate
+    , System, create, Msg
     , Model
+    , Info
     )
 
 {-| While dragging and dropping a list item, the mouse events, the ghost element's positioning
@@ -45,15 +48,24 @@ You can add position styling attributes to this element using the`System` object
         }
 
 
+# Config
+
+@docs Config, config
+@docs freeMovement, horizontalMovement, verticalMovement
+@docs listenOnDrag, listenOnDrop
+@docs withInsertAfter, withInsertBefore, withRotate, withSwap, withUnaltered
+
+@docs hookItemsBeforeListUpdate
+
+
 # System
 
 @docs System, create, Msg
 
 
-# Config
+## Model
 
-@docs Config
-@docs Movement, Listen, Operation
+@docs Model
 
 
 # Info
@@ -62,11 +74,6 @@ You can add position styling attributes to this element using the`System` object
 
 
 # System fields
-
-
-## model
-
-@docs Model
 
 
 ## subscriptions
@@ -228,38 +235,170 @@ import Json.Decode
 import Task
 
 
-{-| Represents the internal model of the current drag and drop features.
-It will be `Nothing` if there is no ongoing dragging.
-You should set it in your model and initialize through the `System`'s `model` field.
+{-| Represents the `System`'s configuration.
 
-    type alias Model =
-        { dnd : DnDList.Model
-        , items : List Fruit
-        }
+  - `hookItemsBeforeListUpdate`: This is a hook and gives you access to your list before it will be sorted.
+    The first number is the drag index, the second number is the drop index.
+    The [Towers of Hanoi](https://annaghi.github.io/dnd-list/gallery/hanoi) uses this hook to update the disks' `tower` attribute.
 
-    initialModel : Model
-    initialModel =
-        { dnd = system.model
-        , items = data
+  - `movement`: The dragging can be constrained to horizontal or vertical axis only, or it can be set to free.
+    This [demo config](https://annaghi.github.io/dnd-list/config/movement) shows the different movements in action.
+
+  - `listen`: The items can listen for drag events or for drop events.
+    In the first case the list will be sorted again and again while the mouse moves over the different drop target items.
+    In the second case the list will be sorted only once on that drop target where the mouse was finally released.
+
+  - `operation`: Different kinds of sort operations can be performed on the list.
+    You can start to analyze them with
+    [sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
+    and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
+
+This is our configuration with a void `hookItemsBeforeListUpdate`:
+
+    config : DnDList.Config Fruit
+    config =
+        { hookItemsBeforeListUpdate = \_ _ list -> list
+        , movement = DnDList.Free
+        , listen = DnDList.OnDrag
+        , operation = DnDList.Rotate
         }
 
 -}
-type Model
-    = Model (Maybe State)
+type Config item
+    = Config (Options item)
 
 
-type alias State =
-    { dragIndex : DragIndex
-    , dropIndex : DropIndex
-    , moveCounter : Int
-    , startPosition : Position
-    , currentPosition : Position
-    , translateVector : Position
-    , dragElementId : DragElementId
-    , dropElementId : DropElementId
-    , dragElement : Maybe Browser.Dom.Element
-    , dropElement : Maybe Browser.Dom.Element
+type alias Options item =
+    { hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
+    , movement : Movement
+    , listen : Listen
+    , operation : Operation
     }
+
+
+config : Config item
+config =
+    Config defaultOptions
+
+
+defaultOptions : Options item
+defaultOptions =
+    { hookItemsBeforeListUpdate = \_ _ list -> list
+    , movement = Free
+    , listen = OnDrag
+    , operation = Rotate
+    }
+
+
+{-| Represents the mouse dragging movement.
+This [demo config](https://annaghi.github.io/dnd-list/config/movement) shows the different movements in action.
+
+  - `Free` : The ghost element follows the mouse pointer.
+
+  - `Horizontal` : The ghost element can only move horizontally.
+
+  - `Vertical` : The ghost element can only move vertically.
+
+-}
+type Movement
+    = Free
+    | Horizontal
+    | Vertical
+
+
+freeMovement : Config item -> Config item
+freeMovement (Config options) =
+    Config { options | movement = Free }
+
+
+horizontalMovement : Config item -> Config item
+horizontalMovement (Config options) =
+    Config { options | movement = Horizontal }
+
+
+verticalMovement : Config item -> Config item
+verticalMovement (Config options) =
+    Config { options | movement = Vertical }
+
+
+{-| Represents the event for which the list sorting is available.
+
+  - `OnDrag`: The list will be sorted when the ghost element is being dragged over a drop target item.
+
+  - `OnDrop`: The list will be sorted when the ghost element is dropped on a drop target item.
+
+-}
+type Listen
+    = OnDrag
+    | OnDrop
+
+
+listenOnDrag : Config item -> Config item
+listenOnDrag (Config options) =
+    Config { options | listen = OnDrag }
+
+
+listenOnDrop : Config item -> Config item
+listenOnDrop (Config options) =
+    Config { options | listen = OnDrop }
+
+
+{-| Represents the list sort operation.
+Detailed comparisons can be found here:
+[sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
+and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
+
+  - `InsertAfter`: The drag source item will be inserted after the drop target item.
+
+  - `InsertBefore`: The drag source item will be inserted before the drop target item.
+
+  - `Rotate`: The items between the drag source and the drop target items will be circularly shifted.
+
+  - `Swap`: The drag source and the drop target items will be swapped.
+
+  - `Unaltered`: The list items will keep their initial order.
+
+-}
+type Operation
+    = InsertAfter
+    | InsertBefore
+    | Rotate
+    | Swap
+    | Unaltered
+
+
+withInsertAfter : Config item -> Config item
+withInsertAfter (Config options) =
+    Config { options | operation = InsertAfter }
+
+
+withInsertBefore : Config item -> Config item
+withInsertBefore (Config options) =
+    Config { options | operation = InsertBefore }
+
+
+withRotate : Config item -> Config item
+withRotate (Config options) =
+    Config { options | operation = Rotate }
+
+
+withSwap : Config item -> Config item
+withSwap (Config options) =
+    Config { options | operation = Swap }
+
+
+withUnaltered : Config item -> Config item
+withUnaltered (Config options) =
+    Config { options | operation = Unaltered }
+
+
+
+-- Hooks
+
+
+hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item -> Config item
+hookItemsBeforeListUpdate handler (Config options) =
+    Config { options | hookItemsBeforeListUpdate = handler }
 
 
 {-| A `System` encapsulates:
@@ -303,104 +442,49 @@ Now the `System` is a wrapper type around the list item and our message types:
 
 -}
 create : Config item -> (Msg -> msg) -> System item msg
-create config toMsg =
+create configuration toMsg =
     { model = Model Nothing
     , subscriptions = subscriptions toMsg
-    , update = update config toMsg
+    , update = update configuration toMsg
     , dragEvents = dragEvents toMsg
     , dropEvents = dropEvents toMsg
-    , ghostStyles = ghostStyles config.movement
+    , ghostStyles = ghostStyles configuration
     , info = info
     }
 
 
-{-| Represents the `System`'s configuration.
+{-| Represents the internal model of the current drag and drop features.
+It will be `Nothing` if there is no ongoing dragging.
+You should set it in your model and initialize through the `System`'s `model` field.
 
-  - `beforeUpdate`: This is a hook and gives you access to your list before it will be sorted.
-    The first number is the drag index, the second number is the drop index.
-    The [Towers of Hanoi](https://annaghi.github.io/dnd-list/gallery/hanoi) uses this hook to update the disks' `tower` attribute.
+    type alias Model =
+        { dnd : DnDList.Model
+        , items : List Fruit
+        }
 
-  - `movement`: The dragging can be constrained to horizontal or vertical axis only, or it can be set to free.
-    This [demo config](https://annaghi.github.io/dnd-list/config/movement) shows the different movements in action.
-
-  - `listen`: The items can listen for drag events or for drop events.
-    In the first case the list will be sorted again and again while the mouse moves over the different drop target items.
-    In the second case the list will be sorted only once on that drop target where the mouse was finally released.
-
-  - `operation`: Different kinds of sort operations can be performed on the list.
-    You can start to analyze them with
-    [sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
-    and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
-
-This is our configuration with a void `beforeUpdate`:
-
-    config : DnDList.Config Fruit
-    config =
-        { beforeUpdate = \_ _ list -> list
-        , movement = DnDList.Free
-        , listen = DnDList.OnDrag
-        , operation = DnDList.Rotate
+    initialModel : Model
+    initialModel =
+        { dnd = system.model
+        , items = data
         }
 
 -}
-type alias Config item =
-    { beforeUpdate : DragIndex -> DropIndex -> List item -> List item
-    , movement : Movement
-    , listen : Listen
-    , operation : Operation
+type Model
+    = Model (Maybe State)
+
+
+type alias State =
+    { dragIndex : DragIndex
+    , dropIndex : DropIndex
+    , moveCounter : Int
+    , startPosition : Position
+    , currentPosition : Position
+    , translateVector : Position
+    , dragElementId : DragElementId
+    , dropElementId : DropElementId
+    , dragElement : Maybe Browser.Dom.Element
+    , dropElement : Maybe Browser.Dom.Element
     }
-
-
-{-| Represents the mouse dragging movement.
-This [demo config](https://annaghi.github.io/dnd-list/config/movement) shows the different movements in action.
-
-  - `Free` : The ghost element follows the mouse pointer.
-
-  - `Horizontal` : The ghost element can only move horizontally.
-
-  - `Vertical` : The ghost element can only move vertically.
-
--}
-type Movement
-    = Free
-    | Horizontal
-    | Vertical
-
-
-{-| Represents the event for which the list sorting is available.
-
-  - `OnDrag`: The list will be sorted when the ghost element is being dragged over a drop target item.
-
-  - `OnDrop`: The list will be sorted when the ghost element is dropped on a drop target item.
-
--}
-type Listen
-    = OnDrag
-    | OnDrop
-
-
-{-| Represents the list sort operation.
-Detailed comparisons can be found here:
-[sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
-and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
-
-  - `InsertAfter`: The drag source item will be inserted after the drop target item.
-
-  - `InsertBefore`: The drag source item will be inserted before the drop target item.
-
-  - `Rotate`: The items between the drag source and the drop target items will be circularly shifted.
-
-  - `Swap`: The drag source and the drop target items will be swapped.
-
-  - `Unaltered`: The list items will keep their initial order.
-
--}
-type Operation
-    = InsertAfter
-    | InsertBefore
-    | Rotate
-    | Swap
-    | Unaltered
 
 
 {-| Represents the information about the drag source and the drop target items.
@@ -551,7 +635,7 @@ subscriptions toMsg (Model model) =
 
 
 update : Config item -> (Msg -> msg) -> Msg -> Model -> List item -> ( List item, Model, Cmd msg )
-update config toMsg msg (Model model) list =
+update (Config options) toMsg msg (Model model) list =
     case msg of
         DownDragItem dragIndex dragElementId xy ->
             ( list
@@ -576,7 +660,7 @@ update config toMsg msg (Model model) list =
                 Just state ->
                     let
                         ( newList, newState, newCmd ) =
-                            inBetweenUpdate config list inBetweenMsg state
+                            inBetweenUpdate options list inBetweenMsg state
                     in
                     ( newList, Model (Just newState), Cmd.map (InBetweenMsg >> toMsg) newCmd )
 
@@ -584,12 +668,12 @@ update config toMsg msg (Model model) list =
                     ( list, Model Nothing, Cmd.none )
 
         UpDocument ->
-            case ( model, config.listen ) of
+            case ( model, options.listen ) of
                 ( Just state, OnDrop ) ->
                     if state.dragIndex /= state.dropIndex then
                         ( list
-                            |> config.beforeUpdate state.dragIndex state.dropIndex
-                            |> listUpdate config.operation state.dragIndex state.dropIndex
+                            |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                            |> listUpdate options.operation state.dragIndex state.dropIndex
                         , Model Nothing
                         , Cmd.none
                         )
@@ -601,8 +685,8 @@ update config toMsg msg (Model model) list =
                     ( list, Model Nothing, Cmd.none )
 
 
-inBetweenUpdate : Config item -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd InBetweenMsg )
-inBetweenUpdate config list msg state =
+inBetweenUpdate : Options item -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd InBetweenMsg )
+inBetweenUpdate options list msg state =
     case msg of
         MoveDocument xy ->
             ( list
@@ -627,12 +711,12 @@ inBetweenUpdate config list msg state =
 
         EnterDropItem ->
             if state.moveCounter > 1 && state.dragIndex /= state.dropIndex then
-                case config.listen of
+                case options.listen of
                     OnDrag ->
                         ( list
-                            |> config.beforeUpdate state.dragIndex state.dropIndex
-                            |> listUpdate config.operation state.dragIndex state.dropIndex
-                        , stateUpdate config.operation state.dropIndex state
+                            |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                            |> listUpdate options.operation state.dragIndex state.dropIndex
+                        , stateUpdate options.operation state.dropIndex state
                         , Cmd.none
                         )
 
@@ -758,13 +842,13 @@ dropEvents toMsg dropIndex dropElementId =
 -- STYLES
 
 
-ghostStyles : Movement -> Model -> List (Html.Attribute msg)
-ghostStyles movement (Model model) =
+ghostStyles : Config item -> Model -> List (Html.Attribute msg)
+ghostStyles (Config options) (Model model) =
     case model of
         Just state ->
             case state.dragElement of
                 Just dragElement ->
-                    transform movement state.translateVector dragElement :: baseStyles dragElement
+                    transform options.movement state.translateVector dragElement :: baseStyles dragElement
 
                 _ ->
                     []
