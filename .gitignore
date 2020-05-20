@@ -1,3 +1,7 @@
+
+# node modules
+node_modules
+
 # elm-package generated files
 elm-stuff
 
@@ -18,5 +22,3 @@ examples/**/main.js
 
 # experiments
 experiments/index.html
-# node modules
-node_modules
