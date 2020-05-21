@@ -1,17 +1,17 @@
 module Internal.Decoders exposing (decodeCoordinates, decodeCoordinatesWithButtonCheck)
 
-import Internal.Types exposing (Position)
+import Internal.Types exposing (Coordinates)
 import Json.Decode
 
 
-decodeCoordinatesWithButtonCheck : Json.Decode.Decoder Position
+decodeCoordinatesWithButtonCheck : Json.Decode.Decoder Coordinates
 decodeCoordinatesWithButtonCheck =
     decodeMainMouseButton decodeCoordinates
 
 
-decodeCoordinates : Json.Decode.Decoder Position
+decodeCoordinates : Json.Decode.Decoder Coordinates
 decodeCoordinates =
-    Json.Decode.map2 Position pageX pageY
+    Json.Decode.map2 Coordinates pageX pageY
 
 
 decodeMainMouseButton : Json.Decode.Decoder a -> Json.Decode.Decoder a

@@ -98,7 +98,7 @@ bubbleGroupRecursive comparator setter list =
             let
                 sublist : List a
                 sublist =
-                    sublistByFirstItem comparator list
+                    groupByFirstItem comparator list
             in
             if sublist /= [] then
                 (sublist |> List.drop 1 |> List.reverse)
@@ -163,8 +163,8 @@ drops dropIndex list =
     list |> List.drop dropIndex |> List.take 1
 
 
-sublistByFirstItem : (a -> a -> Bool) -> List a -> List a
-sublistByFirstItem comparator list =
+groupByFirstItem : (a -> a -> Bool) -> List a -> List a
+groupByFirstItem comparator list =
     case list of
         [] ->
             []

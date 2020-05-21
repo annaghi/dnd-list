@@ -55,16 +55,16 @@ preparedData =
 
 config : DnDList.Groups.Config Item
 config =
-    { beforeUpdate = \_ _ list -> list
-    , listen = DnDList.Groups.OnDrag
-    , operation = DnDList.Groups.Rotate
-    , groups =
+    DnDList.Groups.config
         { listen = DnDList.Groups.OnDrag
-        , operation = DnDList.Groups.InsertBefore
-        , comparator = comparator
-        , setter = setter
+        , operation = DnDList.Groups.Rotate
+        , groups =
+            { listen = DnDList.Groups.OnDrag
+            , operation = DnDList.Groups.InsertBefore
+            , comparator = comparator
+            , setter = setter
+            }
         }
-    }
 
 
 comparator : Item -> Item -> Bool
@@ -79,7 +79,10 @@ setter item1 item2 =
 
 system : DnDList.Groups.System Item Msg
 system =
-    DnDList.Groups.create config MyMsg
+    config
+        |> DnDList.Groups.hookItemsBeforeListUpdate (\_ _ list -> list)
+        |> DnDList.Groups.ghostProperties [ "width", "height", "position" ]
+        |> DnDList.Groups.create MyMsg
 
 
 

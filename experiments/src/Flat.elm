@@ -37,9 +37,21 @@ data =
 -- SYSTEM
 
 
+config : DnDList.Config Fruit
+config =
+    DnDList.config
+        { movement = DnDList.Free
+        , listen = DnDList.OnDrag
+        , operation = DnDList.Rotate
+        }
+
+
 system : DnDList.System Fruit Msg
 system =
-    DnDList.create DnDList.config MyMsg
+    config
+        --|> DnDList.hookItemsBeforeListUpdate (\_ _ list -> list)
+        --|> DnDList.Groups.ghostProperties [ "width", "height", "position" ]
+        |> DnDList.create MyMsg
 
 
 

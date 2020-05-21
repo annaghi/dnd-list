@@ -1,9 +1,10 @@
 module DnDList.Groups exposing
-    ( System, create, Msg
-    , Config
+    ( Config, config
     , Listen(..), Operation(..)
-    , Info
+    , hookItemsBeforeListUpdate, ghostProperties
+    , System, create, Msg
     , Model
+    , Info
     )
 
 {-| If the list is groupable by a certain property, the items can be transferred between those groups.
@@ -44,15 +45,21 @@ So now the internal sorting distinguishes between these two cases and we need to
         }
 
 
+# Config
+
+@docs Config, config
+@docs Listen, Operation
+@docs hookItemsBeforeListUpdate, ghostProperties
+
+
 # System
 
 @docs System, create, Msg
 
 
-# Config
+## Model
 
-@docs Config
-@docs Listen, Operation
+@docs Model
 
 
 # Info
@@ -61,11 +68,6 @@ So now the internal sorting distinguishes between these two cases and we need to
 
 
 # System fields
-
-
-## model
-
-@docs Model
 
 
 ## subscriptions
@@ -245,6 +247,7 @@ import Html
 import Html.Attributes
 import Html.Events
 import Internal.Decoders
+import Internal.GhostStyles
 import Internal.Groups
 import Internal.Operations
 import Internal.Types exposing (..)
@@ -252,38 +255,139 @@ import Json.Decode
 import Task
 
 
-{-| Represents the internal model of the current drag and drop features.
-It will be `Nothing` if there is no ongoing dragging.
-You should set it in your model and initialize through the `System`'s `model` field.
+{-| Represents the `System`'s configuration.
 
-    type alias Model =
-        { dnd : DnDList.Groups.Model
-        , items : List Item
+  - `beforeUpdate`: This is a hook and gives you access to your list before it will be sorted.
+    The first number is the drag index, the second number is the drop index.
+    The [Towers of Hanoi](https://annaghi.github.io/dnd-list/gallery/hanoi) uses this hook to update the disks' `tower` property.
+
+  - `listen`: This setting is for the operation performing on the _same group_.
+    The items can listen for drag events or for drop events.
+    In the first case the list will be sorted again and again while the mouse moves over the different drop target items.
+    In the second case the list will be sorted only once on that drop target where the mouse was finally released.
+
+  - `operation`: This setting is for the operation performing on the _same group_.
+    Different kinds of sort operations can be performed on the list.
+    You can start to analyze them with
+    [sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
+    and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
+
+  - `groups`: This setting is for the operation performing on _different groups_,
+    when the drag source and the drop target belong to different groups.
+    To have a better understanding of how this works
+    see [sorting between groups on drag](https://annaghi.github.io/dnd-list/config-groups/operations-drag)
+    and [sorting between groups on drop](https://annaghi.github.io/dnd-list/config-groups/operations-drop).
+      - `listen`: Same as the plain `listen` but applied when transferring items between groups.
+      - `operation`: Same as the plain `operation` but applied when transferring items between groups.
+      - `comparator`: You should provide this function, which determines if two items are from different groups.
+      - `setter`: You should provide this function, which updates the second item's group by the first item's group.
+
+This is our configuration with a void `beforeUpdate`:
+
+    config : DnDList.Groups.Config Item
+    config =
+        { beforeUpdate = \_ _ list -> list
+        , listen = DnDList.Groups.OnDrag
+        , operation = DnDList.Groups.Rotate
+        , groups =
+            { listen = DnDList.Groups.OnDrag
+            , operation = DnDList.Groups.InsertBefore
+            , comparator = comparator
+            , setter = setter
+            }
         }
 
-    initialModel : Model
-    initialModel =
-        { dnd = system.model
-        , items = preparedData
-        }
+    comparator : Item -> Item -> Bool
+    comparator item1 item2 =
+        item1.group == item2.group
+
+    setter : Item -> Item -> Item
+    setter item1 item2 =
+        { item2 | group = item1.group }
 
 -}
-type Model
-    = Model (Maybe State)
+type Config item
+    = Config (Settings item) (Options item)
 
 
-type alias State =
-    { dragIndex : DragIndex
-    , dropIndex : DropIndex
-    , moveCounter : Int
-    , startPosition : Position
-    , currentPosition : Position
-    , translateVector : Position
-    , dragElementId : DragElementId
-    , dropElementId : DropElementId
-    , dragElement : Maybe Browser.Dom.Element
-    , dropElement : Maybe Browser.Dom.Element
+type alias Settings item =
+    { listen : Listen
+    , operation : Operation
+    , groups :
+        { listen : Listen
+        , operation : Operation
+        , comparator : item -> item -> Bool
+        , setter : item -> item -> item
+        }
     }
+
+
+type alias Options item =
+    { hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
+    , customGhostProperties : List String
+    }
+
+
+config : Settings item -> Config item
+config settings =
+    Config settings defaultOptions
+
+
+defaultOptions : Options item
+defaultOptions =
+    { hookItemsBeforeListUpdate = \_ _ list -> list
+    , customGhostProperties = [ "width", "height", "position" ]
+    }
+
+
+{-| Represents the event for which the list sorting is available.
+
+  - `OnDrag`: The list will be sorted when the ghost element is being dragged over a drop target item.
+
+  - `OnDrop`: The list will be sorted when the ghost element is dropped on a drop target item.
+
+-}
+type Listen
+    = OnDrag
+    | OnDrop
+
+
+{-| Represents the list sort operation.
+Detailed comparisons can be found here:
+[sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
+and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
+
+  - `InsertAfter`: The drag source item will be inserted after the drop target item.
+
+  - `InsertBefore`: The drag source item will be inserted before the drop target item.
+
+  - `Rotate`: The items between the drag source and the drop target items will be circularly shifted.
+
+  - `Swap`: The drag source and the drop target items will be swapped.
+
+  - `Unaltered`: The list items will keep their initial order.
+
+-}
+type Operation
+    = InsertAfter
+    | InsertBefore
+    | Rotate
+    | Swap
+    | Unaltered
+
+
+
+-- Options
+
+
+hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item -> Config item
+hookItemsBeforeListUpdate hook (Config settings options) =
+    Config settings { options | hookItemsBeforeListUpdate = hook }
+
+
+ghostProperties : List String -> Config item -> Config item
+ghostProperties properties (Config settings options) =
+    Config settings { options | customGhostProperties = properties }
 
 
 {-| A `System` encapsulates:
@@ -351,116 +455,50 @@ And now the `System` is a wrapper type around the list item and our message type
         DnDList.Groups.create config MyMsg
 
 -}
-create : Config item -> (Msg -> msg) -> System item msg
-create config toMsg =
+create : (Msg -> msg) -> Config item -> System item msg
+create toMsg configuration =
     { model = Model Nothing
     , subscriptions = subscriptions toMsg
-    , update = update config toMsg
+    , update = update configuration toMsg
     , dragEvents = dragEvents toMsg
     , dropEvents = dropEvents toMsg
-    , ghostStyles = ghostStyles
+    , ghostStyles = ghostStyles configuration
     , info = info
     }
 
 
-{-| Represents the `System`'s configuration.
+{-| Represents the internal model of the current drag and drop features.
+It will be `Nothing` if there is no ongoing dragging.
+You should set it in your model and initialize through the `System`'s `model` field.
 
-  - `beforeUpdate`: This is a hook and gives you access to your list before it will be sorted.
-    The first number is the drag index, the second number is the drop index.
-    The [Towers of Hanoi](https://annaghi.github.io/dnd-list/gallery/hanoi) uses this hook to update the disks' `tower` property.
-
-  - `listen`: This setting is for the operation performing on the _same group_.
-    The items can listen for drag events or for drop events.
-    In the first case the list will be sorted again and again while the mouse moves over the different drop target items.
-    In the second case the list will be sorted only once on that drop target where the mouse was finally released.
-
-  - `operation`: This setting is for the operation performing on the _same group_.
-    Different kinds of sort operations can be performed on the list.
-    You can start to analyze them with
-    [sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
-    and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
-
-  - `groups`: This setting is for the operation performing on _different groups_,
-    when the drag source and the drop target belong to different groups.
-    To have a better understanding of how this works
-    see [sorting between groups on drag](https://annaghi.github.io/dnd-list/config-groups/operations-drag)
-    and [sorting between groups on drop](https://annaghi.github.io/dnd-list/config-groups/operations-drop).
-      - `listen`: Same as the plain `listen` but applied when transferring items between groups.
-      - `operation`: Same as the plain `operation` but applied when transferring items between groups.
-      - `comparator`: You should provide this function, which determines if two items are from different groups.
-      - `setter`: You should provide this function, which updates the second item's group by the first item's group.
-
-This is our configuration with a void `beforeUpdate`:
-
-    config : DnDList.Groups.Config Item
-    config =
-        { beforeUpdate = \_ _ list -> list
-        , listen = DnDList.Groups.OnDrag
-        , operation = DnDList.Groups.Rotate
-        , groups =
-            { listen = DnDList.Groups.OnDrag
-            , operation = DnDList.Groups.InsertBefore
-            , comparator = comparator
-            , setter = setter
-            }
+    type alias Model =
+        { dnd : DnDList.Groups.Model
+        , items : List Item
         }
 
-    comparator : Item -> Item -> Bool
-    comparator item1 item2 =
-        item1.group == item2.group
-
-    setter : Item -> Item -> Item
-    setter item1 item2 =
-        { item2 | group = item1.group }
+    initialModel : Model
+    initialModel =
+        { dnd = system.model
+        , items = preparedData
+        }
 
 -}
-type alias Config item =
-    { beforeUpdate : DragIndex -> DropIndex -> List item -> List item
-    , listen : Listen
-    , operation : Operation
-    , groups :
-        { listen : Listen
-        , operation : Operation
-        , comparator : item -> item -> Bool
-        , setter : item -> item -> item
-        }
+type Model
+    = Model (Maybe State)
+
+
+type alias State =
+    { dragIndex : DragIndex
+    , dropIndex : DropIndex
+    , moveCounter : Int
+    , startPosition : Coordinates
+    , currentPosition : Coordinates
+    , translateVector : Coordinates
+    , dragElementId : DragElementId
+    , dropElementId : DropElementId
+    , dragElement : Maybe Browser.Dom.Element
+    , dropElement : Maybe Browser.Dom.Element
     }
-
-
-{-| Represents the event for which the list sorting is available.
-
-  - `OnDrag`: The list will be sorted when the ghost element is being dragged over a drop target item.
-
-  - `OnDrop`: The list will be sorted when the ghost element is dropped on a drop target item.
-
--}
-type Listen
-    = OnDrag
-    | OnDrop
-
-
-{-| Represents the list sort operation.
-Detailed comparisons can be found here:
-[sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
-and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
-
-  - `InsertAfter`: The drag source item will be inserted after the drop target item.
-
-  - `InsertBefore`: The drag source item will be inserted before the drop target item.
-
-  - `Rotate`: The items between the drag source and the drop target items will be circularly shifted.
-
-  - `Swap`: The drag source and the drop target items will be swapped.
-
-  - `Unaltered`: The list items will keep their initial order.
-
--}
-type Operation
-    = InsertAfter
-    | InsertBefore
-    | Rotate
-    | Swap
-    | Unaltered
 
 
 {-| Represents the information about the drag source and the drop target items.
@@ -545,8 +583,8 @@ type alias Info =
     , dropElementId : DropElementId
     , dragElement : Browser.Dom.Element
     , dropElement : Browser.Dom.Element
-    , startPosition : Position
-    , currentPosition : Position
+    , startPosition : Coordinates
+    , currentPosition : Coordinates
     }
 
 
@@ -580,13 +618,13 @@ It should be wrapped within our message constructor:
 
 -}
 type Msg
-    = DownDragItem DragIndex DragElementId Position
+    = DownDragItem DragIndex DragElementId Coordinates
     | InBetweenMsg InBetweenMsg
     | UpDocument
 
 
 type InBetweenMsg
-    = MoveDocument Position
+    = MoveDocument Coordinates
     | OverDropItem DropIndex DropElementId
     | EnterDropItem
     | LeaveDropItem
@@ -611,7 +649,7 @@ subscriptions toMsg (Model model) =
 
 
 update : Config item -> (Msg -> msg) -> Msg -> Model -> List item -> ( List item, Model, Cmd msg )
-update config toMsg msg (Model model) list =
+update (Config settings options) toMsg msg (Model model) list =
     case msg of
         DownDragItem dragIndex dragElementId xy ->
             ( list
@@ -622,7 +660,7 @@ update config toMsg msg (Model model) list =
                     , moveCounter = 0
                     , startPosition = xy
                     , currentPosition = xy
-                    , translateVector = Position 0 0
+                    , translateVector = Coordinates 0 0
                     , dragElementId = dragElementId
                     , dropElementId = dragElementId
                     , dragElement = Nothing
@@ -636,7 +674,7 @@ update config toMsg msg (Model model) list =
                 Just state ->
                     let
                         ( newList, newState, newCmd ) =
-                            inBetweenUpdate config list inBetweenMsg state
+                            inBetweenUpdate settings options list inBetweenMsg state
                     in
                     ( newList, Model (Just newState), Cmd.map (InBetweenMsg >> toMsg) newCmd )
 
@@ -650,20 +688,20 @@ update config toMsg msg (Model model) list =
                         let
                             equalGroups : Bool
                             equalGroups =
-                                Internal.Groups.equalGroups config.groups.comparator state.dragIndex state.dropIndex list
+                                Internal.Groups.equalGroups settings.groups.comparator state.dragIndex state.dropIndex list
                         in
-                        if config.listen == OnDrop && equalGroups then
+                        if settings.listen == OnDrop && equalGroups then
                             ( list
-                                |> config.beforeUpdate state.dragIndex state.dropIndex
-                                |> sublistUpdate config.operation state.dragIndex state.dropIndex
+                                |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                                |> groupUpdate settings.operation state.dragIndex state.dropIndex
                             , Model Nothing
                             , Cmd.none
                             )
 
-                        else if config.groups.listen == OnDrop && not equalGroups then
+                        else if settings.groups.listen == OnDrop && not equalGroups then
                             ( list
-                                |> config.beforeUpdate state.dragIndex state.dropIndex
-                                |> listUpdate config.groups.operation config.groups.comparator config.groups.setter state.dragIndex state.dropIndex
+                                |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                                |> listUpdate settings.groups.operation settings.groups.comparator settings.groups.setter state.dragIndex state.dropIndex
                             , Model Nothing
                             , Cmd.none
                             )
@@ -678,8 +716,8 @@ update config toMsg msg (Model model) list =
                     ( list, Model Nothing, Cmd.none )
 
 
-inBetweenUpdate : Config item -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd InBetweenMsg )
-inBetweenUpdate config list msg state =
+inBetweenUpdate : Settings item -> Options item -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd InBetweenMsg )
+inBetweenUpdate settings options list msg state =
     case msg of
         MoveDocument xy ->
             ( list
@@ -707,21 +745,21 @@ inBetweenUpdate config list msg state =
                 let
                     equalGroups : Bool
                     equalGroups =
-                        Internal.Groups.equalGroups config.groups.comparator state.dragIndex state.dropIndex list
+                        Internal.Groups.equalGroups settings.groups.comparator state.dragIndex state.dropIndex list
                 in
-                if config.listen == OnDrag && equalGroups then
+                if settings.listen == OnDrag && equalGroups then
                     ( list
-                        |> config.beforeUpdate state.dragIndex state.dropIndex
-                        |> sublistUpdate config.operation state.dragIndex state.dropIndex
-                    , stateUpdate config.operation state.dropIndex state
+                        |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                        |> groupUpdate settings.operation state.dragIndex state.dropIndex
+                    , stateUpdate settings.operation state.dropIndex state
                     , Cmd.none
                     )
 
-                else if config.groups.listen == OnDrag && not equalGroups then
+                else if settings.groups.listen == OnDrag && not equalGroups then
                     ( list
-                        |> config.beforeUpdate state.dragIndex state.dropIndex
-                        |> listUpdate config.groups.operation config.groups.comparator config.groups.setter state.dragIndex state.dropIndex
-                    , stateUpdate config.groups.operation state.dropIndex state
+                        |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                        |> listUpdate settings.groups.operation settings.groups.comparator settings.groups.setter state.dragIndex state.dropIndex
+                    , stateUpdate settings.groups.operation state.dropIndex state
                     , Cmd.none
                     )
 
@@ -759,7 +797,7 @@ inBetweenUpdate config list msg state =
             ( list
             , { state
                 | translateVector =
-                    Position
+                    Coordinates
                         (state.currentPosition.x - state.startPosition.x)
                         (state.currentPosition.y - state.startPosition.y)
               }
@@ -802,8 +840,8 @@ stateUpdate operation dropIndex state =
             { state | moveCounter = 0 }
 
 
-sublistUpdate : Operation -> DragIndex -> DropIndex -> List item -> List item
-sublistUpdate operation dragIndex dropIndex list =
+groupUpdate : Operation -> DragIndex -> DropIndex -> List item -> List item
+groupUpdate operation dragIndex dropIndex list =
     case operation of
         InsertAfter ->
             Internal.Operations.insertAfter dragIndex dropIndex list
@@ -883,13 +921,13 @@ dropEvents toMsg dropIndex dropElementId =
 -- STYLES
 
 
-ghostStyles : Model -> List (Html.Attribute msg)
-ghostStyles (Model model) =
+ghostStyles : Config item -> Model -> List (Html.Attribute msg)
+ghostStyles (Config _ { customGhostProperties }) (Model model) =
     case model of
         Just state ->
             case state.dragElement of
                 Just dragElement ->
-                    transform state.translateVector dragElement :: baseStyles dragElement
+                    transformDeclaration state.translateVector dragElement :: Internal.GhostStyles.baseDeclarations customGhostProperties dragElement
 
                 _ ->
                     []
@@ -898,30 +936,9 @@ ghostStyles (Model model) =
             []
 
 
-transform : Position -> Browser.Dom.Element -> Html.Attribute msg
-transform { x, y } { element } =
+transformDeclaration : Coordinates -> Browser.Dom.Element -> Html.Attribute msg
+transformDeclaration { x, y } { element } =
     Html.Attributes.style "transform" <|
-        translate
+        Internal.GhostStyles.translate
             (round (x + element.x))
             (round (y + element.y))
-
-
-baseStyles : Browser.Dom.Element -> List (Html.Attribute msg)
-baseStyles { element } =
-    [ Html.Attributes.style "position" "fixed"
-    , Html.Attributes.style "top" "0"
-    , Html.Attributes.style "left" "0"
-    , Html.Attributes.style "height" (px (round element.height))
-    , Html.Attributes.style "width" (px (round element.width))
-    , Html.Attributes.style "pointer-events" "none"
-    ]
-
-
-translate : Int -> Int -> String
-translate x y =
-    "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"
-
-
-px : Int -> String
-px n =
-    String.fromInt n ++ "px"

@@ -1,5 +1,8 @@
 module Internal.Types exposing (..)
 
+import Dict
+import Html
+
 
 type alias DragIndex =
     Int
@@ -17,7 +20,7 @@ type alias DropElementId =
     String
 
 
-type alias Position =
+type alias Coordinates =
     { x : Float
     , y : Float
     }

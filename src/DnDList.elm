@@ -1,9 +1,7 @@
 module DnDList exposing
     ( Config, config
-    , freeMovement, horizontalMovement, verticalMovement
-    , listenOnDrag, listenOnDrop
-    , withInsertAfter, withInsertBefore, withRotate, withSwap, withUnaltered
-    , hookItemsBeforeListUpdate
+    , Movement(..), Listen(..), Operation(..)
+    , hookItemsBeforeListUpdate, ghostProperties
     , System, create, Msg
     , Model
     , Info
@@ -51,11 +49,8 @@ You can add position styling attributes to this element using the`System` object
 # Config
 
 @docs Config, config
-@docs freeMovement, horizontalMovement, verticalMovement
-@docs listenOnDrag, listenOnDrop
-@docs withInsertAfter, withInsertBefore, withRotate, withSwap, withUnaltered
-
-@docs hookItemsBeforeListUpdate
+@docs Movement, Listen, Operation
+@docs hookItemsBeforeListUpdate, ghostProperties
 
 
 # System
@@ -229,6 +224,7 @@ import Html
 import Html.Attributes
 import Html.Events
 import Internal.Decoders
+import Internal.GhostStyles
 import Internal.Operations
 import Internal.Types exposing (..)
 import Json.Decode
@@ -265,28 +261,31 @@ This is our configuration with a void `hookItemsBeforeListUpdate`:
 
 -}
 type Config item
-    = Config (Options item)
+    = Config Settings (Options item)
 
 
-type alias Options item =
-    { hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
-    , movement : Movement
+type alias Settings =
+    { movement : Movement
     , listen : Listen
     , operation : Operation
     }
 
 
-config : Config item
-config =
-    Config defaultOptions
+type alias Options item =
+    { hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
+    , customGhostProperties : List String
+    }
+
+
+config : Settings -> Config item
+config settings =
+    Config settings defaultOptions
 
 
 defaultOptions : Options item
 defaultOptions =
     { hookItemsBeforeListUpdate = \_ _ list -> list
-    , movement = Free
-    , listen = OnDrag
-    , operation = Rotate
+    , customGhostProperties = [ "width", "height", "position" ]
     }
 
 
@@ -306,21 +305,6 @@ type Movement
     | Vertical
 
 
-freeMovement : Config item -> Config item
-freeMovement (Config options) =
-    Config { options | movement = Free }
-
-
-horizontalMovement : Config item -> Config item
-horizontalMovement (Config options) =
-    Config { options | movement = Horizontal }
-
-
-verticalMovement : Config item -> Config item
-verticalMovement (Config options) =
-    Config { options | movement = Vertical }
-
-
 {-| Represents the event for which the list sorting is available.
 
   - `OnDrag`: The list will be sorted when the ghost element is being dragged over a drop target item.
@@ -331,16 +315,6 @@ verticalMovement (Config options) =
 type Listen
     = OnDrag
     | OnDrop
-
-
-listenOnDrag : Config item -> Config item
-listenOnDrag (Config options) =
-    Config { options | listen = OnDrag }
-
-
-listenOnDrop : Config item -> Config item
-listenOnDrop (Config options) =
-    Config { options | listen = OnDrop }
 
 
 {-| Represents the list sort operation.
@@ -367,38 +341,18 @@ type Operation
     | Unaltered
 
 
-withInsertAfter : Config item -> Config item
-withInsertAfter (Config options) =
-    Config { options | operation = InsertAfter }
 
-
-withInsertBefore : Config item -> Config item
-withInsertBefore (Config options) =
-    Config { options | operation = InsertBefore }
-
-
-withRotate : Config item -> Config item
-withRotate (Config options) =
-    Config { options | operation = Rotate }
-
-
-withSwap : Config item -> Config item
-withSwap (Config options) =
-    Config { options | operation = Swap }
-
-
-withUnaltered : Config item -> Config item
-withUnaltered (Config options) =
-    Config { options | operation = Unaltered }
-
-
-
--- Hooks
+-- Options
 
 
 hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item -> Config item
-hookItemsBeforeListUpdate handler (Config options) =
-    Config { options | hookItemsBeforeListUpdate = handler }
+hookItemsBeforeListUpdate hook (Config settings options) =
+    Config settings { options | hookItemsBeforeListUpdate = hook }
+
+
+ghostProperties : List String -> Config item -> Config item
+ghostProperties properties (Config settings options) =
+    Config settings { options | customGhostProperties = properties }
 
 
 {-| A `System` encapsulates:
@@ -441,8 +395,8 @@ Now the `System` is a wrapper type around the list item and our message types:
         DnDList.create config MyMsg
 
 -}
-create : Config item -> (Msg -> msg) -> System item msg
-create configuration toMsg =
+create : (Msg -> msg) -> Config item -> System item msg
+create toMsg configuration =
     { model = Model Nothing
     , subscriptions = subscriptions toMsg
     , update = update configuration toMsg
@@ -477,9 +431,9 @@ type alias State =
     { dragIndex : DragIndex
     , dropIndex : DropIndex
     , moveCounter : Int
-    , startPosition : Position
-    , currentPosition : Position
-    , translateVector : Position
+    , startPosition : Coordinates
+    , currentPosition : Coordinates
+    , translateVector : Coordinates
     , dragElementId : DragElementId
     , dropElementId : DropElementId
     , dragElement : Maybe Browser.Dom.Element
@@ -569,8 +523,8 @@ type alias Info =
     , dropElementId : DropElementId
     , dragElement : Browser.Dom.Element
     , dropElement : Browser.Dom.Element
-    , startPosition : Position
-    , currentPosition : Position
+    , startPosition : Coordinates
+    , currentPosition : Coordinates
     }
 
 
@@ -604,13 +558,13 @@ It should be wrapped within our message constructor:
 
 -}
 type Msg
-    = DownDragItem DragIndex DragElementId Position
+    = DownDragItem DragIndex DragElementId Coordinates
     | InBetweenMsg InBetweenMsg
     | UpDocument
 
 
 type InBetweenMsg
-    = MoveDocument Position
+    = MoveDocument Coordinates
     | OverDropItem DropIndex DropElementId
     | EnterDropItem
     | LeaveDropItem
@@ -635,7 +589,7 @@ subscriptions toMsg (Model model) =
 
 
 update : Config item -> (Msg -> msg) -> Msg -> Model -> List item -> ( List item, Model, Cmd msg )
-update (Config options) toMsg msg (Model model) list =
+update (Config settings options) toMsg msg (Model model) list =
     case msg of
         DownDragItem dragIndex dragElementId xy ->
             ( list
@@ -646,7 +600,7 @@ update (Config options) toMsg msg (Model model) list =
                     , moveCounter = 0
                     , startPosition = xy
                     , currentPosition = xy
-                    , translateVector = Position 0 0
+                    , translateVector = Coordinates 0 0
                     , dragElementId = dragElementId
                     , dropElementId = dragElementId
                     , dragElement = Nothing
@@ -660,7 +614,7 @@ update (Config options) toMsg msg (Model model) list =
                 Just state ->
                     let
                         ( newList, newState, newCmd ) =
-                            inBetweenUpdate options list inBetweenMsg state
+                            inBetweenUpdate settings options list inBetweenMsg state
                     in
                     ( newList, Model (Just newState), Cmd.map (InBetweenMsg >> toMsg) newCmd )
 
@@ -668,12 +622,12 @@ update (Config options) toMsg msg (Model model) list =
                     ( list, Model Nothing, Cmd.none )
 
         UpDocument ->
-            case ( model, options.listen ) of
+            case ( model, settings.listen ) of
                 ( Just state, OnDrop ) ->
                     if state.dragIndex /= state.dropIndex then
                         ( list
                             |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
-                            |> listUpdate options.operation state.dragIndex state.dropIndex
+                            |> listUpdate settings.operation state.dragIndex state.dropIndex
                         , Model Nothing
                         , Cmd.none
                         )
@@ -685,8 +639,8 @@ update (Config options) toMsg msg (Model model) list =
                     ( list, Model Nothing, Cmd.none )
 
 
-inBetweenUpdate : Options item -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd InBetweenMsg )
-inBetweenUpdate options list msg state =
+inBetweenUpdate : Settings -> Options item -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd InBetweenMsg )
+inBetweenUpdate settings options list msg state =
     case msg of
         MoveDocument xy ->
             ( list
@@ -711,12 +665,12 @@ inBetweenUpdate options list msg state =
 
         EnterDropItem ->
             if state.moveCounter > 1 && state.dragIndex /= state.dropIndex then
-                case options.listen of
+                case settings.listen of
                     OnDrag ->
                         ( list
                             |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
-                            |> listUpdate options.operation state.dragIndex state.dropIndex
-                        , stateUpdate options.operation state.dropIndex state
+                            |> listUpdate settings.operation state.dragIndex state.dropIndex
+                        , stateUpdate settings.operation state.dropIndex state
                         , Cmd.none
                         )
 
@@ -754,7 +708,7 @@ inBetweenUpdate options list msg state =
             ( list
             , { state
                 | translateVector =
-                    Position
+                    Coordinates
                         (state.currentPosition.x - state.startPosition.x)
                         (state.currentPosition.y - state.startPosition.y)
               }
@@ -843,12 +797,12 @@ dropEvents toMsg dropIndex dropElementId =
 
 
 ghostStyles : Config item -> Model -> List (Html.Attribute msg)
-ghostStyles (Config options) (Model model) =
+ghostStyles (Config { movement } { customGhostProperties }) (Model model) =
     case model of
         Just state ->
             case state.dragElement of
                 Just dragElement ->
-                    transform options.movement state.translateVector dragElement :: baseStyles dragElement
+                    transformDeclaration movement state.translateVector dragElement :: Internal.GhostStyles.baseDeclarations customGhostProperties dragElement
 
                 _ ->
                     []
@@ -857,44 +811,23 @@ ghostStyles (Config options) (Model model) =
             []
 
 
-transform : Movement -> Position -> Browser.Dom.Element -> Html.Attribute msg
-transform movement { x, y } { element } =
+transformDeclaration : Movement -> Coordinates -> Browser.Dom.Element -> Html.Attribute msg
+transformDeclaration movement { x, y } { element } =
     case movement of
         Horizontal ->
             Html.Attributes.style "transform" <|
-                translate
+                Internal.GhostStyles.translate
                     (round (x + element.x))
                     (round element.y)
 
         Vertical ->
             Html.Attributes.style "transform" <|
-                translate
+                Internal.GhostStyles.translate
                     (round element.x)
                     (round (y + element.y))
 
         Free ->
             Html.Attributes.style "transform" <|
-                translate
+                Internal.GhostStyles.translate
                     (round (x + element.x))
                     (round (y + element.y))
-
-
-baseStyles : Browser.Dom.Element -> List (Html.Attribute msg)
-baseStyles { element } =
-    [ Html.Attributes.style "position" "fixed"
-    , Html.Attributes.style "top" "0"
-    , Html.Attributes.style "left" "0"
-    , Html.Attributes.style "height" (px (round element.height))
-    , Html.Attributes.style "width" (px (round element.width))
-    , Html.Attributes.style "pointer-events" "none"
-    ]
-
-
-translate : Int -> Int -> String
-translate x y =
-    "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"
-
-
-px : Int -> String
-px n =
-    String.fromInt n ++ "px"
