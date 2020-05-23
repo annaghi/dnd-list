@@ -323,8 +323,8 @@ type alias Settings item =
 
 
 type alias Options item =
-    { hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
-    , customGhostProperties : List String
+    { customGhostProperties : List String
+    , hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
     }
 
 
@@ -335,8 +335,8 @@ config settings =
 
 defaultOptions : Options item
 defaultOptions =
-    { hookItemsBeforeListUpdate = \_ _ list -> list
-    , customGhostProperties = [ "width", "height", "position" ]
+    { customGhostProperties = [ "width", "height", "position" ]
+    , hookItemsBeforeListUpdate = \_ _ list -> list
     }
 
 
@@ -380,14 +380,14 @@ type Operation
 -- Options
 
 
-hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item -> Config item
-hookItemsBeforeListUpdate hook (Config settings options) =
-    Config settings { options | hookItemsBeforeListUpdate = hook }
-
-
 ghostProperties : List String -> Config item -> Config item
 ghostProperties properties (Config settings options) =
     Config settings { options | customGhostProperties = properties }
+
+
+hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item -> Config item
+hookItemsBeforeListUpdate hook (Config settings options) =
+    Config settings { options | hookItemsBeforeListUpdate = hook }
 
 
 {-| A `System` encapsulates:
@@ -722,22 +722,17 @@ inBetweenUpdate settings options list msg state =
         MoveDocument xy ->
             ( list
             , { state | currentPosition = xy, moveCounter = state.moveCounter + 1 }
-            , case state.dragElement of
-                Nothing ->
-                    Task.attempt GotDragItem (Browser.Dom.getElement state.dragElementId)
+            , if state.dragElement == Nothing then
+                Task.attempt GotDragItem (Browser.Dom.getElement state.dragElementId)
 
-                _ ->
-                    Cmd.none
+              else
+                Cmd.none
             )
 
         OverDropItem dropIndex dropElementId ->
             ( list
             , { state | dropIndex = dropIndex, dropElementId = dropElementId }
-            , if state.moveCounter == 0 then
-                Task.attempt GotDropItem (Browser.Dom.getElement state.dropElementId)
-
-              else
-                Cmd.none
+            , Task.attempt GotDropItem (Browser.Dom.getElement dropElementId)
             )
 
         EnterDropItem ->

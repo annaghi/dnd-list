@@ -69,6 +69,7 @@ config =
 system : DnDList.System Item Msg
 system =
     config
+        |> DnDList.ghostProperties [ "position" ]
         |> DnDList.hookItemsBeforeListUpdate updateColor
         |> DnDList.create DnDMsg
 

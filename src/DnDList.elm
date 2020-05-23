@@ -272,10 +272,10 @@ type alias Settings =
 
 
 type alias Options item msg =
-    { hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
+    { customGhostProperties : List String
+    , hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
     , hookCommandsOnDrag : Maybe (DropIndex -> List item -> msg)
     , hookCommandsOnDrop : Maybe (DropIndex -> List item -> msg)
-    , customGhostProperties : List String
     }
 
 
@@ -286,10 +286,10 @@ config settings =
 
 defaultOptions : Options item msg
 defaultOptions =
-    { hookItemsBeforeListUpdate = \_ _ list -> list
+    { customGhostProperties = [ "width", "height", "position" ]
+    , hookItemsBeforeListUpdate = \_ _ list -> list
     , hookCommandsOnDrag = Nothing
     , hookCommandsOnDrop = Nothing
-    , customGhostProperties = [ "width", "height", "position" ]
     }
 
 
@@ -349,19 +349,24 @@ type Operation
 -- Options
 
 
+ghostProperties : List String -> Config item msg -> Config item msg
+ghostProperties properties (Config settings options) =
+    Config settings { options | customGhostProperties = properties }
+
+
 hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item msg -> Config item msg
 hookItemsBeforeListUpdate hook (Config settings options) =
     Config settings { options | hookItemsBeforeListUpdate = hook }
 
 
+hookCommandsOnDrag : (DropIndex -> List item -> msg) -> Config item msg -> Config item msg
+hookCommandsOnDrag hook (Config settings options) =
+    Config settings { options | hookCommandsOnDrag = Just hook }
+
+
 hookCommandsOnDrop : (DropIndex -> List item -> msg) -> Config item msg -> Config item msg
 hookCommandsOnDrop hook (Config settings options) =
     Config settings { options | hookCommandsOnDrop = Just hook }
-
-
-ghostProperties : List String -> Config item msg -> Config item msg
-ghostProperties properties (Config settings options) =
-    Config settings { options | customGhostProperties = properties }
 
 
 {-| A `System` encapsulates:
@@ -645,17 +650,20 @@ update (Config settings options) toMsg list msg (Model model) =
                                 , Model Nothing
                                 , Cmd.none
                                   --, options.hookCommandsOnDrop
-                                  --    |> Maybe.map (\f -> Task.perform (f newList) (Task.succeed state.dropIndex))
+                                  -- |> Maybe.map (\f -> Task.perform (f state.dropIndex) (Task.succeed list))
                                   --    |> Maybe.withDefault Cmd.none
                                 )
 
                     else
                         ( list
                         , Model Nothing
-                        , Cmd.none
-                          --, options.hookCommandsOnDrop
-                          --    |> Maybe.map (\f -> Task.perform (f list) (Task.succeed state.dropIndex))
-                          --    |> Maybe.withDefault Cmd.none
+                          -- TODO Check how this and the drag hook command works together
+                          -- command on drop
+                          -- command on last drag aka drop
+                          -- command on each drag and the last one too
+                        , options.hookCommandsOnDrop
+                            |> Maybe.map (\f -> Task.perform (f state.dropIndex) (Task.succeed list))
+                            |> Maybe.withDefault Cmd.none
                         )
 
                 _ ->
@@ -668,22 +676,17 @@ inBetweenUpdate settings options list msg state =
         MoveDocument xy ->
             ( list
             , { state | currentPosition = xy, moveCounter = state.moveCounter + 1 }
-            , case state.dragElement of
-                Nothing ->
-                    Task.attempt GotDragItem (Browser.Dom.getElement state.dragElementId)
+            , if state.dragElement == Nothing then
+                Task.attempt GotDragItem (Browser.Dom.getElement state.dragElementId)
 
-                _ ->
-                    Cmd.none
+              else
+                Cmd.none
             )
 
         OverDropItem dropIndex dropElementId ->
             ( list
             , { state | dropIndex = dropIndex, dropElementId = dropElementId }
-            , if state.moveCounter == 0 then
-                Task.attempt GotDropItem (Browser.Dom.getElement state.dropElementId)
-
-              else
-                Cmd.none
+            , Task.attempt GotDropItem (Browser.Dom.getElement dropElementId)
             )
 
         EnterDropItem ->
@@ -696,7 +699,7 @@ inBetweenUpdate settings options list msg state =
                         , stateUpdate settings.operation state.dropIndex state
                         , Cmd.none
                           --, options.hookCommandsOnDrag
-                          --    |> Maybe.map (\f -> Task.perform (f state.dropIndex) (Task.succeed newList))
+                          -- |> Maybe.map (\f -> Task.perform (f state.dropIndex) (Task.succeed list))
                           --    |> Maybe.withDefault Cmd.none
                         )
 
