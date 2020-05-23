@@ -48,18 +48,20 @@ data =
 -- SYSTEM
 
 
-config : DnDList.Config Disk
+config : DnDList.Config Disk Msg
 config =
-    { beforeUpdate = updateTower
-    , movement = DnDList.Free
-    , listen = DnDList.OnDrop
-    , operation = DnDList.InsertAfter
-    }
+    DnDList.config
+        { movement = DnDList.Free
+        , listen = DnDList.OnDrop
+        , operation = DnDList.InsertAfter
+        }
 
 
 system : DnDList.System Disk Msg
 system =
-    DnDList.create config MyMsg
+    config
+        |> DnDList.hookItemsBeforeListUpdate updateTower
+        |> DnDList.create DnDMsg
 
 
 updateTower : Int -> Int -> List Disk -> List Disk
@@ -89,17 +91,17 @@ updateTower dragIndex dropIndex list =
 
 
 type alias Model =
-    { dnd : DnDList.Model
-    , disks : List Disk
+    { disks : List Disk
     , solved : Bool
+    , dnd : DnDList.Model
     }
 
 
 initialModel : Model
 initialModel =
-    { dnd = system.model
-    , disks = data
+    { disks = data
     , solved = False
+    , dnd = system.model
     }
 
 
@@ -122,23 +124,23 @@ subscriptions model =
 
 
 type Msg
-    = MyMsg DnDList.Msg
+    = DnDMsg DnDList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case message of
-        MyMsg msg ->
+update msg model =
+    case msg of
+        DnDMsg dndMsg ->
             let
-                ( dnd, disks ) =
-                    system.update msg model.dnd model.disks
+                ( disks, dndModel, dndCmd ) =
+                    system.update model.disks dndMsg model.dnd
 
                 solved : Bool
                 solved =
                     disks |> List.take 3 |> List.all (\disk -> disk.startColor == "transparent")
             in
-            ( { model | dnd = dnd, disks = disks, solved = solved }
-            , system.commands dnd
+            ( { model | disks = disks, solved = solved, dnd = dndModel }
+            , dndCmd
             )
 
 

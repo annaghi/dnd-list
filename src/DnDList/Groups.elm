@@ -247,7 +247,7 @@ import Html
 import Html.Attributes
 import Html.Events
 import Internal.Decoders
-import Internal.GhostStyles
+import Internal.Ghost
 import Internal.Groups
 import Internal.Operations
 import Internal.Types exposing (..)
@@ -404,7 +404,7 @@ Later we will learn more about the [Info object](#info) and the [System fields](
 type alias System item msg =
     { model : Model
     , subscriptions : Model -> Sub msg
-    , update : Msg -> Model -> List item -> ( List item, Model, Cmd msg )
+    , update : List item -> Msg -> Model -> ( List item, Model, Cmd msg )
     , dragEvents : DragIndex -> DragElementId -> List (Html.Attribute msg)
     , dropEvents : DropIndex -> DropElementId -> List (Html.Attribute msg)
     , ghostStyles : Model -> List (Html.Attribute msg)
@@ -648,8 +648,8 @@ subscriptions toMsg (Model model) =
         Sub.none
 
 
-update : Config item -> (Msg -> msg) -> Msg -> Model -> List item -> ( List item, Model, Cmd msg )
-update (Config settings options) toMsg msg (Model model) list =
+update : Config item -> (Msg -> msg) -> List item -> Msg -> Model -> ( List item, Model, Cmd msg )
+update (Config settings options) toMsg list msg (Model model) =
     case msg of
         DownDragItem dragIndex dragElementId xy ->
             ( list
@@ -927,7 +927,7 @@ ghostStyles (Config _ { customGhostProperties }) (Model model) =
         Just state ->
             case state.dragElement of
                 Just dragElement ->
-                    transformDeclaration state.translateVector dragElement :: Internal.GhostStyles.baseDeclarations customGhostProperties dragElement
+                    transformDeclaration state.translateVector dragElement :: Internal.Ghost.baseDeclarations customGhostProperties dragElement
 
                 _ ->
                     []
@@ -939,6 +939,6 @@ ghostStyles (Config _ { customGhostProperties }) (Model model) =
 transformDeclaration : Coordinates -> Browser.Dom.Element -> Html.Attribute msg
 transformDeclaration { x, y } { element } =
     Html.Attributes.style "transform" <|
-        Internal.GhostStyles.translate
+        Internal.Ghost.translate
             (round (x + element.x))
             (round (y + element.y))

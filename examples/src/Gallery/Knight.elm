@@ -66,18 +66,20 @@ knightMoves =
 -- SYSTEM
 
 
-config : DnDList.Config Square
+config : DnDList.Config Square Msg
 config =
-    { beforeUpdate = beforeUpdate
-    , movement = DnDList.Free
-    , listen = DnDList.OnDrop
-    , operation = DnDList.Swap
-    }
+    DnDList.config
+        { movement = DnDList.Free
+        , listen = DnDList.OnDrop
+        , operation = DnDList.Swap
+        }
 
 
 system : DnDList.System Square Msg
 system =
-    DnDList.create config MyMsg
+    config
+        |> DnDList.hookItemsBeforeListUpdate beforeUpdate
+        |> DnDList.create DnDMsg
 
 
 beforeUpdate : Int -> Int -> List Square -> List Square
@@ -134,23 +136,23 @@ subscriptions model =
 
 
 type Msg
-    = MyMsg DnDList.Msg
+    = DnDMsg DnDList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case message of
-        MyMsg msg ->
+update msg model =
+    case msg of
+        DnDMsg dndMsg ->
             let
-                ( dnd, squares ) =
-                    system.update msg model.dnd model.squares
+                ( squares, dndModel, dndCmd ) =
+                    system.update model.squares dndMsg model.dnd
 
                 solved : Bool
                 solved =
                     (squares |> List.filter (\square -> square == "×") |> List.length) == 24
             in
-            ( { model | squares = squares, solved = solved, dnd = dnd }
-            , system.commands dnd
+            ( { model | squares = squares, solved = solved, dnd = dndModel }
+            , dndCmd
             )
 
 

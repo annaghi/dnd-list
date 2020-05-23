@@ -1,9 +1,10 @@
-module Introduction.Margins exposing (Model, Msg, initialModel, main, subscriptions, update, view)
+module Config.Flat.Movement.FreeOnDrag exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Html.Events
 
 
 
@@ -30,7 +31,8 @@ type alias Item =
 
 data : List Item
 data =
-    [ "A", "B", "C", "D" ]
+    List.range 1 9
+        |> List.map String.fromInt
 
 
 
@@ -57,6 +59,7 @@ system =
 
 type alias Model =
     { items : List Item
+    , affected : List Int
     , dnd : DnDList.Model
     }
 
@@ -64,6 +67,7 @@ type alias Model =
 initialModel : Model
 initialModel =
     { items = data
+    , affected = []
     , dnd = system.model
     }
 
@@ -88,6 +92,7 @@ subscriptions model =
 
 type Msg
     = DnDMsg DnDList.Msg
+    | ClearAffected
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -97,10 +102,26 @@ update msg model =
             let
                 ( items, dndModel, dndCmd ) =
                     system.update model.items dndMsg model.dnd
+
+                affected : List Int
+                affected =
+                    case system.info dndModel of
+                        Just { dragIndex, dropIndex } ->
+                            if dragIndex /= dropIndex then
+                                dragIndex :: dropIndex :: model.affected
+
+                            else
+                                model.affected
+
+                        _ ->
+                            model.affected
             in
-            ( { model | items = items, dnd = dndModel }
+            ( { model | dnd = dndModel, items = items, affected = affected }
             , dndCmd
             )
+
+        ClearAffected ->
+            ( { model | affected = [] }, Cmd.none )
 
 
 
@@ -109,46 +130,49 @@ update msg model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section []
+    Html.section
+        [ Html.Events.onMouseDown ClearAffected ]
         [ model.items
-            |> List.indexedMap (itemView model.dnd)
+            |> List.indexedMap (itemView model.dnd model.affected)
             |> Html.div containerStyles
         , ghostView model.dnd model.items
         ]
 
 
-itemView : DnDList.Model -> Int -> Item -> Html.Html Msg
-itemView dnd index item =
+itemView : DnDList.Model -> List Int -> Int -> Item -> Html.Html Msg
+itemView dnd affected index item =
     let
         itemId : String
         itemId =
-            "id-" ++ item
+            "frdrag-" ++ item
+
+        attrs : List (Html.Attribute msg)
+        attrs =
+            Html.Attributes.id itemId
+                :: itemStyles
+                ++ (if List.member index affected then
+                        affectedStyles
+
+                    else
+                        []
+                   )
     in
     case system.info dnd of
         Just { dragIndex } ->
             if dragIndex /= index then
                 Html.div
-                    [ Html.Attributes.style "margin" "2em" ]
-                    [ Html.div
-                        (Html.Attributes.id itemId :: itemStyles green ++ system.dropEvents index itemId)
-                        [ Html.text item ]
-                    ]
+                    (attrs ++ system.dropEvents index itemId)
+                    [ Html.text item ]
 
             else
                 Html.div
-                    [ Html.Attributes.style "margin" "2em" ]
-                    [ Html.div
-                        (Html.Attributes.id itemId :: itemStyles "dimgray")
-                        []
-                    ]
+                    (attrs ++ placeholderStyles)
+                    []
 
         Nothing ->
             Html.div
-                [ Html.Attributes.style "margin" "2em" ]
-                [ Html.div
-                    (Html.Attributes.id itemId :: itemStyles green ++ system.dragEvents index itemId)
-                    [ Html.text item ]
-                ]
+                (attrs ++ system.dragEvents index itemId)
+                [ Html.text item ]
 
 
 ghostView : DnDList.Model -> List Item -> Html.Html Msg
@@ -162,25 +186,11 @@ ghostView dnd items =
     case maybeDragItem of
         Just item ->
             Html.div
-                (itemStyles ghostGreen ++ system.ghostStyles dnd)
+                (itemStyles ++ ghostStyles ++ system.ghostStyles dnd)
                 [ Html.text item ]
 
         Nothing ->
             Html.text ""
-
-
-
--- COLORS
-
-
-green : String
-green =
-    "#3da565"
-
-
-ghostGreen : String
-ghostGreen =
-    "#2f804e"
 
 
 
@@ -189,22 +199,37 @@ ghostGreen =
 
 containerStyles : List (Html.Attribute msg)
 containerStyles =
-    [ Html.Attributes.style "display" "flex"
-    , Html.Attributes.style "flex-wrap" "wrap"
-    , Html.Attributes.style "align-items" "center"
+    [ Html.Attributes.style "display" "grid"
+    , Html.Attributes.style "grid-template-columns" "50px 50px 50px"
+    , Html.Attributes.style "grid-template-rows" "50px 50px 50px"
+    , Html.Attributes.style "grid-gap" "1em"
     , Html.Attributes.style "justify-content" "center"
     ]
 
 
-itemStyles : String -> List (Html.Attribute msg)
-itemStyles color =
-    [ Html.Attributes.style "width" "5rem"
-    , Html.Attributes.style "height" "5rem"
-    , Html.Attributes.style "background-color" color
+itemStyles : List (Html.Attribute msg)
+itemStyles =
+    [ Html.Attributes.style "background-color" "#aa1e9d"
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
+    , Html.Attributes.style "font-size" "1.2em"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
     ]
+
+
+placeholderStyles : List (Html.Attribute msg)
+placeholderStyles =
+    [ Html.Attributes.style "background-color" "dimgray" ]
+
+
+affectedStyles : List (Html.Attribute msg)
+affectedStyles =
+    [ Html.Attributes.style "background-color" "#691361" ]
+
+
+ghostStyles : List (Html.Attribute msg)
+ghostStyles =
+    [ Html.Attributes.style "background-color" "#1e9daa" ]

@@ -59,16 +59,16 @@ solution =
 
 config : DnDList.Groups.Config Item
 config =
-    { beforeUpdate = \_ _ list -> list
-    , listen = DnDList.Groups.OnDrag
-    , operation = DnDList.Groups.Swap
-    , groups =
-        { listen = DnDList.Groups.OnDrop
+    DnDList.Groups.config
+        { listen = DnDList.Groups.OnDrag
         , operation = DnDList.Groups.Swap
-        , comparator = comparator
-        , setter = setter
+        , groups =
+            { listen = DnDList.Groups.OnDrop
+            , operation = DnDList.Groups.Swap
+            , comparator = comparator
+            , setter = setter
+            }
         }
-    }
 
 
 comparator : Item -> Item -> Bool
@@ -83,7 +83,7 @@ setter item1 item2 =
 
 system : DnDList.Groups.System Item Msg
 system =
-    DnDList.Groups.create config MyMsg
+    DnDList.Groups.create DnDMsg config
 
 
 
@@ -91,15 +91,15 @@ system =
 
 
 type alias Model =
-    { dnd : DnDList.Groups.Model
-    , items : List Item
+    { items : List Item
+    , dnd : DnDList.Groups.Model
     }
 
 
 initialModel : Model
 initialModel =
-    { dnd = system.model
-    , items = []
+    { items = []
+    , dnd = system.model
     }
 
 
@@ -132,12 +132,12 @@ commands =
 
 type Msg
     = NewGame (List Item)
-    | MyMsg DnDList.Groups.Msg
+    | DnDMsg DnDList.Groups.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case message of
+update msg model =
+    case msg of
         NewGame shuffled ->
             ( { model
                 | items =
@@ -166,13 +166,13 @@ update message model =
             , Cmd.none
             )
 
-        MyMsg msg ->
+        DnDMsg dndMsg ->
             let
-                ( dnd, items ) =
-                    system.update msg model.dnd model.items
+                ( items, dndModel, dndCmd ) =
+                    system.update model.items dndMsg model.dnd
             in
-            ( { model | dnd = dnd, items = items }
-            , system.commands dnd
+            ( { model | items = items, dnd = dndModel }
+            , dndCmd
             )
 
 

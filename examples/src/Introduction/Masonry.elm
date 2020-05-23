@@ -47,18 +47,18 @@ colors =
 -- SYSTEM
 
 
-config : DnDList.Config Item
+config : DnDList.Config Item Msg
 config =
-    { beforeUpdate = \_ _ list -> list
-    , movement = DnDList.Free
-    , listen = DnDList.OnDrag
-    , operation = DnDList.Swap
-    }
+    DnDList.config
+        { movement = DnDList.Free
+        , listen = DnDList.OnDrag
+        , operation = DnDList.Swap
+        }
 
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.create DnDMsg config
 
 
 
@@ -74,15 +74,15 @@ type Item
 
 
 type alias Model =
-    { dnd : DnDList.Model
-    , items : List Item
+    { items : List Item
+    , dnd : DnDList.Model
     }
 
 
 initialModel : Model
 initialModel =
-    { dnd = system.model
-    , items = []
+    { items = []
+    , dnd = system.model
     }
 
 
@@ -115,12 +115,12 @@ commands =
 
 type Msg
     = NewMasonry (List Int)
-    | MyMsg DnDList.Msg
+    | DnDMsg DnDList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case message of
+update msg model =
+    case msg of
         NewMasonry widths ->
             ( { model
                 | items =
@@ -129,13 +129,13 @@ update message model =
             , Cmd.none
             )
 
-        MyMsg msg ->
+        DnDMsg dndMsg ->
             let
-                ( dnd, items ) =
-                    system.update msg model.dnd model.items
+                ( items, dndModel, dndCmd ) =
+                    system.update model.items dndMsg model.dnd
             in
-            ( { model | dnd = dnd, items = items }
-            , system.commands dnd
+            ( { model | items = items, dnd = dndModel }
+            , dndCmd
             )
 
 

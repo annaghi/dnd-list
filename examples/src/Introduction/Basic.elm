@@ -37,18 +37,18 @@ data =
 -- SYSTEM
 
 
-config : DnDList.Config Fruit
+config : DnDList.Config Fruit Msg
 config =
-    { beforeUpdate = \_ _ list -> list
-    , movement = DnDList.Free
-    , listen = DnDList.OnDrag
-    , operation = DnDList.Rotate
-    }
+    DnDList.config
+        { movement = DnDList.Free
+        , listen = DnDList.OnDrag
+        , operation = DnDList.Rotate
+        }
 
 
 system : DnDList.System Fruit Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.create DnDMsg config
 
 
 
@@ -56,15 +56,15 @@ system =
 
 
 type alias Model =
-    { dnd : DnDList.Model
-    , items : List Fruit
+    { items : List Fruit
+    , dnd : DnDList.Model
     }
 
 
 initialModel : Model
 initialModel =
-    { dnd = system.model
-    , items = data
+    { items = data
+    , dnd = system.model
     }
 
 
@@ -87,19 +87,19 @@ subscriptions model =
 
 
 type Msg
-    = MyMsg DnDList.Msg
+    = DnDMsg DnDList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case message of
-        MyMsg msg ->
+update msg model =
+    case msg of
+        DnDMsg dndMsg ->
             let
-                ( dnd, items ) =
-                    system.update msg model.dnd model.items
+                ( items, dndModel, dndCmd ) =
+                    system.update model.items dndMsg model.dnd
             in
-            ( { model | dnd = dnd, items = items }
-            , system.commands dnd
+            ( { model | items = items, dnd = dndModel }
+            , dndCmd
             )
 
 

@@ -58,18 +58,20 @@ spots =
 -- SYSTEM
 
 
-config : DnDList.Config Color
+config : DnDList.Config Color Msg
 config =
-    { beforeUpdate = \_ _ list -> list
-    , movement = DnDList.Free
-    , listen = DnDList.OnDrag
-    , operation = DnDList.Swap
-    }
+    DnDList.config
+        { movement = DnDList.Free
+        , listen = DnDList.OnDrag
+        , operation = DnDList.Swap
+        }
 
 
 system : DnDList.System Color Msg
 system =
-    DnDList.create config MyMsg
+    config
+        |> DnDList.ghostProperties [ "position" ]
+        |> DnDList.create DnDMsg
 
 
 
@@ -77,15 +79,15 @@ system =
 
 
 type alias Model =
-    { dnd : DnDList.Model
-    , colors : List Color
+    { colors : List Color
+    , dnd : DnDList.Model
     }
 
 
 initialModel : Model
 initialModel =
-    { dnd = system.model
-    , colors = data
+    { colors = data
+    , dnd = system.model
     }
 
 
@@ -108,22 +110,19 @@ subscriptions model =
 
 
 type Msg
-    = MyMsg DnDList.Msg
+    = DnDMsg DnDList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case message of
-        MyMsg msg ->
+update msg model =
+    case msg of
+        DnDMsg dndMsg ->
             let
-                ( dnd, colors ) =
-                    system.update msg model.dnd model.colors
+                ( colors, dndModel, dndCmd ) =
+                    system.update model.colors dndMsg model.dnd
             in
-            ( { model
-                | dnd = dnd
-                , colors = colors
-              }
-            , system.commands dnd
+            ( { model | colors = colors, dnd = dndModel }
+            , dndCmd
             )
 
 
@@ -164,23 +163,16 @@ itemView model index ( color, spot ) =
                         :: itemStyles width height color
                         ++ system.dropEvents index itemId
                     )
-                    [ Html.div
-                        handleStyles
-                        [ Html.text "⠶" ]
-                    ]
+                    [ Html.div handleStyles [ Html.text "⠶" ] ]
 
             else
                 Html.div
-                    (Html.Attributes.id itemId
-                        :: itemStyles width height gray
-                    )
+                    (Html.Attributes.id itemId :: itemStyles width height gray)
                     []
 
         _ ->
             Html.div
-                (Html.Attributes.id itemId
-                    :: itemStyles width height color
-                )
+                (Html.Attributes.id itemId :: itemStyles width height color)
                 [ Html.div
                     (handleStyles ++ system.dragEvents index itemId)
                     [ Html.text "⠶" ]
@@ -208,10 +200,7 @@ ghostView model =
                        , Html.Attributes.style "transition" "width 0.5s, height 0.5s"
                        ]
                 )
-                [ Html.div
-                    handleStyles
-                    [ Html.text "⠶" ]
-                ]
+                [ Html.div handleStyles [ Html.text "⠶" ] ]
 
         _ ->
             Html.text ""

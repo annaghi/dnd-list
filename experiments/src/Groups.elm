@@ -82,7 +82,7 @@ system =
     config
         |> DnDList.Groups.hookItemsBeforeListUpdate (\_ _ list -> list)
         |> DnDList.Groups.ghostProperties [ "width", "height", "position" ]
-        |> DnDList.Groups.create MyMsg
+        |> DnDList.Groups.create DnDMsg
 
 
 
@@ -121,19 +121,19 @@ subscriptions model =
 
 
 type Msg
-    = MyMsg DnDList.Groups.Msg
+    = DnDMsg DnDList.Groups.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case message of
-        MyMsg msg ->
+update msg model =
+    case msg of
+        DnDMsg dndMsg ->
             let
-                ( items, dnd, cmd ) =
-                    system.update msg model.dnd model.items
+                ( items, dndModel, dndCmd ) =
+                    system.update model.items dndMsg model.dnd
             in
-            ( { model | dnd = dnd, items = items }
-            , cmd
+            ( { model | items = items, dnd = dndModel }
+            , dndCmd
             )
 
 

@@ -37,7 +37,7 @@ data =
 -- SYSTEM
 
 
-config : DnDList.Config Fruit
+config : DnDList.Config Fruit Msg
 config =
     DnDList.config
         { movement = DnDList.Free
@@ -51,7 +51,7 @@ system =
     config
         --|> DnDList.hookItemsBeforeListUpdate (\_ _ list -> list)
         --|> DnDList.Groups.ghostProperties [ "width", "height", "position" ]
-        |> DnDList.create MyMsg
+        |> DnDList.create DnDMsg
 
 
 
@@ -90,19 +90,19 @@ subscriptions model =
 
 
 type Msg
-    = MyMsg DnDList.Msg
+    = DnDMsg DnDList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case message of
-        MyMsg msg ->
+update msg model =
+    case msg of
+        DnDMsg dndMsg ->
             let
-                ( items, dnd, cmd ) =
-                    system.update msg model.dnd model.items
+                ( items, dndModel, dndCmd ) =
+                    system.update model.items dndMsg model.dnd
             in
-            ( { model | dnd = dnd, items = items }
-            , cmd
+            ( { model | items = items, dnd = dndModel }
+            , dndCmd
             )
 
 

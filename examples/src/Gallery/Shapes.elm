@@ -63,18 +63,20 @@ data =
 -- SYSTEM
 
 
-config : DnDList.Config Item
+config : DnDList.Config Item Msg
 config =
-    { beforeUpdate = updateShapes
-    , movement = DnDList.Free
-    , listen = DnDList.OnDrop
-    , operation = DnDList.Unaltered
-    }
+    DnDList.config
+        { movement = DnDList.Free
+        , listen = DnDList.OnDrop
+        , operation = DnDList.Unaltered
+        }
 
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg
+    config
+        |> DnDList.hookItemsBeforeListUpdate updateShapes
+        |> DnDList.create DnDMsg
 
 
 updateShapes : Int -> Int -> List Item -> List Item
@@ -128,15 +130,15 @@ updateShapes dragIndex dropIndex list =
 
 
 type alias Model =
-    { dnd : DnDList.Model
-    , items : List Item
+    { items : List Item
+    , dnd : DnDList.Model
     }
 
 
 initialModel : Model
 initialModel =
-    { dnd = system.model
-    , items = data
+    { items = data
+    , dnd = system.model
     }
 
 
@@ -159,19 +161,19 @@ subscriptions model =
 
 
 type Msg
-    = MyMsg DnDList.Msg
+    = DnDMsg DnDList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case message of
-        MyMsg msg ->
+update msg model =
+    case msg of
+        DnDMsg dndMsg ->
             let
-                ( dnd, items ) =
-                    system.update msg model.dnd model.items
+                ( items, dndModel, dndCmd ) =
+                    system.update model.items dndMsg model.dnd
             in
-            ( { model | dnd = dnd, items = items }
-            , system.commands dnd
+            ( { model | items = items, dnd = dndModel }
+            , dndCmd
             )
 
 

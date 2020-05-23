@@ -58,16 +58,16 @@ data =
 
 cardConfig : DnDList.Groups.Config Card
 cardConfig =
-    { beforeUpdate = \_ _ list -> list
-    , listen = DnDList.Groups.OnDrag
-    , operation = DnDList.Groups.Rotate
-    , groups =
+    DnDList.Groups.config
         { listen = DnDList.Groups.OnDrag
-        , operation = DnDList.Groups.InsertBefore
-        , comparator = comparator
-        , setter = setter
+        , operation = DnDList.Groups.Rotate
+        , groups =
+            { listen = DnDList.Groups.OnDrag
+            , operation = DnDList.Groups.InsertBefore
+            , comparator = comparator
+            , setter = setter
+            }
         }
-    }
 
 
 comparator : Card -> Card -> Bool
@@ -82,21 +82,21 @@ setter card1 card2 =
 
 cardSystem : DnDList.Groups.System Card Msg
 cardSystem =
-    DnDList.Groups.create cardConfig CardMoved
+    DnDList.Groups.create CardMoved cardConfig
 
 
-columnConfig : DnDList.Config (List Card)
+columnConfig : DnDList.Config (List Card) Msg
 columnConfig =
-    { beforeUpdate = \_ _ list -> list
-    , movement = DnDList.Free
-    , listen = DnDList.OnDrag
-    , operation = DnDList.Rotate
-    }
+    DnDList.config
+        { movement = DnDList.Free
+        , listen = DnDList.OnDrag
+        , operation = DnDList.Rotate
+        }
 
 
 columnSystem : DnDList.System (List Card) Msg
 columnSystem =
-    DnDList.create columnConfig ColumnMoved
+    DnDList.create ColumnMoved columnConfig
 
 
 
@@ -104,17 +104,17 @@ columnSystem =
 
 
 type alias Model =
-    { cardDnD : DnDList.Groups.Model
+    { cards : List Card
+    , cardDnD : DnDList.Groups.Model
     , columnDnD : DnDList.Model
-    , cards : List Card
     }
 
 
 initialModel : Model
 initialModel =
-    { cardDnD = cardSystem.model
+    { cards = data
+    , cardDnD = cardSystem.model
     , columnDnD = columnSystem.model
-    , cards = data
     }
 
 
@@ -145,30 +145,30 @@ type Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case message of
-        CardMoved msg ->
+update msg model =
+    case msg of
+        CardMoved cardMovedMsg ->
             let
-                ( cardDnD, cards ) =
-                    cardSystem.update msg model.cardDnD model.cards
+                ( cards, cardDnDModel, cardCmd ) =
+                    cardSystem.update model.cards cardMovedMsg model.cardDnD
             in
             ( { model
-                | cardDnD = cardDnD
-                , cards = cards
+                | cards = cards
+                , cardDnD = cardDnDModel
               }
-            , cardSystem.commands cardDnD
+            , cardCmd
             )
 
-        ColumnMoved msg ->
+        ColumnMoved columnMovedMsg ->
             let
-                ( columnDnD, columns ) =
-                    columnSystem.update msg model.columnDnD (gatherByActivity model.cards)
+                ( columns, columnDnDModel, columnCmd ) =
+                    columnSystem.update (gatherByActivity model.cards) columnMovedMsg model.columnDnD
             in
             ( { model
-                | columnDnD = columnDnD
-                , cards = List.concat columns
+                | cards = List.concat columns
+                , columnDnD = columnDnDModel
               }
-            , columnSystem.commands columnDnD
+            , columnCmd
             )
 
 

@@ -224,7 +224,7 @@ import Html
 import Html.Attributes
 import Html.Events
 import Internal.Decoders
-import Internal.GhostStyles
+import Internal.Ghost
 import Internal.Operations
 import Internal.Types exposing (..)
 import Json.Decode
@@ -260,8 +260,8 @@ This is our configuration with a void `hookItemsBeforeListUpdate`:
         }
 
 -}
-type Config item
-    = Config Settings (Options item)
+type Config item msg
+    = Config Settings (Options item msg)
 
 
 type alias Settings =
@@ -271,20 +271,24 @@ type alias Settings =
     }
 
 
-type alias Options item =
+type alias Options item msg =
     { hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
+    , hookCommandsOnDrag : Maybe (DropIndex -> List item -> msg)
+    , hookCommandsOnDrop : Maybe (DropIndex -> List item -> msg)
     , customGhostProperties : List String
     }
 
 
-config : Settings -> Config item
+config : Settings -> Config item msg
 config settings =
     Config settings defaultOptions
 
 
-defaultOptions : Options item
+defaultOptions : Options item msg
 defaultOptions =
     { hookItemsBeforeListUpdate = \_ _ list -> list
+    , hookCommandsOnDrag = Nothing
+    , hookCommandsOnDrop = Nothing
     , customGhostProperties = [ "width", "height", "position" ]
     }
 
@@ -345,12 +349,17 @@ type Operation
 -- Options
 
 
-hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item -> Config item
+hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item msg -> Config item msg
 hookItemsBeforeListUpdate hook (Config settings options) =
     Config settings { options | hookItemsBeforeListUpdate = hook }
 
 
-ghostProperties : List String -> Config item -> Config item
+hookCommandsOnDrop : (DropIndex -> List item -> msg) -> Config item msg -> Config item msg
+hookCommandsOnDrop hook (Config settings options) =
+    Config settings { options | hookCommandsOnDrop = Just hook }
+
+
+ghostProperties : List String -> Config item msg -> Config item msg
 ghostProperties properties (Config settings options) =
     Config settings { options | customGhostProperties = properties }
 
@@ -369,7 +378,7 @@ Later we will learn more about the [Info object](#info) and the [System fields](
 type alias System item msg =
     { model : Model
     , subscriptions : Model -> Sub msg
-    , update : Msg -> Model -> List item -> ( List item, Model, Cmd msg )
+    , update : List item -> Msg -> Model -> ( List item, Model, Cmd msg )
     , dragEvents : DragIndex -> DragElementId -> List (Html.Attribute msg)
     , dropEvents : DropIndex -> DropElementId -> List (Html.Attribute msg)
     , ghostStyles : Model -> List (Html.Attribute msg)
@@ -395,7 +404,7 @@ Now the `System` is a wrapper type around the list item and our message types:
         DnDList.create config MyMsg
 
 -}
-create : (Msg -> msg) -> Config item -> System item msg
+create : (Msg -> msg) -> Config item msg -> System item msg
 create toMsg configuration =
     { model = Model Nothing
     , subscriptions = subscriptions toMsg
@@ -588,8 +597,8 @@ subscriptions toMsg (Model model) =
         Sub.none
 
 
-update : Config item -> (Msg -> msg) -> Msg -> Model -> List item -> ( List item, Model, Cmd msg )
-update (Config settings options) toMsg msg (Model model) list =
+update : Config item msg -> (Msg -> msg) -> List item -> Msg -> Model -> ( List item, Model, Cmd msg )
+update (Config settings options) toMsg list msg (Model model) =
     case msg of
         DownDragItem dragIndex dragElementId xy ->
             ( list
@@ -622,24 +631,38 @@ update (Config settings options) toMsg msg (Model model) list =
                     ( list, Model Nothing, Cmd.none )
 
         UpDocument ->
-            case ( model, settings.listen ) of
-                ( Just state, OnDrop ) ->
+            case model of
+                Just state ->
                     if state.dragIndex /= state.dropIndex then
-                        ( list
-                            |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
-                            |> listUpdate settings.operation state.dragIndex state.dropIndex
-                        , Model Nothing
-                        , Cmd.none
-                        )
+                        case settings.listen of
+                            OnDrag ->
+                                ( list, Model Nothing, Cmd.none )
+
+                            OnDrop ->
+                                ( list
+                                    |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                                    |> listUpdate settings.operation state.dragIndex state.dropIndex
+                                , Model Nothing
+                                , Cmd.none
+                                  --, options.hookCommandsOnDrop
+                                  --    |> Maybe.map (\f -> Task.perform (f newList) (Task.succeed state.dropIndex))
+                                  --    |> Maybe.withDefault Cmd.none
+                                )
 
                     else
-                        ( list, Model Nothing, Cmd.none )
+                        ( list
+                        , Model Nothing
+                        , Cmd.none
+                          --, options.hookCommandsOnDrop
+                          --    |> Maybe.map (\f -> Task.perform (f list) (Task.succeed state.dropIndex))
+                          --    |> Maybe.withDefault Cmd.none
+                        )
 
                 _ ->
                     ( list, Model Nothing, Cmd.none )
 
 
-inBetweenUpdate : Settings -> Options item -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd InBetweenMsg )
+inBetweenUpdate : Settings -> Options item msg -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd InBetweenMsg )
 inBetweenUpdate settings options list msg state =
     case msg of
         MoveDocument xy ->
@@ -672,6 +695,9 @@ inBetweenUpdate settings options list msg state =
                             |> listUpdate settings.operation state.dragIndex state.dropIndex
                         , stateUpdate settings.operation state.dropIndex state
                         , Cmd.none
+                          --, options.hookCommandsOnDrag
+                          --    |> Maybe.map (\f -> Task.perform (f state.dropIndex) (Task.succeed newList))
+                          --    |> Maybe.withDefault Cmd.none
                         )
 
                     OnDrop ->
@@ -796,13 +822,13 @@ dropEvents toMsg dropIndex dropElementId =
 -- STYLES
 
 
-ghostStyles : Config item -> Model -> List (Html.Attribute msg)
+ghostStyles : Config item msg -> Model -> List (Html.Attribute msg)
 ghostStyles (Config { movement } { customGhostProperties }) (Model model) =
     case model of
         Just state ->
             case state.dragElement of
                 Just dragElement ->
-                    transformDeclaration movement state.translateVector dragElement :: Internal.GhostStyles.baseDeclarations customGhostProperties dragElement
+                    transformDeclaration movement state.translateVector dragElement :: Internal.Ghost.baseDeclarations customGhostProperties dragElement
 
                 _ ->
                     []
@@ -816,18 +842,18 @@ transformDeclaration movement { x, y } { element } =
     case movement of
         Horizontal ->
             Html.Attributes.style "transform" <|
-                Internal.GhostStyles.translate
+                Internal.Ghost.translate
                     (round (x + element.x))
                     (round element.y)
 
         Vertical ->
             Html.Attributes.style "transform" <|
-                Internal.GhostStyles.translate
+                Internal.Ghost.translate
                     (round element.x)
                     (round (y + element.y))
 
         Free ->
             Html.Attributes.style "transform" <|
-                Internal.GhostStyles.translate
+                Internal.Ghost.translate
                     (round (x + element.x))
                     (round (y + element.y))

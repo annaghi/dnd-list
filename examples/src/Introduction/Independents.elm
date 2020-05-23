@@ -42,32 +42,32 @@ blueData =
 -- SYSTEM
 
 
-redConfig : DnDList.Config String
+redConfig : DnDList.Config String Msg
 redConfig =
-    { beforeUpdate = \_ _ list -> list
-    , movement = DnDList.Free
-    , listen = DnDList.OnDrag
-    , operation = DnDList.Swap
-    }
+    DnDList.config
+        { movement = DnDList.Free
+        , listen = DnDList.OnDrag
+        , operation = DnDList.Swap
+        }
 
 
 redSystem : DnDList.System String Msg
 redSystem =
-    DnDList.create redConfig RedMsg
+    DnDList.create RedMsg redConfig
 
 
-blueConfig : DnDList.Config String
+blueConfig : DnDList.Config String Msg
 blueConfig =
-    { movement = DnDList.Free
-    , listen = DnDList.OnDrag
-    , operation = DnDList.Swap
-    , beforeUpdate = \_ _ list -> list
-    }
+    DnDList.config
+        { movement = DnDList.Free
+        , listen = DnDList.OnDrag
+        , operation = DnDList.Swap
+        }
 
 
 blueSystem : DnDList.System String Msg
 blueSystem =
-    DnDList.create blueConfig BlueMsg
+    DnDList.create BlueMsg blueConfig
 
 
 
@@ -75,19 +75,19 @@ blueSystem =
 
 
 type alias Model =
-    { redDnD : DnDList.Model
-    , blueDnD : DnDList.Model
-    , reds : List String
+    { reds : List String
     , blues : List String
+    , redDnD : DnDList.Model
+    , blueDnD : DnDList.Model
     }
 
 
 initialModel : Model
 initialModel =
-    { redDnD = redSystem.model
-    , blueDnD = blueSystem.model
-    , reds = redData
+    { reds = redData
     , blues = blueData
+    , redDnD = redSystem.model
+    , blueDnD = blueSystem.model
     }
 
 
@@ -118,30 +118,30 @@ type Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case message of
-        RedMsg msg ->
+update msg model =
+    case msg of
+        RedMsg redMsg ->
             let
-                ( redDnD, reds ) =
-                    redSystem.update msg model.redDnD model.reds
+                ( reds, redDnDModel, redCmd ) =
+                    redSystem.update model.reds redMsg model.redDnD
             in
             ( { model
-                | redDnD = redDnD
-                , reds = reds
+                | reds = reds
+                , redDnD = redDnDModel
               }
-            , redSystem.commands redDnD
+            , redCmd
             )
 
-        BlueMsg msg ->
+        BlueMsg blueMsg ->
             let
-                ( blueDnD, blues ) =
-                    blueSystem.update msg model.blueDnD model.blues
+                ( blues, blueDnDModel, blueCmd ) =
+                    blueSystem.update model.blues blueMsg model.blueDnD
             in
             ( { model
-                | blueDnD = blueDnD
-                , blues = blues
+                | blues = blues
+                , blueDnD = blueDnDModel
               }
-            , blueSystem.commands blueDnD
+            , blueCmd
             )
 
 

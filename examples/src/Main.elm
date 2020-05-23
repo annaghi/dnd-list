@@ -3,8 +3,8 @@ module Main exposing (main)
 import Browser
 import Browser.Dom
 import Browser.Navigation
-import Config.Root
-import ConfigGroups.Root
+import Config.Flat.Root
+import Config.Groups.Root
 import Gallery.Root
 import Home
 import Html
@@ -53,8 +53,8 @@ type Example
     = NotFound
     | Home Home.Model
     | Introduction Introduction.Root.Model
-    | Config Config.Root.Model
-    | ConfigGroups ConfigGroups.Root.Model
+    | ConfigFlat Config.Flat.Root.Model
+    | ConfigGroups Config.Groups.Root.Model
     | Gallery Gallery.Root.Model
 
 
@@ -68,8 +68,8 @@ type Msg
     | UrlChanged Url.Url
     | HomeMsg Home.Msg
     | IntroductionMsg Introduction.Root.Msg
-    | ConfigMsg Config.Root.Msg
-    | ConfigGroupsMsg ConfigGroups.Root.Msg
+    | ConfigMsg Config.Flat.Root.Msg
+    | ConfigGroupsMsg Config.Groups.Root.Msg
     | GalleryMsg Gallery.Root.Msg
 
 
@@ -103,11 +103,11 @@ update message model =
         ( IntroductionMsg msg, Introduction mo ) ->
             stepIntroduction model (Introduction.Root.update msg mo)
 
-        ( ConfigMsg msg, Config mo ) ->
-            stepConfig model (Config.Root.update msg mo)
+        ( ConfigMsg msg, ConfigFlat mo ) ->
+            stepConfig model (Config.Flat.Root.update msg mo)
 
         ( ConfigGroupsMsg msg, ConfigGroups mo ) ->
-            stepConfigGroups model (ConfigGroups.Root.update msg mo)
+            stepConfigGroups model (Config.Groups.Root.update msg mo)
 
         ( GalleryMsg msg, Gallery mo ) ->
             stepGallery model (Gallery.Root.update msg mo)
@@ -126,12 +126,12 @@ stepIntroduction model ( mo, cmds ) =
     ( { model | example = Introduction mo }, Cmd.map IntroductionMsg cmds )
 
 
-stepConfig : Model -> ( Config.Root.Model, Cmd Config.Root.Msg ) -> ( Model, Cmd Msg )
+stepConfig : Model -> ( Config.Flat.Root.Model, Cmd Config.Flat.Root.Msg ) -> ( Model, Cmd Msg )
 stepConfig model ( mo, cmds ) =
-    ( { model | example = Config mo }, Cmd.map ConfigMsg cmds )
+    ( { model | example = ConfigFlat mo }, Cmd.map ConfigMsg cmds )
 
 
-stepConfigGroups : Model -> ( ConfigGroups.Root.Model, Cmd ConfigGroups.Root.Msg ) -> ( Model, Cmd Msg )
+stepConfigGroups : Model -> ( Config.Groups.Root.Model, Cmd Config.Groups.Root.Msg ) -> ( Model, Cmd Msg )
 stepConfigGroups model ( mo, cmds ) =
     ( { model | example = ConfigGroups mo }, Cmd.map ConfigGroupsMsg cmds )
 
@@ -157,11 +157,11 @@ subscriptions model =
         Introduction mo ->
             Sub.map IntroductionMsg (Introduction.Root.subscriptions mo)
 
-        Config mo ->
-            Sub.map ConfigMsg (Config.Root.subscriptions mo)
+        ConfigFlat mo ->
+            Sub.map ConfigMsg (Config.Flat.Root.subscriptions mo)
 
         ConfigGroups mo ->
-            Sub.map ConfigGroupsMsg (ConfigGroups.Root.subscriptions mo)
+            Sub.map ConfigGroupsMsg (Config.Groups.Root.subscriptions mo)
 
         Gallery mo ->
             Sub.map GalleryMsg (Gallery.Root.subscriptions mo)
@@ -201,12 +201,12 @@ stepUrl url model =
                     (Url.Parser.s Path.rootPath </> Url.Parser.s "introduction" </> slug_)
                 , Url.Parser.map
                     (\slug ->
-                        stepConfig model (Config.Root.init slug)
+                        stepConfig model (Config.Flat.Root.init slug)
                     )
                     (Url.Parser.s Path.rootPath </> Url.Parser.s "config" </> slug_)
                 , Url.Parser.map
                     (\slug ->
-                        stepConfigGroups model (ConfigGroups.Root.init slug)
+                        stepConfigGroups model (Config.Groups.Root.init slug)
                     )
                     (Url.Parser.s Path.rootPath </> Url.Parser.s "config-groups" </> slug_)
                 , Url.Parser.map
@@ -251,8 +251,8 @@ view model =
             [ cardView
             , Html.nav []
                 [ Html.map IntroductionMsg (Introduction.Root.navigationView model.path)
-                , Html.map ConfigMsg (Config.Root.navigationView model.path)
-                , Html.map ConfigGroupsMsg (ConfigGroups.Root.navigationView model.path)
+                , Html.map ConfigMsg (Config.Flat.Root.navigationView model.path)
+                , Html.map ConfigGroupsMsg (Config.Groups.Root.navigationView model.path)
                 , Html.map GalleryMsg (Gallery.Root.navigationView model.path)
                 ]
             ]
@@ -271,16 +271,16 @@ view model =
                     , Html.map IntroductionMsg (Introduction.Root.codeView mo)
                     ]
 
-                Config mo ->
-                    [ Html.map ConfigMsg (Config.Root.headerView mo)
-                    , Html.map ConfigMsg (Config.Root.demoView mo)
-                    , Html.map ConfigMsg (Config.Root.codeView mo)
+                ConfigFlat mo ->
+                    [ Html.map ConfigMsg (Config.Flat.Root.headerView mo)
+                    , Html.map ConfigMsg (Config.Flat.Root.demoView mo)
+                    , Html.map ConfigMsg (Config.Flat.Root.codeView mo)
                     ]
 
                 ConfigGroups mo ->
-                    [ Html.map ConfigGroupsMsg (ConfigGroups.Root.headerView mo)
-                    , Html.map ConfigGroupsMsg (ConfigGroups.Root.demoView mo)
-                    , Html.map ConfigGroupsMsg (ConfigGroups.Root.codeView mo)
+                    [ Html.map ConfigGroupsMsg (Config.Groups.Root.headerView mo)
+                    , Html.map ConfigGroupsMsg (Config.Groups.Root.demoView mo)
+                    , Html.map ConfigGroupsMsg (Config.Groups.Root.codeView mo)
                     ]
 
                 Gallery mo ->

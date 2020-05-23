@@ -55,16 +55,16 @@ preparedData =
 
 config : DnDList.Groups.Config Item
 config =
-    { beforeUpdate = \_ _ list -> list
-    , listen = DnDList.Groups.OnDrag
-    , operation = DnDList.Groups.Rotate
-    , groups =
+    DnDList.Groups.config
         { listen = DnDList.Groups.OnDrag
-        , operation = DnDList.Groups.InsertBefore
-        , comparator = comparator
-        , setter = setter
+        , operation = DnDList.Groups.Rotate
+        , groups =
+            { listen = DnDList.Groups.OnDrag
+            , operation = DnDList.Groups.InsertBefore
+            , comparator = comparator
+            , setter = setter
+            }
         }
-    }
 
 
 comparator : Item -> Item -> Bool
@@ -79,7 +79,7 @@ setter item1 item2 =
 
 system : DnDList.Groups.System Item Msg
 system =
-    DnDList.Groups.create config MyMsg
+    DnDList.Groups.create DnDMsg config
 
 
 
@@ -87,15 +87,15 @@ system =
 
 
 type alias Model =
-    { dnd : DnDList.Groups.Model
-    , items : List Item
+    { items : List Item
+    , dnd : DnDList.Groups.Model
     }
 
 
 initialModel : Model
 initialModel =
-    { dnd = system.model
-    , items = preparedData
+    { items = preparedData
+    , dnd = system.model
     }
 
 
@@ -118,19 +118,19 @@ subscriptions model =
 
 
 type Msg
-    = MyMsg DnDList.Groups.Msg
+    = DnDMsg DnDList.Groups.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case message of
-        MyMsg msg ->
+update msg model =
+    case msg of
+        DnDMsg dndMsg ->
             let
-                ( dnd, items ) =
-                    system.update msg model.dnd model.items
+                ( items, dndModel, dndCmd ) =
+                    system.update model.items dndMsg model.dnd
             in
-            ( { model | dnd = dnd, items = items }
-            , system.commands dnd
+            ( { model | items = items, dnd = dndModel }
+            , dndCmd
             )
 
 
