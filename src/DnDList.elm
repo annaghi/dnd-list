@@ -1,11 +1,11 @@
 module DnDList exposing
     ( Config, config
     , Movement(..), Listen(..), Operation(..)
-    , ghostProperties
     , hookItemsBeforeListUpdate, detectDrop, detectReorder
     , System, create, Msg
     , Model
     , Info
+    , ghostProperties
     )
 
 {-| While dragging and dropping a list item, the mouse events, the ghost element's positioning
@@ -51,7 +51,7 @@ You can add position styling attributes to this element using the`System` object
 
 @docs Config, config
 @docs Movement, Listen, Operation
-@docs ghostProperties
+@docs ghostRuleset
 @docs hookItemsBeforeListUpdate, detectDrop, detectReorder
 
 
@@ -274,7 +274,7 @@ type alias Settings =
 
 
 type alias Options item msg =
-    { customGhostProperties : List String
+    { ghostProperties : List String
     , hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
     , detectDrop : Maybe (DragIndex -> DropIndex -> List item -> msg)
     , detectReorder : Maybe (DragIndex -> DropIndex -> List item -> msg)
@@ -288,7 +288,7 @@ config settings =
 
 defaultOptions : Options item msg
 defaultOptions =
-    { customGhostProperties = [ "width", "height", "position" ]
+    { ghostProperties = [ "width", "height", "position" ]
     , hookItemsBeforeListUpdate = \_ _ list -> list
     , detectDrop = Nothing
     , detectReorder = Nothing
@@ -353,7 +353,7 @@ type Operation
 
 ghostProperties : List String -> Config item msg -> Config item msg
 ghostProperties properties (Config settings options) =
-    Config settings { options | customGhostProperties = properties }
+    Config settings { options | ghostProperties = properties }
 
 
 hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item msg -> Config item msg
@@ -833,12 +833,13 @@ dropEvents toMsg dropIndex dropElementId =
 
 
 ghostStyles : Config item msg -> Model -> List (Html.Attribute msg)
-ghostStyles (Config { movement } { customGhostProperties }) (Model model) =
+ghostStyles (Config settings options) (Model model) =
     case model of
         Just state ->
             case state.dragElement of
                 Just dragElement ->
-                    transformDeclaration movement state.translateVector dragElement :: Internal.Ghost.baseDeclarations customGhostProperties dragElement
+                    transformDeclaration settings.movement state.translateVector dragElement
+                        :: Internal.Ghost.baseDeclarations options.ghostProperties dragElement
 
                 _ ->
                     []

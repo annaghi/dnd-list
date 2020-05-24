@@ -50,7 +50,7 @@ system : DnDList.System Fruit Msg
 system =
     config
         --|> DnDList.hookItemsBeforeListUpdate (\_ _ list -> list)
-        --|> DnDList.Groups.ghostProperties [ "width", "height", "position" ]
+        |> DnDList.ghostProperties [ "width", "height", "position" ]
         |> DnDList.detectReorder DetectReorder
         |> DnDList.create DnDMsg
 

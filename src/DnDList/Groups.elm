@@ -325,7 +325,7 @@ type alias Settings item =
 
 
 type alias Options item msg =
-    { customGhostProperties : List String
+    { ghostProperties : List String
     , hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
     , detectDrop : Maybe (DragIndex -> DropIndex -> List item -> msg)
     , detectReorder : Maybe (DragIndex -> DropIndex -> List item -> msg)
@@ -339,7 +339,7 @@ config settings =
 
 defaultOptions : Options item msg
 defaultOptions =
-    { customGhostProperties = [ "width", "height", "position" ]
+    { ghostProperties = [ "width", "height", "position" ]
     , hookItemsBeforeListUpdate = \_ _ list -> list
     , detectDrop = Nothing
     , detectReorder = Nothing
@@ -388,7 +388,7 @@ type Operation
 
 ghostProperties : List String -> Config item msg -> Config item msg
 ghostProperties properties (Config settings options) =
-    Config settings { options | customGhostProperties = properties }
+    Config settings { options | ghostProperties = properties }
 
 
 hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item msg -> Config item msg
@@ -978,12 +978,13 @@ dropEvents toMsg dropIndex dropElementId =
 
 
 ghostStyles : Config item msg -> Model -> List (Html.Attribute msg)
-ghostStyles (Config _ { customGhostProperties }) (Model model) =
+ghostStyles (Config _ options) (Model model) =
     case model of
         Just state ->
             case state.dragElement of
                 Just dragElement ->
-                    transformDeclaration state.translateVector dragElement :: Internal.Ghost.baseDeclarations customGhostProperties dragElement
+                    transformDeclaration state.translateVector dragElement
+                        :: Internal.Ghost.baseDeclarations options.ghostProperties dragElement
 
                 _ ->
                     []
