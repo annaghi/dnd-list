@@ -51,6 +51,7 @@ system =
     config
         --|> DnDList.hookItemsBeforeListUpdate (\_ _ list -> list)
         --|> DnDList.Groups.ghostProperties [ "width", "height", "position" ]
+        |> DnDList.detectReorder DetectReorder
         |> DnDList.create DnDMsg
 
 
@@ -91,6 +92,7 @@ subscriptions model =
 
 type Msg
     = DnDMsg DnDList.Msg
+    | DetectReorder Int Int (List Fruit)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -104,6 +106,19 @@ update msg model =
             ( { model | items = items, dnd = dndModel }
             , dndCmd
             )
+
+        DetectReorder dragIndex dropIndex fruits ->
+            let
+                _ =
+                    Debug.log "DetectDrag" dragIndex
+
+                _ =
+                    Debug.log "DetectDrag" dropIndex
+
+                _ =
+                    Debug.log "DetectDrag" fruits
+            in
+            ( model, Cmd.none )
 
 
 

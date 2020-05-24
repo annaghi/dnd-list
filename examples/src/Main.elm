@@ -3,13 +3,13 @@ module Main exposing (main)
 import Browser
 import Browser.Dom
 import Browser.Navigation
-import Config.Flat.Root
-import Config.Groups.Root
-import Gallery.Root
+import DnDList.Parent
+import DnDListGroups.Parent
+import Gallery.Parent
 import Home
 import Html
 import Html.Attributes
-import Introduction.Root
+import Introduction.Parent
 import Path
 import Task
 import Url
@@ -52,10 +52,10 @@ init flags url key =
 type Example
     = NotFound
     | Home Home.Model
-    | Introduction Introduction.Root.Model
-    | ConfigFlat Config.Flat.Root.Model
-    | ConfigGroups Config.Groups.Root.Model
-    | Gallery Gallery.Root.Model
+    | Introduction Introduction.Parent.Model
+    | DnDList DnDList.Parent.Model
+    | DnDListGroups DnDListGroups.Parent.Model
+    | Gallery Gallery.Parent.Model
 
 
 
@@ -67,10 +67,10 @@ type Msg
     | LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
     | HomeMsg Home.Msg
-    | IntroductionMsg Introduction.Root.Msg
-    | ConfigMsg Config.Flat.Root.Msg
-    | ConfigGroupsMsg Config.Groups.Root.Msg
-    | GalleryMsg Gallery.Root.Msg
+    | IntroductionMsg Introduction.Parent.Msg
+    | DnDListMsg DnDList.Parent.Msg
+    | DnDListGroupsMsg DnDListGroups.Parent.Msg
+    | GalleryMsg Gallery.Parent.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -101,16 +101,16 @@ update message model =
             stepHome model (Home.update msg mo)
 
         ( IntroductionMsg msg, Introduction mo ) ->
-            stepIntroduction model (Introduction.Root.update msg mo)
+            stepIntroduction model (Introduction.Parent.update msg mo)
 
-        ( ConfigMsg msg, ConfigFlat mo ) ->
-            stepConfig model (Config.Flat.Root.update msg mo)
+        ( DnDListMsg msg, DnDList mo ) ->
+            stepConfig model (DnDList.Parent.update msg mo)
 
-        ( ConfigGroupsMsg msg, ConfigGroups mo ) ->
-            stepConfigGroups model (Config.Groups.Root.update msg mo)
+        ( DnDListGroupsMsg msg, DnDListGroups mo ) ->
+            stepConfigGroups model (DnDListGroups.Parent.update msg mo)
 
         ( GalleryMsg msg, Gallery mo ) ->
-            stepGallery model (Gallery.Root.update msg mo)
+            stepGallery model (Gallery.Parent.update msg mo)
 
         _ ->
             ( model, Cmd.none )
@@ -121,22 +121,22 @@ stepHome model ( mo, cmds ) =
     ( { model | example = Home mo }, Cmd.map HomeMsg cmds )
 
 
-stepIntroduction : Model -> ( Introduction.Root.Model, Cmd Introduction.Root.Msg ) -> ( Model, Cmd Msg )
+stepIntroduction : Model -> ( Introduction.Parent.Model, Cmd Introduction.Parent.Msg ) -> ( Model, Cmd Msg )
 stepIntroduction model ( mo, cmds ) =
     ( { model | example = Introduction mo }, Cmd.map IntroductionMsg cmds )
 
 
-stepConfig : Model -> ( Config.Flat.Root.Model, Cmd Config.Flat.Root.Msg ) -> ( Model, Cmd Msg )
+stepConfig : Model -> ( DnDList.Parent.Model, Cmd DnDList.Parent.Msg ) -> ( Model, Cmd Msg )
 stepConfig model ( mo, cmds ) =
-    ( { model | example = ConfigFlat mo }, Cmd.map ConfigMsg cmds )
+    ( { model | example = DnDList mo }, Cmd.map DnDListMsg cmds )
 
 
-stepConfigGroups : Model -> ( Config.Groups.Root.Model, Cmd Config.Groups.Root.Msg ) -> ( Model, Cmd Msg )
+stepConfigGroups : Model -> ( DnDListGroups.Parent.Model, Cmd DnDListGroups.Parent.Msg ) -> ( Model, Cmd Msg )
 stepConfigGroups model ( mo, cmds ) =
-    ( { model | example = ConfigGroups mo }, Cmd.map ConfigGroupsMsg cmds )
+    ( { model | example = DnDListGroups mo }, Cmd.map DnDListGroupsMsg cmds )
 
 
-stepGallery : Model -> ( Gallery.Root.Model, Cmd Gallery.Root.Msg ) -> ( Model, Cmd Msg )
+stepGallery : Model -> ( Gallery.Parent.Model, Cmd Gallery.Parent.Msg ) -> ( Model, Cmd Msg )
 stepGallery model ( mo, cmds ) =
     ( { model | example = Gallery mo }, Cmd.map GalleryMsg cmds )
 
@@ -155,16 +155,16 @@ subscriptions model =
             Sub.map HomeMsg (Home.subscriptions mo)
 
         Introduction mo ->
-            Sub.map IntroductionMsg (Introduction.Root.subscriptions mo)
+            Sub.map IntroductionMsg (Introduction.Parent.subscriptions mo)
 
-        ConfigFlat mo ->
-            Sub.map ConfigMsg (Config.Flat.Root.subscriptions mo)
+        DnDList mo ->
+            Sub.map DnDListMsg (DnDList.Parent.subscriptions mo)
 
-        ConfigGroups mo ->
-            Sub.map ConfigGroupsMsg (Config.Groups.Root.subscriptions mo)
+        DnDListGroups mo ->
+            Sub.map DnDListGroupsMsg (DnDListGroups.Parent.subscriptions mo)
 
         Gallery mo ->
-            Sub.map GalleryMsg (Gallery.Root.subscriptions mo)
+            Sub.map GalleryMsg (Gallery.Parent.subscriptions mo)
 
 
 
@@ -189,29 +189,29 @@ stepUrl url model =
         parser =
             Url.Parser.oneOf
                 [ Url.Parser.map
-                    (stepGallery model (Gallery.Root.init "hanoi"))
+                    (stepGallery model (Gallery.Parent.init "hanoi"))
                     Url.Parser.top
                 , Url.Parser.map
-                    (stepGallery model (Gallery.Root.init "hanoi"))
+                    (stepGallery model (Gallery.Parent.init "hanoi"))
                     (Url.Parser.s Path.rootPath)
                 , Url.Parser.map
                     (\slug ->
-                        stepIntroduction model (Introduction.Root.init slug)
+                        stepIntroduction model (Introduction.Parent.init slug)
                     )
                     (Url.Parser.s Path.rootPath </> Url.Parser.s "introduction" </> slug_)
                 , Url.Parser.map
                     (\slug ->
-                        stepConfig model (Config.Flat.Root.init slug)
+                        stepConfig model (DnDList.Parent.init slug)
                     )
-                    (Url.Parser.s Path.rootPath </> Url.Parser.s "config" </> slug_)
+                    (Url.Parser.s Path.rootPath </> Url.Parser.s "DnDList" </> slug_)
                 , Url.Parser.map
                     (\slug ->
-                        stepConfigGroups model (Config.Groups.Root.init slug)
+                        stepConfigGroups model (DnDListGroups.Parent.init slug)
                     )
-                    (Url.Parser.s Path.rootPath </> Url.Parser.s "config-groups" </> slug_)
+                    (Url.Parser.s Path.rootPath </> Url.Parser.s "DnDListGroups" </> slug_)
                 , Url.Parser.map
                     (\slug ->
-                        stepGallery model (Gallery.Root.init slug)
+                        stepGallery model (Gallery.Parent.init slug)
                     )
                     (Url.Parser.s Path.rootPath </> Url.Parser.s "gallery" </> slug_)
                 ]
@@ -250,10 +250,10 @@ view model =
             [ Html.Attributes.id "sidebar" ]
             [ cardView
             , Html.nav []
-                [ Html.map IntroductionMsg (Introduction.Root.navigationView model.path)
-                , Html.map ConfigMsg (Config.Flat.Root.navigationView model.path)
-                , Html.map ConfigGroupsMsg (Config.Groups.Root.navigationView model.path)
-                , Html.map GalleryMsg (Gallery.Root.navigationView model.path)
+                [ Html.map IntroductionMsg (Introduction.Parent.navigationView model.path)
+                , Html.map DnDListMsg (DnDList.Parent.navigationView model.path)
+                , Html.map DnDListGroupsMsg (DnDListGroups.Parent.navigationView model.path)
+                , Html.map GalleryMsg (Gallery.Parent.navigationView model.path)
                 ]
             ]
         , Html.main_
@@ -266,27 +266,27 @@ view model =
                     [ Html.map HomeMsg (Home.view mo) ]
 
                 Introduction mo ->
-                    [ Html.map IntroductionMsg (Introduction.Root.headerView mo)
-                    , Html.map IntroductionMsg (Introduction.Root.demoView mo)
-                    , Html.map IntroductionMsg (Introduction.Root.codeView mo)
+                    [ Html.map IntroductionMsg (Introduction.Parent.headerView mo)
+                    , Html.map IntroductionMsg (Introduction.Parent.demoView mo)
+                    , Html.map IntroductionMsg (Introduction.Parent.codeView mo)
                     ]
 
-                ConfigFlat mo ->
-                    [ Html.map ConfigMsg (Config.Flat.Root.headerView mo)
-                    , Html.map ConfigMsg (Config.Flat.Root.demoView mo)
-                    , Html.map ConfigMsg (Config.Flat.Root.codeView mo)
+                DnDList mo ->
+                    [ Html.map DnDListMsg (DnDList.Parent.headerView mo)
+                    , Html.map DnDListMsg (DnDList.Parent.demoView mo)
+                    , Html.map DnDListMsg (DnDList.Parent.codeView mo)
                     ]
 
-                ConfigGroups mo ->
-                    [ Html.map ConfigGroupsMsg (Config.Groups.Root.headerView mo)
-                    , Html.map ConfigGroupsMsg (Config.Groups.Root.demoView mo)
-                    , Html.map ConfigGroupsMsg (Config.Groups.Root.codeView mo)
+                DnDListGroups mo ->
+                    [ Html.map DnDListGroupsMsg (DnDListGroups.Parent.headerView mo)
+                    , Html.map DnDListGroupsMsg (DnDListGroups.Parent.demoView mo)
+                    , Html.map DnDListGroupsMsg (DnDListGroups.Parent.codeView mo)
                     ]
 
                 Gallery mo ->
-                    [ Html.map GalleryMsg (Gallery.Root.headerView mo)
-                    , Html.map GalleryMsg (Gallery.Root.demoView mo)
-                    , Html.map GalleryMsg (Gallery.Root.codeView mo)
+                    [ Html.map GalleryMsg (Gallery.Parent.headerView mo)
+                    , Html.map GalleryMsg (Gallery.Parent.demoView mo)
+                    , Html.map GalleryMsg (Gallery.Parent.codeView mo)
                     ]
             )
         ]

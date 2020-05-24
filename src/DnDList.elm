@@ -1,7 +1,8 @@
 module DnDList exposing
     ( Config, config
     , Movement(..), Listen(..), Operation(..)
-    , hookItemsBeforeListUpdate, ghostProperties
+    , ghostProperties
+    , hookItemsBeforeListUpdate, detectDrop, detectReorder
     , System, create, Msg
     , Model
     , Info
@@ -50,7 +51,8 @@ You can add position styling attributes to this element using the`System` object
 
 @docs Config, config
 @docs Movement, Listen, Operation
-@docs hookItemsBeforeListUpdate, ghostProperties
+@docs ghostProperties
+@docs hookItemsBeforeListUpdate, detectDrop, detectReorder
 
 
 # System
@@ -274,8 +276,8 @@ type alias Settings =
 type alias Options item msg =
     { customGhostProperties : List String
     , hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
-    , hookCommandsOnDrag : Maybe (DropIndex -> List item -> msg)
-    , hookCommandsOnDrop : Maybe (DropIndex -> List item -> msg)
+    , detectDrop : Maybe (DragIndex -> DropIndex -> List item -> msg)
+    , detectReorder : Maybe (DragIndex -> DropIndex -> List item -> msg)
     }
 
 
@@ -288,8 +290,8 @@ defaultOptions : Options item msg
 defaultOptions =
     { customGhostProperties = [ "width", "height", "position" ]
     , hookItemsBeforeListUpdate = \_ _ list -> list
-    , hookCommandsOnDrag = Nothing
-    , hookCommandsOnDrop = Nothing
+    , detectDrop = Nothing
+    , detectReorder = Nothing
     }
 
 
@@ -359,14 +361,14 @@ hookItemsBeforeListUpdate hook (Config settings options) =
     Config settings { options | hookItemsBeforeListUpdate = hook }
 
 
-hookCommandsOnDrag : (DropIndex -> List item -> msg) -> Config item msg -> Config item msg
-hookCommandsOnDrag hook (Config settings options) =
-    Config settings { options | hookCommandsOnDrag = Just hook }
+detectDrop : (DragIndex -> DropIndex -> List item -> msg) -> Config item msg -> Config item msg
+detectDrop hook (Config settings options) =
+    Config settings { options | detectDrop = Just hook }
 
 
-hookCommandsOnDrop : (DropIndex -> List item -> msg) -> Config item msg -> Config item msg
-hookCommandsOnDrop hook (Config settings options) =
-    Config settings { options | hookCommandsOnDrop = Just hook }
+detectReorder : (DragIndex -> DropIndex -> List item -> msg) -> Config item msg -> Config item msg
+detectReorder hook (Config settings options) =
+    Config settings { options | detectReorder = Just hook }
 
 
 {-| A `System` encapsulates:
@@ -580,7 +582,7 @@ type Msg
 type InBetweenMsg
     = MoveDocument Coordinates
     | OverDropItem DropIndex DropElementId
-    | EnterDropItem
+    | EnterDropItem -- EnterDropItem : InBetweenMsg
     | LeaveDropItem
     | GotDragItem (Result Browser.Dom.Error Browser.Dom.Element)
     | GotDropItem (Result Browser.Dom.Error Browser.Dom.Element)
@@ -628,9 +630,9 @@ update (Config settings options) toMsg list msg (Model model) =
                 Just state ->
                     let
                         ( newList, newState, newCmd ) =
-                            inBetweenUpdate settings options list inBetweenMsg state
+                            inBetweenUpdate settings options toMsg list inBetweenMsg state
                     in
-                    ( newList, Model (Just newState), Cmd.map (InBetweenMsg >> toMsg) newCmd )
+                    ( newList, Model (Just newState), newCmd )
 
                 Nothing ->
                     ( list, Model Nothing, Cmd.none )
@@ -644,25 +646,26 @@ update (Config settings options) toMsg list msg (Model model) =
                                 ( list, Model Nothing, Cmd.none )
 
                             OnDrop ->
-                                ( list
-                                    |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
-                                    |> listUpdate settings.operation state.dragIndex state.dropIndex
+                                let
+                                    -- TODO Is there a way to get rid of this newList variable?
+                                    newList : List item
+                                    newList =
+                                        list
+                                            |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                                            |> listUpdate settings.operation state.dragIndex state.dropIndex
+                                in
+                                ( newList
                                 , Model Nothing
-                                , Cmd.none
-                                  --, options.hookCommandsOnDrop
-                                  -- |> Maybe.map (\f -> Task.perform (f state.dropIndex) (Task.succeed list))
-                                  --    |> Maybe.withDefault Cmd.none
+                                , options.detectDrop
+                                    |> Maybe.map (\f -> Task.perform (f state.dragIndex state.dropIndex) (Task.succeed newList))
+                                    |> Maybe.withDefault Cmd.none
                                 )
 
                     else
                         ( list
                         , Model Nothing
-                          -- TODO Check how this and the drag hook command works together
-                          -- command on drop
-                          -- command on last drag aka drop
-                          -- command on each drag and the last one too
-                        , options.hookCommandsOnDrop
-                            |> Maybe.map (\f -> Task.perform (f state.dropIndex) (Task.succeed list))
+                        , options.detectDrop
+                            |> Maybe.map (\f -> Task.perform (f state.dragIndex state.dropIndex) (Task.succeed list))
                             |> Maybe.withDefault Cmd.none
                         )
 
@@ -670,14 +673,14 @@ update (Config settings options) toMsg list msg (Model model) =
                     ( list, Model Nothing, Cmd.none )
 
 
-inBetweenUpdate : Settings -> Options item msg -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd InBetweenMsg )
-inBetweenUpdate settings options list msg state =
+inBetweenUpdate : Settings -> Options item msg -> (Msg -> msg) -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd msg )
+inBetweenUpdate settings options toMsg list msg state =
     case msg of
         MoveDocument xy ->
             ( list
             , { state | currentPosition = xy, moveCounter = state.moveCounter + 1 }
             , if state.dragElement == Nothing then
-                Task.attempt GotDragItem (Browser.Dom.getElement state.dragElementId)
+                Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GotDragItem (Browser.Dom.getElement state.dragElementId))
 
               else
                 Cmd.none
@@ -686,21 +689,25 @@ inBetweenUpdate settings options list msg state =
         OverDropItem dropIndex dropElementId ->
             ( list
             , { state | dropIndex = dropIndex, dropElementId = dropElementId }
-            , Task.attempt GotDropItem (Browser.Dom.getElement dropElementId)
+            , Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GotDropItem (Browser.Dom.getElement dropElementId))
             )
 
         EnterDropItem ->
             if state.moveCounter > 1 && state.dragIndex /= state.dropIndex then
                 case settings.listen of
                     OnDrag ->
-                        ( list
-                            |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
-                            |> listUpdate settings.operation state.dragIndex state.dropIndex
+                        let
+                            newList : List item
+                            newList =
+                                list
+                                    |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                                    |> listUpdate settings.operation state.dragIndex state.dropIndex
+                        in
+                        ( newList
                         , stateUpdate settings.operation state.dropIndex state
-                        , Cmd.none
-                          --, options.hookCommandsOnDrag
-                          -- |> Maybe.map (\f -> Task.perform (f state.dropIndex) (Task.succeed list))
-                          --    |> Maybe.withDefault Cmd.none
+                        , options.detectReorder
+                            |> Maybe.map (\f -> Task.perform (f state.dragIndex state.dropIndex) (Task.succeed newList))
+                            |> Maybe.withDefault Cmd.none
                         )
 
                     OnDrop ->

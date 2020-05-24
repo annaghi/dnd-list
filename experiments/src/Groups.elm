@@ -53,7 +53,7 @@ preparedData =
 -- SYSTEM
 
 
-config : DnDList.Groups.Config Item
+config : DnDList.Groups.Config Item Msg
 config =
     DnDList.Groups.config
         { listen = DnDList.Groups.OnDrag
@@ -82,6 +82,7 @@ system =
     config
         |> DnDList.Groups.hookItemsBeforeListUpdate (\_ _ list -> list)
         |> DnDList.Groups.ghostProperties [ "width", "height", "position" ]
+        |> DnDList.Groups.detectDrop DetectDrop
         |> DnDList.Groups.create DnDMsg
 
 
@@ -122,6 +123,7 @@ subscriptions model =
 
 type Msg
     = DnDMsg DnDList.Groups.Msg
+    | DetectDrop Int Int (List Item)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -135,6 +137,19 @@ update msg model =
             ( { model | items = items, dnd = dndModel }
             , dndCmd
             )
+
+        DetectDrop dragIndex dropIndex fruits ->
+            let
+                _ =
+                    Debug.log "DetectDrop" dragIndex
+
+                _ =
+                    Debug.log "DetectDrop" dropIndex
+
+                _ =
+                    Debug.log "DetectDrop" fruits
+            in
+            ( model, Cmd.none )
 
 
 

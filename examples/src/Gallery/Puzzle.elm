@@ -57,7 +57,7 @@ solution =
 -- SYSTEM
 
 
-config : DnDList.Groups.Config Item
+config : DnDList.Groups.Config Item Msg
 config =
     DnDList.Groups.config
         { listen = DnDList.Groups.OnDrag

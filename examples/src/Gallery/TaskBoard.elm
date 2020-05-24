@@ -56,7 +56,7 @@ data =
 -- SYSTEM
 
 
-cardConfig : DnDList.Groups.Config Card
+cardConfig : DnDList.Groups.Config Card Msg
 cardConfig =
     DnDList.Groups.config
         { listen = DnDList.Groups.OnDrag
