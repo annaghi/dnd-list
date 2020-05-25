@@ -1,11 +1,10 @@
 module DnDList exposing
     ( Config, config
     , Movement(..), Listen(..), Operation(..)
-    , hookItemsBeforeListUpdate, detectDrop, detectReorder
+    , ghostProperties, hookItemsBeforeListUpdate, detectDrop, detectReorder
     , System, create, Msg
     , Model
     , Info
-    , ghostProperties
     )
 
 {-| While dragging and dropping a list item, the mouse events, the ghost element's positioning
@@ -51,8 +50,7 @@ You can add position styling attributes to this element using the`System` object
 
 @docs Config, config
 @docs Movement, Listen, Operation
-@docs ghostRuleset
-@docs hookItemsBeforeListUpdate, detectDrop, detectReorder
+@docs ghostProperties, hookItemsBeforeListUpdate, detectDrop, detectReorder
 
 
 # System
@@ -362,13 +360,13 @@ hookItemsBeforeListUpdate hook (Config settings options) =
 
 
 detectDrop : (DragIndex -> DropIndex -> List item -> msg) -> Config item msg -> Config item msg
-detectDrop hook (Config settings options) =
-    Config settings { options | detectDrop = Just hook }
+detectDrop toMessage (Config settings options) =
+    Config settings { options | detectDrop = Just toMessage }
 
 
 detectReorder : (DragIndex -> DropIndex -> List item -> msg) -> Config item msg -> Config item msg
-detectReorder hook (Config settings options) =
-    Config settings { options | detectReorder = Just hook }
+detectReorder toMessage (Config settings options) =
+    Config settings { options | detectReorder = Just toMessage }
 
 
 {-| A `System` encapsulates:
@@ -501,36 +499,6 @@ Or you can determine the current drag source item using the `Info` object:
                         |> List.head
                 )
 
-Or you can control over generating styles for the dragged ghost element.
-For example adding an offset to the position:
-
-    type alias Offset =
-        { x : Int
-        , y : Int
-        }
-
-    customGhostStyle : DnDList.Model -> DnDList.Info -> Offset -> List (Html.Attribute msg)
-    customGhostStyle dnd { element } offset =
-        let
-            px : Int -> String
-            px x =
-                String.fromInt x ++ "px"
-
-            translate : Int -> Int -> String
-            translate x y =
-                "translate3d(" ++ px x ++ ", " ++ px y ++ ", 0)"
-        in
-        case system.info dnd of
-            Just { currentPosition, startPosition } ->
-                [ Html.Attribute.style "transform" <|
-                    translate
-                        (round element.x + offset.x)
-                        (round (currentPosition.y - startPosition.y + element.y) + offset.y)
-                ]
-
-            Nothing ->
-                []
-
 -}
 type alias Info =
     { dragIndex : DragIndex
@@ -539,8 +507,6 @@ type alias Info =
     , dropElementId : DropElementId
     , dragElement : Browser.Dom.Element
     , dropElement : Browser.Dom.Element
-    , startPosition : Coordinates
-    , currentPosition : Coordinates
     }
 
 
@@ -556,8 +522,6 @@ info (Model model) =
                     , dropElementId = state.dropElementId
                     , dragElement = dragElement
                     , dropElement = dropElement
-                    , startPosition = state.startPosition
-                    , currentPosition = state.currentPosition
                     }
                 )
                 state.dragElement
@@ -582,7 +546,7 @@ type Msg
 type InBetweenMsg
     = MoveDocument Coordinates
     | OverDropItem DropIndex DropElementId
-    | EnterDropItem -- EnterDropItem : InBetweenMsg
+    | EnterDropItem
     | LeaveDropItem
     | GotDragItem (Result Browser.Dom.Error Browser.Dom.Element)
     | GotDropItem (Result Browser.Dom.Error Browser.Dom.Element)
@@ -607,15 +571,15 @@ subscriptions toMsg (Model model) =
 update : Config item msg -> (Msg -> msg) -> List item -> Msg -> Model -> ( List item, Model, Cmd msg )
 update (Config settings options) toMsg list msg (Model model) =
     case msg of
-        DownDragItem dragIndex dragElementId xy ->
+        DownDragItem dragIndex dragElementId coordinates ->
             ( list
             , Model <|
                 Just
                     { dragIndex = dragIndex
                     , dropIndex = dragIndex
                     , moveCounter = 0
-                    , startPosition = xy
-                    , currentPosition = xy
+                    , startPosition = coordinates
+                    , currentPosition = coordinates
                     , translateVector = Coordinates 0 0
                     , dragElementId = dragElementId
                     , dropElementId = dragElementId
@@ -638,34 +602,39 @@ update (Config settings options) toMsg list msg (Model model) =
                     ( list, Model Nothing, Cmd.none )
 
         UpDocument ->
+            -- TODO This branch might be DRY
             case model of
                 Just state ->
                     if state.dragIndex /= state.dropIndex then
-                        case settings.listen of
-                            OnDrag ->
-                                ( list, Model Nothing, Cmd.none )
+                        if settings.listen == OnDrop then
+                            let
+                                -- TODO Is there a way to get rid of this newList variable?
+                                newList : List item
+                                newList =
+                                    list
+                                        |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                                        |> listUpdate settings.operation state.dragIndex state.dropIndex
+                            in
+                            ( newList
+                            , Model Nothing
+                            , options.detectDrop
+                                |> Maybe.map (\toMessage -> Task.perform (toMessage state.dragIndex state.dropIndex) (Task.succeed newList))
+                                |> Maybe.withDefault Cmd.none
+                            )
 
-                            OnDrop ->
-                                let
-                                    -- TODO Is there a way to get rid of this newList variable?
-                                    newList : List item
-                                    newList =
-                                        list
-                                            |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
-                                            |> listUpdate settings.operation state.dragIndex state.dropIndex
-                                in
-                                ( newList
-                                , Model Nothing
-                                , options.detectDrop
-                                    |> Maybe.map (\f -> Task.perform (f state.dragIndex state.dropIndex) (Task.succeed newList))
-                                    |> Maybe.withDefault Cmd.none
-                                )
+                        else
+                            ( list
+                            , Model Nothing
+                            , options.detectDrop
+                                |> Maybe.map (\toMessage -> Task.perform (toMessage state.dragIndex state.dropIndex) (Task.succeed list))
+                                |> Maybe.withDefault Cmd.none
+                            )
 
                     else
                         ( list
                         , Model Nothing
                         , options.detectDrop
-                            |> Maybe.map (\f -> Task.perform (f state.dragIndex state.dropIndex) (Task.succeed list))
+                            |> Maybe.map (\toMessage -> Task.perform (toMessage state.dragIndex state.dropIndex) (Task.succeed list))
                             |> Maybe.withDefault Cmd.none
                         )
 
@@ -676,9 +645,9 @@ update (Config settings options) toMsg list msg (Model model) =
 inBetweenUpdate : Settings -> Options item msg -> (Msg -> msg) -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd msg )
 inBetweenUpdate settings options toMsg list msg state =
     case msg of
-        MoveDocument xy ->
+        MoveDocument coordinates ->
             ( list
-            , { state | currentPosition = xy, moveCounter = state.moveCounter + 1 }
+            , { state | currentPosition = coordinates, moveCounter = state.moveCounter + 1 }
             , if state.dragElement == Nothing then
                 Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GotDragItem (Browser.Dom.getElement state.dragElementId))
 
@@ -706,7 +675,7 @@ inBetweenUpdate settings options toMsg list msg state =
                         ( newList
                         , stateUpdate settings.operation state.dropIndex state
                         , options.detectReorder
-                            |> Maybe.map (\f -> Task.perform (f state.dragIndex state.dropIndex) (Task.succeed newList))
+                            |> Maybe.map (\toMessage -> Task.perform (toMessage state.dragIndex state.dropIndex) (Task.succeed newList))
                             |> Maybe.withDefault Cmd.none
                         )
 

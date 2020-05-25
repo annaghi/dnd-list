@@ -40,7 +40,7 @@ data =
 
 
 
--- SYSTEM
+-- DND
 
 
 config : DnDList.Config KeyedItem Msg

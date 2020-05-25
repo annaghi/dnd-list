@@ -1,8 +1,5 @@
 module Internal.Types exposing (..)
 
-import Dict
-import Html
-
 
 type alias DragIndex =
     Int

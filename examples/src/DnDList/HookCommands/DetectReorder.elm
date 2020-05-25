@@ -35,7 +35,7 @@ data =
 
 
 
--- SYSTEM
+-- DND
 
 
 config : DnDList.Config Item Msg
@@ -109,7 +109,9 @@ update msg model =
             )
 
         DetectReorder dragIndex dropIndex _ ->
-            ( { model | history = ( dragIndex, dropIndex ) :: model.history }, Cmd.none )
+            ( { model | history = ( dragIndex, dropIndex ) :: model.history }
+            , Cmd.none
+            )
 
 
 
@@ -145,7 +147,7 @@ itemView dnd index item =
     let
         itemId : String
         itemId =
-            "dragdrag-" ++ item
+            "detectreorder-" ++ item
 
         attrs : List (Html.Attribute msg)
         attrs =
@@ -208,9 +210,9 @@ historyStyles =
 
 itemStyles : List (Html.Attribute msg)
 itemStyles =
-    [ Html.Attributes.style "background-color" "#aa1e9d"
+    [ Html.Attributes.style "background-color" "#fb5f51"
     , Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "color" "white"
+    , Html.Attributes.style "color" "black"
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "font-size" "1.2em"
     , Html.Attributes.style "display" "flex"
@@ -229,4 +231,4 @@ placeholderStyles =
 
 ghostStyles : List (Html.Attribute msg)
 ghostStyles =
-    [ Html.Attributes.style "background-color" "#1e9daa" ]
+    [ Html.Attributes.style "background-color" "#fb5f51" ]

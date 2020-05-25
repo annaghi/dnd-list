@@ -14,6 +14,7 @@ type Property
 
 type alias Styles msg =
     -- TODO Find a nice and simple way to use Property as key
+    -- TODO Should properties contain `pointer-events`?
     Dict.Dict String (List (Html.Attribute msg))
 
 

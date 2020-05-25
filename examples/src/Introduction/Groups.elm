@@ -50,7 +50,7 @@ preparedData =
 
 
 
--- SYSTEM
+-- DND
 
 
 config : DnDList.Groups.Config Item Msg
@@ -67,6 +67,11 @@ config =
         }
 
 
+system : DnDList.Groups.System Item Msg
+system =
+    DnDList.Groups.create DnDMsg config
+
+
 comparator : Item -> Item -> Bool
 comparator item1 item2 =
     item1.group == item2.group
@@ -75,11 +80,6 @@ comparator item1 item2 =
 setter : Item -> Item -> Item
 setter item1 item2 =
     { item2 | group = item1.group }
-
-
-system : DnDList.Groups.System Item Msg
-system =
-    DnDList.Groups.create DnDMsg config
 
 
 

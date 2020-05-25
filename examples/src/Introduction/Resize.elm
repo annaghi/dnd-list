@@ -55,7 +55,7 @@ spots =
 
 
 
--- SYSTEM
+-- DND
 
 
 config : DnDList.Config Color Msg

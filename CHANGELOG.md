@@ -2,116 +2,104 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.0.0] - upcoming
+
+### Fixes
+
+-   Stop sending messages from commands
+
+### Features
+
+### Maintenance
+
+-   Update README, documentation, and examples reflecting the new API
+
 ## [6.0.0] - 2020-03-08
 
-### Added
+### Fixes
 
-- Add `startPosition` field to `Info` in the `DnDList` module only.
-- Add `currentPosition` field to `Info` in the `DnDList` module only.
+-   Use fixed `position` instead of absolute for `ghostStyles` in both modules, see: #50
 
-### Changed
+### Features
 
-- Use fixed `position` instead of absolute in `ghostStyles` in both modules.
+-   Add `startPosition` field to `Info` in the `DnDList` module only, see: #65
+-   Add `currentPosition` field to `Info` in the `DnDList` module only, see: #65
 
 ## [5.0.0] - 2019-05-06
 
-### New
+### Features
 
-- Transfer groupable items between different groups using only list items as drop elements.
-- List state invariant:
-  - the list is gathered by the grouping property
-  - if there are auxiliary items, they are keep their header or footer places
+-   Reorder items in groupable lists in the module `DnDList.Groups`
+-   List state invariant:
+    -   the list is gathered by the grouping property
+    -   if there are auxiliary items, they are keep their places as headers or footers
 
-### Added
-
-- Add new module `DnDList.Groups`.
-
-* Introduce `Info` type alias with a lot of useful fields.
-* Add `info` field to `System`.
-* Move `dragIndex` field from `System` to `Info` as a field called `dragIndex`.
-
-- Add `beforeUpdate` field to `Config`.
-- Add `listen` field to `Config`.
-- Add `operation` field to `Config`.
-
-### Changed
-
-- Move `message` field from `Config` to `create` function as a new `Msg` argument.
-
-* Rename `Draggable` type to `Model`.
-* Rename `draggable` field to `model` in `System`.
+*   Introduce `Info` type alias with a lot of useful fields
+*   Add `info` field to `System`
 
 ## [4.0.2] - 2019-03-07
 
-### Fixed
+### Fixes
 
-- Instead of `Int` use `Float` when extracting mouse position.
-- Delete `preventDefault` from `mouseover` because it has no default action.
+-   Instead of `Int` use `Float` when extracting mouse coordinates
+-   Delete `preventDefault` from `mouseover` because it has no default action
 
 ## [4.0.1] - 2019-02-21
 
-### Docs
+### Maintenance
 
-- Update README, documentation, and examples for better understanding.
+-   Update README, documentation, and examples for better understanding
 
 ## [4.0.0] - 2019-02-19
 
-### Changed
+### Maintenance
 
-- Rename `draggedIndex` field to `dragIndex` in `System`.
+-   Rename `draggedIndex` field to `dragIndex` in `System`
 
 ## [3.0.0] - 2019-02-18
 
-### Changed
+### Maintenance
 
-- Add `item` type variable to `System`.
-- Move `DnDList.update` function into `System` as a new field called `update`.
-- Move `DnDList.getDragIndex` function into `System` as a new field called `draggedIndex`.
-
-* Rename `events` field to `message` in `Config`.
+-   Add `item` type variable to `System`
+-   Move `DnDList.update` function into `System` as a new field called `update`
+-   Move `DnDList.getDragIndex` function into `System` as a new field called `draggedIndex`
 
 ## [2.0.0] - 2019-02-17
 
-### Added
+### Maintenance
 
-- Introduce `Config` type alias.
-- Replace `Msg` argument with `Config Msg` in `create` function.
-- Add the removed `Msg` from `create` to `Config` as a field called `events`.
-- Move `Movement` argument from `draggedStyles` to `Config` as a field called `movement`.
+-   Introduce `Config` type alias
 
 ## [1.0.4] - 2019-02-17
 
-### Docs
+### Maintenance
 
-- Add example using `mdgriffith/elm-ui`.
+-   Add example using `mdgriffith/elm-ui`, see: #2
 
 ## [1.0.3] - 2019-02-14
 
-### Docs
+### Maintenance
 
-- Update README, documentation, and examples for better understanding.
+-   Update README, documentation, and examples for better understanding
 
 ## [1.0.2] - 2019-02-12
 
-### Fixed
+### Fixes
 
-- The ghost element's position was animated by setting the left and top properties which trigger layout operations, and that's expensive. The better solution is to use a translate on the element, which does not trigger layout.
+-   Move ghost with `translate` instead of `position`, see: #1
 
 ## [1.0.1] - 2019-02-08
 
-- No changes, just check how the Elm package system works.
+-   No changes, just checking how the Elm package system works
 
 ## [1.0.0] - 2019-02-08
 
-### New
+### Features
 
-- Move items in flat lists.
-- List state invariant: none
+-   Reorder items in flat lists in the module `DnDList`
+-   List state invariant: none
 
-### Added
-
-- Add module called `DnDList`.
-
+[7.0.0]: https://github.com/annaghi/dnd-list/compare/6.0.0...7.0.0
 [6.0.0]: https://github.com/annaghi/dnd-list/compare/5.0.0...6.0.0
 [5.0.0]: https://github.com/annaghi/dnd-list/compare/4.0.2...5.0.0
 [4.0.2]: https://github.com/annaghi/dnd-list/compare/4.0.1...4.0.2

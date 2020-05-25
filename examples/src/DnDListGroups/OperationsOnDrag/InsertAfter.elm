@@ -50,7 +50,7 @@ preparedData =
 
 
 
--- SYSTEM
+-- DND
 
 
 config : DnDList.Groups.Config Item Msg

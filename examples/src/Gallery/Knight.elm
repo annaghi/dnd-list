@@ -63,7 +63,7 @@ knightMoves =
 
 
 
--- SYSTEM
+-- DND
 
 
 config : DnDList.Config Square Msg

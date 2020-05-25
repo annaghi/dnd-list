@@ -173,7 +173,7 @@ info : Example -> Info
 info example =
     case example of
         DetectDrop _ ->
-            "Detect drop"
+            "Detect drop with swap"
 
         DetectReorder _ ->
-            "Detect reorder"
+            "Detect reorder with swap"

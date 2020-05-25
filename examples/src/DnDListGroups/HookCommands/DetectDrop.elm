@@ -48,16 +48,16 @@ preparedData =
 
 
 
--- SYSTEM
+-- DND
 
 
 config : DnDList.Groups.Config Item Msg
 config =
     DnDList.Groups.config
         { listen = DnDList.Groups.OnDrop
-        , operation = DnDList.Groups.Rotate
+        , operation = DnDList.Groups.InsertBefore
         , groups =
-            { listen = DnDList.Groups.OnDrag
+            { listen = DnDList.Groups.OnDrop
             , operation = DnDList.Groups.InsertBefore
             , comparator = comparator
             , setter = setter
@@ -137,7 +137,9 @@ update msg model =
             )
 
         DetectDrop dragIndex dropIndex _ ->
-            ( { model | history = ( dragIndex, dropIndex ) :: model.history }, Cmd.none )
+            ( { model | history = ( dragIndex, dropIndex ) :: model.history }
+            , Cmd.none
+            )
 
 
 
@@ -185,18 +187,13 @@ itemView model offset localIndex { group, value, color } =
 
         itemId : String
         itemId =
-            "insertbefore-" ++ String.fromInt globalIndex
+            "detectdrop-" ++ String.fromInt globalIndex
     in
     case ( system.info model.dnd, maybeDragItem model.dnd model.items ) of
         ( Just { dragIndex, dropIndex }, Just dragItem ) ->
-            if value == "" && group /= dragItem.group then
+            if value == "" then
                 Html.div
                     (Html.Attributes.id itemId :: auxiliaryItemStyles ++ system.dropEvents globalIndex itemId)
-                    []
-
-            else if value == "" && group == dragItem.group then
-                Html.div
-                    (Html.Attributes.id itemId :: auxiliaryItemStyles)
                     []
 
             else if globalIndex /= dragIndex && globalIndex /= dropIndex then
@@ -268,17 +265,17 @@ maybeDragItem dnd items =
 
 dropColor : String
 dropColor =
-    "dimgray"
+    "gray"
 
 
 numberColor : String
 numberColor =
-    "#aa1e9d"
+    "#fb5f51"
 
 
 letterColor : String
 letterColor =
-    "#1e9daa"
+    "#5b84b1"
 
 
 transparent : String
@@ -308,7 +305,7 @@ itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
     [ Html.Attributes.style "background-color" color
     , Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "color" "white"
+    , Html.Attributes.style "color" "black"
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "font-size" "1.2em"
     , Html.Attributes.style "display" "flex"

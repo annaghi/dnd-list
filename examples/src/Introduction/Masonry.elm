@@ -44,7 +44,7 @@ colors =
 
 
 
--- SYSTEM
+-- DND
 
 
 config : DnDList.Config Item Msg

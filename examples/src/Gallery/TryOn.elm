@@ -54,7 +54,7 @@ data =
 
 
 
--- SYSTEM
+-- DND
 
 
 config : DnDList.Config Item Msg

@@ -45,7 +45,7 @@ data =
 
 
 
--- SYSTEM
+-- DND
 
 
 config : DnDList.Config Disk Msg

@@ -1,8 +1,8 @@
-module Test.Internal.Common.Operations exposing (suite)
+module Test.Internal.Operations exposing (suite)
 
 import Expect
 import Fuzzer
-import Internal.Common.Operations exposing (..)
+import Internal.Operations exposing (..)
 import Test
 
 

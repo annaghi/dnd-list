@@ -53,7 +53,7 @@ data =
 
 
 
--- SYSTEM
+-- DND
 
 
 cardConfig : DnDList.Groups.Config Card Msg
@@ -70,6 +70,11 @@ cardConfig =
         }
 
 
+cardSystem : DnDList.Groups.System Card Msg
+cardSystem =
+    DnDList.Groups.create CardMoved cardConfig
+
+
 comparator : Card -> Card -> Bool
 comparator card1 card2 =
     card1.activity == card2.activity
@@ -78,11 +83,6 @@ comparator card1 card2 =
 setter : Card -> Card -> Card
 setter card1 card2 =
     { card2 | activity = card1.activity }
-
-
-cardSystem : DnDList.Groups.System Card Msg
-cardSystem =
-    DnDList.Groups.create CardMoved cardConfig
 
 
 columnConfig : DnDList.Config (List Card) Msg

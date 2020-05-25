@@ -39,7 +39,7 @@ blueData =
 
 
 
--- SYSTEM
+-- DND
 
 
 redConfig : DnDList.Config String Msg

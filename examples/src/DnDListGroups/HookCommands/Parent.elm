@@ -173,7 +173,7 @@ info : Example -> Info
 info example =
     case example of
         DetectDrop _ ->
-            "Detect drop"
+            "Detect drop with insert before"
 
         DetectReorder _ ->
-            "Detect reorder"
+            "Detect reorder with insert before"

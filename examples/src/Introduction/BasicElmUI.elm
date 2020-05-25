@@ -36,7 +36,7 @@ data =
 
 
 
--- SYSTEM
+-- DND
 
 
 config : DnDList.Config Fruit Msg
