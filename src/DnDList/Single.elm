@@ -429,6 +429,21 @@ type Model
     = Model (Maybe State)
 
 
+type alias State =
+    { dragIndex : DragIndex
+    , dropIndex : DropIndex
+    , moveCounter : Int
+    , startPosition : Coordinates
+    , currentPosition : Coordinates
+    , translateVector : Coordinates
+    , dragElementId : DragElementId
+    , dropElementId : DropElementId
+    , dragElement : Maybe Browser.Dom.Element
+    , dropElement : Maybe Browser.Dom.Element
+    , containerElement : Maybe Browser.Dom.Element
+    }
+
+
 {-| Represents the information about the drag source and the drop target items.
 It is accessible through the `System`'s `info` field.
 
@@ -702,7 +717,7 @@ inBetweenUpdate options toMsg list msg state =
             , { state
                 | translateVector =
                     if (options.scroll.fence /= FenceNone) && (state.containerElement /= Nothing) then
-                        Internal.Scroll.coordinatesWithFence options.scroll.offset state
+                        Internal.Scroll.coordinatesWithFence options.scroll.offset state.startPosition state.currentPosition state.containerElement
 
                     else
                         Coordinates

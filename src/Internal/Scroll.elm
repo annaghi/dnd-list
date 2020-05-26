@@ -1,5 +1,6 @@
 module Internal.Scroll exposing (coordinatesWithFence)
 
+import Browser.Dom
 import Internal.Types exposing (..)
 
 
@@ -23,8 +24,8 @@ type alias Dimensions =
     }
 
 
-coordinatesWithFence : Offset -> State -> Coordinates
-coordinatesWithFence offset { startPosition, currentPosition, containerElement } =
+coordinatesWithFence : Offset -> Coordinates -> Coordinates -> Maybe Browser.Dom.Element -> Coordinates
+coordinatesWithFence offset startPosition currentPosition containerElement =
     case containerElement of
         Just { element } ->
             case direction currentPosition offset element element of
