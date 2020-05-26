@@ -1,6 +1,7 @@
 module Gallery.Puzzle exposing (Model, Msg, commands, initialModel, main, subscriptions, update, view)
 
 import Browser
+import DnDList
 import DnDList.Groups
 import Html
 import Html.Attributes
@@ -57,33 +58,18 @@ solution =
 -- DND
 
 
-config : DnDList.Groups.Config Item Msg
-config =
-    DnDList.Groups.config
-        { listen = DnDList.Groups.OnDrag
-        , operation = DnDList.Groups.Swap
-        , groups =
-            { listen = DnDList.Groups.OnDrop
-            , operation = DnDList.Groups.Swap
-            , comparator = comparator
-            , setter = setter
-            }
-        }
-
-
 system : DnDList.Groups.System Item Msg
 system =
-    DnDList.Groups.create DnDMsg config
-
-
-comparator : Item -> Item -> Bool
-comparator item1 item2 =
-    item1.group == item2.group
-
-
-setter : Item -> Item -> Item
-setter item1 item2 =
-    { item2 | group = item1.group }
+    DnDList.Groups.config
+        |> DnDList.Groups.listen DnDList.OnDrag
+        |> DnDList.Groups.operation DnDList.Swap
+        |> DnDList.Groups.groups
+            { listen = DnDList.OnDrop
+            , operation = DnDList.Swap
+            , comparator = \item1 item2 -> item1.group == item2.group
+            , setter = \item1 item2 -> { item2 | group = item1.group }
+            }
+        |> DnDList.Groups.create DnDMsg
 
 
 

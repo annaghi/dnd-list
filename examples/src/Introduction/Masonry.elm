@@ -2,6 +2,7 @@ module Introduction.Masonry exposing (Model, Msg, commands, initialModel, main, 
 
 import Browser
 import DnDList
+import DnDList.Single
 import Html
 import Html.Attributes
 import Random
@@ -47,18 +48,11 @@ colors =
 -- DND
 
 
-config : DnDList.Config Item Msg
-config =
-    DnDList.config
-        { movement = DnDList.Free
-        , listen = DnDList.OnDrag
-        , operation = DnDList.Swap
-        }
-
-
-system : DnDList.System Item Msg
+system : DnDList.Single.System Item Msg
 system =
-    DnDList.create DnDMsg config
+    DnDList.Single.config
+        |> DnDList.Single.operation DnDList.Swap
+        |> DnDList.Single.create DnDMsg
 
 
 
@@ -75,7 +69,7 @@ type Item
 
 type alias Model =
     { items : List Item
-    , dnd : DnDList.Model
+    , dnd : DnDList.Single.Model
     }
 
 
@@ -115,7 +109,7 @@ commands =
 
 type Msg
     = NewMasonry (List Int)
-    | DnDMsg DnDList.Msg
+    | DnDMsg DnDList.Single.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -153,7 +147,7 @@ view model =
         ]
 
 
-itemView : DnDList.Model -> Int -> Item -> Html.Html Msg
+itemView : DnDList.Single.Model -> Int -> Item -> Html.Html Msg
 itemView dnd index (Item color width) =
     let
         itemId : String
@@ -186,7 +180,7 @@ itemView dnd index (Item color width) =
                 []
 
 
-ghostView : DnDList.Model -> List Item -> Html.Html Msg
+ghostView : DnDList.Single.Model -> List Item -> Html.Html Msg
 ghostView dnd items =
     let
         maybeDragItem : Maybe Item

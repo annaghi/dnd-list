@@ -1,7 +1,7 @@
 module Introduction.Basic exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
-import DnDList
+import DnDList.Single
 import Html
 import Html.Attributes
 
@@ -37,18 +37,9 @@ data =
 -- DND
 
 
-config : DnDList.Config Fruit Msg
-config =
-    DnDList.config
-        { movement = DnDList.Free
-        , listen = DnDList.OnDrag
-        , operation = DnDList.Rotate
-        }
-
-
-system : DnDList.System Fruit Msg
+system : DnDList.Single.System Fruit Msg
 system =
-    DnDList.create DnDMsg config
+    DnDList.Single.create DnDMsg DnDList.Single.config
 
 
 
@@ -57,7 +48,7 @@ system =
 
 type alias Model =
     { items : List Fruit
-    , dnd : DnDList.Model
+    , dnd : DnDList.Single.Model
     }
 
 
@@ -87,7 +78,7 @@ subscriptions model =
 
 
 type Msg
-    = DnDMsg DnDList.Msg
+    = DnDMsg DnDList.Single.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -118,7 +109,7 @@ view model =
         ]
 
 
-itemView : DnDList.Model -> Int -> Fruit -> Html.Html Msg
+itemView : DnDList.Single.Model -> Int -> Fruit -> Html.Html Msg
 itemView dnd index item =
     let
         itemId : String
@@ -143,7 +134,7 @@ itemView dnd index item =
                 [ Html.text item ]
 
 
-ghostView : DnDList.Model -> List Fruit -> Html.Html Msg
+ghostView : DnDList.Single.Model -> List Fruit -> Html.Html Msg
 ghostView dnd items =
     let
         maybeDragItem : Maybe Fruit

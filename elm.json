@@ -6,6 +6,7 @@
   "version": "7.0.0",
   "exposed-modules": [
     "DnDList",
+    "DnDList.Single",
     "DnDList.Groups"
   ],
   "elm-version": "0.19.1 <= v < 0.20.0",

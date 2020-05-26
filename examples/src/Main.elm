@@ -3,8 +3,8 @@ module Main exposing (main)
 import Browser
 import Browser.Dom
 import Browser.Navigation
-import DnDList.Parent
-import DnDListGroups.Parent
+import DnDList.Groups.Parent
+import DnDList.Single.Parent
 import Gallery.Parent
 import Home
 import Html
@@ -45,7 +45,7 @@ type alias Model =
 
 
 init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
-init flags url key =
+init () url key =
     stepUrl url { key = key, example = NotFound, path = toPath url }
 
 
@@ -53,8 +53,8 @@ type Example
     = NotFound
     | Home Home.Model
     | Introduction Introduction.Parent.Model
-    | DnDList DnDList.Parent.Model
-    | DnDListGroups DnDListGroups.Parent.Model
+    | Single DnDList.Single.Parent.Model
+    | Groups DnDList.Groups.Parent.Model
     | Gallery Gallery.Parent.Model
 
 
@@ -68,8 +68,8 @@ type Msg
     | UrlChanged Url.Url
     | HomeMsg Home.Msg
     | IntroductionMsg Introduction.Parent.Msg
-    | DnDListMsg DnDList.Parent.Msg
-    | DnDListGroupsMsg DnDListGroups.Parent.Msg
+    | SingleMsg DnDList.Single.Parent.Msg
+    | GroupsMsg DnDList.Groups.Parent.Msg
     | GalleryMsg Gallery.Parent.Msg
 
 
@@ -103,11 +103,11 @@ update message model =
         ( IntroductionMsg msg, Introduction mo ) ->
             stepIntroduction model (Introduction.Parent.update msg mo)
 
-        ( DnDListMsg msg, DnDList mo ) ->
-            stepConfig model (DnDList.Parent.update msg mo)
+        ( SingleMsg msg, Single mo ) ->
+            stepSingle model (DnDList.Single.Parent.update msg mo)
 
-        ( DnDListGroupsMsg msg, DnDListGroups mo ) ->
-            stepConfigGroups model (DnDListGroups.Parent.update msg mo)
+        ( GroupsMsg msg, Groups mo ) ->
+            stepGroups model (DnDList.Groups.Parent.update msg mo)
 
         ( GalleryMsg msg, Gallery mo ) ->
             stepGallery model (Gallery.Parent.update msg mo)
@@ -126,14 +126,14 @@ stepIntroduction model ( mo, cmds ) =
     ( { model | example = Introduction mo }, Cmd.map IntroductionMsg cmds )
 
 
-stepConfig : Model -> ( DnDList.Parent.Model, Cmd DnDList.Parent.Msg ) -> ( Model, Cmd Msg )
-stepConfig model ( mo, cmds ) =
-    ( { model | example = DnDList mo }, Cmd.map DnDListMsg cmds )
+stepSingle : Model -> ( DnDList.Single.Parent.Model, Cmd DnDList.Single.Parent.Msg ) -> ( Model, Cmd Msg )
+stepSingle model ( mo, cmds ) =
+    ( { model | example = Single mo }, Cmd.map SingleMsg cmds )
 
 
-stepConfigGroups : Model -> ( DnDListGroups.Parent.Model, Cmd DnDListGroups.Parent.Msg ) -> ( Model, Cmd Msg )
-stepConfigGroups model ( mo, cmds ) =
-    ( { model | example = DnDListGroups mo }, Cmd.map DnDListGroupsMsg cmds )
+stepGroups : Model -> ( DnDList.Groups.Parent.Model, Cmd DnDList.Groups.Parent.Msg ) -> ( Model, Cmd Msg )
+stepGroups model ( mo, cmds ) =
+    ( { model | example = Groups mo }, Cmd.map GroupsMsg cmds )
 
 
 stepGallery : Model -> ( Gallery.Parent.Model, Cmd Gallery.Parent.Msg ) -> ( Model, Cmd Msg )
@@ -157,11 +157,11 @@ subscriptions model =
         Introduction mo ->
             Sub.map IntroductionMsg (Introduction.Parent.subscriptions mo)
 
-        DnDList mo ->
-            Sub.map DnDListMsg (DnDList.Parent.subscriptions mo)
+        Single mo ->
+            Sub.map SingleMsg (DnDList.Single.Parent.subscriptions mo)
 
-        DnDListGroups mo ->
-            Sub.map DnDListGroupsMsg (DnDListGroups.Parent.subscriptions mo)
+        Groups mo ->
+            Sub.map GroupsMsg (DnDList.Groups.Parent.subscriptions mo)
 
         Gallery mo ->
             Sub.map GalleryMsg (Gallery.Parent.subscriptions mo)
@@ -201,14 +201,14 @@ stepUrl url model =
                     (Url.Parser.s Path.rootPath </> Url.Parser.s "introduction" </> slug_)
                 , Url.Parser.map
                     (\slug ->
-                        stepConfig model (DnDList.Parent.init slug)
+                        stepSingle model (DnDList.Single.Parent.init slug)
                     )
-                    (Url.Parser.s Path.rootPath </> Url.Parser.s "DnDList" </> slug_)
+                    (Url.Parser.s Path.rootPath </> Url.Parser.s "single" </> slug_)
                 , Url.Parser.map
                     (\slug ->
-                        stepConfigGroups model (DnDListGroups.Parent.init slug)
+                        stepGroups model (DnDList.Groups.Parent.init slug)
                     )
-                    (Url.Parser.s Path.rootPath </> Url.Parser.s "DnDListGroups" </> slug_)
+                    (Url.Parser.s Path.rootPath </> Url.Parser.s "groups" </> slug_)
                 , Url.Parser.map
                     (\slug ->
                         stepGallery model (Gallery.Parent.init slug)
@@ -251,8 +251,8 @@ view model =
             [ cardView
             , Html.nav []
                 [ Html.map IntroductionMsg (Introduction.Parent.navigationView model.path)
-                , Html.map DnDListMsg (DnDList.Parent.navigationView model.path)
-                , Html.map DnDListGroupsMsg (DnDListGroups.Parent.navigationView model.path)
+                , Html.map SingleMsg (DnDList.Single.Parent.navigationView model.path)
+                , Html.map GroupsMsg (DnDList.Groups.Parent.navigationView model.path)
                 , Html.map GalleryMsg (Gallery.Parent.navigationView model.path)
                 ]
             ]
@@ -271,16 +271,16 @@ view model =
                     , Html.map IntroductionMsg (Introduction.Parent.codeView mo)
                     ]
 
-                DnDList mo ->
-                    [ Html.map DnDListMsg (DnDList.Parent.headerView mo)
-                    , Html.map DnDListMsg (DnDList.Parent.demoView mo)
-                    , Html.map DnDListMsg (DnDList.Parent.codeView mo)
+                Single mo ->
+                    [ Html.map SingleMsg (DnDList.Single.Parent.headerView mo)
+                    , Html.map SingleMsg (DnDList.Single.Parent.demoView mo)
+                    , Html.map SingleMsg (DnDList.Single.Parent.codeView mo)
                     ]
 
-                DnDListGroups mo ->
-                    [ Html.map DnDListGroupsMsg (DnDListGroups.Parent.headerView mo)
-                    , Html.map DnDListGroupsMsg (DnDListGroups.Parent.demoView mo)
-                    , Html.map DnDListGroupsMsg (DnDListGroups.Parent.codeView mo)
+                Groups mo ->
+                    [ Html.map GroupsMsg (DnDList.Groups.Parent.headerView mo)
+                    , Html.map GroupsMsg (DnDList.Groups.Parent.demoView mo)
+                    , Html.map GroupsMsg (DnDList.Groups.Parent.codeView mo)
                     ]
 
                 Gallery mo ->

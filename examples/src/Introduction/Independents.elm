@@ -2,6 +2,7 @@ module Introduction.Independents exposing (Model, Msg, initialModel, main, subsc
 
 import Browser
 import DnDList
+import DnDList.Single
 import Html
 import Html.Attributes
 
@@ -42,32 +43,18 @@ blueData =
 -- DND
 
 
-redConfig : DnDList.Config String Msg
-redConfig =
-    DnDList.config
-        { movement = DnDList.Free
-        , listen = DnDList.OnDrag
-        , operation = DnDList.Swap
-        }
-
-
-redSystem : DnDList.System String Msg
+redSystem : DnDList.Single.System String Msg
 redSystem =
-    DnDList.create RedMsg redConfig
+    DnDList.Single.config
+        |> DnDList.Single.operation DnDList.Swap
+        |> DnDList.Single.create RedMsg
 
 
-blueConfig : DnDList.Config String Msg
-blueConfig =
-    DnDList.config
-        { movement = DnDList.Free
-        , listen = DnDList.OnDrag
-        , operation = DnDList.Swap
-        }
-
-
-blueSystem : DnDList.System String Msg
+blueSystem : DnDList.Single.System String Msg
 blueSystem =
-    DnDList.create BlueMsg blueConfig
+    DnDList.Single.config
+        |> DnDList.Single.operation DnDList.Swap
+        |> DnDList.Single.create BlueMsg
 
 
 
@@ -77,8 +64,8 @@ blueSystem =
 type alias Model =
     { reds : List String
     , blues : List String
-    , redDnD : DnDList.Model
-    , blueDnD : DnDList.Model
+    , redDnD : DnDList.Single.Model
+    , blueDnD : DnDList.Single.Model
     }
 
 
@@ -113,8 +100,8 @@ subscriptions model =
 
 
 type Msg
-    = RedMsg DnDList.Msg
-    | BlueMsg DnDList.Msg
+    = RedMsg DnDList.Single.Msg
+    | BlueMsg DnDList.Single.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -163,7 +150,7 @@ view model =
         ]
 
 
-redView : DnDList.Model -> Int -> String -> Html.Html Msg
+redView : DnDList.Single.Model -> Int -> String -> Html.Html Msg
 redView dnd index item =
     let
         itemId : String
@@ -196,7 +183,7 @@ redView dnd index item =
                 [ Html.text item ]
 
 
-blueView : DnDList.Model -> Int -> String -> Html.Html Msg
+blueView : DnDList.Single.Model -> Int -> String -> Html.Html Msg
 blueView dnd index item =
     let
         itemId : String
@@ -229,7 +216,7 @@ blueView dnd index item =
                 [ Html.text item ]
 
 
-redGhostView : DnDList.Model -> List String -> Html.Html Msg
+redGhostView : DnDList.Single.Model -> List String -> Html.Html Msg
 redGhostView dnd items =
     let
         maybeDragRed : Maybe String
@@ -247,7 +234,7 @@ redGhostView dnd items =
             Html.text ""
 
 
-blueGhostView : DnDList.Model -> List String -> Html.Html Msg
+blueGhostView : DnDList.Single.Model -> List String -> Html.Html Msg
 blueGhostView dnd items =
     let
         maybeDragBlue : Maybe String

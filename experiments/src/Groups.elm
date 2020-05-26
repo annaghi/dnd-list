@@ -1,6 +1,7 @@
 module Groups exposing (Model, Msg, init, subscriptions, update, view)
 
 import Browser
+import DnDList
 import DnDList.Groups
 import Html
 import Html.Attributes
@@ -53,35 +54,19 @@ preparedData =
 -- SYSTEM
 
 
-config : DnDList.Groups.Config Item Msg
-config =
-    DnDList.Groups.config
-        { listen = DnDList.Groups.OnDrag
-        , operation = DnDList.Groups.Rotate
-        , groups =
-            { listen = DnDList.Groups.OnDrag
-            , operation = DnDList.Groups.InsertBefore
-            , comparator = comparator
-            , setter = setter
-            }
-        }
-
-
-comparator : Item -> Item -> Bool
-comparator item1 item2 =
-    item1.group == item2.group
-
-
-setter : Item -> Item -> Item
-setter item1 item2 =
-    { item2 | group = item1.group }
-
-
 system : DnDList.Groups.System Item Msg
 system =
-    config
+    DnDList.Groups.config
+        |> DnDList.Groups.listen DnDList.OnDrag
+        |> DnDList.Groups.operation DnDList.Rotate
+        |> DnDList.Groups.groups
+            { listen = DnDList.OnDrag
+            , operation = DnDList.InsertBefore
+            , comparator = \item1 item2 -> item1.group == item2.group
+            , setter = \item1 item2 -> { item2 | group = item1.group }
+            }
         |> DnDList.Groups.hookItemsBeforeListUpdate (\_ _ list -> list)
-        |> DnDList.Groups.ghostProperties [ "width", "height", "position" ]
+        |> DnDList.Groups.ghost [ "width", "height", "position" ]
         |> DnDList.Groups.detectDrop DetectDrop
         |> DnDList.Groups.create DnDMsg
 
@@ -182,7 +167,7 @@ itemView model offset localIndex { group, value, color } =
 
         itemId : String
         itemId =
-            "id-" ++ String.fromInt globalIndex
+            "groups-" ++ String.fromInt globalIndex
     in
     case ( system.info model.dnd, maybeDragItem model.dnd model.items ) of
         ( Just { dragIndex }, Just dragItem ) ->

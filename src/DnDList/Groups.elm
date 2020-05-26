@@ -1,7 +1,7 @@
 module DnDList.Groups exposing
     ( Config, config
-    , Listen(..), Operation(..)
-    , ghostProperties, hookItemsBeforeListUpdate, detectDrop, detectReorder
+    , listen, operation
+    , groups, ghost, hookItemsBeforeListUpdate, detectDrop, detectReorder
     , System, create, Msg
     , Model
     , Info
@@ -13,7 +13,7 @@ and possibly prepared with auxiliary items.
 Here is a [demo with groups](https://annaghi.github.io/dnd-list/introduction/groups),
 we will use it as an illustration throughout this page.
 
-This module is a modified version of the `DnDList` module.
+This module is a modified version of the `Single` module.
 The `Config` was extended with a new field called `groups`, and the `movement` field was withdrawn.
 
 With groupable items the drag source and the drop target items can belong to the _same group_ or to _different groups_.
@@ -48,8 +48,8 @@ So now the internal sorting distinguishes between these two cases and we need to
 # Config
 
 @docs Config, config
-@docs Listen, Operation
-@docs ghostProperties, hookItemsBeforeListUpdate, detectDrop, detectReorder
+@docs listen, operation
+@docs groups, ghost, hookItemsBeforeListUpdate, detectDrop, detectReorder
 
 
 # System
@@ -211,7 +211,7 @@ itemView model offset localIndex { group, value, color } =
 `ghostStyles` is a function which wraps up the positioning styles of the ghost element.
 The ghost element has absolute position relative to the viewport.
 
-    ghostView : DnDList.Groups.Model -> List Item -> Html.Html Msg
+    ghostView : Single.Groups.Model -> List Item -> Html.Html Msg
     ghostView dnd items =
         case maybeDragItem dnd items of
             Just { value, color } ->
@@ -243,6 +243,7 @@ See [Info](#info).
 
 import Browser.Dom
 import Browser.Events
+import DnDList exposing (..)
 import Html
 import Html.Attributes
 import Html.Events
@@ -284,14 +285,14 @@ import Task
 
 This is our configuration with a void `beforeUpdate`:
 
-    config : DnDList.Groups.Config Item
+    config : Single.Groups.Config Item
     config =
         { beforeUpdate = \_ _ list -> list
-        , listen = DnDList.Groups.OnDrag
-        , operation = DnDList.Groups.Rotate
+        , listen = Single.Groups.OnDrag
+        , operation = Single.Groups.Rotate
         , groups =
-            { listen = DnDList.Groups.OnDrag
-            , operation = DnDList.Groups.InsertBefore
+            { listen = Single.Groups.OnDrag
+            , operation = Single.Groups.InsertBefore
             , comparator = comparator
             , setter = setter
             }
@@ -307,12 +308,16 @@ This is our configuration with a void `beforeUpdate`:
 
 -}
 type Config item msg
-    = Config (Settings item) (Options item msg)
+    = Config (Options item msg)
 
 
-type alias Settings item =
+type alias Options item msg =
     { listen : Listen
     , operation : Operation
+    , ghost : List String
+    , hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
+    , detectDrop : Maybe (DragIndex -> DropIndex -> List item -> msg)
+    , detectReorder : Maybe (DragIndex -> DropIndex -> List item -> msg)
     , groups :
         { listen : Listen
         , operation : Operation
@@ -322,86 +327,72 @@ type alias Settings item =
     }
 
 
-type alias Options item msg =
-    { ghostProperties : List String
-    , hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
-    , detectDrop : Maybe (DragIndex -> DropIndex -> List item -> msg)
-    , detectReorder : Maybe (DragIndex -> DropIndex -> List item -> msg)
-    }
-
-
-config : Settings item -> Config item msg
-config settings =
-    Config settings defaultOptions
+config : Config item msg
+config =
+    Config defaultOptions
 
 
 defaultOptions : Options item msg
 defaultOptions =
-    { ghostProperties = [ "width", "height", "position" ]
+    { listen = OnDrag
+    , operation = Rotate
+    , ghost = [ "width", "height", "position" ]
     , hookItemsBeforeListUpdate = \_ _ list -> list
     , detectDrop = Nothing
     , detectReorder = Nothing
+    , groups =
+        { listen = OnDrag
+        , operation = InsertBefore
+        , comparator = \_ _ -> True
+        , setter = \_ b -> b
+        }
     }
-
-
-{-| Represents the event for which the list sorting is available.
-
-  - `OnDrag`: The list will be sorted when the ghost element is being dragged over a drop target item.
-
-  - `OnDrop`: The list will be sorted when the ghost element is dropped on a drop target item.
-
--}
-type Listen
-    = OnDrag
-    | OnDrop
-
-
-{-| Represents the list sort operation.
-Detailed comparisons can be found here:
-[sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
-and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
-
-  - `InsertAfter`: The drag source item will be inserted after the drop target item.
-
-  - `InsertBefore`: The drag source item will be inserted before the drop target item.
-
-  - `Rotate`: The items between the drag source and the drop target items will be circularly shifted.
-
-  - `Swap`: The drag source and the drop target items will be swapped.
-
-  - `Unaltered`: The list items will keep their initial order.
-
--}
-type Operation
-    = InsertAfter
-    | InsertBefore
-    | Rotate
-    | Swap
-    | Unaltered
 
 
 
 -- Options
 
 
-ghostProperties : List String -> Config item msg -> Config item msg
-ghostProperties properties (Config settings options) =
-    Config settings { options | ghostProperties = properties }
+listen : Listen -> Config item msg -> Config item msg
+listen listen_ (Config options) =
+    Config { options | listen = listen_ }
+
+
+operation : Operation -> Config item msg -> Config item msg
+operation operation_ (Config options) =
+    Config { options | operation = operation_ }
+
+
+groups :
+    { listen : Listen
+    , operation : Operation
+    , comparator : item -> item -> Bool
+    , setter : item -> item -> item
+    }
+    -> Config item msg
+    -> Config item msg
+groups properties (Config options) =
+    Config { options | groups = properties }
+
+
+ghost : List String -> Config item msg -> Config item msg
+ghost properties (Config options) =
+    Config { options | ghost = properties }
 
 
 hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item msg -> Config item msg
-hookItemsBeforeListUpdate hook (Config settings options) =
-    Config settings { options | hookItemsBeforeListUpdate = hook }
+hookItemsBeforeListUpdate hook (Config options) =
+    Config { options | hookItemsBeforeListUpdate = hook }
 
 
 detectDrop : (DragIndex -> DropIndex -> List item -> msg) -> Config item msg -> Config item msg
-detectDrop toMessage (Config settings options) =
-    Config settings { options | detectDrop = Just toMessage }
+detectDrop toMessage (Config options) =
+    Config { options | detectDrop = Just toMessage }
 
 
 detectReorder : (DragIndex -> DropIndex -> List item -> msg) -> Config item msg -> Config item msg
-detectReorder toMessage (Config settings options) =
-    Config settings { options | detectReorder = Just toMessage }
+detectReorder toMessage (Config options) =
+    Config { options | detectReorder = Just toMessage }
 
 
 {-| A `System` encapsulates:
@@ -464,9 +455,9 @@ The sort operations were designed with the following list state invariant in min
 
 And now the `System` is a wrapper type around the list item and our message types:
 
-    system : DnDList.Groups.System Item Msg
+    system : Single.Groups.System Item Msg
     system =
-        DnDList.Groups.create config MyMsg
+        Single.Groups.create config MyMsg
 
 -}
 create : (Msg -> msg) -> Config item msg -> System item msg
@@ -486,7 +477,7 @@ It will be `Nothing` if there is no ongoing dragging.
 You should set it in your model and initialize through the `System`'s `model` field.
 
     type alias Model =
-        { dnd : DnDList.Groups.Model
+        { dnd : Single.Groups.Model
         , items : List Item
         }
 
@@ -549,7 +540,7 @@ and what to render when there is no dragging:
 
 Or you can determine the current drag source item using the `Info` object:
 
-    maybeDragItem : DnDList.Groups.Model -> List Item -> Maybe Item
+    maybeDragItem : Single.Groups.Model -> List Item -> Maybe Item
     maybeDragItem dnd items =
         system.info dnd
             |> Maybe.andThen
@@ -594,7 +585,7 @@ info (Model model) =
 It should be wrapped within our message constructor:
 
     type Msg
-        = MyMsg DnDList.Groups.Msg
+        = MyMsg Single.Groups.Msg
 
 -}
 type Msg
@@ -629,7 +620,7 @@ subscriptions toMsg (Model model) =
 
 
 update : Config item msg -> (Msg -> msg) -> List item -> Msg -> Model -> ( List item, Model, Cmd msg )
-update (Config settings options) toMsg list msg (Model model) =
+update (Config options) toMsg list msg (Model model) =
     case msg of
         DownDragItem dragIndex dragElementId coordinates ->
             ( list
@@ -654,7 +645,7 @@ update (Config settings options) toMsg list msg (Model model) =
                 Just state ->
                     let
                         ( newList, newState, newCmd ) =
-                            inBetweenUpdate settings options toMsg list inBetweenMsg state
+                            inBetweenUpdate options toMsg list inBetweenMsg state
                     in
                     ( newList, Model (Just newState), newCmd )
 
@@ -669,16 +660,16 @@ update (Config settings options) toMsg list msg (Model model) =
                         let
                             equalGroups : Bool
                             equalGroups =
-                                Internal.Groups.equalGroups settings.groups.comparator state.dragIndex state.dropIndex list
+                                Internal.Groups.equalGroups options.groups.comparator state.dragIndex state.dropIndex list
                         in
-                        if settings.listen == OnDrop && equalGroups then
+                        if options.listen == OnDrop && equalGroups then
                             let
                                 -- TODO I do not like creating variable from the list
                                 newList : List item
                                 newList =
                                     list
                                         |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
-                                        |> groupUpdate settings.operation state.dragIndex state.dropIndex
+                                        |> groupUpdate options.operation state.dragIndex state.dropIndex
                             in
                             ( newList
                             , Model Nothing
@@ -687,13 +678,13 @@ update (Config settings options) toMsg list msg (Model model) =
                                 |> Maybe.withDefault Cmd.none
                             )
 
-                        else if settings.groups.listen == OnDrop && not equalGroups then
+                        else if options.groups.listen == OnDrop && not equalGroups then
                             let
                                 newList : List item
                                 newList =
                                     list
                                         |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
-                                        |> listUpdate settings.groups.operation settings.groups.comparator settings.groups.setter state.dragIndex state.dropIndex
+                                        |> listUpdate options.groups.operation options.groups.comparator options.groups.setter state.dragIndex state.dropIndex
                             in
                             ( newList
                             , Model Nothing
@@ -722,8 +713,8 @@ update (Config settings options) toMsg list msg (Model model) =
                     ( list, Model Nothing, Cmd.none )
 
 
-inBetweenUpdate : Settings item -> Options item msg -> (Msg -> msg) -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd msg )
-inBetweenUpdate settings options toMsg list msg state =
+inBetweenUpdate : Options item msg -> (Msg -> msg) -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd msg )
+inBetweenUpdate options toMsg list msg state =
     case msg of
         MoveDocument coordinates ->
             ( list
@@ -746,33 +737,33 @@ inBetweenUpdate settings options toMsg list msg state =
                 let
                     equalGroups : Bool
                     equalGroups =
-                        Internal.Groups.equalGroups settings.groups.comparator state.dragIndex state.dropIndex list
+                        Internal.Groups.equalGroups options.groups.comparator state.dragIndex state.dropIndex list
                 in
-                if settings.listen == OnDrag && equalGroups then
+                if options.listen == OnDrag && equalGroups then
                     let
                         newList : List item
                         newList =
                             list
                                 |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
-                                |> groupUpdate settings.operation state.dragIndex state.dropIndex
+                                |> groupUpdate options.operation state.dragIndex state.dropIndex
                     in
                     ( newList
-                    , stateUpdate settings.operation state.dropIndex state
+                    , stateUpdate options.operation state.dropIndex state
                     , options.detectReorder
                         |> Maybe.map (\toMessage -> Task.perform (toMessage state.dragIndex state.dropIndex) (Task.succeed newList))
                         |> Maybe.withDefault Cmd.none
                     )
 
-                else if settings.groups.listen == OnDrag && not equalGroups then
+                else if options.groups.listen == OnDrag && not equalGroups then
                     let
                         newList : List item
                         newList =
                             list
                                 |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
-                                |> listUpdate settings.groups.operation settings.groups.comparator settings.groups.setter state.dragIndex state.dropIndex
+                                |> listUpdate options.groups.operation options.groups.comparator options.groups.setter state.dragIndex state.dropIndex
                     in
                     ( newList
-                    , stateUpdate settings.groups.operation state.dropIndex state
+                    , stateUpdate options.groups.operation state.dropIndex state
                     , options.detectReorder
                         |> Maybe.map (\toMessage -> Task.perform (toMessage state.dragIndex state.dropIndex) (Task.succeed newList))
                         |> Maybe.withDefault Cmd.none
@@ -821,8 +812,8 @@ inBetweenUpdate settings options toMsg list msg state =
 
 
 stateUpdate : Operation -> DropIndex -> State -> State
-stateUpdate operation dropIndex state =
-    case operation of
+stateUpdate operation_ dropIndex state =
+    case operation_ of
         InsertAfter ->
             { state
                 | dragIndex =
@@ -856,8 +847,8 @@ stateUpdate operation dropIndex state =
 
 
 groupUpdate : Operation -> DragIndex -> DropIndex -> List item -> List item
-groupUpdate operation dragIndex dropIndex list =
-    case operation of
+groupUpdate operation_ dragIndex dropIndex list =
+    case operation_ of
         InsertAfter ->
             Internal.Operations.insertAfter dragIndex dropIndex list
 
@@ -875,8 +866,8 @@ groupUpdate operation dragIndex dropIndex list =
 
 
 listUpdate : Operation -> (item -> item -> Bool) -> (item -> item -> item) -> DragIndex -> DropIndex -> List item -> List item
-listUpdate operation comparator setter dragIndex dropIndex list =
-    case operation of
+listUpdate operation_ comparator setter dragIndex dropIndex list =
+    case operation_ of
         InsertAfter ->
             list
                 |> Internal.Groups.dragGroupUpdate setter dragIndex dropIndex
@@ -937,13 +928,13 @@ dropEvents toMsg dropIndex dropElementId =
 
 
 ghostStyles : Config item msg -> Model -> List (Html.Attribute msg)
-ghostStyles (Config _ options) (Model model) =
+ghostStyles (Config options) (Model model) =
     case model of
         Just state ->
             case state.dragElement of
                 Just dragElement ->
                     transformDeclaration state.translateVector dragElement
-                        :: Internal.Ghost.baseDeclarations options.ghostProperties dragElement
+                        :: Internal.Ghost.baseDeclarations options.ghost dragElement
 
                 _ ->
                     []

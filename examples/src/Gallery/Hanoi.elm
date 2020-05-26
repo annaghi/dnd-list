@@ -2,6 +2,7 @@ module Gallery.Hanoi exposing (Model, Msg, initialModel, main, subscriptions, up
 
 import Browser
 import DnDList
+import DnDList.Single
 import Html
 import Html.Attributes
 
@@ -48,20 +49,13 @@ data =
 -- DND
 
 
-config : DnDList.Config Disk Msg
-config =
-    DnDList.config
-        { movement = DnDList.Free
-        , listen = DnDList.OnDrop
-        , operation = DnDList.InsertAfter
-        }
-
-
-system : DnDList.System Disk Msg
+system : DnDList.Single.System Disk Msg
 system =
-    config
-        |> DnDList.hookItemsBeforeListUpdate updateTower
-        |> DnDList.create DnDMsg
+    DnDList.Single.config
+        |> DnDList.Single.listen DnDList.OnDrop
+        |> DnDList.Single.operation DnDList.InsertAfter
+        |> DnDList.Single.hookItemsBeforeListUpdate updateTower
+        |> DnDList.Single.create DnDMsg
 
 
 updateTower : Int -> Int -> List Disk -> List Disk
@@ -93,7 +87,7 @@ updateTower dragIndex dropIndex list =
 type alias Model =
     { disks : List Disk
     , solved : Bool
-    , dnd : DnDList.Model
+    , dnd : DnDList.Single.Model
     }
 
 
@@ -124,7 +118,7 @@ subscriptions model =
 
 
 type Msg
-    = DnDMsg DnDList.Msg
+    = DnDMsg DnDList.Single.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -291,7 +285,7 @@ calculateOffset index tower list =
                 calculateOffset (index + 1) tower xs
 
 
-maybeDragDisk : DnDList.Model -> List Disk -> Maybe Disk
+maybeDragDisk : DnDList.Single.Model -> List Disk -> Maybe Disk
 maybeDragDisk dnd disks =
     system.info dnd
         |> Maybe.andThen (\{ dragIndex } -> disks |> List.drop dragIndex |> List.head)

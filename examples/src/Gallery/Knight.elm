@@ -3,6 +3,7 @@ module Gallery.Knight exposing (Model, Msg, initialModel, main, subscriptions, u
 import Bitwise
 import Browser
 import DnDList
+import DnDList.Single
 import Html
 import Html.Attributes
 import Path
@@ -66,20 +67,13 @@ knightMoves =
 -- DND
 
 
-config : DnDList.Config Square Msg
-config =
-    DnDList.config
-        { movement = DnDList.Free
-        , listen = DnDList.OnDrop
-        , operation = DnDList.Swap
-        }
-
-
-system : DnDList.System Square Msg
+system : DnDList.Single.System Square Msg
 system =
-    config
-        |> DnDList.hookItemsBeforeListUpdate beforeUpdate
-        |> DnDList.create DnDMsg
+    DnDList.Single.config
+        |> DnDList.Single.listen DnDList.OnDrop
+        |> DnDList.Single.operation DnDList.Swap
+        |> DnDList.Single.hookItemsBeforeListUpdate beforeUpdate
+        |> DnDList.Single.create DnDMsg
 
 
 beforeUpdate : Int -> Int -> List Square -> List Square
@@ -105,7 +99,7 @@ beforeUpdate dragIndex dropIndex squares =
 type alias Model =
     { squares : List Square
     , solved : Bool
-    , dnd : DnDList.Model
+    , dnd : DnDList.Single.Model
     }
 
 
@@ -136,7 +130,7 @@ subscriptions model =
 
 
 type Msg
-    = DnDMsg DnDList.Msg
+    = DnDMsg DnDList.Single.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -170,7 +164,7 @@ view model =
         ]
 
 
-squareView : DnDList.Model -> Bool -> Int -> ( Int, Square ) -> Html.Html Msg
+squareView : DnDList.Single.Model -> Bool -> Int -> ( Int, Square ) -> Html.Html Msg
 squareView dnd solved index5 ( index8, square ) =
     let
         id : String
@@ -231,7 +225,7 @@ squareView dnd solved index5 ( index8, square ) =
                     [ Html.text square ]
 
 
-ghostView : DnDList.Model -> List Square -> Html.Html Msg
+ghostView : DnDList.Single.Model -> List Square -> Html.Html Msg
 ghostView dnd squares =
     let
         maybeDragSquare : Maybe Square

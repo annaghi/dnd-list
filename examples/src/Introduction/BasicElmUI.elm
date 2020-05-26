@@ -1,7 +1,7 @@
 module Introduction.BasicElmUI exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
-import DnDList
+import DnDList.Single
 import Element
 import Element.Font
 import Html
@@ -39,18 +39,9 @@ data =
 -- DND
 
 
-config : DnDList.Config Fruit Msg
-config =
-    DnDList.config
-        { movement = DnDList.Free
-        , listen = DnDList.OnDrag
-        , operation = DnDList.Rotate
-        }
-
-
-system : DnDList.System Fruit Msg
+system : DnDList.Single.System Fruit Msg
 system =
-    DnDList.create DnDMsg config
+    DnDList.Single.create DnDMsg DnDList.Single.config
 
 
 
@@ -59,7 +50,7 @@ system =
 
 type alias Model =
     { items : List Fruit
-    , dnd : DnDList.Model
+    , dnd : DnDList.Single.Model
     }
 
 
@@ -89,7 +80,7 @@ subscriptions model =
 
 
 type Msg
-    = DnDMsg DnDList.Msg
+    = DnDMsg DnDList.Single.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -124,7 +115,7 @@ view model =
         ]
 
 
-itemView : DnDList.Model -> Int -> Fruit -> Element.Element Msg
+itemView : DnDList.Single.Model -> Int -> Fruit -> Element.Element Msg
 itemView dnd index item =
     let
         itemId : String
@@ -157,7 +148,7 @@ itemView dnd index item =
                 (Element.text item)
 
 
-ghostView : DnDList.Model -> List Fruit -> Element.Element Msg
+ghostView : DnDList.Single.Model -> List Fruit -> Element.Element Msg
 ghostView dnd items =
     let
         maybeDragItem : Maybe Fruit

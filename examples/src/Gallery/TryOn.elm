@@ -2,6 +2,7 @@ module Gallery.TryOn exposing (Model, Msg, initialModel, main, subscriptions, up
 
 import Browser
 import DnDList
+import DnDList.Single
 import Html
 import Html.Attributes
 import Svg
@@ -57,21 +58,14 @@ data =
 -- DND
 
 
-config : DnDList.Config Item Msg
-config =
-    DnDList.config
-        { movement = DnDList.Free
-        , listen = DnDList.OnDrop
-        , operation = DnDList.Unaltered
-        }
-
-
-system : DnDList.System Item Msg
+system : DnDList.Single.System Item Msg
 system =
-    config
-        |> DnDList.ghostProperties [ "position" ]
-        |> DnDList.hookItemsBeforeListUpdate updateColor
-        |> DnDList.create DnDMsg
+    DnDList.Single.config
+        |> DnDList.Single.listen DnDList.OnDrop
+        |> DnDList.Single.operation DnDList.Unaltered
+        |> DnDList.Single.ghost [ "position" ]
+        |> DnDList.Single.hookItemsBeforeListUpdate updateColor
+        |> DnDList.Single.create DnDMsg
 
 
 updateColor : Int -> Int -> List Item -> List Item
@@ -110,7 +104,7 @@ updateColor dragIndex dropIndex list =
 
 type alias Model =
     { items : List Item
-    , dnd : DnDList.Model
+    , dnd : DnDList.Single.Model
     }
 
 
@@ -140,7 +134,7 @@ subscriptions model =
 
 
 type Msg
-    = DnDMsg DnDList.Msg
+    = DnDMsg DnDList.Single.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

@@ -2,6 +2,7 @@ module Gallery.Shapes exposing (Model, Msg, initialModel, main, subscriptions, u
 
 import Browser
 import DnDList
+import DnDList.Single
 import Html
 import Html.Attributes
 import Svg
@@ -63,20 +64,13 @@ data =
 -- DND
 
 
-config : DnDList.Config Item Msg
-config =
-    DnDList.config
-        { movement = DnDList.Free
-        , listen = DnDList.OnDrop
-        , operation = DnDList.Unaltered
-        }
-
-
-system : DnDList.System Item Msg
+system : DnDList.Single.System Item Msg
 system =
-    config
-        |> DnDList.hookItemsBeforeListUpdate updateShapes
-        |> DnDList.create DnDMsg
+    DnDList.Single.config
+        |> DnDList.Single.listen DnDList.OnDrop
+        |> DnDList.Single.operation DnDList.Unaltered
+        |> DnDList.Single.hookItemsBeforeListUpdate updateShapes
+        |> DnDList.Single.create DnDMsg
 
 
 updateShapes : Int -> Int -> List Item -> List Item
@@ -131,7 +125,7 @@ updateShapes dragIndex dropIndex list =
 
 type alias Model =
     { items : List Item
-    , dnd : DnDList.Model
+    , dnd : DnDList.Single.Model
     }
 
 
@@ -161,7 +155,7 @@ subscriptions model =
 
 
 type Msg
-    = DnDMsg DnDList.Msg
+    = DnDMsg DnDList.Single.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -211,7 +205,7 @@ scoreView items =
         [ Html.text ("Attempts: " ++ attempts) ]
 
 
-shapeView : DnDList.Model -> Int -> Item -> Html.Html Msg
+shapeView : DnDList.Single.Model -> Int -> Item -> Html.Html Msg
 shapeView dnd index { shape, color, solved } =
     let
         itemId : String
@@ -242,7 +236,7 @@ shapeView dnd index { shape, color, solved } =
                     [ svgView shape color (Html.Attributes.id itemId :: system.dragEvents index itemId) ]
 
 
-holeView : DnDList.Model -> Int -> Item -> Html.Html Msg
+holeView : DnDList.Single.Model -> Int -> Item -> Html.Html Msg
 holeView dnd index { shape, color } =
     let
         globalIndex : Int
@@ -265,7 +259,7 @@ holeView dnd index { shape, color } =
                 [ svgView shape color [ Html.Attributes.id itemId ] ]
 
 
-ghostView : DnDList.Model -> List Item -> Html.Html Msg
+ghostView : DnDList.Single.Model -> List Item -> Html.Html Msg
 ghostView dnd items =
     let
         maybeDragItem : Maybe Item

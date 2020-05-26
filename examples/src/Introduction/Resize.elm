@@ -2,6 +2,7 @@ module Introduction.Resize exposing (Model, Msg, initialModel, main, subscriptio
 
 import Browser
 import DnDList
+import DnDList.Single
 import Html
 import Html.Attributes
 
@@ -58,20 +59,12 @@ spots =
 -- DND
 
 
-config : DnDList.Config Color Msg
-config =
-    DnDList.config
-        { movement = DnDList.Free
-        , listen = DnDList.OnDrag
-        , operation = DnDList.Swap
-        }
-
-
-system : DnDList.System Color Msg
+system : DnDList.Single.System Color Msg
 system =
-    config
-        |> DnDList.ghostProperties [ "position" ]
-        |> DnDList.create DnDMsg
+    DnDList.Single.config
+        |> DnDList.Single.operation DnDList.Swap
+        |> DnDList.Single.ghost [ "position" ]
+        |> DnDList.Single.create DnDMsg
 
 
 
@@ -80,7 +73,7 @@ system =
 
 type alias Model =
     { colors : List Color
-    , dnd : DnDList.Model
+    , dnd : DnDList.Single.Model
     }
 
 
@@ -110,7 +103,7 @@ subscriptions model =
 
 
 type Msg
-    = DnDMsg DnDList.Msg
+    = DnDMsg DnDList.Single.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

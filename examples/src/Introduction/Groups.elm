@@ -1,6 +1,7 @@
 module Introduction.Groups exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
+import DnDList
 import DnDList.Groups
 import Html
 import Html.Attributes
@@ -53,33 +54,18 @@ preparedData =
 -- DND
 
 
-config : DnDList.Groups.Config Item Msg
-config =
-    DnDList.Groups.config
-        { listen = DnDList.Groups.OnDrag
-        , operation = DnDList.Groups.Rotate
-        , groups =
-            { listen = DnDList.Groups.OnDrag
-            , operation = DnDList.Groups.InsertBefore
-            , comparator = comparator
-            , setter = setter
-            }
-        }
-
-
 system : DnDList.Groups.System Item Msg
 system =
-    DnDList.Groups.create DnDMsg config
-
-
-comparator : Item -> Item -> Bool
-comparator item1 item2 =
-    item1.group == item2.group
-
-
-setter : Item -> Item -> Item
-setter item1 item2 =
-    { item2 | group = item1.group }
+    DnDList.Groups.config
+        |> DnDList.Groups.listen DnDList.OnDrag
+        |> DnDList.Groups.operation DnDList.Rotate
+        |> DnDList.Groups.groups
+            { listen = DnDList.OnDrag
+            , operation = DnDList.InsertBefore
+            , comparator = \item1 item2 -> item1.group == item2.group
+            , setter = \item1 item2 -> { item2 | group = item1.group }
+            }
+        |> DnDList.Groups.create DnDMsg
 
 
 

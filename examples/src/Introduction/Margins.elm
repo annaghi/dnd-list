@@ -2,6 +2,7 @@ module Introduction.Margins exposing (Model, Msg, initialModel, main, subscripti
 
 import Browser
 import DnDList
+import DnDList.Single
 import Html
 import Html.Attributes
 
@@ -37,18 +38,11 @@ data =
 -- DND
 
 
-config : DnDList.Config Item Msg
-config =
-    DnDList.config
-        { movement = DnDList.Free
-        , listen = DnDList.OnDrag
-        , operation = DnDList.Swap
-        }
-
-
-system : DnDList.System Item Msg
+system : DnDList.Single.System Item Msg
 system =
-    DnDList.create DnDMsg config
+    DnDList.Single.config
+        |> DnDList.Single.operation DnDList.Swap
+        |> DnDList.Single.create DnDMsg
 
 
 
@@ -57,7 +51,7 @@ system =
 
 type alias Model =
     { items : List Item
-    , dnd : DnDList.Model
+    , dnd : DnDList.Single.Model
     }
 
 
@@ -87,7 +81,7 @@ subscriptions model =
 
 
 type Msg
-    = DnDMsg DnDList.Msg
+    = DnDMsg DnDList.Single.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -117,7 +111,7 @@ view model =
         ]
 
 
-itemView : DnDList.Model -> Int -> Item -> Html.Html Msg
+itemView : DnDList.Single.Model -> Int -> Item -> Html.Html Msg
 itemView dnd index item =
     let
         itemId : String
@@ -151,7 +145,7 @@ itemView dnd index item =
                 ]
 
 
-ghostView : DnDList.Model -> List Item -> Html.Html Msg
+ghostView : DnDList.Single.Model -> List Item -> Html.Html Msg
 ghostView dnd items =
     let
         maybeDragItem : Maybe Item

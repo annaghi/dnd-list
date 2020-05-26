@@ -1,11 +1,11 @@
 module Main exposing (main)
 
 import Browser
-import Flat
 import Glue
 import Groups
 import Html
 import Html.Attributes
+import Single
 
 
 main : Program () Model Msg
@@ -18,7 +18,7 @@ main =
         }
 
 
-flat : Glue.Glue Model Flat.Model Msg Flat.Msg
+flat : Glue.Glue Model Single.Model Msg Single.Msg
 flat =
     Glue.glue
         { msg = FlatMsg
@@ -37,7 +37,7 @@ groups =
 
 
 type alias Model =
-    { flat : Flat.Model
+    { flat : Single.Model
     , groups : Groups.Model
     }
 
@@ -45,19 +45,19 @@ type alias Model =
 init : () -> ( Model, Cmd Msg )
 init () =
     ( Model, Cmd.none )
-        |> Glue.init flat Flat.init
+        |> Glue.init flat Single.init
         |> Glue.init groups Groups.init
 
 
 type Msg
-    = FlatMsg Flat.Msg
+    = FlatMsg Single.Msg
     | GroupsMsg Groups.Msg
 
 
 subscriptions : Model -> Sub Msg
 subscriptions =
     always Sub.none
-        |> Glue.subscriptions flat Flat.subscriptions
+        |> Glue.subscriptions flat Single.subscriptions
         |> Glue.subscriptions groups Groups.subscriptions
 
 
@@ -66,7 +66,7 @@ update msg model =
     case msg of
         FlatMsg flatMsg ->
             ( model, Cmd.none )
-                |> Glue.update flat Flat.update flatMsg
+                |> Glue.update flat Single.update flatMsg
 
         GroupsMsg groupsMsg ->
             ( model, Cmd.none )
@@ -79,6 +79,6 @@ view model =
         [ Html.Attributes.style "display" "flex"
         , Html.Attributes.style "justify-content" "space-evenly"
         ]
-        [ Glue.view flat Flat.view model
+        [ Glue.view flat Single.view model
         , Glue.view groups Groups.view model
         ]

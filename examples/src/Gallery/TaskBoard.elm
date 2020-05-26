@@ -3,6 +3,7 @@ module Gallery.TaskBoard exposing (Model, Msg, initialModel, main, subscriptions
 import Browser
 import DnDList
 import DnDList.Groups
+import DnDList.Single
 import Html
 import Html.Attributes
 
@@ -56,47 +57,23 @@ data =
 -- DND
 
 
-cardConfig : DnDList.Groups.Config Card Msg
-cardConfig =
-    DnDList.Groups.config
-        { listen = DnDList.Groups.OnDrag
-        , operation = DnDList.Groups.Rotate
-        , groups =
-            { listen = DnDList.Groups.OnDrag
-            , operation = DnDList.Groups.InsertBefore
-            , comparator = comparator
-            , setter = setter
-            }
-        }
-
-
 cardSystem : DnDList.Groups.System Card Msg
 cardSystem =
-    DnDList.Groups.create CardMoved cardConfig
+    DnDList.Groups.config
+        |> DnDList.Groups.listen DnDList.OnDrag
+        |> DnDList.Groups.operation DnDList.Rotate
+        |> DnDList.Groups.groups
+            { listen = DnDList.OnDrag
+            , operation = DnDList.InsertBefore
+            , comparator = \card1 card2 -> card1.activity == card2.activity
+            , setter = \card1 card2 -> { card2 | activity = card1.activity }
+            }
+        |> DnDList.Groups.create CardMoved
 
 
-comparator : Card -> Card -> Bool
-comparator card1 card2 =
-    card1.activity == card2.activity
-
-
-setter : Card -> Card -> Card
-setter card1 card2 =
-    { card2 | activity = card1.activity }
-
-
-columnConfig : DnDList.Config (List Card) Msg
-columnConfig =
-    DnDList.config
-        { movement = DnDList.Free
-        , listen = DnDList.OnDrag
-        , operation = DnDList.Rotate
-        }
-
-
-columnSystem : DnDList.System (List Card) Msg
+columnSystem : DnDList.Single.System (List Card) Msg
 columnSystem =
-    DnDList.create ColumnMoved columnConfig
+    DnDList.Single.create ColumnMoved DnDList.Single.config
 
 
 
@@ -106,7 +83,7 @@ columnSystem =
 type alias Model =
     { cards : List Card
     , cardDnD : DnDList.Groups.Model
-    , columnDnD : DnDList.Model
+    , columnDnD : DnDList.Single.Model
     }
 
 
@@ -141,7 +118,7 @@ subscriptions model =
 
 type Msg
     = CardMoved DnDList.Groups.Msg
-    | ColumnMoved DnDList.Msg
+    | ColumnMoved DnDList.Single.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

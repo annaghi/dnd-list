@@ -293,7 +293,7 @@ info example =
         Hanoi _ ->
             { slug = "hanoi"
             , title = "Towers of Hanoi"
-            , description = "Flat list with auxiliary items."
+            , description = "Single list with auxiliary items."
             }
 
         Puzzle _ ->
@@ -305,19 +305,19 @@ info example =
         Shapes _ ->
             { slug = "shapes"
             , title = "Geometric shapes"
-            , description = "Flat list with the Unaltered operation and beforeUpdate."
+            , description = "Single list with the Unaltered operation and beforeUpdate."
             }
 
         Knight _ ->
             { slug = "knight"
             , title = "Knight's tour"
-            , description = "Flat list with Swap. The top-left 5 × 5 sub-board is diced from the original 8 × 8 board."
+            , description = "Single list with Swap. The top-left 5 × 5 sub-board is diced from the original 8 × 8 board."
             }
 
         TryOn _ ->
             { slug = "try-on"
             , title = "Try on"
-            , description = "Flat list with info.targetElement."
+            , description = "Single list with info.targetElement."
             }
 
         TaskBoard _ ->
