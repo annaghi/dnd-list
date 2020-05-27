@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixes
 
-- Fix broken ghost coordinates when scrolling, see: #50
+- Fix broken ghost coordinates when scrolling, see: [#50]
 
 
 ## [6.0.0] - 2020-03-08
@@ -120,6 +120,7 @@ All notable changes to this project will be documented in this file.
 
 - Add module called `DnDList`.
 
+[6.0.1]: https://github.com/annaghi/dnd-list/compare/6.0.0...6.0.1
 [6.0.0]: https://github.com/annaghi/dnd-list/compare/5.0.0...6.0.0
 [5.0.0]: https://github.com/annaghi/dnd-list/compare/4.0.2...5.0.0
 [4.0.2]: https://github.com/annaghi/dnd-list/compare/4.0.1...4.0.2
@@ -132,3 +133,5 @@ All notable changes to this project will be documented in this file.
 [1.0.2]: https://github.com/annaghi/dnd-list/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/annaghi/dnd-list/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/annaghi/dnd-list/releases/tag/1.0.0
+
+[#50]: https://github.com/annaghi/dnd-list/pull/50
