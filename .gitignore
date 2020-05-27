@@ -10,6 +10,9 @@ docs.json
 # VS Code settings
 .vscode
 
+# IntelliJ IDEA settings
+.idea
+
 # elm-make generated files
 examples/**/main.js
 
