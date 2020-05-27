@@ -880,14 +880,14 @@ ghostStyles (Model model) =
 
         Just state ->
             case state.dragElement of
-                Just { element } ->
+                Just { element, viewport } ->
                     [ Html.Attributes.style "position" "fixed"
                     , Html.Attributes.style "left" "0"
                     , Html.Attributes.style "top" "0"
                     , Html.Attributes.style "transform" <|
                         Internal.Common.Utils.translate
-                            (round (state.currentPosition.x - state.startPosition.x + element.x))
-                            (round (state.currentPosition.y - state.startPosition.y + element.y))
+                            (round (state.currentPosition.x - state.startPosition.x + element.x - viewport.x))
+                            (round (state.currentPosition.y - state.startPosition.y + element.y - viewport.y))
                     , Html.Attributes.style "height" (Internal.Common.Utils.px (round element.height))
                     , Html.Attributes.style "width" (Internal.Common.Utils.px (round element.width))
                     , Html.Attributes.style "pointer-events" "none"

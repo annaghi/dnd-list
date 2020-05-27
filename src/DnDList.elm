@@ -756,7 +756,7 @@ ghostStyles movement (Model model) =
 
         Just state ->
             case state.dragElement of
-                Just { element } ->
+                Just { element, viewport } ->
                     let
                         baseStyles =
                             [ Html.Attributes.style "position" "fixed"
@@ -772,20 +772,20 @@ ghostStyles movement (Model model) =
                                 Horizontal ->
                                     Html.Attributes.style "transform" <|
                                         Internal.Common.Utils.translate
-                                            (round (state.currentPosition.x - state.startPosition.x + element.x))
-                                            (round element.y)
+                                            (round (state.currentPosition.x - state.startPosition.x + element.x - viewport.x))
+                                            (round (element.y - viewport.y))
 
                                 Vertical ->
                                     Html.Attributes.style "transform" <|
                                         Internal.Common.Utils.translate
-                                            (round element.x)
-                                            (round (state.currentPosition.y - state.startPosition.y + element.y))
+                                            (round (element.x - viewport.x))
+                                            (round (state.currentPosition.y - state.startPosition.y + element.y - viewport.y))
 
                                 Free ->
                                     Html.Attributes.style "transform" <|
                                         Internal.Common.Utils.translate
-                                            (round (state.currentPosition.x - state.startPosition.x + element.x))
-                                            (round (state.currentPosition.y - state.startPosition.y + element.y))
+                                            (round (state.currentPosition.x - state.startPosition.x + element.x - viewport.x))
+                                            (round (state.currentPosition.y - state.startPosition.y + element.y - viewport.y))
                     in
                     transform :: baseStyles
 
