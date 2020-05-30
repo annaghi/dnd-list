@@ -17,6 +17,10 @@ type alias DropElementId =
     String
 
 
+type alias ContainerElementId =
+    String
+
+
 type alias Coordinates =
     { x : Float
     , y : Float

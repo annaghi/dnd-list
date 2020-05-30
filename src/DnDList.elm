@@ -1,4 +1,4 @@
-module DnDList exposing (Movement(..), Listen(..), Operation(..), Fence(..))
+module DnDList exposing (Movement(..), Listen(..), Operation(..))
 
 {-|
 
@@ -60,10 +60,3 @@ type Operation
     | Rotate
     | Swap
     | Unaltered
-
-
-type Fence
-    = FenceNone
-    | FenceVertical
-    | FenceHorizontal
-    | FenceEach

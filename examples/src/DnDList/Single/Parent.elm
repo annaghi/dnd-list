@@ -15,10 +15,9 @@ import DnDList.Single.HookCommands.Parent
 import DnDList.Single.Movement.Parent
 import DnDList.Single.OperationsOnDrag.Parent
 import DnDList.Single.OperationsOnDrop.Parent
+import DnDList.Single.Scroll.Parent
 import Html
-import Html.Attributes
-import Path
-import Url.Builder
+import Views
 
 
 
@@ -34,6 +33,7 @@ type Example
     | OperationsOnDrag DnDList.Single.OperationsOnDrag.Parent.Model
     | OperationsOnDrop DnDList.Single.OperationsOnDrop.Parent.Model
     | HookCommands DnDList.Single.HookCommands.Parent.Model
+    | Scroll DnDList.Single.Scroll.Parent.Model
 
 
 init : String -> ( Model, Cmd Msg )
@@ -50,6 +50,7 @@ type Msg
     | OperationsOnDragMsg DnDList.Single.OperationsOnDrag.Parent.Msg
     | OperationsOnDropMsg DnDList.Single.OperationsOnDrop.Parent.Msg
     | HookCommandsMsg DnDList.Single.HookCommands.Parent.Msg
+    | ScrollMsg DnDList.Single.Scroll.Parent.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -66,6 +67,9 @@ update message model =
 
         ( HookCommandsMsg msg, HookCommands mo ) ->
             stepHookCommands (DnDList.Single.HookCommands.Parent.update msg mo)
+
+        ( ScrollMsg msg, Scroll mo ) ->
+            stepScroll (DnDList.Single.Scroll.Parent.update msg mo)
 
         _ ->
             ( model, Cmd.none )
@@ -91,6 +95,11 @@ stepHookCommands ( mo, cmds ) =
     ( HookCommands mo, Cmd.map HookCommandsMsg cmds )
 
 
+stepScroll : ( DnDList.Single.Scroll.Parent.Model, Cmd DnDList.Single.Scroll.Parent.Msg ) -> ( Model, Cmd Msg )
+stepScroll ( mo, cmds ) =
+    ( Scroll mo, Cmd.map ScrollMsg cmds )
+
+
 
 -- SUBSCRIPTIONS
 
@@ -110,57 +119,31 @@ subscriptions model =
         HookCommands mo ->
             Sub.map HookCommandsMsg (DnDList.Single.HookCommands.Parent.subscriptions mo)
 
+        Scroll mo ->
+            Sub.map ScrollMsg (DnDList.Single.Scroll.Parent.subscriptions mo)
+
 
 
 -- VIEW
 
 
-navigationView : String -> Html.Html Msg
-navigationView currentPath =
-    Html.div
-        [ Html.Attributes.class "navigation" ]
-        [ Html.h4 [] [ Html.text "DnDList.Single" ]
-        , [ Movement DnDList.Single.Movement.Parent.initialModel
-          , OperationsOnDrag DnDList.Single.OperationsOnDrag.Parent.initialModel
-          , OperationsOnDrop DnDList.Single.OperationsOnDrop.Parent.initialModel
-          , HookCommands DnDList.Single.HookCommands.Parent.initialModel
-          ]
-            |> List.map (linkView currentPath)
-            |> Html.ul []
-        ]
-
-
-linkView : String -> Example -> Html.Html Msg
-linkView currentPath example =
-    let
-        path : String
-        path =
-            Url.Builder.absolute [ Path.rootPath, "single", (info >> .slug) example ] []
-    in
-    Html.li []
-        [ Html.a
-            [ Html.Attributes.classList [ ( "is-active", path == currentPath ) ]
-            , Html.Attributes.href path
-            ]
-            [ Html.text ((info >> .title) example) ]
+navigationView : Html.Html msg
+navigationView =
+    Views.navigationView
+        "DnDList.Single"
+        "single"
+        info
+        [ Movement DnDList.Single.Movement.Parent.initialModel
+        , OperationsOnDrag DnDList.Single.OperationsOnDrag.Parent.initialModel
+        , OperationsOnDrop DnDList.Single.OperationsOnDrop.Parent.initialModel
+        , HookCommands DnDList.Single.HookCommands.Parent.initialModel
+        , Scroll DnDList.Single.Scroll.Parent.initialModel
         ]
 
 
 headerView : Model -> Html.Html Msg
 headerView model =
-    let
-        title : String
-        title =
-            (info >> .title) model
-
-        description : String
-        description =
-            (info >> .description) model
-    in
-    Html.header []
-        [ Html.h2 [] [ Html.text title ]
-        , Html.p [] [ Html.text description ]
-        ]
+    Views.demoHeaderView info model
 
 
 demoView : Model -> Html.Html Msg
@@ -178,6 +161,9 @@ demoView model =
         HookCommands mo ->
             Html.map HookCommandsMsg (DnDList.Single.HookCommands.Parent.view mo)
 
+        Scroll mo ->
+            Html.map ScrollMsg (DnDList.Single.Scroll.Parent.view mo)
+
 
 codeView : Model -> Html.Html Msg
 codeView model =
@@ -193,6 +179,9 @@ codeView model =
 
         HookCommands mo ->
             toCode (DnDList.Single.HookCommands.Parent.url mo.id)
+
+        Scroll mo ->
+            toCode (DnDList.Single.Scroll.Parent.url mo.id)
 
 
 toCode : String -> Html.Html msg
@@ -218,6 +207,9 @@ toExample slug =
 
         "hook-commands" ->
             HookCommands DnDList.Single.HookCommands.Parent.initialModel
+
+        "scroll" ->
+            Scroll DnDList.Single.Scroll.Parent.initialModel
 
         _ ->
             Movement DnDList.Single.Movement.Parent.initialModel
@@ -255,4 +247,10 @@ info example =
             { slug = "hook-commands"
             , title = "Hook commands"
             , description = "Compare detectDrop and detectReorder hooks."
+            }
+
+        Scroll _ ->
+            { slug = "scroll"
+            , title = "Scrolling"
+            , description = "Customize scrollable containers and areas."
             }

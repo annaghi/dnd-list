@@ -137,7 +137,7 @@ initialModel =
 
 
 init : () -> ( Model, Cmd Msg )
-init _ =
+init () =
     ( initialModel, Cmd.none )
 
 

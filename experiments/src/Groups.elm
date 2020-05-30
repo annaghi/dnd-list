@@ -51,7 +51,7 @@ preparedData =
 
 
 
--- SYSTEM
+-- DND
 
 
 system : DnDList.Groups.System Item Msg
@@ -76,15 +76,15 @@ system =
 
 
 type alias Model =
-    { dnd : DnDList.Groups.Model
-    , items : List Item
+    { items : List Item
+    , dnd : DnDList.Groups.Model
     }
 
 
 initialModel : Model
 initialModel =
-    { dnd = system.model
-    , items = preparedData
+    { items = preparedData
+    , dnd = system.model
     }
 
 

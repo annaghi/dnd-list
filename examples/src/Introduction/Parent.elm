@@ -12,7 +12,6 @@ module Introduction.Parent exposing
 
 import CustomElement
 import Html
-import Html.Attributes
 import Introduction.Basic
 import Introduction.BasicElmUI
 import Introduction.Groups
@@ -22,8 +21,7 @@ import Introduction.Keyed
 import Introduction.Margins
 import Introduction.Masonry
 import Introduction.Resize
-import Path
-import Url.Builder
+import Views
 
 
 
@@ -194,57 +192,27 @@ commands =
 -- VIEW
 
 
-navigationView : String -> Html.Html Msg
-navigationView currentPath =
-    Html.div
-        [ Html.Attributes.class "navigation" ]
-        [ Html.h4 [] [ Html.text "Introduction" ]
-        , [ Basic Introduction.Basic.initialModel
-          , BasicElmUI Introduction.BasicElmUI.initialModel
-          , Handle Introduction.Handle.initialModel
-          , Keyed Introduction.Keyed.initialModel
-          , Margins Introduction.Margins.initialModel
-          , Masonry Introduction.Masonry.initialModel
-          , Resize Introduction.Resize.initialModel
-          , Independents Introduction.Independents.initialModel
-          , Groups Introduction.Groups.initialModel
-          ]
-            |> List.map (linkView currentPath)
-            |> Html.ul []
-        ]
-
-
-linkView : String -> Example -> Html.Html Msg
-linkView currentPath example =
-    let
-        path : String
-        path =
-            Url.Builder.absolute [ Path.rootPath, "introduction", (info >> .slug) example ] []
-    in
-    Html.li []
-        [ Html.a
-            [ Html.Attributes.classList [ ( "is-active", path == currentPath ) ]
-            , Html.Attributes.href path
-            ]
-            [ Html.text ((info >> .title) example) ]
+navigationView : Html.Html msg
+navigationView =
+    Views.navigationView
+        "Introduction"
+        "introduction"
+        info
+        [ Basic Introduction.Basic.initialModel
+        , BasicElmUI Introduction.BasicElmUI.initialModel
+        , Handle Introduction.Handle.initialModel
+        , Keyed Introduction.Keyed.initialModel
+        , Margins Introduction.Margins.initialModel
+        , Masonry Introduction.Masonry.initialModel
+        , Resize Introduction.Resize.initialModel
+        , Independents Introduction.Independents.initialModel
+        , Groups Introduction.Groups.initialModel
         ]
 
 
 headerView : Model -> Html.Html Msg
 headerView model =
-    let
-        title : String
-        title =
-            (info >> .title) model
-
-        description : String
-        description =
-            (info >> .description) model
-    in
-    Html.header []
-        [ Html.h2 [] [ Html.text title ]
-        , Html.p [] [ Html.text description ]
-        ]
+    Views.demoHeaderView info model
 
 
 demoView : Model -> Html.Html Msg

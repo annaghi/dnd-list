@@ -1,7 +1,6 @@
 module DnDList.Single.Movement.Parent exposing
     ( Model
     , Msg
-    , demoView
     , init
     , initialModel
     , subscriptions
@@ -17,8 +16,7 @@ import DnDList.Single.Movement.HorizontalOnDrop
 import DnDList.Single.Movement.VerticalOnDrag
 import DnDList.Single.Movement.VerticalOnDrop
 import Html
-import Html.Attributes
-import Html.Events
+import Views
 
 
 
@@ -55,7 +53,7 @@ initialModel =
 
 
 init : () -> ( Model, Cmd Msg )
-init _ =
+init () =
     ( initialModel, Cmd.none )
 
 
@@ -201,100 +199,38 @@ subscriptions model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.div []
-        [ model.examples
-            |> List.take 2
-            |> List.indexedMap (demoWrapperView 0 model.id)
-            |> Html.section
-                [ Html.Attributes.style "display" "flex"
-                , Html.Attributes.style "flex-wrap" "wrap"
-                , Html.Attributes.style "justify-content" "center"
-                , Html.Attributes.style "padding-top" "2em"
-                ]
-        , model.examples
-            |> List.drop 2
-            |> List.take 2
-            |> List.indexedMap (demoWrapperView 2 model.id)
-            |> Html.section []
-        , model.examples
-            |> List.drop 4
-            |> List.take 2
-            |> List.indexedMap (demoWrapperView 4 model.id)
-            |> Html.section
-                [ Html.Attributes.style "display" "flex"
-                , Html.Attributes.style "justify-content" "center"
-                ]
-        ]
+    Views.examplesView LinkClicked info model.id model.examples
 
 
-demoWrapperView : Int -> Int -> Int -> Example -> Html.Html Msg
-demoWrapperView offset currentId id example =
-    let
-        globalId : Int
-        globalId =
-            offset + id
-    in
-    Html.div
-        [ Html.Attributes.style "display" "flex"
-        , Html.Attributes.style "justify-content" "center"
-        , Html.Attributes.style "margin" "4em 0"
-        ]
-        [ demoView example
-        , Html.div
-            [ Html.Attributes.classList [ ( "link", True ), ( "is-active", globalId == currentId ) ]
-            , Html.Events.onClick (LinkClicked globalId)
-            ]
-            [ Html.text (info example) ]
-        ]
-
-
-demoView : Example -> Html.Html Msg
-demoView example =
-    case example of
-        FreeOnDrag mo ->
-            Html.map FreeOnDragMsg (DnDList.Single.Movement.FreeOnDrag.view mo)
-
-        FreeOnDrop mo ->
-            Html.map FreeOnDropMsg (DnDList.Single.Movement.FreeOnDrop.view mo)
-
-        HorizontalOnDrag mo ->
-            Html.map HorizontalOnDragMsg (DnDList.Single.Movement.HorizontalOnDrag.view mo)
-
-        HorizontalOnDrop mo ->
-            Html.map HorizontalOnDropMsg (DnDList.Single.Movement.HorizontalOnDrop.view mo)
-
-        VerticalOnDrag mo ->
-            Html.map VerticalOnDragMsg (DnDList.Single.Movement.VerticalOnDrag.view mo)
-
-        VerticalOnDrop mo ->
-            Html.map VerticalOnDropMsg (DnDList.Single.Movement.VerticalOnDrop.view mo)
-
-
-
--- EXAMPLE INFO
-
-
-type alias Info =
-    String
-
-
-info : Example -> Info
+info : Example -> Views.SubInfo Msg
 info example =
     case example of
-        FreeOnDrag _ ->
-            "Free on drag"
+        FreeOnDrag mo ->
+            { title = "Free on drag"
+            , subView = Html.map FreeOnDragMsg (DnDList.Single.Movement.FreeOnDrag.view mo)
+            }
 
-        FreeOnDrop _ ->
-            "Free on drop"
+        FreeOnDrop mo ->
+            { title = "Free on drop"
+            , subView = Html.map FreeOnDropMsg (DnDList.Single.Movement.FreeOnDrop.view mo)
+            }
 
-        HorizontalOnDrag _ ->
-            "Horizontal on drag"
+        HorizontalOnDrag mo ->
+            { title = "Horizontal on drag"
+            , subView = Html.map HorizontalOnDragMsg (DnDList.Single.Movement.HorizontalOnDrag.view mo)
+            }
 
-        HorizontalOnDrop _ ->
-            "Horizontal on drop"
+        HorizontalOnDrop mo ->
+            { title = "Horizontal on drop"
+            , subView = Html.map HorizontalOnDropMsg (DnDList.Single.Movement.HorizontalOnDrop.view mo)
+            }
 
-        VerticalOnDrag _ ->
-            "Vertical on drag"
+        VerticalOnDrag mo ->
+            { title = "Vertical on drag"
+            , subView = Html.map VerticalOnDragMsg (DnDList.Single.Movement.VerticalOnDrag.view mo)
+            }
 
-        VerticalOnDrop _ ->
-            "Vertical on drop"
+        VerticalOnDrop mo ->
+            { title = "Vertical on drop"
+            , subView = Html.map VerticalOnDropMsg (DnDList.Single.Movement.VerticalOnDrop.view mo)
+            }

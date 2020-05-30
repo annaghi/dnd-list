@@ -1,7 +1,6 @@
 module DnDList.Single.HookCommands.Parent exposing
     ( Model
     , Msg
-    , demoView
     , init
     , initialModel
     , subscriptions
@@ -13,8 +12,7 @@ module DnDList.Single.HookCommands.Parent exposing
 import DnDList.Single.HookCommands.DetectDrop
 import DnDList.Single.HookCommands.DetectReorder
 import Html
-import Html.Attributes
-import Html.Events
+import Views
 
 
 
@@ -43,7 +41,7 @@ initialModel =
 
 
 init : () -> ( Model, Cmd Msg )
-init _ =
+init () =
     ( initialModel, Cmd.none )
 
 
@@ -129,51 +127,18 @@ subscriptions model =
 
 view : Model -> Html.Html Msg
 view model =
-    model.examples
-        |> List.indexedMap (demoWrapperView model.id)
-        |> Html.section []
+    Views.examplesView LinkClicked info model.id model.examples
 
 
-demoWrapperView : Int -> Int -> Example -> Html.Html Msg
-demoWrapperView currentId id example =
-    Html.div
-        [ Html.Attributes.style "display" "flex"
-        , Html.Attributes.style "flex-wrap" "wrap"
-        , Html.Attributes.style "justify-content" "center"
-        , Html.Attributes.style "margin" "4em 0"
-        ]
-        [ demoView example
-        , Html.div
-            [ Html.Attributes.classList [ ( "link", True ), ( "is-active", id == currentId ) ]
-            , Html.Events.onClick (LinkClicked id)
-            ]
-            [ Html.text (info example) ]
-        ]
-
-
-demoView : Example -> Html.Html Msg
-demoView example =
-    case example of
-        DetectDrop mo ->
-            Html.map DetectDropMsg (DnDList.Single.HookCommands.DetectDrop.view mo)
-
-        DetectReorder mo ->
-            Html.map DetectReorderMsg (DnDList.Single.HookCommands.DetectReorder.view mo)
-
-
-
--- EXAMPLE INFO
-
-
-type alias Info =
-    String
-
-
-info : Example -> Info
+info : Example -> Views.SubInfo Msg
 info example =
     case example of
-        DetectDrop _ ->
-            "Detect drop with swap"
+        DetectDrop mo ->
+            { title = "Detect drop with swap"
+            , subView = Html.map DetectDropMsg (DnDList.Single.HookCommands.DetectDrop.view mo)
+            }
 
-        DetectReorder _ ->
-            "Detect reorder with swap"
+        DetectReorder mo ->
+            { title = "Detect reorder with swap"
+            , subView = Html.map DetectReorderMsg (DnDList.Single.HookCommands.DetectReorder.view mo)
+            }

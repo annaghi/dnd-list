@@ -31,11 +31,11 @@ type alias Item =
 
 data : List Item
 data =
-    List.range 1 30 |> List.map String.fromInt
+    List.range 1 100 |> List.map String.fromInt
 
 
 
--- SYSTEM
+-- DND
 
 
 scrollableContainerId : String
@@ -52,12 +52,15 @@ system =
         |> DnDList.Single.listen DnDList.OnDrag
         |> DnDList.Single.operation DnDList.Rotate
         |> DnDList.Single.detectReorder DetectReorder
-        |> DnDList.Single.scroll
-            { containerElementId = scrollableContainerId
-            , fence = DnDList.FenceVertical
-            , offset = { top = 0, right = 0, bottom = 0, left = 0 }
-            , area = Nothing -- { top = Infinity, right = Infinity, bottom = Infinity, left = Infinity }
-            }
+        --|> DnDList.Single.scroll scrollableContainerId
+        --|> DnDList.Single.scrollWithOffset scrollableContainerId
+        --    { offset = { top = -40, right = 0, bottom = -40, left = 0 } }
+        |> DnDList.Single.scrollWithOffsetAndFence scrollableContainerId
+            { offset = { top = 0, right = 0, bottom = 0, left = 0 } }
+        --|> DnDList.Single.scrollWithOffsetAndArea scrollableContainerId
+        --    { offset = { top = 0, right = 0, bottom = 0, left = 0 }
+        --    , area = { top = 40, right = 0, bottom = 40, left = 0 }
+        --    }
         |> DnDList.Single.create DnDMsg
 
 
@@ -66,15 +69,15 @@ system =
 
 
 type alias Model =
-    { dnd : DnDList.Single.Model
-    , items : List Item
+    { items : List Item
+    , dnd : DnDList.Single.Model
     }
 
 
 initialModel : Model
 initialModel =
-    { dnd = system.model
-    , items = data
+    { items = data
+    , dnd = system.model
     }
 
 
@@ -135,20 +138,33 @@ view : Model -> Html.Html Msg
 view model =
     Html.section
         [ Html.Attributes.style "width" "200px"
-        , Html.Attributes.style "padding" "50px 0"
+        , Html.Attributes.style "padding" "100px 0"
         , if system.info model.dnd /= Nothing then
             Html.Attributes.style "cursor" "grabbing"
 
           else
             Html.Attributes.style "cursor" "default"
         ]
-        [ model.items
+        [ List.range 1 30
+            |> List.map (String.fromInt >> (\n -> Html.div [] [ Html.text n ]))
+            |> Html.div []
+        , model.items
             |> List.indexedMap (itemView model.dnd)
             |> Html.div
                 [ Html.Attributes.id scrollableContainerId
                 , Html.Attributes.style "height" "300px"
                 , Html.Attributes.style "overflow" "auto"
                 ]
+
+        --,
+        --model.items
+        --  |> List.indexedMap (itemView model.dnd)
+        --  |> Html.div
+        --      [ Html.Attributes.id scrollableContainerId
+        --      , Html.Attributes.style "width" "300px"
+        --      , Html.Attributes.style "overflow" "auto"
+        --      , Html.Attributes.style "display" "flex"
+        --      ]
         , ghostView model.dnd model.items
         ]
 
@@ -158,30 +174,24 @@ itemView dnd index item =
     let
         itemId : String
         itemId =
-            "flat-" ++ item
+            "single-" ++ item
     in
     case system.info dnd of
         Just { dragIndex } ->
             if dragIndex /= index then
                 Html.div
                     (Html.Attributes.id itemId :: itemStyles "#eeeeee" ++ system.dropEvents index itemId)
-                    [ dragHandleView []
-                    , contentView item
-                    ]
+                    [ Html.text item ]
 
             else
                 Html.div
                     (Html.Attributes.id itemId :: itemStyles "#bbbbbb")
-                    [ dragHandleView []
-                    , contentView item
-                    ]
+                    [ Html.text item ]
 
         Nothing ->
             Html.div
-                (Html.Attributes.id itemId :: itemStyles "white")
-                [ dragHandleView (system.dragEvents index itemId)
-                , contentView item
-                ]
+                ([ Html.Attributes.id itemId, Html.Attributes.style "cursor" "grab" ] ++ itemStyles "white" ++ system.dragEvents index itemId)
+                [ Html.text item ]
 
 
 ghostView : DnDList.Single.Model -> List Item -> Html.Html Msg
@@ -196,24 +206,10 @@ ghostView dnd items =
         Just item ->
             Html.div
                 (system.ghostStyles dnd ++ itemStyles "red")
-                [ dragHandleView [], contentView item ]
+                [ Html.text item ]
 
         Nothing ->
             Html.text ""
-
-
-dragHandleView : List (Html.Attribute Msg) -> Html.Html Msg
-dragHandleView events =
-    Html.span
-        (events ++ [ Html.Attributes.style "cursor" "grab" ])
-        [ Html.text "⣿" ]
-
-
-contentView : Item -> Html.Html Msg
-contentView item =
-    Html.span
-        [ Html.Attributes.style "margin-left" "0.7rem" ]
-        [ Html.text item ]
 
 
 

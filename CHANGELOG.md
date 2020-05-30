@@ -14,16 +14,21 @@ All notable changes to this project will be documented in this file.
 
 -   Update README, documentation, and examples reflecting the new API
 
+## [6.0.1] - 2020-05-27
+
+### Fixes
+
+- Fix broken ghost coordinates when scrolling, see: [#50]
+
 ## [6.0.0] - 2020-03-08
 
 ### Fixes
 
--   Use fixed `position` instead of absolute for `ghostStyles` in both modules, see: #50
+-   Use fixed `position` instead of absolute for `ghostStyles` in both modules, see: [#50]
 
 ### Features
 
--   Add `startPosition` field to `Info` in the `DnDList` module only, see: #65
--   Add `currentPosition` field to `Info` in the `DnDList` module only, see: #65
+-   Add `startPosition` and `currentPosition` fields to `Info` in the `DnDList` module only, see: [#65]
 
 ## [5.0.0] - 2019-05-06
 
@@ -74,7 +79,7 @@ All notable changes to this project will be documented in this file.
 
 ### Maintenance
 
--   Add example using `mdgriffith/elm-ui`, see: #2
+-   Add example using `mdgriffith/elm-ui`, see: [#2]
 
 ## [1.0.3] - 2019-02-14
 
@@ -86,7 +91,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixes
 
--   Move ghost with `translate` instead of `position`, see: #1
+-   Move ghost with `translate` instead of `position`, see: [#1]
 
 ## [1.0.1] - 2019-02-08
 
@@ -112,3 +117,9 @@ All notable changes to this project will be documented in this file.
 [1.0.2]: https://github.com/annaghi/dnd-list/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/annaghi/dnd-list/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/annaghi/dnd-list/releases/tag/1.0.0
+
+
+[#1]: https://github.com/annaghi/dnd-list/pull/1
+[#2]: https://github.com/annaghi/dnd-list/pull/2
+[#50]: https://github.com/annaghi/dnd-list/pull/50
+[#65]: https://github.com/annaghi/dnd-list/pull/65

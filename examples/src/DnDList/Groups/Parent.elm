@@ -15,9 +15,7 @@ import DnDList.Groups.HookCommands.Parent
 import DnDList.Groups.OperationsOnDrag.Parent
 import DnDList.Groups.OperationsOnDrop.Parent
 import Html
-import Html.Attributes
-import Path
-import Url.Builder
+import Views
 
 
 
@@ -101,51 +99,21 @@ subscriptions model =
 -- VIEW
 
 
-navigationView : String -> Html.Html Msg
-navigationView currentPath =
-    Html.div
-        [ Html.Attributes.class "navigation" ]
-        [ Html.h4 [] [ Html.text "DnDList.Groups" ]
-        , [ OperationsOnDrag DnDList.Groups.OperationsOnDrag.Parent.initialModel
-          , OperationsOnDrop DnDList.Groups.OperationsOnDrop.Parent.initialModel
-          , HookCommands DnDList.Groups.HookCommands.Parent.initialModel
-          ]
-            |> List.map (linkView currentPath)
-            |> Html.ul []
-        ]
-
-
-linkView : String -> Example -> Html.Html Msg
-linkView currentPath example =
-    let
-        path : String
-        path =
-            Url.Builder.absolute [ Path.rootPath, "groups", (info >> .slug) example ] []
-    in
-    Html.li []
-        [ Html.a
-            [ Html.Attributes.classList [ ( "is-active", path == currentPath ) ]
-            , Html.Attributes.href path
-            ]
-            [ Html.text ((info >> .title) example) ]
+navigationView : Html.Html msg
+navigationView =
+    Views.navigationView
+        "DnDList.Groups"
+        "groups"
+        info
+        [ OperationsOnDrag DnDList.Groups.OperationsOnDrag.Parent.initialModel
+        , OperationsOnDrop DnDList.Groups.OperationsOnDrop.Parent.initialModel
+        , HookCommands DnDList.Groups.HookCommands.Parent.initialModel
         ]
 
 
 headerView : Model -> Html.Html Msg
 headerView model =
-    let
-        title : String
-        title =
-            (info >> .title) model
-
-        description : String
-        description =
-            (info >> .description) model
-    in
-    Html.header []
-        [ Html.h2 [] [ Html.text title ]
-        , Html.p [] [ Html.text description ]
-        ]
+    Views.demoHeaderView info model
 
 
 demoView : Model -> Html.Html Msg

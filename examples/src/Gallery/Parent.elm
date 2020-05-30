@@ -18,9 +18,7 @@ import Gallery.Shapes
 import Gallery.TaskBoard
 import Gallery.TryOn
 import Html
-import Html.Attributes
-import Path
-import Url.Builder
+import Views
 
 
 
@@ -152,54 +150,24 @@ commands =
 -- VIEW
 
 
-navigationView : String -> Html.Html Msg
-navigationView currentPath =
-    Html.div
-        [ Html.Attributes.class "navigation" ]
-        [ Html.h4 [] [ Html.text "Gallery" ]
-        , [ Hanoi Gallery.Hanoi.initialModel
-          , Puzzle Gallery.Puzzle.initialModel
-          , Shapes Gallery.Shapes.initialModel
-          , Knight Gallery.Knight.initialModel
-          , TryOn Gallery.TryOn.initialModel
-          , TaskBoard Gallery.TaskBoard.initialModel
-          ]
-            |> List.map (linkView currentPath)
-            |> Html.ul []
-        ]
-
-
-linkView : String -> Example -> Html.Html Msg
-linkView currentPath example =
-    let
-        path : String
-        path =
-            Url.Builder.absolute [ Path.rootPath, "gallery", (info >> .slug) example ] []
-    in
-    Html.li []
-        [ Html.a
-            [ Html.Attributes.classList [ ( "is-active", path == currentPath ) ]
-            , Html.Attributes.href path
-            ]
-            [ Html.text ((info >> .title) example) ]
+navigationView : Html.Html msg
+navigationView =
+    Views.navigationView
+        "Gallery"
+        "gallery"
+        info
+        [ Hanoi Gallery.Hanoi.initialModel
+        , Puzzle Gallery.Puzzle.initialModel
+        , Shapes Gallery.Shapes.initialModel
+        , Knight Gallery.Knight.initialModel
+        , TryOn Gallery.TryOn.initialModel
+        , TaskBoard Gallery.TaskBoard.initialModel
         ]
 
 
 headerView : Model -> Html.Html Msg
 headerView model =
-    let
-        title : String
-        title =
-            (info >> .title) model
-
-        description : String
-        description =
-            (info >> .description) model
-    in
-    Html.header []
-        [ Html.h2 [] [ Html.text title ]
-        , Html.p [] [ Html.text description ]
-        ]
+    Views.demoHeaderView info model
 
 
 demoView : Model -> Html.Html Msg

@@ -56,7 +56,7 @@ type Msg
 
 subscriptions : Model -> Sub Msg
 subscriptions =
-    always Sub.none
+    (\_ -> Sub.none)
         |> Glue.subscriptions flat Single.subscriptions
         |> Glue.subscriptions groups Groups.subscriptions
 

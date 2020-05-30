@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "watch": "cd examples && elm-live src/Main.elm --pushstate --port=8081 --dir=. --open -- --debug --output=assets/main.js",
+    "watch:d:elm": "cd examples && elm-live src/Main.elm --pushstate --port=8081 --dir=. --open -- --debug --output=assets/main.js",
+    "watch:d:sass": "sass --watch examples/scss:examples/assets",
+    "d": "npm-run-all -p watch:d:*",
     "watch:exp": "cd experiments && elm-live src/Main.elm --port=8082 --dir=. --open -- --debug",
     "watch:doc": "elm-doc-preview",
     "test": "elm-test && npm run format && npm run build",
@@ -13,6 +15,8 @@
     "elm-doc-preview": "^5.0.3",
     "elm-format": "^0.8.3",
     "elm-live": "^4.0.2",
-    "elm-test": "^0.19.1-revision2"
+    "elm-test": "^0.19.1-revision2",
+    "npm-run-all": "^4.1.5",
+    "sass": "^1.26.5"
   }
 }

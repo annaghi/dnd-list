@@ -1,7 +1,6 @@
 module DnDList.Groups.OperationsOnDrop.Parent exposing
     ( Model
     , Msg
-    , demoView
     , init
     , initialModel
     , subscriptions
@@ -15,8 +14,7 @@ import DnDList.Groups.OperationsOnDrop.InsertBefore
 import DnDList.Groups.OperationsOnDrop.Rotate
 import DnDList.Groups.OperationsOnDrop.Swap
 import Html
-import Html.Attributes
-import Html.Events
+import Views
 
 
 
@@ -49,7 +47,7 @@ initialModel =
 
 
 init : () -> ( Model, Cmd Msg )
-init _ =
+init () =
     ( initialModel, Cmd.none )
 
 
@@ -165,63 +163,28 @@ subscriptions model =
 
 view : Model -> Html.Html Msg
 view model =
-    model.examples
-        |> List.indexedMap (demoWrapperView model.id)
-        |> Html.section []
+    Views.examplesView LinkClicked info model.id model.examples
 
 
-demoWrapperView : Int -> Int -> Example -> Html.Html Msg
-demoWrapperView currentId id example =
-    Html.div
-        [ Html.Attributes.style "display" "flex"
-        , Html.Attributes.style "flex-wrap" "wrap"
-        , Html.Attributes.style "justify-content" "center"
-        , Html.Attributes.style "margin" "4em 0"
-        ]
-        [ demoView example
-        , Html.div
-            [ Html.Attributes.classList [ ( "link", True ), ( "is-active", id == currentId ) ]
-            , Html.Events.onClick (LinkClicked id)
-            ]
-            [ Html.text (info example) ]
-        ]
-
-
-demoView : Example -> Html.Html Msg
-demoView example =
-    case example of
-        InsertAfter mo ->
-            Html.map InsertAfterMsg (DnDList.Groups.OperationsOnDrop.InsertAfter.view mo)
-
-        InsertBefore mo ->
-            Html.map InsertBeforeMsg (DnDList.Groups.OperationsOnDrop.InsertBefore.view mo)
-
-        Rotate mo ->
-            Html.map RotateMsg (DnDList.Groups.OperationsOnDrop.Rotate.view mo)
-
-        Swap mo ->
-            Html.map SwapMsg (DnDList.Groups.OperationsOnDrop.Swap.view mo)
-
-
-
--- EXAMPLE INFO
-
-
-type alias Info =
-    String
-
-
-info : Example -> Info
+info : Example -> Views.SubInfo Msg
 info example =
     case example of
-        InsertAfter _ ->
-            "Insert after"
+        InsertAfter mo ->
+            { title = "Insert after"
+            , subView = Html.map InsertAfterMsg (DnDList.Groups.OperationsOnDrop.InsertAfter.view mo)
+            }
 
-        InsertBefore _ ->
-            "Insert before"
+        InsertBefore mo ->
+            { title = "Insert before"
+            , subView = Html.map InsertBeforeMsg (DnDList.Groups.OperationsOnDrop.InsertBefore.view mo)
+            }
 
-        Rotate _ ->
-            "Rotate"
+        Rotate mo ->
+            { title = "Rotate"
+            , subView = Html.map RotateMsg (DnDList.Groups.OperationsOnDrop.Rotate.view mo)
+            }
 
-        Swap _ ->
-            "Swap"
+        Swap mo ->
+            { title = "Swap"
+            , subView = Html.map SwapMsg (DnDList.Groups.OperationsOnDrop.Swap.view mo)
+            }

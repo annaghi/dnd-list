@@ -1,0 +1,173 @@
+*,
+:after,
+:before {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: Work Sans, sans-serif;
+  font-size: 100%;
+}
+
+body {
+  height: 95vh;
+  padding: 0;
+  margin: 0;
+  text-rendering: optimizeSpeed;
+  display: flex;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  color: #5e81ac;
+  text-decoration: none;
+}
+
+.hljs {
+  white-space: pre-wrap;
+}
+
+.dnd {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.dnd__header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  height: 5rem;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  border: 1px solid #eceff4;
+}
+.dnd__header--shell {
+  padding: 0 1rem;
+  margin: 0 auto;
+  max-width: 1100px;
+  text-align: center;
+  display: flex;
+  flex-basis: 100%;
+  flex-shrink: 0;
+}
+.dnd__header--shell--brand {
+  margin-right: auto;
+  color: #5e81ac;
+  font-weight: bolder;
+  font-size: 1.1rem;
+}
+.dnd__header--shell--icon {
+  line-height: 0;
+  padding-left: 1rem;
+  color: #5e81ac;
+}
+.dnd__header--shell--icon.menu {
+  display: none;
+}
+.dnd__header--shell--icon--link {
+  display: block;
+}
+.dnd__header--shell--icon--link:hover {
+  cursor: pointer;
+}
+.dnd__content {
+  padding: 0 1rem;
+  margin: 0 auto;
+  max-width: 1100px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.dnd__content--nav {
+  width: 85%;
+  margin: 0 auto;
+  order: 2;
+  display: flex;
+  justify-content: space-between;
+}
+.dnd__content--nav--section {
+  padding: 2rem 0 4rem 0;
+}
+.dnd__content--nav--section--title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #4c566a;
+  margin-bottom: 1rem;
+}
+.dnd__content--nav--section--links {
+  line-height: 1.5;
+}
+.dnd__content--main {
+  padding: 2rem 0 2rem 0;
+  order: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+.dnd__content--main--name {
+  text-align: center;
+  font-size: 3.4rem;
+  font-weight: 700;
+  color: #2e3440;
+}
+.dnd__content--main--description {
+  text-align: center;
+  font-size: 1.8rem;
+  color: #4c566a;
+}
+.dnd__footer {
+  padding: 0 1rem;
+  margin: 0 auto;
+  margin-bottom: -5vh;
+  max-width: 1100px;
+  height: 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.dnd__footer--author {
+  text-align: center;
+  font-size: smaller;
+  color: #4c566a;
+}
+
+@media (max-width: 1000px) {
+  .dnd__header--shell--icon.menu {
+    display: block;
+  }
+  .dnd__content--nav {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .dnd__content--nav--section {
+    padding: 1rem 0 2rem 0;
+  }
+  .dnd__content--main {
+    padding-bottom: 4rem;
+  }
+  .dnd__content--main--name {
+    padding-bottom: 3rem;
+    font-size: 2.6rem;
+  }
+  .dnd__content--main--description {
+    font-size: 1.4rem;
+  }
+}
+
+/*# sourceMappingURL=styles.css.map */

@@ -11,7 +11,7 @@ decodeCoordinatesWithButtonCheck =
 
 decodeCoordinates : Json.Decode.Decoder Coordinates
 decodeCoordinates =
-    Json.Decode.map2 Coordinates pageX pageY
+    Json.Decode.map2 Coordinates clientX clientY
 
 
 decodeMainMouseButton : Json.Decode.Decoder a -> Json.Decode.Decoder a
@@ -27,11 +27,11 @@ decodeMainMouseButton decoder =
             )
 
 
-pageX : Json.Decode.Decoder Float
-pageX =
-    Json.Decode.field "pageX" Json.Decode.float
+clientX : Json.Decode.Decoder Float
+clientX =
+    Json.Decode.field "clientX" Json.Decode.float
 
 
-pageY : Json.Decode.Decoder Float
-pageY =
-    Json.Decode.field "pageY" Json.Decode.float
+clientY : Json.Decode.Decoder Float
+clientY =
+    Json.Decode.field "clientY" Json.Decode.float

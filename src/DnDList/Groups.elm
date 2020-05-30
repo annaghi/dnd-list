@@ -1,7 +1,8 @@
 module DnDList.Groups exposing
     ( Config, config
-    , listen, operation
-    , groups, ghost, hookItemsBeforeListUpdate, detectDrop, detectReorder
+    , listen, operation, ghost, groups
+    , hookItemsBeforeListUpdate
+    , detectDrop, detectReorder
     , System, create, Msg
     , Model
     , Info
@@ -48,8 +49,9 @@ So now the internal sorting distinguishes between these two cases and we need to
 # Config
 
 @docs Config, config
-@docs listen, operation
-@docs groups, ghost, hookItemsBeforeListUpdate, detectDrop, detectReorder
+@docs listen, operation, ghost, groups
+@docs hookItemsBeforeListUpdate
+@docs detectDrop, detectReorder
 
 
 # System
@@ -344,7 +346,7 @@ defaultOptions =
         { listen = OnDrag
         , operation = InsertBefore
         , comparator = \_ _ -> True
-        , setter = \_ b -> b
+        , setter = \_ item -> item
         }
     }
 
@@ -363,6 +365,11 @@ operation operation_ (Config options) =
     Config { options | operation = operation_ }
 
 
+ghost : List String -> Config item msg -> Config item msg
+ghost properties (Config options) =
+    Config { options | ghost = properties }
+
+
 groups :
     { listen : Listen
     , operation : Operation
@@ -373,11 +380,6 @@ groups :
     -> Config item msg
 groups properties (Config options) =
     Config { options | groups = properties }
-
-
-ghost : List String -> Config item msg -> Config item msg
-ghost properties (Config options) =
-    Config { options | ghost = properties }
 
 
 hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item msg -> Config item msg
@@ -563,22 +565,24 @@ type alias Info =
 
 info : Model -> Maybe Info
 info (Model model) =
-    Maybe.andThen
-        (\state ->
-            Maybe.map2
-                (\dragElement dropElement ->
-                    { dragIndex = state.dragIndex
-                    , dropIndex = state.dropIndex
-                    , dragElementId = state.dragElementId
-                    , dropElementId = state.dropElementId
-                    , dragElement = dragElement
-                    , dropElement = dropElement
-                    }
-                )
-                state.dragElement
-                state.dropElement
-        )
-        model
+    case model of
+        Just state ->
+            case ( state.dragElement, state.dropElement ) of
+                ( Just dragElement, Just dropElement ) ->
+                    Just
+                        { dragIndex = state.dragIndex
+                        , dropIndex = state.dropIndex
+                        , dragElementId = state.dragElementId
+                        , dropElementId = state.dropElementId
+                        , dragElement = dragElement
+                        , dropElement = dropElement
+                        }
+
+                _ ->
+                    Nothing
+
+        Nothing ->
+            Nothing
 
 
 {-| Internal message type.
@@ -601,7 +605,7 @@ type InBetweenMsg
     | LeaveDropItem
     | GotDragItem (Result Browser.Dom.Error Browser.Dom.Element)
     | GotDropItem (Result Browser.Dom.Error Browser.Dom.Element)
-    | Tick
+    | Tick Float
 
 
 subscriptions : (Msg -> msg) -> Model -> Sub msg
@@ -612,7 +616,7 @@ subscriptions toMsg (Model model) =
                 (Internal.Decoders.decodeCoordinates |> Json.Decode.map (MoveDocument >> InBetweenMsg >> toMsg))
             , Browser.Events.onMouseUp
                 (Json.Decode.succeed (UpDocument |> toMsg))
-            , Browser.Events.onAnimationFrameDelta (always Tick >> InBetweenMsg >> toMsg)
+            , Browser.Events.onAnimationFrameDelta (Tick >> InBetweenMsg >> toMsg)
             ]
 
     else
@@ -799,7 +803,7 @@ inBetweenUpdate options toMsg list msg state =
             , Cmd.none
             )
 
-        Tick ->
+        Tick _ ->
             ( list
             , { state
                 | translateVector =
@@ -944,8 +948,8 @@ ghostStyles (Config options) (Model model) =
 
 
 transformDeclaration : Coordinates -> Browser.Dom.Element -> Html.Attribute msg
-transformDeclaration { x, y } { element } =
+transformDeclaration { x, y } { element, viewport } =
     Html.Attributes.style "transform" <|
         Internal.Ghost.translate
-            (round (x + element.x))
-            (round (y + element.y))
+            (round (x + element.x - viewport.x))
+            (round (y + element.y - viewport.y))

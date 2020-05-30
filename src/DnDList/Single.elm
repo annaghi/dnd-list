@@ -1,7 +1,9 @@
 module DnDList.Single exposing
     ( Config, config
-    , movement, listen, operation
-    , ghost, hookItemsBeforeListUpdate, detectDrop, detectReorder, scroll
+    , movement, listen, operation, ghost
+    , hookItemsBeforeListUpdate
+    , detectDrop, detectReorder
+    , scroll, scrollWithOffset, scrollWithOffsetAndFence, scrollWithOffsetAndArea
     , System, create, Msg
     , Model
     , Info
@@ -49,8 +51,10 @@ You can add position styling attributes to this element using the`System` object
 # Config
 
 @docs Config, config
-@docs movement, listen, operation
-@docs ghost, hookItemsBeforeListUpdate, detectDrop, detectReorder, scroll
+@docs movement, listen, operation, ghost
+@docs hookItemsBeforeListUpdate
+@docs detectDrop, detectReorder
+@docs scroll, scrollWithOffset, scrollWithOffsetAndFence, scrollWithOffsetAndArea
 
 
 # System
@@ -274,12 +278,10 @@ type alias Options item msg =
     , hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
     , detectDrop : Maybe (DragIndex -> DropIndex -> List item -> msg)
     , detectReorder : Maybe (DragIndex -> DropIndex -> List item -> msg)
-    , scroll :
-        { containerElementId : String
-        , fence : Fence
-        , offset : Offset
-        , area : Maybe Offset
-        }
+    , containerElementId : ContainerElementId
+    , offset : Offset
+    , hasFence : Bool
+    , area : Maybe Offset
     }
 
 
@@ -297,12 +299,10 @@ defaultOptions =
     , hookItemsBeforeListUpdate = \_ _ list -> list
     , detectDrop = Nothing
     , detectReorder = Nothing
-    , scroll =
-        { containerElementId = ""
-        , fence = FenceNone
-        , offset = { top = 0, right = 0, bottom = 0, left = 0 }
-        , area = Nothing
-        }
+    , containerElementId = ""
+    , offset = { top = 0, right = 0, bottom = 0, left = 0 }
+    , hasFence = False
+    , area = Nothing
     }
 
 
@@ -345,16 +345,24 @@ detectReorder toMessage (Config options) =
     Config { options | detectReorder = Just toMessage }
 
 
-scroll :
-    { containerElementId : String
-    , fence : Fence
-    , offset : Offset
-    , area : Maybe Offset
-    }
-    -> Config item msg
-    -> Config item msg
-scroll properties (Config options) =
-    Config { options | scroll = properties }
+scroll : ContainerElementId -> Config item msg -> Config item msg
+scroll containerElementId (Config options) =
+    Config { options | containerElementId = containerElementId }
+
+
+scrollWithOffset : ContainerElementId -> { offset : Offset } -> Config item msg -> Config item msg
+scrollWithOffset containerElementId { offset } (Config options) =
+    Config { options | containerElementId = containerElementId, offset = offset }
+
+
+scrollWithOffsetAndFence : ContainerElementId -> { offset : Offset } -> Config item msg -> Config item msg
+scrollWithOffsetAndFence containerElementId { offset } (Config options) =
+    Config { options | containerElementId = containerElementId, offset = offset, hasFence = True }
+
+
+scrollWithOffsetAndArea : ContainerElementId -> { offset : Offset, area : Offset } -> Config item msg -> Config item msg
+scrollWithOffsetAndArea containerElementId { offset, area } (Config options) =
+    Config { options | containerElementId = containerElementId, offset = offset, area = Just area }
 
 
 {-| A `System` encapsulates:
@@ -501,22 +509,24 @@ type alias Info =
 
 info : Model -> Maybe Info
 info (Model model) =
-    Maybe.andThen
-        (\state ->
-            Maybe.map2
-                (\dragElement dropElement ->
-                    { dragIndex = state.dragIndex
-                    , dropIndex = state.dropIndex
-                    , dragElementId = state.dragElementId
-                    , dropElementId = state.dropElementId
-                    , dragElement = dragElement
-                    , dropElement = dropElement
-                    }
-                )
-                state.dragElement
-                state.dropElement
-        )
-        model
+    case model of
+        Just state ->
+            case ( state.dragElement, state.dropElement ) of
+                ( Just dragElement, Just dropElement ) ->
+                    Just
+                        { dragIndex = state.dragIndex
+                        , dropIndex = state.dropIndex
+                        , dragElementId = state.dragElementId
+                        , dropElementId = state.dropElementId
+                        , dragElement = dragElement
+                        , dropElement = dropElement
+                        }
+
+                _ ->
+                    Nothing
+
+        Nothing ->
+            Nothing
 
 
 {-| Internal message type.
@@ -540,7 +550,8 @@ type InBetweenMsg
     | GotDragItem (Result Browser.Dom.Error Browser.Dom.Element)
     | GotDropItem (Result Browser.Dom.Error Browser.Dom.Element)
     | GotContainer (Result Browser.Dom.Error Browser.Dom.Element)
-    | Tick
+    | Tick Float
+    | NoOp
 
 
 subscriptions : (Msg -> msg) -> Model -> Sub msg
@@ -551,7 +562,7 @@ subscriptions toMsg (Model model) =
                 (Internal.Decoders.decodeCoordinates |> Json.Decode.map (MoveDocument >> InBetweenMsg >> toMsg))
             , Browser.Events.onMouseUp
                 (Json.Decode.succeed (UpDocument |> toMsg))
-            , Browser.Events.onAnimationFrameDelta (always Tick >> InBetweenMsg >> toMsg)
+            , Browser.Events.onAnimationFrameDelta (Tick >> InBetweenMsg >> toMsg)
             ]
 
     else
@@ -642,7 +653,7 @@ inBetweenUpdate options toMsg list msg state =
             , if state.dragElement == Nothing then
                 Cmd.batch
                     [ Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GotDragItem (Browser.Dom.getElement state.dragElementId))
-                    , Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GotContainer (Browser.Dom.getElement options.scroll.containerElementId))
+                    , Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GotContainer (Browser.Dom.getElement options.containerElementId))
                     ]
 
               else
@@ -712,20 +723,44 @@ inBetweenUpdate options toMsg list msg state =
             , Cmd.none
             )
 
-        Tick ->
+        Tick _ ->
             ( list
             , { state
                 | translateVector =
-                    if (options.scroll.fence /= FenceNone) && (state.containerElement /= Nothing) then
-                        Internal.Scroll.coordinatesWithFence options.scroll.offset state.startPosition state.currentPosition state.containerElement
+                    case state.containerElement of
+                        Just containerElement ->
+                            if options.hasFence then
+                                Internal.Scroll.coordinatesWithFence options.offset state.startPosition state.currentPosition containerElement
 
-                    else
-                        Coordinates
-                            (state.currentPosition.x - state.startPosition.x)
-                            (state.currentPosition.y - state.startPosition.y)
+                            else
+                                Coordinates
+                                    (state.currentPosition.x - state.startPosition.x)
+                                    (state.currentPosition.y - state.startPosition.y)
+
+                        Nothing ->
+                            Coordinates
+                                (state.currentPosition.x - state.startPosition.x)
+                                (state.currentPosition.y - state.startPosition.y)
               }
-            , Cmd.none
+            , autoScrollCmd options toMsg state
             )
+
+        NoOp ->
+            ( list, state, Cmd.none )
+
+
+autoScrollCmd : Options item msg -> (Msg -> msg) -> State -> Cmd msg
+autoScrollCmd { containerElementId, offset, hasFence, area } toMsg state =
+    case state.containerElement of
+        Just containerElement ->
+            -- TODO Can I make this cheaper? Do not like the NoOp.
+            Browser.Dom.getViewportOf containerElementId
+                |> Task.andThen (Internal.Scroll.scrollByStep 35 area offset state.currentPosition containerElementId containerElement)
+                |> Task.attempt (\_ -> NoOp)
+                |> Cmd.map (InBetweenMsg >> toMsg)
+
+        Nothing ->
+            Cmd.none
 
 
 stateUpdate : Operation -> DropIndex -> State -> State
@@ -825,22 +860,22 @@ ghostStyles (Config options) (Model model) =
 
 
 transformDeclaration : Movement -> Coordinates -> Browser.Dom.Element -> Html.Attribute msg
-transformDeclaration movement_ { x, y } { element } =
+transformDeclaration movement_ { x, y } { element, viewport } =
     case movement_ of
         Horizontal ->
             Html.Attributes.style "transform" <|
                 Internal.Ghost.translate
-                    (round (x + element.x))
-                    (round element.y)
+                    (round (x + element.x - viewport.x))
+                    (round (element.y - viewport.y))
 
         Vertical ->
             Html.Attributes.style "transform" <|
                 Internal.Ghost.translate
-                    (round element.x)
-                    (round (y + element.y))
+                    (round (element.x - viewport.x))
+                    (round (y + element.y - viewport.y))
 
         Free ->
             Html.Attributes.style "transform" <|
                 Internal.Ghost.translate
-                    (round (x + element.x))
-                    (round (y + element.y))
+                    (round (x + element.x - viewport.x))
+                    (round (y + element.y - viewport.y))

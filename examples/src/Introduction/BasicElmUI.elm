@@ -3,7 +3,6 @@ module Introduction.BasicElmUI exposing (Model, Msg, initialModel, main, subscri
 import Browser
 import DnDList.Single
 import Element
-import Element.Font
 import Html
 import Html.Attributes
 
@@ -62,7 +61,7 @@ initialModel =
 
 
 init : () -> ( Model, Cmd Msg )
-init _ =
+init () =
     ( initialModel, Cmd.none )
 
 
@@ -126,23 +125,20 @@ itemView dnd index item =
         Just { dragIndex } ->
             if dragIndex /= index then
                 Element.el
-                    (Element.Font.color (Element.rgb 1 1 1)
-                        :: Element.htmlAttribute (Html.Attributes.id itemId)
+                    (Element.htmlAttribute (Html.Attributes.id itemId)
                         :: List.map Element.htmlAttribute (system.dropEvents index itemId)
                     )
                     (Element.text item)
 
             else
                 Element.el
-                    [ Element.Font.color (Element.rgb 1 1 1)
-                    , Element.htmlAttribute (Html.Attributes.id itemId)
+                    [ Element.htmlAttribute (Html.Attributes.id itemId)
                     ]
                     (Element.text "[---------]")
 
         Nothing ->
             Element.el
-                (Element.Font.color (Element.rgb 1 1 1)
-                    :: Element.htmlAttribute (Html.Attributes.id itemId)
+                (Element.htmlAttribute (Html.Attributes.id itemId)
                     :: List.map Element.htmlAttribute (system.dragEvents index itemId)
                 )
                 (Element.text item)
@@ -159,9 +155,7 @@ ghostView dnd items =
     case maybeDragItem of
         Just item ->
             Element.el
-                (Element.Font.color (Element.rgb 1 1 1)
-                    :: List.map Element.htmlAttribute (system.ghostStyles dnd)
-                )
+                (List.map Element.htmlAttribute (system.ghostStyles dnd))
                 (Element.text item)
 
         Nothing ->
