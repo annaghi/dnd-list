@@ -21,7 +21,9 @@ docs.json
 .editorconfig
 
 # elm-make generated files
-examples/**/main.js
+examples/assets/main.js
+examples/assets/*.css
+examples/assets/*.css.map
 
 # experiments
 experiments/index.html

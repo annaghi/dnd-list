@@ -184,11 +184,18 @@ view model =
                 [ moduleClass |> WeakCss.nest "content" ]
                 [ Html.div
                     [ moduleClass |> WeakCss.nestMany [ "content", "nav" ] ]
-                    [ Introduction.Parent.navigationView
-                    , DnDList.Single.Parent.navigationView
-                    , DnDList.Groups.Parent.navigationView
-                    , Gallery.Parent.navigationView
-                    ]
+                    (if model.page == Home then
+                        [ DnDList.Single.Parent.navigationView
+                        , DnDList.Groups.Parent.navigationView
+                        ]
+
+                     else
+                        [ Introduction.Parent.navigationView
+                        , DnDList.Single.Parent.navigationView
+                        , DnDList.Groups.Parent.navigationView
+                        , Gallery.Parent.navigationView
+                        ]
+                    )
                 , case model.page of
                     Home ->
                         Home.view
