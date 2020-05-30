@@ -17,6 +17,9 @@ docs.json
 # IntelliJ IDEA settings
 .idea
 
+# EditorConfig settings
+.editorconfig
+
 # elm-make generated files
 examples/**/main.js
 
