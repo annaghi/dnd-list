@@ -65,7 +65,7 @@ system =
             , comparator = \item1 item2 -> item1.group == item2.group
             , setter = \item1 item2 -> { item2 | group = item1.group }
             }
-        |> DnDList.Groups.hookItemsBeforeListUpdate beforeUpdate
+        |> DnDList.Groups.setItemsBeforeReorder beforeUpdate
         |> DnDList.Groups.create DnDMsg
 
 

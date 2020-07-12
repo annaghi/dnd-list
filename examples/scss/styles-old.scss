@@ -1,0 +1,370 @@
+@media (min-width: 640px) {
+    html {
+        font-size: 125%;
+    }
+}
+
+@media (min-width: 900px) {
+    html {
+        font-size: 131.25%;
+        line-height: 1.4;
+    }
+}
+
+@media (min-width: 1100px) {
+    html {
+        font-size: 137.5%;
+    }
+}
+
+@media (min-width: 1800px) {
+    html {
+        font-size: 156.25%;
+    }
+}
+
+@media (min-width: 2800px) {
+    html {
+        font-size: 175%;
+    }
+}
+*,
+:after,
+:before {
+    box-sizing: border-box;
+}
+html {
+    font-family: Work Sans, sans-serif;
+    font-size: 118.75%;
+    color: #343434;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+
+    text-rendering: optimizeSpeed;
+}
+
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+li {
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: #5e81ac;
+    text-decoration: none;
+}
+
+pre {
+    margin: 0;
+}
+
+h1,
+h2 {
+    padding: 0;
+    margin: 0;
+}
+
+.hljs {
+    white-space: pre-wrap;
+    padding: 2rem 1rem;
+}
+
+.dnd {
+    $max-width: 1100px;
+
+    &.home {
+        height: 95vh;
+        width: 100%;
+
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__header {
+        position: sticky;
+        top: 0;
+        left: 0;
+
+        height: 4rem;
+
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+
+        background-color: #ffffff;
+        border: 1px solid #eceff4;
+
+        &--shell {
+            padding: 0 1rem;
+            margin: 0 auto;
+            max-width: $max-width;
+
+            text-align: center;
+
+            display: flex;
+            align-items: center;
+            flex-basis: 100%;
+            flex-shrink: 0;
+
+            &--brand {
+                margin-right: auto;
+            }
+
+            &--link {
+                margin-left: 1rem;
+                display: block;
+
+                &:hover {
+                    cursor: pointer;
+                }
+
+                &--icon {
+                    display: block;
+                    line-height: 0;
+                }
+
+                .home &.menu {
+                    display: none;
+                }
+            }
+        }
+    }
+
+    .home &__main {
+        padding: 0 1rem;
+
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+
+        &--name {
+            padding: 2rem 0 3rem 0;
+
+            text-align: center;
+        }
+
+        &--description {
+            padding: 0 0 1rem 0;
+            text-align: center;
+        }
+    }
+
+    .home &__nav {
+        padding: 0 1rem;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+
+        &--section {
+            padding: 1rem 0 2rem 0;
+
+            text-align: center;
+
+            &--header {
+                padding-bottom: 1rem;
+            }
+
+            &--links {
+                line-height: 1.7;
+            }
+        }
+    }
+
+    .demo &__main {
+        &--header {
+            padding: 2rem 1rem 0 1rem;
+            /* TODO Decide when Title vs Name */
+            &--title {
+                display: flex;
+                align-items: center;
+
+                &--text {
+                    margin-right: auto;
+                }
+
+                &--link {
+                    display: flex;
+                    align-items: center;
+
+                    &--label {
+                        padding-right: 0.7rem;
+                    }
+
+                    &--icon {
+                        display: block;
+                        line-height: 0;
+                    }
+                }
+            }
+
+            &--description {
+                padding-bottom: 1rem;
+            }
+        }
+        &--demo {
+            padding: 2rem 1rem 4rem 1rem;
+            text-align: center;
+        }
+
+        &--code {
+        }
+    }
+
+    .demo &__nav {
+        display: block;
+
+        position: fixed;
+        visibility: hidden;
+        top: 0;
+        right: -100%;
+
+        width: 300px;
+        height: 100%;
+
+        margin: 0;
+        padding: 80px 0;
+
+        background-color: #eceff1;
+        box-shadow: -5px 0px 6px rgba(0, 0, 0, 0.2);
+
+        transition-duration: 0.25s;
+
+        &.show {
+            visibility: visible;
+            right: 0;
+        }
+    }
+
+    &__footer {
+        padding: 0 1rem;
+        margin: 0 auto;
+        max-width: $max-width;
+
+        height: 4rem;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        .home & {
+            margin-bottom: -5vh;
+        }
+
+        &--author {
+            text-align: center;
+            font-size: smaller;
+            color: #777777;
+        }
+    }
+}
+
+@media (min-width: 480px) {
+}
+
+@media (min-width: 600px) {
+}
+
+@media (min-width: 700px) {
+}
+
+@media (min-width: 1000px) {
+    .dnd {
+        &.demo {
+            display: grid;
+            grid-template-areas:
+                "header header"
+                "menu content"
+                "menu footer";
+
+            height: 100vh;
+        }
+
+        &__header {
+            grid-area: header;
+
+            &--shell {
+                &--link.menu {
+                    display: none;
+                }
+            }
+        }
+
+        .home &__main {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1;
+            flex-basis: 50%;
+
+            &--name {
+                padding: 2rem 0 2rem 0;
+            }
+
+            &--description {
+            }
+        }
+
+        .home &__nav {
+            display: flex;
+            justify-content: center;
+            flex-basis: 50%;
+
+            &--section {
+                flex-basis: 50%;
+            }
+        }
+
+        .demo &__main {
+            grid-area: content;
+
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+
+            flex: 3 0 auto;
+            overflow-y: auto;
+
+            &--header {
+                padding: 2rem 1rem 0 3rem;
+            }
+        }
+        .demo &__nav {
+            grid-area: menu;
+
+            position: unset;
+
+            visibility: visible;
+            box-shadow: none;
+
+            width: unset;
+
+            margin: 0;
+            padding: 2.4rem 3rem 0 1rem;
+
+            flex: 1 0 auto;
+            overflow-y: auto;
+        }
+
+        &__footer {
+            grid-area: footer;
+        }
+    }
+}
+
+@media (min-width: 1220px) {
+}
+
+@media (min-width: 1360px) {
+}

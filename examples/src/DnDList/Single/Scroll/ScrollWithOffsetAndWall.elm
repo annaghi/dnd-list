@@ -1,4 +1,4 @@
-module DnDList.Single.Scroll.ScrollWithOffsetAndArea exposing (..)
+module DnDList.Single.Scroll.ScrollWithOffsetAndWall exposing (..)
 
 import Browser
 import DnDList
@@ -40,16 +40,13 @@ data =
 
 scrollableContainerId : String
 scrollableContainerId =
-    "scrollable-container-scrollwithoffsetandarea"
+    "scrollable-container-scrollwithoffsetandwall"
 
 
 system : DnDList.Single.System Item Msg
 system =
     DnDList.Single.config
-        |> DnDList.Single.scrollWithOffsetAndArea scrollableContainerId
-            { offset = { top = 0, right = -60, bottom = 0, left = 60 }
-            , area = { top = 0, right = 40, bottom = 0, left = 40 }
-            }
+        |> DnDList.Single.scrollWithOffsetAndWall { top = 0, right = -60, bottom = 0, left = -60 } DnDList.Scroll_X scrollableContainerId
         |> DnDList.Single.create DnDMsg
 
 
@@ -137,7 +134,7 @@ itemView dnd index item =
     let
         itemId : String
         itemId =
-            "scrollwithoffsetandarea-" ++ item
+            "scrollwithoffsetandwall-" ++ item
     in
     case system.info dnd of
         Just { dragIndex } ->

@@ -69,7 +69,7 @@ system =
     DnDList.Single.config
         |> DnDList.Single.listen DnDList.OnDrop
         |> DnDList.Single.operation DnDList.Unaltered
-        |> DnDList.Single.hookItemsBeforeListUpdate updateShapes
+        |> DnDList.Single.setItemsBeforeReorder updateShapes
         |> DnDList.Single.create DnDMsg
 
 

@@ -4,17 +4,13 @@ import Browser
 import Browser.Dom
 import Browser.Navigation
 import Demo
-import DnDList.Groups.Parent
-import DnDList.Single.Parent
-import Gallery.Parent
+import Global
 import Home
 import Html
-import Introduction.Parent
 import Router
 import Task
 import Url
 import Views
-import WeakCss
 
 
 
@@ -28,8 +24,8 @@ main =
         , view = view
         , update = update
         , subscriptions = subscriptions
-        , onUrlChange = UrlChanged
-        , onUrlRequest = RouteTo
+        , onUrlChange = OnUrlChange
+        , onUrlRequest = OnUrlRequest
         }
 
 
@@ -39,7 +35,7 @@ main =
 
 type Page
     = Home
-    | Demo Demo.Model
+    | Demo Demo.Example
     | NotFound
 
 
@@ -64,7 +60,12 @@ routePage route model =
         | page = Tuple.first genPage
         , route = route
       }
-    , Tuple.second genPage
+    , Cmd.batch
+        [ Tuple.second genPage
+        , Task.perform (\_ -> GlobalMsg Global.ShowMenu) (Task.succeed ())
+
+        -- , jumpToTop "dnd"
+        ]
     )
 
 
@@ -75,6 +76,7 @@ routePage route model =
 type alias Model =
     { key : Browser.Navigation.Key
     , route : Router.Route
+    , global : Global.Model
     , page : Page
     }
 
@@ -85,6 +87,7 @@ init () url key =
         (Router.route url)
         { key = key
         , route = Router.route url
+        , global = Global.initialModel -- No commands yet
         , page = NotFound
         }
 
@@ -94,50 +97,18 @@ init () url key =
 
 
 type Msg
-    = RouteTo Browser.UrlRequest
-    | UrlChanged Url.Url
+    = OnUrlRequest Browser.UrlRequest
+    | OnUrlChange Url.Url
+    | GlobalMsg Global.Msg
     | DemoMsg Demo.Msg
     | NoOp
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case ( message, model.page ) of
-        ( RouteTo url, _ ) ->
-            case url of
-                Browser.Internal location ->
-                    ( model
-                    , Cmd.batch
-                        [ Browser.Navigation.pushUrl model.key (Url.toString location)
-                        , jumpToTop "main"
-                        ]
-                    )
-
-                Browser.External url_ ->
-                    ( model
-                      -- TODO Check this if statement
-                    , if String.isEmpty url_ then
-                        Cmd.none
-
-                      else
-                        Browser.Navigation.load url_
-                    )
-
-        ( UrlChanged url, _ ) ->
-            routePage (Router.route url) model
-
-        ( DemoMsg msg, Demo mo ) ->
-            -- TODO Check if Browser.Navigation.pushUrl key is needed
-            Demo.update model.key msg mo
-                |> Tuple.mapFirst (\m -> { model | page = Demo m })
-                |> Tuple.mapSecond (Cmd.map DemoMsg)
-
-        _ ->
-            ( model, Cmd.none )
-
-
-
--- SUBSCRIPTIONS
+jumpToTop : String -> Cmd Msg
+jumpToTop id =
+    Browser.Dom.getViewportOf id
+        |> Task.andThen (\_ -> Browser.Dom.setViewportOf id 0 0)
+        |> Task.attempt (\_ -> NoOp)
 
 
 subscriptions : Model -> Sub Msg
@@ -153,60 +124,67 @@ subscriptions model =
             Sub.none
 
 
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        OnUrlRequest (Browser.Internal location) ->
+            ( model
+            , Browser.Navigation.pushUrl model.key (Url.toString location)
+            )
 
--- COMMANDS
+        OnUrlRequest (Browser.External url) ->
+            ( model
+              -- TODO Check this if statement
+            , if String.isEmpty url then
+                Cmd.none
 
+              else
+                Browser.Navigation.load url
+            )
 
-jumpToTop : String -> Cmd Msg
-jumpToTop id =
-    Browser.Dom.getViewportOf id
-        |> Task.andThen (\_ -> Browser.Dom.setViewportOf id 0 0)
-        |> Task.attempt (\_ -> NoOp)
+        OnUrlChange url ->
+            routePage (Router.route url) model
+
+        GlobalMsg globalMsg ->
+            Global.update globalMsg model.global
+                |> Tuple.mapFirst (\m -> { model | global = m })
+                |> Tuple.mapSecond (Cmd.map GlobalMsg)
+
+        DemoMsg demoMsg ->
+            case model.page of
+                Demo mo ->
+                    -- TODO Check if Browser.Navigation.pushUrl key is needed
+                    Demo.update model.key demoMsg mo
+                        |> Tuple.mapFirst (\m -> { model | page = Demo m })
+                        |> Tuple.mapSecond (Cmd.map DemoMsg)
+
+                _ ->
+                    ( model, Cmd.none )
+
+        _ ->
+            ( model, Cmd.none )
 
 
 
 -- VIEW
 
 
-moduleClass : WeakCss.ClassName
-moduleClass =
-    WeakCss.namespace "dnd"
-
-
 view : Model -> Browser.Document Msg
 view model =
     { title = "annaghi | dnd-list"
     , body =
-        [ Html.div
-            [ moduleClass |> WeakCss.withStates [ ( "home", model.page == Home ) ] ]
-            [ Views.headerView
-            , Html.div
-                [ moduleClass |> WeakCss.nest "content" ]
-                [ Html.div
-                    [ moduleClass |> WeakCss.nestMany [ "content", "nav" ] ]
-                    (if model.page == Home then
-                        [ DnDList.Single.Parent.navigationView
-                        , DnDList.Groups.Parent.navigationView
-                        ]
+        Views.bodyView
+            (GlobalMsg Global.ShowMenu)
+            (model.page == Home)
+            (case model.page of
+                Home ->
+                    Home.view
 
-                     else
-                        [ Introduction.Parent.navigationView
-                        , DnDList.Single.Parent.navigationView
-                        , DnDList.Groups.Parent.navigationView
-                        , Gallery.Parent.navigationView
-                        ]
-                    )
-                , case model.page of
-                    Home ->
-                        Home.view
+                Demo mo ->
+                    Html.map DemoMsg (Demo.view model.global.showMenu mo)
 
-                    Demo mo ->
-                        Html.map DemoMsg (Demo.view mo)
-
-                    NotFound ->
-                        Html.text "Not found"
-                ]
-            , Views.footerView
-            ]
-        ]
+                NotFound ->
+                    -- TODO Create a nice view for this page too
+                    Html.text "Not found"
+            )
     }

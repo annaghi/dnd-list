@@ -46,7 +46,7 @@ scrollableContainerId =
 system : DnDList.Single.System Item Msg
 system =
     DnDList.Single.config
-        |> DnDList.Single.scroll scrollableContainerId
+        |> DnDList.Single.scroll DnDList.Scroll_X scrollableContainerId
         |> DnDList.Single.create DnDMsg
 
 

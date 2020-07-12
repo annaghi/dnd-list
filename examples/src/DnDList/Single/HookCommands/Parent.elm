@@ -136,9 +136,11 @@ info example =
         DetectDrop mo ->
             { title = "Detect drop with swap"
             , subView = Html.map DetectDropMsg (DnDList.Single.HookCommands.DetectDrop.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/HookCommands/DetectDrop.elm"
             }
 
         DetectReorder mo ->
             { title = "Detect reorder with swap"
             , subView = Html.map DetectReorderMsg (DnDList.Single.HookCommands.DetectReorder.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/HookCommands/DetectReorder.elm"
             }

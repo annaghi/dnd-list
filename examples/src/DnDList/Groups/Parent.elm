@@ -1,16 +1,16 @@
 module DnDList.Groups.Parent exposing
-    ( Model
+    ( Example
     , Msg
-    , codeView
-    , demoView
-    , headerView
+    , chapterView
     , init
-    , navigationView
     , subscriptions
     , update
+    , view
     )
 
+import AssocList
 import CustomElement
+import Dict
 import DnDList.Groups.HookCommands.Parent
 import DnDList.Groups.OperationsOnDrag.Parent
 import DnDList.Groups.OperationsOnDrop.Parent
@@ -19,11 +19,98 @@ import Views
 
 
 
+-- WORKAROUND ENUM TYPE
+
+
+defaultMeta : Views.Metadata Example
+defaultMeta =
+    { segment = "operations-drag"
+    , title = "Operations on drag"
+    , description = "Compare the list operations sorting on drag"
+    , link = ""
+    , initialModel = OperationsOnDrag DnDList.Groups.OperationsOnDrag.Parent.initialModel
+    }
+
+
+meta : List (Views.Metadata Example)
+meta =
+    [ defaultMeta
+    , { segment = "operations-drop"
+      , title = "Operations on drop"
+      , description = "Compare the list operations sorting on drop"
+      , link = ""
+      , initialModel = OperationsOnDrop DnDList.Groups.OperationsOnDrop.Parent.initialModel
+      }
+    , { segment = "hook-commands"
+      , title = "Hook commands"
+      , description = "Compare detectDrop and detectReorder hooks"
+      , link = ""
+      , initialModel = HookCommands DnDList.Groups.HookCommands.Parent.initialModel
+      }
+    ]
+
+
+type Tag
+    = OperationsOnDragTag
+    | OperationsOnDropTag
+    | HookCommandsTag
+
+
+allTags : List Tag
+allTags =
+    let
+        ignored : Tag -> ()
+        ignored tag =
+            case tag of
+                OperationsOnDragTag ->
+                    ()
+
+                OperationsOnDropTag ->
+                    ()
+
+                HookCommandsTag ->
+                    ()
+    in
+    [ OperationsOnDragTag
+    , OperationsOnDropTag
+    , HookCommandsTag
+    ]
+
+
+exampleToTag : Example -> Tag
+exampleToTag example =
+    case example of
+        OperationsOnDrag _ ->
+            OperationsOnDragTag
+
+        OperationsOnDrop _ ->
+            OperationsOnDropTag
+
+        HookCommands _ ->
+            HookCommandsTag
+
+
+tagSegmentDict : AssocList.Dict Tag (Views.Metadata Example)
+tagSegmentDict =
+    List.map2 Tuple.pair allTags meta |> AssocList.fromList
+
+
+tagToMetadata : Tag -> Views.Metadata Example
+tagToMetadata tag =
+    Maybe.withDefault defaultMeta <|
+        case tag of
+            OperationsOnDragTag ->
+                AssocList.get OperationsOnDragTag tagSegmentDict
+
+            OperationsOnDropTag ->
+                AssocList.get OperationsOnDropTag tagSegmentDict
+
+            HookCommandsTag ->
+                AssocList.get HookCommandsTag tagSegmentDict
+
+
+
 -- MODEL
-
-
-type alias Model =
-    Example
 
 
 type Example
@@ -32,9 +119,15 @@ type Example
     | HookCommands DnDList.Groups.HookCommands.Parent.Model
 
 
-init : String -> ( Model, Cmd Msg )
-init slug =
-    ( toExample slug, Cmd.none )
+init : String -> ( Example, Cmd Msg )
+init segment =
+    ( meta
+        |> List.map (\m -> ( m.segment, m.initialModel ))
+        |> Dict.fromList
+        |> Dict.get segment
+        |> Maybe.withDefault defaultMeta.initialModel
+    , Cmd.none
+    )
 
 
 
@@ -47,150 +140,82 @@ type Msg
     | HookCommandsMsg DnDList.Groups.HookCommands.Parent.Msg
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case ( message, model ) of
-        ( OperationsOnDragMsg msg, OperationsOnDrag mo ) ->
-            stepOperationsOnDrag (DnDList.Groups.OperationsOnDrag.Parent.update msg mo)
+subscriptions : Example -> Sub Msg
+subscriptions model =
+    case model of
+        OperationsOnDrag subModel ->
+            Sub.map OperationsOnDragMsg (DnDList.Groups.OperationsOnDrag.Parent.subscriptions subModel)
 
-        ( OperationsOnDropMsg msg, OperationsOnDrop mo ) ->
-            stepOperationsOnDrop (DnDList.Groups.OperationsOnDrop.Parent.update msg mo)
+        OperationsOnDrop subModel ->
+            Sub.map OperationsOnDropMsg (DnDList.Groups.OperationsOnDrop.Parent.subscriptions subModel)
 
-        ( HookCommandsMsg msg, HookCommands mo ) ->
-            stepHookCommands (DnDList.Groups.HookCommands.Parent.update msg mo)
+        HookCommands subModel ->
+            Sub.map HookCommandsMsg (DnDList.Groups.HookCommands.Parent.subscriptions subModel)
+
+
+update : Msg -> Example -> ( Example, Cmd Msg )
+update msg model =
+    case ( msg, model ) of
+        ( OperationsOnDragMsg subMsg, OperationsOnDrag subModel ) ->
+            stepOperationsOnDrag (DnDList.Groups.OperationsOnDrag.Parent.update subMsg subModel)
+
+        ( OperationsOnDropMsg subMsg, OperationsOnDrop subModel ) ->
+            stepOperationsOnDrop (DnDList.Groups.OperationsOnDrop.Parent.update subMsg subModel)
+
+        ( HookCommandsMsg subMsg, HookCommands subModel ) ->
+            stepHookCommands (DnDList.Groups.HookCommands.Parent.update subMsg subModel)
 
         _ ->
             ( model, Cmd.none )
 
 
-stepOperationsOnDrag : ( DnDList.Groups.OperationsOnDrag.Parent.Model, Cmd DnDList.Groups.OperationsOnDrag.Parent.Msg ) -> ( Model, Cmd Msg )
-stepOperationsOnDrag ( mo, cmds ) =
-    ( OperationsOnDrag mo, Cmd.map OperationsOnDragMsg cmds )
+stepOperationsOnDrag : ( DnDList.Groups.OperationsOnDrag.Parent.Model, Cmd DnDList.Groups.OperationsOnDrag.Parent.Msg ) -> ( Example, Cmd Msg )
+stepOperationsOnDrag ( subModel, subCmd ) =
+    ( OperationsOnDrag subModel, Cmd.map OperationsOnDragMsg subCmd )
 
 
-stepOperationsOnDrop : ( DnDList.Groups.OperationsOnDrop.Parent.Model, Cmd DnDList.Groups.OperationsOnDrop.Parent.Msg ) -> ( Model, Cmd Msg )
-stepOperationsOnDrop ( mo, cmds ) =
-    ( OperationsOnDrop mo, Cmd.map OperationsOnDropMsg cmds )
+stepOperationsOnDrop : ( DnDList.Groups.OperationsOnDrop.Parent.Model, Cmd DnDList.Groups.OperationsOnDrop.Parent.Msg ) -> ( Example, Cmd Msg )
+stepOperationsOnDrop ( subModel, subCmd ) =
+    ( OperationsOnDrop subModel, Cmd.map OperationsOnDropMsg subCmd )
 
 
-stepHookCommands : ( DnDList.Groups.HookCommands.Parent.Model, Cmd DnDList.Groups.HookCommands.Parent.Msg ) -> ( Model, Cmd Msg )
-stepHookCommands ( mo, cmds ) =
-    ( HookCommands mo, Cmd.map HookCommandsMsg cmds )
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    case model of
-        OperationsOnDrag mo ->
-            Sub.map OperationsOnDragMsg (DnDList.Groups.OperationsOnDrag.Parent.subscriptions mo)
-
-        OperationsOnDrop mo ->
-            Sub.map OperationsOnDropMsg (DnDList.Groups.OperationsOnDrop.Parent.subscriptions mo)
-
-        HookCommands mo ->
-            Sub.map HookCommandsMsg (DnDList.Groups.HookCommands.Parent.subscriptions mo)
+stepHookCommands : ( DnDList.Groups.HookCommands.Parent.Model, Cmd DnDList.Groups.HookCommands.Parent.Msg ) -> ( Example, Cmd Msg )
+stepHookCommands ( subModel, subCmd ) =
+    ( HookCommands subModel, Cmd.map HookCommandsMsg subCmd )
 
 
 
 -- VIEW
 
 
-navigationView : Html.Html msg
-navigationView =
-    Views.navigationView
-        "DnDList.Groups"
-        "groups"
-        info
-        [ OperationsOnDrag DnDList.Groups.OperationsOnDrag.Parent.initialModel
-        , OperationsOnDrop DnDList.Groups.OperationsOnDrop.Parent.initialModel
-        , HookCommands DnDList.Groups.HookCommands.Parent.initialModel
-        ]
+view : Example -> List (Html.Html Msg)
+view example =
+    [ Views.demoHeaderView
+        (example
+            |> exampleToTag
+            |> tagToMetadata
+            |> (\m -> { title = m.title, description = m.description, link = m.link })
+        )
+    , case example of
+        OperationsOnDrag subModel ->
+            Html.map OperationsOnDragMsg (DnDList.Groups.OperationsOnDrag.Parent.view subModel)
+
+        OperationsOnDrop subModel ->
+            Html.map OperationsOnDropMsg (DnDList.Groups.OperationsOnDrop.Parent.view subModel)
+
+        HookCommands subModel ->
+            Html.map HookCommandsMsg (DnDList.Groups.HookCommands.Parent.view subModel)
+    , CustomElement.elmCode
+        [ CustomElement.href (example |> exampleToTag |> tagToMetadata |> (\m -> m.link)) ]
+        []
+    ]
 
 
-headerView : Model -> Html.Html Msg
-headerView model =
-    Views.demoHeaderView info model
-
-
-demoView : Model -> Html.Html Msg
-demoView model =
-    case model of
-        OperationsOnDrag mo ->
-            Html.map OperationsOnDragMsg (DnDList.Groups.OperationsOnDrag.Parent.view mo)
-
-        OperationsOnDrop mo ->
-            Html.map OperationsOnDropMsg (DnDList.Groups.OperationsOnDrop.Parent.view mo)
-
-        HookCommands mo ->
-            Html.map HookCommandsMsg (DnDList.Groups.HookCommands.Parent.view mo)
-
-
-codeView : Model -> Html.Html Msg
-codeView model =
-    case model of
-        OperationsOnDrag mo ->
-            toCode (DnDList.Groups.OperationsOnDrag.Parent.url mo.id)
-
-        OperationsOnDrop mo ->
-            toCode (DnDList.Groups.OperationsOnDrop.Parent.url mo.id)
-
-        HookCommands mo ->
-            toCode (DnDList.Groups.HookCommands.Parent.url mo.id)
-
-
-toCode : String -> Html.Html msg
-toCode url =
-    CustomElement.elmCode [ CustomElement.href url ] []
-
-
-
--- EXAMPLE INFO
-
-
-toExample : String -> Example
-toExample slug =
-    case slug of
-        "operations-drag" ->
-            OperationsOnDrag DnDList.Groups.OperationsOnDrag.Parent.initialModel
-
-        "operations-drop" ->
-            OperationsOnDrop DnDList.Groups.OperationsOnDrop.Parent.initialModel
-
-        "hook-commands" ->
-            HookCommands DnDList.Groups.HookCommands.Parent.initialModel
-
-        _ ->
-            OperationsOnDrag DnDList.Groups.OperationsOnDrag.Parent.initialModel
-
-
-type alias Info =
-    { slug : String
-    , title : String
-    , description : String
-    }
-
-
-info : Example -> Info
-info example =
-    case example of
-        OperationsOnDrag _ ->
-            { slug = "operations-drag"
-            , title = "Operations on drag"
-            , description = "Compare the list operations with groups sorting on drag."
-            }
-
-        OperationsOnDrop _ ->
-            { slug = "operations-drop"
-            , title = "Operations on drop"
-            , description = "Compare the list operations with groups sorting on drop."
-            }
-
-        HookCommands _ ->
-            { slug = "hook-commands"
-            , title = "Hook commands"
-            , description = "Compare detectDrop and detectReorder hooks."
-            }
+chapterView : String -> Html.Html msg
+chapterView class =
+    Views.chapterView
+        class
+        { title = "DnDList.Groups"
+        , slug = "groups"
+        , allTags = allTags |> List.map (tagToMetadata >> (\m -> { segment = m.segment, title = m.title }))
+        }

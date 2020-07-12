@@ -47,7 +47,7 @@ system =
     DnDList.Single.config
         |> DnDList.Single.listen DnDList.OnDrop
         |> DnDList.Single.operation DnDList.InsertBefore
-        |> DnDList.Single.hookItemsBeforeListUpdate beforeUpdate
+        |> DnDList.Single.setItemsBeforeReorder beforeUpdate
         |> DnDList.Single.create DnDMsg
 
 
@@ -218,22 +218,22 @@ ghostView dnd items =
 
 baseColor : String
 baseColor =
-    "dimgray"
+    "transparent"
 
 
 dragColor : String
 dragColor =
-    "red"
+    "#3692c7"
 
 
 dropColor : String
 dropColor =
-    "green"
+    "#44526f"
 
 
 affectedColor : String
 affectedColor =
-    "purple"
+    "#eabd00"
 
 
 
@@ -252,7 +252,11 @@ containerStyles =
 itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
     [ Html.Attributes.style "background-color" color
-    , Html.Attributes.style "color" "white"
+    , if color == baseColor then
+        Html.Attributes.style "border" "1px solid gray"
+
+      else
+        Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"

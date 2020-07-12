@@ -190,24 +190,29 @@ info example =
         InsertAfter mo ->
             { title = "Insert after"
             , subView = Html.map InsertAfterMsg (DnDList.Single.OperationsOnDrop.InsertAfter.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/OperationsOnDrop/DetectReorder.elm"
             }
 
         InsertBefore mo ->
             { title = "Insert before"
             , subView = Html.map InsertBeforeMsg (DnDList.Single.OperationsOnDrop.InsertBefore.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/OperationsOnDrop/InsertBefore.elm"
             }
 
         Rotate mo ->
             { title = "Rotate"
             , subView = Html.map RotateMsg (DnDList.Single.OperationsOnDrop.Rotate.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/OperationsOnDrop/Rotate.elm"
             }
 
         Swap mo ->
             { title = "Swap"
             , subView = Html.map SwapMsg (DnDList.Single.OperationsOnDrop.Swap.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/OperationsOnDrop/DetectReorder.elm"
             }
 
         Unaltered mo ->
             { title = "Unaltered"
             , subView = Html.map UnalteredMsg (DnDList.Single.OperationsOnDrop.Unaltered.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/OperationsOnDrop/Unaltered.elm"
             }

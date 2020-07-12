@@ -1,11 +1,11 @@
-module DnDList exposing (Movement(..), Listen(..), Operation(..))
+module DnDList exposing (Movement(..), Listen(..), Operation(..), Orientation(..))
 
 {-|
 
 
 # Config
 
-@docs Movement, Listen, Operation, Fence
+@docs Movement, Listen, Operation, Orientation, HasWall
 
 -}
 
@@ -60,3 +60,9 @@ type Operation
     | Rotate
     | Swap
     | Unaltered
+
+
+type Orientation
+    = Scroll_X
+    | Scroll_Y
+    | Scroll_XY

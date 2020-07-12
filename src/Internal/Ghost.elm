@@ -23,7 +23,7 @@ declarations { element } =
     Dict.fromList
         [ ( "width", [ Html.Attributes.style "width" <| px (round element.width) ] )
         , ( "height", [ Html.Attributes.style "height" <| px (round element.height) ] )
-        , ( "position"
+        , ( "positionTopLeft"
           , [ Html.Attributes.style "position" "fixed"
             , Html.Attributes.style "top" "0"
             , Html.Attributes.style "left" "0"

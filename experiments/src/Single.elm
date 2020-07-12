@@ -46,21 +46,16 @@ scrollableContainerId =
 system : DnDList.Single.System Item Msg
 system =
     DnDList.Single.config
-        |> DnDList.Single.hookItemsBeforeListUpdate (\_ _ list -> list)
-        |> DnDList.Single.ghost [ "width", "height", "position" ]
+        |> DnDList.Single.setItemsBeforeReorder (\_ _ list -> list)
+        |> DnDList.Single.ghost [ "width", "height", "positionTopLeft" ]
         |> DnDList.Single.movement DnDList.Free
         |> DnDList.Single.listen DnDList.OnDrag
         |> DnDList.Single.operation DnDList.Rotate
         |> DnDList.Single.detectReorder DetectReorder
-        --|> DnDList.Single.scroll scrollableContainerId
-        --|> DnDList.Single.scrollWithOffset scrollableContainerId
-        --    { offset = { top = -40, right = 0, bottom = -40, left = 0 } }
-        |> DnDList.Single.scrollWithOffsetAndFence scrollableContainerId
-            { offset = { top = 0, right = 0, bottom = 0, left = 0 } }
-        --|> DnDList.Single.scrollWithOffsetAndArea scrollableContainerId
-        --    { offset = { top = 0, right = 0, bottom = 0, left = 0 }
-        --    , area = { top = 40, right = 0, bottom = 40, left = 0 }
-        --    }
+        |> DnDList.Single.withAutoScroll
+        --|> DnDList.Single.scroll DnDList.Scroll_Y scrollableContainerId
+        --|> DnDList.Single.scrollWithOffset { top = 40, right = 0, bottom = 40, left = 0 } DnDList.Scroll_Y scrollableContainerId
+        |> DnDList.Single.scrollWithOffsetAndWall { top = -40, right = 0, bottom = -40, left = 0 } DnDList.Scroll_Y scrollableContainerId
         |> DnDList.Single.create DnDMsg
 
 
@@ -117,16 +112,14 @@ update msg model =
             )
 
         DetectReorder dragIndex dropIndex fruits ->
-            let
-                _ =
-                    Debug.log "DetectReorder" dragIndex
-
-                _ =
-                    Debug.log "DetectReorder" dropIndex
-
-                _ =
-                    Debug.log "DetectReorder" fruits
-            in
+            -- let
+            --     _ =
+            --         Debug.log "DetectReorder" dragIndex
+            --     _ =
+            --         Debug.log "DetectReorder" dropIndex
+            --     _ =
+            --         Debug.log "DetectReorder" fruits
+            -- in
             ( model, Cmd.none )
 
 
@@ -145,26 +138,25 @@ view model =
           else
             Html.Attributes.style "cursor" "default"
         ]
-        [ List.range 1 30
+        [ List.range 1 20
             |> List.map (String.fromInt >> (\n -> Html.div [] [ Html.text n ]))
             |> Html.div []
         , model.items
             |> List.indexedMap (itemView model.dnd)
             |> Html.div
                 [ Html.Attributes.id scrollableContainerId
-                , Html.Attributes.style "height" "300px"
+                , Html.Attributes.style "height" "800px"
                 , Html.Attributes.style "overflow" "auto"
                 ]
 
-        --,
-        --model.items
-        --  |> List.indexedMap (itemView model.dnd)
-        --  |> Html.div
-        --      [ Html.Attributes.id scrollableContainerId
-        --      , Html.Attributes.style "width" "300px"
-        --      , Html.Attributes.style "overflow" "auto"
-        --      , Html.Attributes.style "display" "flex"
-        --      ]
+        --, model.items
+        --    |> List.indexedMap (itemView model.dnd)
+        --    |> Html.div
+        --        [ Html.Attributes.id scrollableContainerId
+        --        , Html.Attributes.style "width" "300px"
+        --        , Html.Attributes.style "overflow" "auto"
+        --        , Html.Attributes.style "display" "flex"
+        --        ]
         , ghostView model.dnd model.items
         ]
 

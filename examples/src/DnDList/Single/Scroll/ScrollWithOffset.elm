@@ -46,8 +46,7 @@ scrollableContainerId =
 system : DnDList.Single.System Item Msg
 system =
     DnDList.Single.config
-        |> DnDList.Single.scrollWithOffset scrollableContainerId
-            { offset = { top = 0, right = -60, bottom = 0, left = 60 } }
+        |> DnDList.Single.scrollWithOffset { top = 0, right = -60, bottom = 0, left = -60 } DnDList.Scroll_X scrollableContainerId
         |> DnDList.Single.create DnDMsg
 
 

@@ -27,3 +27,4 @@ examples/assets/*.css.map
 
 # experiments
 experiments/index.html
+examples/src/WeakCSS/*

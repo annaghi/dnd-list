@@ -137,9 +137,11 @@ info example =
         DetectDrop mo ->
             { title = "Detect drop with insert before"
             , subView = Html.map DetectDropMsg (DnDList.Groups.HookCommands.DetectDrop.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList.Groups/HookCommands/DetectDrop.elm"
             }
 
         DetectReorder mo ->
             { title = "Detect reorder with insert before"
             , subView = Html.map DetectReorderMsg (DnDList.Groups.HookCommands.DetectReorder.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList.Groups/HookCommands/DetectReorder.elm"
             }

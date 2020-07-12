@@ -205,7 +205,7 @@ containerStyles =
 
 itemStyles : List (Html.Attribute msg)
 itemStyles =
-    [ Html.Attributes.style "background-color" "#aa1e9d"
+    [ Html.Attributes.style "background-color" "#44526f"
     , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"

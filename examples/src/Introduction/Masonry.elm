@@ -32,15 +32,14 @@ type alias Color =
 
 colors : List Color
 colors =
-    [ "#acfe2f"
-    , "#cefe2f"
-    , "#f0fe2f"
-    , "#feea2f"
-    , "#fec72f"
-    , "#fea52f"
-    , "#fe832f"
-    , "#fe612f"
-    , "#fe3f2f"
+    [ "#82ddd0"
+    , "#82d3dd"
+    , "#82bcdd"
+    , "#82a5dd"
+    , "#828edd"
+    , "#8d82dd"
+    , "#a482dd"
+    , "#bb82dd"
     ]
 
 
@@ -209,8 +208,8 @@ containerStyles =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-wrap" "wrap"
     , Html.Attributes.style "margin" "0 auto"
-    , Html.Attributes.style "max-width" "40em"
-    , Html.Attributes.style "padding-top" "2em"
+    , Html.Attributes.style "max-width" "40rem"
+    , Html.Attributes.style "padding-top" "2rem"
     ]
 
 
@@ -220,6 +219,6 @@ itemStyles color width =
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "flex" "1 0 auto"
     , Html.Attributes.style "height" "4.5rem"
-    , Html.Attributes.style "margin" "0 1.5em 1.5em 0"
+    , Html.Attributes.style "margin" "0 1.5rem 1.5rem 0"
     , Html.Attributes.style "width" (String.fromInt width ++ "px")
     ]

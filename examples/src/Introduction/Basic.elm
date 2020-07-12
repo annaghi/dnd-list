@@ -7,20 +7,6 @@ import Html.Attributes
 
 
 
--- MAIN
-
-
-main : Program () Model Msg
-main =
-    Browser.element
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
-        }
-
-
-
 -- DATA
 
 
@@ -43,6 +29,29 @@ system =
 
 
 
+-- MAIN
+
+
+main : Program () Model Msg
+main =
+    Browser.element
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    system.subscriptions model.dnd
+
+
+
 -- MODEL
 
 
@@ -62,15 +71,6 @@ initialModel =
 init : () -> ( Model, Cmd Msg )
 init () =
     ( initialModel, Cmd.none )
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    system.subscriptions model.dnd
 
 
 
@@ -101,7 +101,7 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     Html.section
-        [ Html.Attributes.style "text-align" "center" ]
+        []
         [ model.items
             |> List.indexedMap (itemView model.dnd)
             |> Html.div []

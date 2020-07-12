@@ -6,8 +6,10 @@ import DnDList.Groups.Parent
 import DnDList.Single.Parent
 import Gallery.Parent
 import Html
+import Html.Attributes
 import Introduction.Parent
 import Url
+import Views
 import WeakCss
 
 
@@ -15,18 +17,14 @@ import WeakCss
 -- MODEL
 
 
-type alias Model =
-    Example
-
-
 type Example
-    = Introduction Introduction.Parent.Model
-    | Single DnDList.Single.Parent.Model
-    | Groups DnDList.Groups.Parent.Model
-    | Gallery Gallery.Parent.Model
+    = Introduction Introduction.Parent.Example
+    | Single DnDList.Single.Parent.Example
+    | Groups DnDList.Groups.Parent.Example
+    | Gallery Gallery.Parent.Example
 
 
-init : String -> String -> ( Model, Cmd Msg )
+init : String -> String -> ( Example, Cmd Msg )
 init slug inner =
     toExample slug inner
 
@@ -42,50 +40,7 @@ type Msg
     | GalleryMsg Gallery.Parent.Msg
 
 
-update : Browser.Navigation.Key -> Msg -> Model -> ( Model, Cmd Msg )
-update key message model =
-    case ( message, model ) of
-        ( IntroductionMsg msg, Introduction mo ) ->
-            stepIntroduction (Introduction.Parent.update msg mo)
-
-        ( SingleMsg msg, Single mo ) ->
-            stepSingle (DnDList.Single.Parent.update msg mo)
-
-        ( GroupsMsg msg, Groups mo ) ->
-            stepGroups (DnDList.Groups.Parent.update msg mo)
-
-        ( GalleryMsg msg, Gallery mo ) ->
-            stepGallery (Gallery.Parent.update msg mo)
-
-        _ ->
-            ( model, Cmd.none )
-
-
-stepIntroduction : ( Introduction.Parent.Model, Cmd Introduction.Parent.Msg ) -> ( Model, Cmd Msg )
-stepIntroduction ( mo, cmds ) =
-    ( Introduction mo, Cmd.map IntroductionMsg cmds )
-
-
-stepSingle : ( DnDList.Single.Parent.Model, Cmd DnDList.Single.Parent.Msg ) -> ( Model, Cmd Msg )
-stepSingle ( mo, cmds ) =
-    ( Single mo, Cmd.map SingleMsg cmds )
-
-
-stepGroups : ( DnDList.Groups.Parent.Model, Cmd DnDList.Groups.Parent.Msg ) -> ( Model, Cmd Msg )
-stepGroups ( mo, cmds ) =
-    ( Groups mo, Cmd.map GroupsMsg cmds )
-
-
-stepGallery : ( Gallery.Parent.Model, Cmd Gallery.Parent.Msg ) -> ( Model, Cmd Msg )
-stepGallery ( mo, cmds ) =
-    ( Gallery mo, Cmd.map GalleryMsg cmds )
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
+subscriptions : Example -> Sub Msg
 subscriptions model =
     case model of
         Introduction mo ->
@@ -101,6 +56,45 @@ subscriptions model =
             Sub.map GalleryMsg (Gallery.Parent.subscriptions mo)
 
 
+update : Browser.Navigation.Key -> Msg -> Example -> ( Example, Cmd Msg )
+update key msg model =
+    case ( msg, model ) of
+        ( IntroductionMsg subMsg, Introduction subModel ) ->
+            stepIntroduction (Introduction.Parent.update subMsg subModel)
+
+        ( SingleMsg subMsg, Single subModel ) ->
+            stepSingle (DnDList.Single.Parent.update subMsg subModel)
+
+        ( GroupsMsg subMsg, Groups subModel ) ->
+            stepGroups (DnDList.Groups.Parent.update subMsg subModel)
+
+        ( GalleryMsg subMsg, Gallery subModel ) ->
+            stepGallery (Gallery.Parent.update subMsg subModel)
+
+        _ ->
+            ( model, Cmd.none )
+
+
+stepIntroduction : ( Introduction.Parent.Example, Cmd Introduction.Parent.Msg ) -> ( Example, Cmd Msg )
+stepIntroduction ( subModel, subCmd ) =
+    ( Introduction subModel, Cmd.map IntroductionMsg subCmd )
+
+
+stepSingle : ( DnDList.Single.Parent.Example, Cmd DnDList.Single.Parent.Msg ) -> ( Example, Cmd Msg )
+stepSingle ( subModel, subCmd ) =
+    ( Single subModel, Cmd.map SingleMsg subCmd )
+
+
+stepGroups : ( DnDList.Groups.Parent.Example, Cmd DnDList.Groups.Parent.Msg ) -> ( Example, Cmd Msg )
+stepGroups ( subModel, subCmd ) =
+    ( Groups subModel, Cmd.map GroupsMsg subCmd )
+
+
+stepGallery : ( Gallery.Parent.Example, Cmd Gallery.Parent.Msg ) -> ( Example, Cmd Msg )
+stepGallery ( subModel, subCmd ) =
+    ( Gallery subModel, Cmd.map GalleryMsg subCmd )
+
+
 
 -- VIEW
 
@@ -110,35 +104,33 @@ moduleClass =
     WeakCss.namespace "dnd"
 
 
-view : Model -> Html.Html Msg
-view model =
-    Html.div
-        [ moduleClass |> WeakCss.nest "main" ]
-        (case model of
-            Introduction mo ->
-                [ Html.map IntroductionMsg (Introduction.Parent.headerView mo)
-                , Html.map IntroductionMsg (Introduction.Parent.demoView mo)
-                , Html.map IntroductionMsg (Introduction.Parent.codeView mo)
-                ]
+view : Bool -> Example -> Html.Html Msg
+view showSidebar model =
+    Html.main_
+        [ moduleClass |> WeakCss.nest "demo" ]
+        [ Html.section
+            [ moduleClass |> WeakCss.nestMany [ "demo", "content" ] ]
+            (case model of
+                Introduction mo ->
+                    List.map (Html.map IntroductionMsg) (Introduction.Parent.view mo)
 
-            Single mo ->
-                [ Html.map SingleMsg (DnDList.Single.Parent.headerView mo)
-                , Html.map SingleMsg (DnDList.Single.Parent.demoView mo)
-                , Html.map SingleMsg (DnDList.Single.Parent.codeView mo)
-                ]
+                Single mo ->
+                    List.map (Html.map SingleMsg) (DnDList.Single.Parent.view mo)
 
-            Groups mo ->
-                [ Html.map GroupsMsg (DnDList.Groups.Parent.headerView mo)
-                , Html.map GroupsMsg (DnDList.Groups.Parent.demoView mo)
-                , Html.map GroupsMsg (DnDList.Groups.Parent.codeView mo)
-                ]
+                Groups mo ->
+                    List.map (Html.map GroupsMsg) (DnDList.Groups.Parent.view mo)
 
-            Gallery mo ->
-                [ Html.map GalleryMsg (Gallery.Parent.headerView mo)
-                , Html.map GalleryMsg (Gallery.Parent.demoView mo)
-                , Html.map GalleryMsg (Gallery.Parent.codeView mo)
-                ]
-        )
+                Gallery mo ->
+                    List.map (Html.map GalleryMsg) (Gallery.Parent.view mo)
+            )
+        , Html.section
+            [ moduleClass |> WeakCss.addMany [ "demo", "chapters" ] |> WeakCss.withStates [ ( "show", showSidebar ) ] ]
+            [ Introduction.Parent.chapterView "demo"
+            , Gallery.Parent.chapterView "demo"
+            , DnDList.Single.Parent.chapterView "demo"
+            , DnDList.Groups.Parent.chapterView "demo"
+            ]
+        ]
 
 
 

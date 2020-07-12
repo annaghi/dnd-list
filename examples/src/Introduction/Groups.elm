@@ -127,8 +127,8 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     Html.section sectionStyles
-        [ groupView model Left lightRed
-        , groupView model Right lightBlue
+        [ groupView model Left red
+        , groupView model Right blue
         , ghostView model.dnd model.items
         ]
 
@@ -243,27 +243,17 @@ maybeDragItem dnd items =
 
 red : String
 red =
-    "#c30005"
+    "#3f6593"
 
 
 blue : String
 blue =
-    "#0067c3"
-
-
-lightRed : String
-lightRed =
-    "#ea9088"
-
-
-lightBlue : String
-lightBlue =
-    "#88b0ea"
+    "#8ca9cd"
 
 
 gray : String
 gray =
-    "dimgray"
+    "gainsboro"
 
 
 transparent : String
@@ -290,9 +280,10 @@ groupStyles : String -> List (Html.Attribute msg)
 groupStyles color =
     [ Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-direction" "column"
-    , Html.Attributes.style "background-color" color
+    , Html.Attributes.style "border" ("3px solid " ++ color)
     , Html.Attributes.style "padding-top" "2rem"
     , Html.Attributes.style "min-height" "19rem"
+    , Html.Attributes.style "margin" "2rem"
     ]
 
 
@@ -301,8 +292,8 @@ itemStyles color =
     [ Html.Attributes.style "width" "5rem"
     , Html.Attributes.style "height" "5rem"
     , Html.Attributes.style "background-color" color
-    , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "color" "#ffffff"
+    , Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "margin" "0 auto 1rem auto"
     , Html.Attributes.style "display" "flex"

@@ -1,5 +1,7 @@
 module Internal.Types exposing (..)
 
+import DnDList exposing (..)
+
 
 type alias DragIndex =
     Int
@@ -32,4 +34,12 @@ type alias Offset =
     , right : Float
     , bottom : Float
     , left : Float
+    }
+
+
+type alias ScrollOptions =
+    { containerElementId : ContainerElementId
+    , orientation : Orientation
+    , offset : Offset
+    , hasWall : Bool
     }

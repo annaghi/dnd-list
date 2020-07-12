@@ -208,29 +208,35 @@ info example =
         FreeOnDrag mo ->
             { title = "Free on drag"
             , subView = Html.map FreeOnDragMsg (DnDList.Single.Movement.FreeOnDrag.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Movement/FreeOnDrag.elm"
             }
 
         FreeOnDrop mo ->
             { title = "Free on drop"
             , subView = Html.map FreeOnDropMsg (DnDList.Single.Movement.FreeOnDrop.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Movement/FreeOnDrop.elm"
             }
 
         HorizontalOnDrag mo ->
             { title = "Horizontal on drag"
             , subView = Html.map HorizontalOnDragMsg (DnDList.Single.Movement.HorizontalOnDrag.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Movement/HorizontalOnDrag.elm"
             }
 
         HorizontalOnDrop mo ->
             { title = "Horizontal on drop"
             , subView = Html.map HorizontalOnDropMsg (DnDList.Single.Movement.HorizontalOnDrop.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Movement/HorizontalOnDrop.elm"
             }
 
         VerticalOnDrag mo ->
             { title = "Vertical on drag"
             , subView = Html.map VerticalOnDragMsg (DnDList.Single.Movement.VerticalOnDrag.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Movement/VerticalOnDrag.elm"
             }
 
         VerticalOnDrop mo ->
             { title = "Vertical on drop"
             , subView = Html.map VerticalOnDropMsg (DnDList.Single.Movement.VerticalOnDrop.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Movement/VerticalOnDrop.elm"
             }

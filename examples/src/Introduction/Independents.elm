@@ -245,7 +245,7 @@ blueGhostView dnd items =
     case maybeDragBlue of
         Just item ->
             Html.div
-                (itemStyles blueGhost ++ blueSystem.ghostStyles dnd)
+                (itemStyles ghostBlue ++ blueSystem.ghostStyles dnd)
                 [ Html.text item ]
 
         Nothing ->
@@ -258,27 +258,27 @@ blueGhostView dnd items =
 
 red : String
 red =
-    "#ff1117"
-
-
-blue : String
-blue =
-    "#118eff"
+    "#d8dee9"
 
 
 redGhost : String
 redGhost =
-    "#c30005"
+    "#3f6593"
 
 
-blueGhost : String
-blueGhost =
-    "#0067c3"
+blue : String
+blue =
+    "#8ca9cd"
+
+
+ghostBlue : String
+ghostBlue =
+    "#3f6593"
 
 
 gray : String
 gray =
-    "dimgray"
+    "gainsboro"
 
 
 
@@ -308,7 +308,6 @@ itemStyles color =
     , Html.Attributes.style "height" "5rem"
     , Html.Attributes.style "background-color" color
     , Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "margin" "0 2em 2em 0"
     , Html.Attributes.style "display" "flex"

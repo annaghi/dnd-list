@@ -1,7 +1,7 @@
 module DnDList.Groups exposing
     ( Config, config
     , listen, operation, ghost, groups
-    , hookItemsBeforeListUpdate
+    , setItemsBeforeReorder
     , detectDrop, detectReorder
     , System, create, Msg
     , Model
@@ -50,7 +50,7 @@ So now the internal sorting distinguishes between these two cases and we need to
 
 @docs Config, config
 @docs listen, operation, ghost, groups
-@docs hookItemsBeforeListUpdate
+@docs setItemsBeforeReorder
 @docs detectDrop, detectReorder
 
 
@@ -317,7 +317,7 @@ type alias Options item msg =
     { listen : Listen
     , operation : Operation
     , ghost : List String
-    , hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
+    , setItemsBeforeReorder : DragIndex -> DropIndex -> List item -> List item
     , detectDrop : Maybe (DragIndex -> DropIndex -> List item -> msg)
     , detectReorder : Maybe (DragIndex -> DropIndex -> List item -> msg)
     , groups :
@@ -338,8 +338,8 @@ defaultOptions : Options item msg
 defaultOptions =
     { listen = OnDrag
     , operation = Rotate
-    , ghost = [ "width", "height", "position" ]
-    , hookItemsBeforeListUpdate = \_ _ list -> list
+    , ghost = [ "width", "height", "positionTopLeft" ]
+    , setItemsBeforeReorder = \_ _ list -> list
     , detectDrop = Nothing
     , detectReorder = Nothing
     , groups =
@@ -382,9 +382,9 @@ groups properties (Config options) =
     Config { options | groups = properties }
 
 
-hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item msg -> Config item msg
-hookItemsBeforeListUpdate hook (Config options) =
-    Config { options | hookItemsBeforeListUpdate = hook }
+setItemsBeforeReorder : (DragIndex -> DropIndex -> List item -> List item) -> Config item msg -> Config item msg
+setItemsBeforeReorder hook (Config options) =
+    Config { options | setItemsBeforeReorder = hook }
 
 
 detectDrop : (DragIndex -> DropIndex -> List item -> msg) -> Config item msg -> Config item msg
@@ -593,18 +593,18 @@ It should be wrapped within our message constructor:
 
 -}
 type Msg
-    = DownDragItem DragIndex DragElementId Coordinates
+    = DownInsideDragItem DragIndex DragElementId Coordinates
     | InBetweenMsg InBetweenMsg
-    | UpDocument
+    | ReleaseMouse
 
 
 type InBetweenMsg
-    = MoveDocument Coordinates
+    = MoveMouse Coordinates
     | OverDropItem DropIndex DropElementId
     | EnterDropItem
     | LeaveDropItem
-    | GotDragItem (Result Browser.Dom.Error Browser.Dom.Element)
-    | GotDropItem (Result Browser.Dom.Error Browser.Dom.Element)
+    | GetDragItem (Result Browser.Dom.Error Browser.Dom.Element)
+    | GetDropItem (Result Browser.Dom.Error Browser.Dom.Element)
     | Tick Float
 
 
@@ -613,9 +613,9 @@ subscriptions toMsg (Model model) =
     if model /= Nothing then
         Sub.batch
             [ Browser.Events.onMouseMove
-                (Internal.Decoders.decodeCoordinates |> Json.Decode.map (MoveDocument >> InBetweenMsg >> toMsg))
+                (Internal.Decoders.decodeCoordinates |> Json.Decode.map (MoveMouse >> InBetweenMsg >> toMsg))
             , Browser.Events.onMouseUp
-                (Json.Decode.succeed (UpDocument |> toMsg))
+                (Json.Decode.succeed (ReleaseMouse |> toMsg))
             , Browser.Events.onAnimationFrameDelta (Tick >> InBetweenMsg >> toMsg)
             ]
 
@@ -626,7 +626,7 @@ subscriptions toMsg (Model model) =
 update : Config item msg -> (Msg -> msg) -> List item -> Msg -> Model -> ( List item, Model, Cmd msg )
 update (Config options) toMsg list msg (Model model) =
     case msg of
-        DownDragItem dragIndex dragElementId coordinates ->
+        DownInsideDragItem dragIndex dragElementId coordinates ->
             ( list
             , Model <|
                 Just
@@ -656,7 +656,7 @@ update (Config options) toMsg list msg (Model model) =
                 Nothing ->
                     ( list, Model Nothing, Cmd.none )
 
-        UpDocument ->
+        ReleaseMouse ->
             -- TODO This branch should be DRY
             case model of
                 Just state ->
@@ -672,7 +672,7 @@ update (Config options) toMsg list msg (Model model) =
                                 newList : List item
                                 newList =
                                     list
-                                        |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                                        |> options.setItemsBeforeReorder state.dragIndex state.dropIndex
                                         |> groupUpdate options.operation state.dragIndex state.dropIndex
                             in
                             ( newList
@@ -687,7 +687,7 @@ update (Config options) toMsg list msg (Model model) =
                                 newList : List item
                                 newList =
                                     list
-                                        |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                                        |> options.setItemsBeforeReorder state.dragIndex state.dropIndex
                                         |> listUpdate options.groups.operation options.groups.comparator options.groups.setter state.dragIndex state.dropIndex
                             in
                             ( newList
@@ -720,11 +720,11 @@ update (Config options) toMsg list msg (Model model) =
 inBetweenUpdate : Options item msg -> (Msg -> msg) -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd msg )
 inBetweenUpdate options toMsg list msg state =
     case msg of
-        MoveDocument coordinates ->
+        MoveMouse coordinates ->
             ( list
             , { state | currentPosition = coordinates, moveCounter = state.moveCounter + 1 }
             , if state.dragElement == Nothing then
-                Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GotDragItem (Browser.Dom.getElement state.dragElementId))
+                Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GetDragItem (Browser.Dom.getElement state.dragElementId))
 
               else
                 Cmd.none
@@ -733,7 +733,7 @@ inBetweenUpdate options toMsg list msg state =
         OverDropItem dropIndex dropElementId ->
             ( list
             , { state | dropIndex = dropIndex, dropElementId = dropElementId }
-            , Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GotDropItem (Browser.Dom.getElement dropElementId))
+            , Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GetDropItem (Browser.Dom.getElement dropElementId))
             )
 
         EnterDropItem ->
@@ -748,7 +748,7 @@ inBetweenUpdate options toMsg list msg state =
                         newList : List item
                         newList =
                             list
-                                |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                                |> options.setItemsBeforeReorder state.dragIndex state.dropIndex
                                 |> groupUpdate options.operation state.dragIndex state.dropIndex
                     in
                     ( newList
@@ -763,7 +763,7 @@ inBetweenUpdate options toMsg list msg state =
                         newList : List item
                         newList =
                             list
-                                |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                                |> options.setItemsBeforeReorder state.dragIndex state.dropIndex
                                 |> listUpdate options.groups.operation options.groups.comparator options.groups.setter state.dragIndex state.dropIndex
                     in
                     ( newList
@@ -785,21 +785,15 @@ inBetweenUpdate options toMsg list msg state =
             , Cmd.none
             )
 
-        GotDragItem (Err _) ->
-            ( list, state, Cmd.none )
-
-        GotDragItem (Ok dragElement) ->
+        GetDragItem result ->
             ( list
-            , { state | dragElement = Just dragElement, dropElement = Just dragElement }
+            , { state | dragElement = Result.toMaybe result, dropElement = Result.toMaybe result }
             , Cmd.none
             )
 
-        GotDropItem (Err _) ->
-            ( list, state, Cmd.none )
-
-        GotDropItem (Ok dropElement) ->
+        GetDropItem result ->
             ( list
-            , { state | dropElement = Just dropElement }
+            , { state | dropElement = Result.toMaybe result }
             , Cmd.none
             )
 
@@ -913,7 +907,7 @@ dragEvents : (Msg -> msg) -> DragIndex -> DragElementId -> List (Html.Attribute 
 dragEvents toMsg dragIndex dragElementId =
     [ Html.Events.preventDefaultOn "mousedown"
         (Internal.Decoders.decodeCoordinatesWithButtonCheck
-            |> Json.Decode.map (DownDragItem dragIndex dragElementId >> toMsg)
+            |> Json.Decode.map (DownInsideDragItem dragIndex dragElementId >> toMsg)
             |> Json.Decode.map (\msg -> ( msg, True ))
         )
     ]

@@ -63,8 +63,8 @@ system =
     DnDList.Single.config
         |> DnDList.Single.listen DnDList.OnDrop
         |> DnDList.Single.operation DnDList.Unaltered
-        |> DnDList.Single.ghost [ "position" ]
-        |> DnDList.Single.hookItemsBeforeListUpdate updateColor
+        |> DnDList.Single.ghost [ "positionTopLeft" ]
+        |> DnDList.Single.setItemsBeforeReorder updateColor
         |> DnDList.Single.create DnDMsg
 
 
@@ -264,8 +264,8 @@ ghostView model =
                 height
                 color
                 (system.ghostStyles model.dnd
-                    ++ [ Html.Attributes.style "width" (String.fromInt width ++ "rem")
-                       , Html.Attributes.style "height" (String.fromInt height ++ "rem")
+                    ++ [ Html.Attributes.style "width" (String.fromInt width ++ "em")
+                       , Html.Attributes.style "height" (String.fromInt height ++ "em")
                        , Html.Attributes.style "transition" "width 0.5s, height 0.5s"
                        ]
                 )
@@ -311,6 +311,7 @@ sectionStyles =
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "padding-top" "2rem"
+    , Html.Attributes.style "font-size" "14px"
     ]
 
 
@@ -338,8 +339,8 @@ colorStyles width height color =
     [ Html.Attributes.style "border-radius" "8px"
     , Html.Attributes.style "margin" "0 3rem 3rem 0"
     , Html.Attributes.style "background-color" color
-    , Html.Attributes.style "width" (String.fromInt width ++ "rem")
-    , Html.Attributes.style "height" (String.fromInt height ++ "rem")
+    , Html.Attributes.style "width" (String.fromInt width ++ "em")
+    , Html.Attributes.style "height" (String.fromInt height ++ "em")
     ]
 
 

@@ -172,19 +172,23 @@ info example =
         InsertAfter mo ->
             { title = "Insert after"
             , subView = Html.map InsertAfterMsg (DnDList.Groups.OperationsOnDrag.InsertAfter.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList.Groups/OperationsOnDrag/DetectReorder.elm"
             }
 
         InsertBefore mo ->
             { title = "Insert before"
             , subView = Html.map InsertBeforeMsg (DnDList.Groups.OperationsOnDrag.InsertBefore.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList.Groups/OperationsOnDrag/InsertBefore.elm"
             }
 
         Rotate mo ->
             { title = "Rotate"
             , subView = Html.map RotateMsg (DnDList.Groups.OperationsOnDrag.Rotate.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList.Groups/OperationsOnDrag/Rotate.elm"
             }
 
         Swap mo ->
             { title = "Swap"
             , subView = Html.map SwapMsg (DnDList.Groups.OperationsOnDrag.Swap.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList.Groups/OperationsOnDrag/DetectReorder.elm"
             }

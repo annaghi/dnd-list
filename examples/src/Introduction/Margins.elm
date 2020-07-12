@@ -124,7 +124,7 @@ itemView dnd index item =
                 Html.div
                     [ Html.Attributes.style "margin" "2em" ]
                     [ Html.div
-                        (Html.Attributes.id itemId :: itemStyles green ++ system.dropEvents index itemId)
+                        (Html.Attributes.id itemId :: itemStyles blue ++ system.dropEvents index itemId)
                         [ Html.text item ]
                     ]
 
@@ -132,7 +132,7 @@ itemView dnd index item =
                 Html.div
                     [ Html.Attributes.style "margin" "2em" ]
                     [ Html.div
-                        (Html.Attributes.id itemId :: itemStyles "dimgray")
+                        (Html.Attributes.id itemId :: itemStyles "gainsboro")
                         []
                     ]
 
@@ -140,7 +140,7 @@ itemView dnd index item =
             Html.div
                 [ Html.Attributes.style "margin" "2em" ]
                 [ Html.div
-                    (Html.Attributes.id itemId :: itemStyles green ++ system.dragEvents index itemId)
+                    (Html.Attributes.id itemId :: itemStyles blue ++ system.dragEvents index itemId)
                     [ Html.text item ]
                 ]
 
@@ -156,7 +156,7 @@ ghostView dnd items =
     case maybeDragItem of
         Just item ->
             Html.div
-                (itemStyles ghostGreen ++ system.ghostStyles dnd)
+                (itemStyles ghostBlue ++ system.ghostStyles dnd)
                 [ Html.text item ]
 
         Nothing ->
@@ -167,14 +167,14 @@ ghostView dnd items =
 -- COLORS
 
 
-green : String
-green =
-    "#3da565"
+blue : String
+blue =
+    "#8ca9cd"
 
 
-ghostGreen : String
-ghostGreen =
-    "#2f804e"
+ghostBlue : String
+ghostBlue =
+    "#3f6593"
 
 
 
@@ -196,7 +196,6 @@ itemStyles color =
     , Html.Attributes.style "height" "5rem"
     , Html.Attributes.style "background-color" color
     , Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "color" "white"
     , Html.Attributes.style "cursor" "pointer"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"

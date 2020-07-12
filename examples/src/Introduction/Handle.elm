@@ -129,7 +129,7 @@ itemView dnd index fruit =
 
             else
                 Html.div
-                    (Html.Attributes.id fruitId :: itemStyles "dimgray")
+                    (Html.Attributes.id fruitId :: itemStyles "gainsboro")
                     []
 
         Nothing ->
@@ -151,7 +151,7 @@ ghostView dnd fruits =
     case maybeDragFruit of
         Just fruit ->
             Html.div
-                (itemStyles orange ++ system.ghostStyles dnd)
+                (ghostStyles "#d8dee9" ++ system.ghostStyles dnd)
                 [ Html.div (handleStyles darkOrange) []
                 , Html.text fruit
                 ]
@@ -166,22 +166,22 @@ ghostView dnd fruits =
 
 green : String
 green =
-    "#cddc39"
+    "#8ca9cd"
 
 
 orange : String
 orange =
-    "#dc9a39"
+    "#3f6593"
 
 
 darkGreen : String
 darkGreen =
-    "#afb42b"
+    "#88c0d0"
 
 
 darkOrange : String
 darkOrange =
-    "#b4752b"
+    "#8ca9cd"
 
 
 
@@ -194,29 +194,42 @@ containerStyles =
     , Html.Attributes.style "flex-wrap" "wrap"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
-    , Html.Attributes.style "padding-top" "4em"
+    , Html.Attributes.style "padding-top" "2rem"
     ]
 
 
 itemStyles : String -> List (Html.Attribute msg)
 itemStyles color =
-    [ Html.Attributes.style "width" "180px"
-    , Html.Attributes.style "height" "100px"
-    , Html.Attributes.style "background-color" color
+    [ Html.Attributes.style "width" "10rem"
+    , Html.Attributes.style "height" "5rem"
+    , Html.Attributes.style "border" ("1px solid " ++ color)
+    , Html.Attributes.style "box-shadow" "0 25px 50px -12px #d8dee9"
     , Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "color" "#000"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "align-items" "center"
-    , Html.Attributes.style "margin" "0 4em 4em 0"
+    , Html.Attributes.style "margin" "0 4rem 4rem 0"
     ]
 
 
 handleStyles : String -> List (Html.Attribute msg)
 handleStyles color =
-    [ Html.Attributes.style "width" "50px"
-    , Html.Attributes.style "height" "50px"
+    [ Html.Attributes.style "width" "2.5rem"
+    , Html.Attributes.style "height" "2.5rem"
     , Html.Attributes.style "background-color" color
     , Html.Attributes.style "border-radius" "8px"
-    , Html.Attributes.style "margin" "20px"
+    , Html.Attributes.style "margin" "1rem"
     , Html.Attributes.style "cursor" "pointer"
+    ]
+
+
+ghostStyles : String -> List (Html.Attribute msg)
+ghostStyles color =
+    [ Html.Attributes.style "width" "10rem"
+    , Html.Attributes.style "height" "5rem"
+    , Html.Attributes.style "border" ("1px solid " ++ "#8ca9cd")
+    , Html.Attributes.style "background-color" color
+    , Html.Attributes.style "border-radius" "8px"
+    , Html.Attributes.style "display" "flex"
+    , Html.Attributes.style "align-items" "center"
+    , Html.Attributes.style "margin" "0 4rem 4rem 0"
     ]

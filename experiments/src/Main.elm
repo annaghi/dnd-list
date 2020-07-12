@@ -18,12 +18,12 @@ main =
         }
 
 
-flat : Glue.Glue Model Single.Model Msg Single.Msg
-flat =
+single : Glue.Glue Model Single.Model Msg Single.Msg
+single =
     Glue.glue
-        { msg = FlatMsg
-        , get = .flat
-        , set = \subModel model -> { model | flat = subModel }
+        { msg = SingleMsg
+        , get = .single
+        , set = \subModel model -> { model | single = subModel }
         }
 
 
@@ -37,7 +37,7 @@ groups =
 
 
 type alias Model =
-    { flat : Single.Model
+    { single : Single.Model
     , groups : Groups.Model
     }
 
@@ -45,28 +45,28 @@ type alias Model =
 init : () -> ( Model, Cmd Msg )
 init () =
     ( Model, Cmd.none )
-        |> Glue.init flat Single.init
+        |> Glue.init single Single.init
         |> Glue.init groups Groups.init
 
 
 type Msg
-    = FlatMsg Single.Msg
+    = SingleMsg Single.Msg
     | GroupsMsg Groups.Msg
 
 
 subscriptions : Model -> Sub Msg
 subscriptions =
     (\_ -> Sub.none)
-        |> Glue.subscriptions flat Single.subscriptions
+        |> Glue.subscriptions single Single.subscriptions
         |> Glue.subscriptions groups Groups.subscriptions
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        FlatMsg flatMsg ->
+        SingleMsg singleMsg ->
             ( model, Cmd.none )
-                |> Glue.update flat Single.update flatMsg
+                |> Glue.update single Single.update singleMsg
 
         GroupsMsg groupsMsg ->
             ( model, Cmd.none )
@@ -79,6 +79,6 @@ view model =
         [ Html.Attributes.style "display" "flex"
         , Html.Attributes.style "justify-content" "space-evenly"
         ]
-        [ Glue.view flat Single.view model
+        [ Glue.view single Single.view model
         , Glue.view groups Groups.view model
         ]

@@ -54,7 +54,7 @@ system =
     DnDList.Single.config
         |> DnDList.Single.listen DnDList.OnDrop
         |> DnDList.Single.operation DnDList.InsertAfter
-        |> DnDList.Single.hookItemsBeforeListUpdate updateTower
+        |> DnDList.Single.setItemsBeforeReorder updateTower
         |> DnDList.Single.create DnDMsg
 
 

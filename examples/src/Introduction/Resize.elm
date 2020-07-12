@@ -63,7 +63,7 @@ system : DnDList.Single.System Color Msg
 system =
     DnDList.Single.config
         |> DnDList.Single.operation DnDList.Swap
-        |> DnDList.Single.ghost [ "position" ]
+        --|> DnDList.Single.ghost [ "positionTopLeft" ]
         |> DnDList.Single.create DnDMsg
 
 
@@ -240,7 +240,7 @@ yellow =
 
 gray : Color
 gray =
-    "dimgray"
+    "gainsboro"
 
 
 

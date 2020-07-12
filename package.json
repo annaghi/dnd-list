@@ -8,7 +8,8 @@
     "test": "elm-test && npm run format && npm run build",
     "build": "rm -rf docs/assets && npm run optimize && (elm diff || true) && cp -a examples/assets docs",
     "format": "elm-format --validate .",
-    "optimize": "cd examples && elm make src/Main.elm --optimize --output=assets/main.js"
+    "optimize": "cd examples && elm make src/Main.elm --optimize --output=assets/main.js",
+    "make": "cd experiments && elm make src/Main.elm --output=assets/main-no-opt.js"
   },
   "devDependencies": {
     "elm": "^0.19.1-3",

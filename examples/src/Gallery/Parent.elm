@@ -1,32 +1,171 @@
 module Gallery.Parent exposing
-    ( Model
+    ( Example
     , Msg
-    , codeView
-    , demoView
-    , headerView
+    , chapterView
     , init
-    , navigationView
     , subscriptions
     , update
+    , view
     )
 
+import AssocList
 import CustomElement
+import Dict
 import Gallery.Hanoi
 import Gallery.Knight
 import Gallery.Puzzle
 import Gallery.Shapes
 import Gallery.TaskBoard
 import Gallery.TryOn
+import Global
 import Html
 import Views
 
 
 
+-- WORKAROUND ENUM TYPE
+
+
+defaultMeta : Views.Metadata Example
+defaultMeta =
+    { segment = "hanoi"
+    , title = "Towers of Hanoi"
+    , description = "Single list with auxiliary items."
+    , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/Hanoi.elm"
+    , initialModel = Hanoi Gallery.Hanoi.initialModel
+    }
+
+
+meta : List (Views.Metadata Example)
+meta =
+    [ defaultMeta
+    , { segment = "puzzle"
+      , title = "Puzzle"
+      , description = "List with groups without auxiliary items."
+      , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/Puzzle.elm"
+      , initialModel = Puzzle Gallery.Puzzle.initialModel
+      }
+    , { segment = "shapes"
+      , title = "Geometric shapes"
+      , description = "Single list with the Unaltered operation and beforeUpdate."
+      , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/Shapes.elm"
+      , initialModel = Shapes Gallery.Shapes.initialModel
+      }
+    , { segment = "knight"
+      , title = "Knight's tour"
+      , description = "Single list with Swap. The top-left 5 × 5 sub-board is diced from the original 8 × 8 board."
+      , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/Knight.elm"
+      , initialModel = Knight Gallery.Knight.initialModel
+      }
+    , { segment = "try-on"
+      , title = "Try on"
+      , description = "Single list with info.targetElement."
+      , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/TryOn.elm"
+      , initialModel = TryOn Gallery.TryOn.initialModel
+      }
+    , { segment = "taskboard"
+      , title = "Task board"
+      , description = "Two systems - one for the cards and one for the columns."
+      , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/TaskBoard.elm"
+      , initialModel = TaskBoard Gallery.TaskBoard.initialModel
+      }
+    ]
+
+
+type Tag
+    = HanoiTag
+    | PuzzleTag
+    | ShapesTag
+    | KnightTag
+    | TryOnTag
+    | TaskBoardTag
+
+
+allTags : List Tag
+allTags =
+    let
+        ignored : Tag -> ()
+        ignored tag =
+            case tag of
+                HanoiTag ->
+                    ()
+
+                PuzzleTag ->
+                    ()
+
+                ShapesTag ->
+                    ()
+
+                KnightTag ->
+                    ()
+
+                TryOnTag ->
+                    ()
+
+                TaskBoardTag ->
+                    ()
+    in
+    [ HanoiTag
+    , PuzzleTag
+    , ShapesTag
+    , KnightTag
+    , TryOnTag
+    , TaskBoardTag
+    ]
+
+
+exampleToTag : Example -> Tag
+exampleToTag example =
+    case example of
+        Hanoi _ ->
+            HanoiTag
+
+        Puzzle _ ->
+            PuzzleTag
+
+        Shapes _ ->
+            ShapesTag
+
+        Knight _ ->
+            KnightTag
+
+        TryOn _ ->
+            TryOnTag
+
+        TaskBoard _ ->
+            TaskBoardTag
+
+
+tagSegmentDict : AssocList.Dict Tag (Views.Metadata Example)
+tagSegmentDict =
+    List.map2 Tuple.pair allTags meta |> AssocList.fromList
+
+
+tagToMetadata : Tag -> Views.Metadata Example
+tagToMetadata tag =
+    Maybe.withDefault defaultMeta <|
+        case tag of
+            HanoiTag ->
+                AssocList.get HanoiTag tagSegmentDict
+
+            PuzzleTag ->
+                AssocList.get PuzzleTag tagSegmentDict
+
+            ShapesTag ->
+                AssocList.get ShapesTag tagSegmentDict
+
+            KnightTag ->
+                AssocList.get KnightTag tagSegmentDict
+
+            TryOnTag ->
+                AssocList.get TryOnTag tagSegmentDict
+
+            TaskBoardTag ->
+                AssocList.get TaskBoardTag tagSegmentDict
+
+
+
 -- MODEL
-
-
-type alias Model =
-    Example
 
 
 type Example
@@ -38,9 +177,15 @@ type Example
     | TaskBoard Gallery.TaskBoard.Model
 
 
-init : String -> ( Model, Cmd Msg )
-init slug =
-    ( toExample slug, commands )
+init : String -> ( Example, Cmd Msg )
+init segment =
+    ( meta
+        |> List.map (\m -> ( m.segment, m.initialModel ))
+        |> Dict.fromList
+        |> Dict.get segment
+        |> Maybe.withDefault defaultMeta.initialModel
+    , commands
+    )
 
 
 
@@ -56,240 +201,129 @@ type Msg
     | TaskBoardMsg Gallery.TaskBoard.Msg
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
-    case ( message, model ) of
-        ( HanoiMsg msg, Hanoi mo ) ->
-            stepHanoi (Gallery.Hanoi.update msg mo)
-
-        ( PuzzleMsg msg, Puzzle mo ) ->
-            stepPuzzle (Gallery.Puzzle.update msg mo)
-
-        ( ShapesMsg msg, Shapes mo ) ->
-            stepShapes (Gallery.Shapes.update msg mo)
-
-        ( KnightMsg msg, Knight mo ) ->
-            stepKnight (Gallery.Knight.update msg mo)
-
-        ( TryOnMsg msg, TryOn mo ) ->
-            stepTryOn (Gallery.TryOn.update msg mo)
-
-        ( TaskBoardMsg msg, TaskBoard mo ) ->
-            stepTaskBoard (Gallery.TaskBoard.update msg mo)
-
-        _ ->
-            ( model, Cmd.none )
-
-
-stepHanoi : ( Gallery.Hanoi.Model, Cmd Gallery.Hanoi.Msg ) -> ( Model, Cmd Msg )
-stepHanoi ( mo, cmds ) =
-    ( Hanoi mo, Cmd.map HanoiMsg cmds )
-
-
-stepPuzzle : ( Gallery.Puzzle.Model, Cmd Gallery.Puzzle.Msg ) -> ( Model, Cmd Msg )
-stepPuzzle ( mo, cmds ) =
-    ( Puzzle mo, Cmd.map PuzzleMsg cmds )
-
-
-stepShapes : ( Gallery.Shapes.Model, Cmd Gallery.Shapes.Msg ) -> ( Model, Cmd Msg )
-stepShapes ( mo, cmds ) =
-    ( Shapes mo, Cmd.map ShapesMsg cmds )
-
-
-stepKnight : ( Gallery.Knight.Model, Cmd Gallery.Knight.Msg ) -> ( Model, Cmd Msg )
-stepKnight ( mo, cmds ) =
-    ( Knight mo, Cmd.map KnightMsg cmds )
-
-
-stepTryOn : ( Gallery.TryOn.Model, Cmd Gallery.TryOn.Msg ) -> ( Model, Cmd Msg )
-stepTryOn ( mo, cmds ) =
-    ( TryOn mo, Cmd.map TryOnMsg cmds )
-
-
-stepTaskBoard : ( Gallery.TaskBoard.Model, Cmd Gallery.TaskBoard.Msg ) -> ( Model, Cmd Msg )
-stepTaskBoard ( mo, cmds ) =
-    ( TaskBoard mo, Cmd.map TaskBoardMsg cmds )
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    case model of
-        Hanoi mo ->
-            Sub.map HanoiMsg (Gallery.Hanoi.subscriptions mo)
-
-        Puzzle mo ->
-            Sub.map PuzzleMsg (Gallery.Puzzle.subscriptions mo)
-
-        Shapes mo ->
-            Sub.map ShapesMsg (Gallery.Shapes.subscriptions mo)
-
-        Knight mo ->
-            Sub.map KnightMsg (Gallery.Knight.subscriptions mo)
-
-        TryOn mo ->
-            Sub.map TryOnMsg (Gallery.TryOn.subscriptions mo)
-
-        TaskBoard mo ->
-            Sub.map TaskBoardMsg (Gallery.TaskBoard.subscriptions mo)
-
-
-
--- COMMANDS
-
-
 commands : Cmd Msg
 commands =
     Cmd.map PuzzleMsg Gallery.Puzzle.commands
+
+
+subscriptions : Example -> Sub Msg
+subscriptions example =
+    case example of
+        Hanoi subModel ->
+            Sub.map HanoiMsg (Gallery.Hanoi.subscriptions subModel)
+
+        Puzzle subModel ->
+            Sub.map PuzzleMsg (Gallery.Puzzle.subscriptions subModel)
+
+        Shapes subModel ->
+            Sub.map ShapesMsg (Gallery.Shapes.subscriptions subModel)
+
+        Knight subModel ->
+            Sub.map KnightMsg (Gallery.Knight.subscriptions subModel)
+
+        TryOn subModel ->
+            Sub.map TryOnMsg (Gallery.TryOn.subscriptions subModel)
+
+        TaskBoard subModel ->
+            Sub.map TaskBoardMsg (Gallery.TaskBoard.subscriptions subModel)
+
+
+update : Msg -> Example -> ( Example, Cmd Msg )
+update msg example =
+    case ( msg, example ) of
+        ( HanoiMsg subMsg, Hanoi subModel ) ->
+            stepHanoi (Gallery.Hanoi.update subMsg subModel)
+
+        ( PuzzleMsg subMsg, Puzzle subModel ) ->
+            stepPuzzle (Gallery.Puzzle.update subMsg subModel)
+
+        ( ShapesMsg subMsg, Shapes subModel ) ->
+            stepShapes (Gallery.Shapes.update subMsg subModel)
+
+        ( KnightMsg subMsg, Knight subModel ) ->
+            stepKnight (Gallery.Knight.update subMsg subModel)
+
+        ( TryOnMsg subMsg, TryOn subModel ) ->
+            stepTryOn (Gallery.TryOn.update subMsg subModel)
+
+        ( TaskBoardMsg subMsg, TaskBoard subModel ) ->
+            stepTaskBoard (Gallery.TaskBoard.update subMsg subModel)
+
+        _ ->
+            ( example, Cmd.none )
+
+
+stepHanoi : ( Gallery.Hanoi.Model, Cmd Gallery.Hanoi.Msg ) -> ( Example, Cmd Msg )
+stepHanoi ( subModel, subCmd ) =
+    ( Hanoi subModel, Cmd.map HanoiMsg subCmd )
+
+
+stepPuzzle : ( Gallery.Puzzle.Model, Cmd Gallery.Puzzle.Msg ) -> ( Example, Cmd Msg )
+stepPuzzle ( subModel, subCmd ) =
+    ( Puzzle subModel, Cmd.map PuzzleMsg subCmd )
+
+
+stepShapes : ( Gallery.Shapes.Model, Cmd Gallery.Shapes.Msg ) -> ( Example, Cmd Msg )
+stepShapes ( subModel, subCmd ) =
+    ( Shapes subModel, Cmd.map ShapesMsg subCmd )
+
+
+stepKnight : ( Gallery.Knight.Model, Cmd Gallery.Knight.Msg ) -> ( Example, Cmd Msg )
+stepKnight ( subModel, subCmd ) =
+    ( Knight subModel, Cmd.map KnightMsg subCmd )
+
+
+stepTryOn : ( Gallery.TryOn.Model, Cmd Gallery.TryOn.Msg ) -> ( Example, Cmd Msg )
+stepTryOn ( subModel, subCmd ) =
+    ( TryOn subModel, Cmd.map TryOnMsg subCmd )
+
+
+stepTaskBoard : ( Gallery.TaskBoard.Model, Cmd Gallery.TaskBoard.Msg ) -> ( Example, Cmd Msg )
+stepTaskBoard ( subModel, subCmd ) =
+    ( TaskBoard subModel, Cmd.map TaskBoardMsg subCmd )
 
 
 
 -- VIEW
 
 
-navigationView : Html.Html msg
-navigationView =
-    Views.navigationView
-        "Gallery"
-        "gallery"
-        info
-        [ Hanoi Gallery.Hanoi.initialModel
-        , Puzzle Gallery.Puzzle.initialModel
-        , Shapes Gallery.Shapes.initialModel
-        , Knight Gallery.Knight.initialModel
-        , TryOn Gallery.TryOn.initialModel
-        , TaskBoard Gallery.TaskBoard.initialModel
-        ]
+view : Example -> List (Html.Html Msg)
+view example =
+    [ Views.demoHeaderView
+        (example
+            |> exampleToTag
+            |> tagToMetadata
+            |> (\m -> { title = m.title, description = m.description, link = m.link })
+        )
+    , case example of
+        Hanoi subModel ->
+            Html.map HanoiMsg (Gallery.Hanoi.view subModel)
+
+        Puzzle subModel ->
+            Html.map PuzzleMsg (Gallery.Puzzle.view subModel)
+
+        Shapes subModel ->
+            Html.map ShapesMsg (Gallery.Shapes.view subModel)
+
+        Knight subModel ->
+            Html.map KnightMsg (Gallery.Knight.view subModel)
+
+        TryOn subModel ->
+            Html.map TryOnMsg (Gallery.TryOn.view subModel)
+
+        TaskBoard subModel ->
+            Html.map TaskBoardMsg (Gallery.TaskBoard.view subModel)
+    , CustomElement.elmCode
+        [ CustomElement.href (example |> exampleToTag |> tagToMetadata |> (\m -> m.link)) ]
+        []
+    ]
 
 
-headerView : Model -> Html.Html Msg
-headerView model =
-    Views.demoHeaderView info model
-
-
-demoView : Model -> Html.Html Msg
-demoView model =
-    case model of
-        Hanoi mo ->
-            Html.map HanoiMsg (Gallery.Hanoi.view mo)
-
-        Puzzle mo ->
-            Html.map PuzzleMsg (Gallery.Puzzle.view mo)
-
-        Shapes mo ->
-            Html.map ShapesMsg (Gallery.Shapes.view mo)
-
-        Knight mo ->
-            Html.map KnightMsg (Gallery.Knight.view mo)
-
-        TryOn mo ->
-            Html.map TryOnMsg (Gallery.TryOn.view mo)
-
-        TaskBoard mo ->
-            Html.map TaskBoardMsg (Gallery.TaskBoard.view mo)
-
-
-codeView : Model -> Html.Html Msg
-codeView model =
-    case model of
-        Hanoi _ ->
-            toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/Hanoi.elm"
-
-        Puzzle _ ->
-            toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/Puzzle.elm"
-
-        Shapes _ ->
-            toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/Shapes.elm"
-
-        Knight _ ->
-            toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/Knight.elm"
-
-        TryOn _ ->
-            toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/TryOn.elm"
-
-        TaskBoard _ ->
-            toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Gallery/TaskBoard.elm"
-
-
-toCode : String -> Html.Html msg
-toCode url =
-    CustomElement.elmCode [ CustomElement.href url ] []
-
-
-
--- EXAMPLE INFO
-
-
-toExample : String -> Example
-toExample slug =
-    case slug of
-        "hanoi" ->
-            Hanoi Gallery.Hanoi.initialModel
-
-        "puzzle" ->
-            Puzzle Gallery.Puzzle.initialModel
-
-        "shapes" ->
-            Shapes Gallery.Shapes.initialModel
-
-        "knight" ->
-            Knight Gallery.Knight.initialModel
-
-        "try-on" ->
-            TryOn Gallery.TryOn.initialModel
-
-        "taskboard" ->
-            TaskBoard Gallery.TaskBoard.initialModel
-
-        _ ->
-            Hanoi Gallery.Hanoi.initialModel
-
-
-type alias Info =
-    { slug : String
-    , title : String
-    , description : String
-    }
-
-
-info : Example -> Info
-info example =
-    case example of
-        Hanoi _ ->
-            { slug = "hanoi"
-            , title = "Towers of Hanoi"
-            , description = "Single list with auxiliary items."
-            }
-
-        Puzzle _ ->
-            { slug = "puzzle"
-            , title = "Puzzle"
-            , description = "List with groups without auxiliary items."
-            }
-
-        Shapes _ ->
-            { slug = "shapes"
-            , title = "Geometric shapes"
-            , description = "Single list with the Unaltered operation and beforeUpdate."
-            }
-
-        Knight _ ->
-            { slug = "knight"
-            , title = "Knight's tour"
-            , description = "Single list with Swap. The top-left 5 × 5 sub-board is diced from the original 8 × 8 board."
-            }
-
-        TryOn _ ->
-            { slug = "try-on"
-            , title = "Try on"
-            , description = "Single list with info.targetElement."
-            }
-
-        TaskBoard _ ->
-            { slug = "taskboard"
-            , title = "Task board"
-            , description = "Two systems - one for the cards and one for the columns."
-            }
+chapterView : String -> Html.Html msg
+chapterView class =
+    Views.chapterView
+        class
+        { title = "Gallery"
+        , slug = "gallery"
+        , allTags = allTags |> List.map (tagToMetadata >> (\m -> { segment = m.segment, title = m.title }))
+        }

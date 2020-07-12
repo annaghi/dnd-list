@@ -65,8 +65,8 @@ system =
             , comparator = \item1 item2 -> item1.group == item2.group
             , setter = \item1 item2 -> { item2 | group = item1.group }
             }
-        |> DnDList.Groups.hookItemsBeforeListUpdate (\_ _ list -> list)
-        |> DnDList.Groups.ghost [ "width", "height", "position" ]
+        |> DnDList.Groups.setItemsBeforeReorder (\_ _ list -> list)
+        |> DnDList.Groups.ghost [ "width", "height", "positionTopLeft" ]
         |> DnDList.Groups.detectDrop DetectDrop
         |> DnDList.Groups.create DnDMsg
 
@@ -124,16 +124,14 @@ update msg model =
             )
 
         DetectDrop dragIndex dropIndex fruits ->
-            let
-                _ =
-                    Debug.log "DetectDrop" dragIndex
-
-                _ =
-                    Debug.log "DetectDrop" dropIndex
-
-                _ =
-                    Debug.log "DetectDrop" fruits
-            in
+            -- let
+            --     _ =
+            --         Debug.log "DetectDrop" dragIndex
+            --     _ =
+            --         Debug.log "DetectDrop" dropIndex
+            --     _ =
+            --         Debug.log "DetectDrop" fruits
+            -- in
             ( model, Cmd.none )
 
 

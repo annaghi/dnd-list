@@ -1,9 +1,10 @@
 module DnDList.Single exposing
     ( Config, config
     , movement, listen, operation, ghost
-    , hookItemsBeforeListUpdate
+    , setItemsBeforeReorder
     , detectDrop, detectReorder
-    , scroll, scrollWithOffset, scrollWithOffsetAndFence, scrollWithOffsetAndArea
+    , withAutoScroll
+    , scroll, scrollWithOffset, scrollWithOffsetAndWall
     , System, create, Msg
     , Model
     , Info
@@ -52,9 +53,10 @@ You can add position styling attributes to this element using the`System` object
 
 @docs Config, config
 @docs movement, listen, operation, ghost
-@docs hookItemsBeforeListUpdate
+@docs setItemsBeforeReorder
 @docs detectDrop, detectReorder
-@docs scroll, scrollWithOffset, scrollWithOffsetAndFence, scrollWithOffsetAndArea
+@docs withAutoScroll
+@docs scroll, scrollWithOffset, scrollWithOffsetAndWall
 
 
 # System
@@ -239,7 +241,7 @@ import Task
 
 {-| Represents the `System`'s configuration.
 
-  - `hookItemsBeforeListUpdate`: This is a hook and gives you access to your list before it will be sorted.
+  - `setItemsBeforeReorder`: This is a hook and gives you access to your list before it will be sorted.
     The first number is the drag index, the second number is the drop index.
     The [Towers of Hanoi](https://annaghi.github.io/dnd-list/gallery/hanoi) uses this hook to update the disks' `tower` attribute.
 
@@ -255,11 +257,11 @@ import Task
     [sorting on drag](https://annaghi.github.io/dnd-list/config/operations-drag)
     and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop).
 
-This is our configuration with a void `hookItemsBeforeListUpdate`:
+This is our configuration with a void `setItemsBeforeReorder`:
 
     config : Single.Config Fruit
     config =
-        { hookItemsBeforeListUpdate = \_ _ list -> list
+        { setItemsBeforeReorder = \_ _ list -> list
         , movement = Single.Free
         , listen = Single.OnDrag
         , operation = Single.Rotate
@@ -275,13 +277,11 @@ type alias Options item msg =
     , listen : Listen
     , operation : Operation
     , ghost : List String
-    , hookItemsBeforeListUpdate : DragIndex -> DropIndex -> List item -> List item
+    , setItemsBeforeReorder : DragIndex -> DropIndex -> List item -> List item
     , detectDrop : Maybe (DragIndex -> DropIndex -> List item -> msg)
     , detectReorder : Maybe (DragIndex -> DropIndex -> List item -> msg)
-    , containerElementId : ContainerElementId
-    , offset : Offset
-    , hasFence : Bool
-    , area : Maybe Offset
+    , autoScroll : Bool
+    , scroll : Maybe ScrollOptions
     }
 
 
@@ -295,14 +295,12 @@ defaultOptions =
     { movement = Free
     , listen = OnDrag
     , operation = Rotate
-    , ghost = [ "width", "height", "position" ]
-    , hookItemsBeforeListUpdate = \_ _ list -> list
+    , ghost = [ "width", "height", "positionTopLeft" ]
+    , setItemsBeforeReorder = \_ _ list -> list
     , detectDrop = Nothing
     , detectReorder = Nothing
-    , containerElementId = ""
-    , offset = { top = 0, right = 0, bottom = 0, left = 0 }
-    , hasFence = False
-    , area = Nothing
+    , autoScroll = False
+    , scroll = Nothing
     }
 
 
@@ -330,9 +328,9 @@ ghost properties (Config options) =
     Config { options | ghost = properties }
 
 
-hookItemsBeforeListUpdate : (DragIndex -> DropIndex -> List item -> List item) -> Config item msg -> Config item msg
-hookItemsBeforeListUpdate hook (Config options) =
-    Config { options | hookItemsBeforeListUpdate = hook }
+setItemsBeforeReorder : (DragIndex -> DropIndex -> List item -> List item) -> Config item msg -> Config item msg
+setItemsBeforeReorder hook (Config options) =
+    Config { options | setItemsBeforeReorder = hook }
 
 
 detectDrop : (DragIndex -> DropIndex -> List item -> msg) -> Config item msg -> Config item msg
@@ -345,24 +343,51 @@ detectReorder toMessage (Config options) =
     Config { options | detectReorder = Just toMessage }
 
 
-scroll : ContainerElementId -> Config item msg -> Config item msg
-scroll containerElementId (Config options) =
-    Config { options | containerElementId = containerElementId }
+withAutoScroll : Config item msg -> Config item msg
+withAutoScroll (Config options) =
+    Config { options | autoScroll = True }
 
 
-scrollWithOffset : ContainerElementId -> { offset : Offset } -> Config item msg -> Config item msg
-scrollWithOffset containerElementId { offset } (Config options) =
-    Config { options | containerElementId = containerElementId, offset = offset }
+scroll : Orientation -> ContainerElementId -> Config item msg -> Config item msg
+scroll orientation containerElementId (Config options) =
+    Config
+        { options
+            | scroll =
+                Just
+                    { containerElementId = containerElementId
+                    , orientation = orientation
+                    , offset = Internal.Scroll.noOffset
+                    , hasWall = False
+                    }
+        }
 
 
-scrollWithOffsetAndFence : ContainerElementId -> { offset : Offset } -> Config item msg -> Config item msg
-scrollWithOffsetAndFence containerElementId { offset } (Config options) =
-    Config { options | containerElementId = containerElementId, offset = offset, hasFence = True }
+scrollWithOffset : Offset -> Orientation -> ContainerElementId -> Config item msg -> Config item msg
+scrollWithOffset offset orientation containerElementId (Config options) =
+    Config
+        { options
+            | scroll =
+                Just
+                    { containerElementId = containerElementId
+                    , orientation = orientation
+                    , offset = offset
+                    , hasWall = False
+                    }
+        }
 
 
-scrollWithOffsetAndArea : ContainerElementId -> { offset : Offset, area : Offset } -> Config item msg -> Config item msg
-scrollWithOffsetAndArea containerElementId { offset, area } (Config options) =
-    Config { options | containerElementId = containerElementId, offset = offset, area = Just area }
+scrollWithOffsetAndWall : Offset -> Orientation -> ContainerElementId -> Config item msg -> Config item msg
+scrollWithOffsetAndWall offset orientation containerElementId (Config options) =
+    Config
+        { options
+            | scroll =
+                Just
+                    { containerElementId = containerElementId
+                    , orientation = orientation
+                    , offset = offset
+                    , hasWall = True
+                    }
+        }
 
 
 {-| A `System` encapsulates:
@@ -537,20 +562,26 @@ It should be wrapped within our message constructor:
 
 -}
 type Msg
-    = DownDragItem DragIndex DragElementId Coordinates
+    = DownInsideDragItem DragIndex DragElementId Coordinates
     | InBetweenMsg InBetweenMsg
-    | UpDocument
+    | ReleaseMouse
 
 
 type InBetweenMsg
-    = MoveDocument Coordinates
+    = MoveMouse Coordinates
     | OverDropItem DropIndex DropElementId
     | EnterDropItem
     | LeaveDropItem
-    | GotDragItem (Result Browser.Dom.Error Browser.Dom.Element)
-    | GotDropItem (Result Browser.Dom.Error Browser.Dom.Element)
-    | GotContainer (Result Browser.Dom.Error Browser.Dom.Element)
-    | Tick Float
+    | GetDragItem (Result Browser.Dom.Error Browser.Dom.Element)
+    | GetDropItem (Result Browser.Dom.Error Browser.Dom.Element)
+    | GetContainer (Result Browser.Dom.Error Browser.Dom.Element)
+    | TickMsg TickMsg
+
+
+type TickMsg
+    = Tick Float
+    | ScrollOnContainer (Result Browser.Dom.Error Internal.Scroll.ScrollMeta)
+    | AutoScrollOnContainer (Result Browser.Dom.Error Internal.Scroll.ScrollMeta)
     | NoOp
 
 
@@ -559,10 +590,10 @@ subscriptions toMsg (Model model) =
     if model /= Nothing then
         Sub.batch
             [ Browser.Events.onMouseMove
-                (Internal.Decoders.decodeCoordinates |> Json.Decode.map (MoveDocument >> InBetweenMsg >> toMsg))
+                (Internal.Decoders.decodeCoordinates |> Json.Decode.map (MoveMouse >> InBetweenMsg >> toMsg))
             , Browser.Events.onMouseUp
-                (Json.Decode.succeed (UpDocument |> toMsg))
-            , Browser.Events.onAnimationFrameDelta (Tick >> InBetweenMsg >> toMsg)
+                (Json.Decode.succeed (ReleaseMouse |> toMsg))
+            , Browser.Events.onAnimationFrameDelta (Tick >> TickMsg >> InBetweenMsg >> toMsg)
             ]
 
     else
@@ -572,7 +603,7 @@ subscriptions toMsg (Model model) =
 update : Config item msg -> (Msg -> msg) -> List item -> Msg -> Model -> ( List item, Model, Cmd msg )
 update (Config options) toMsg list msg (Model model) =
     case msg of
-        DownDragItem dragIndex dragElementId coordinates ->
+        DownInsideDragItem dragIndex dragElementId coordinates ->
             ( list
             , Model <|
                 Just
@@ -588,7 +619,15 @@ update (Config options) toMsg list msg (Model model) =
                     , dropElement = Nothing
                     , containerElement = Nothing
                     }
-            , Cmd.none
+            , Cmd.batch
+                [ Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GetDragItem (Browser.Dom.getElement dragElementId))
+                , case options.scroll of
+                    Just scrollOptions ->
+                        Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GetContainer (Browser.Dom.getElement scrollOptions.containerElementId))
+
+                    Nothing ->
+                        Cmd.none
+                ]
             )
 
         InBetweenMsg inBetweenMsg ->
@@ -603,7 +642,7 @@ update (Config options) toMsg list msg (Model model) =
                 Nothing ->
                     ( list, Model Nothing, Cmd.none )
 
-        UpDocument ->
+        ReleaseMouse ->
             -- TODO This branch might be DRY
             case model of
                 Just state ->
@@ -614,7 +653,7 @@ update (Config options) toMsg list msg (Model model) =
                                 newList : List item
                                 newList =
                                     list
-                                        |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                                        |> options.setItemsBeforeReorder state.dragIndex state.dropIndex
                                         |> listUpdate options.operation state.dragIndex state.dropIndex
                             in
                             ( newList
@@ -647,23 +686,16 @@ update (Config options) toMsg list msg (Model model) =
 inBetweenUpdate : Options item msg -> (Msg -> msg) -> List item -> InBetweenMsg -> State -> ( List item, State, Cmd msg )
 inBetweenUpdate options toMsg list msg state =
     case msg of
-        MoveDocument coordinates ->
+        MoveMouse coordinates ->
             ( list
             , { state | currentPosition = coordinates, moveCounter = state.moveCounter + 1 }
-            , if state.dragElement == Nothing then
-                Cmd.batch
-                    [ Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GotDragItem (Browser.Dom.getElement state.dragElementId))
-                    , Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GotContainer (Browser.Dom.getElement options.containerElementId))
-                    ]
-
-              else
-                Cmd.none
+            , Cmd.none
             )
 
         OverDropItem dropIndex dropElementId ->
             ( list
             , { state | dropIndex = dropIndex, dropElementId = dropElementId }
-            , Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GotDropItem (Browser.Dom.getElement dropElementId))
+            , Cmd.map (InBetweenMsg >> toMsg) (Task.attempt GetDropItem (Browser.Dom.getElement dropElementId))
             )
 
         EnterDropItem ->
@@ -674,7 +706,7 @@ inBetweenUpdate options toMsg list msg state =
                             newList : List item
                             newList =
                                 list
-                                    |> options.hookItemsBeforeListUpdate state.dragIndex state.dropIndex
+                                    |> options.setItemsBeforeReorder state.dragIndex state.dropIndex
                                     |> listUpdate options.operation state.dragIndex state.dropIndex
                         in
                         ( newList
@@ -696,71 +728,104 @@ inBetweenUpdate options toMsg list msg state =
             , Cmd.none
             )
 
-        GotDragItem (Err _) ->
-            ( list, state, Cmd.none )
-
-        GotDragItem (Ok dragElement) ->
+        GetDragItem result ->
             ( list
-            , { state | dragElement = Just dragElement, dropElement = Just dragElement }
+            , { state | dragElement = Result.toMaybe result, dropElement = Result.toMaybe result }
             , Cmd.none
             )
 
-        GotDropItem (Err _) ->
-            ( list, state, Cmd.none )
-
-        GotDropItem (Ok dropElement) ->
+        GetDropItem result ->
             ( list
-            , { state | dropElement = Just dropElement }
+            , { state | dropElement = Result.toMaybe result }
             , Cmd.none
             )
 
-        GotContainer (Err _) ->
-            ( list, state, Cmd.none )
-
-        GotContainer (Ok containerElement) ->
+        GetContainer result ->
             ( list
-            , { state | containerElement = Just containerElement }
+            , { state | containerElement = Result.toMaybe result }
             , Cmd.none
             )
 
+        TickMsg tickMsg ->
+            let
+                ( newState, newCmd ) =
+                    tickUpdate options tickMsg state
+            in
+            ( list, newState, Cmd.map (TickMsg >> InBetweenMsg >> toMsg) newCmd )
+
+
+tickUpdate : Options item msg -> TickMsg -> State -> ( State, Cmd TickMsg )
+tickUpdate options msg state =
+    case msg of
         Tick _ ->
-            ( list
-            , { state
-                | translateVector =
+            case ( options.autoScroll, options.scroll ) of
+                ( True, Just scrollOptions ) ->
                     case state.containerElement of
                         Just containerElement ->
-                            if options.hasFence then
-                                Internal.Scroll.coordinatesWithFence options.offset state.startPosition state.currentPosition containerElement
-
-                            else
-                                Coordinates
-                                    (state.currentPosition.x - state.startPosition.x)
-                                    (state.currentPosition.y - state.startPosition.y)
+                            ( state
+                            , Task.map2 (Internal.Scroll.ScrollMeta scrollOptions containerElement)
+                                (Browser.Dom.getViewportOf scrollOptions.containerElementId)
+                                Browser.Dom.getViewport
+                                |> Task.attempt AutoScrollOnContainer
+                            )
 
                         Nothing ->
-                            Coordinates
-                                (state.currentPosition.x - state.startPosition.x)
-                                (state.currentPosition.y - state.startPosition.y)
-              }
-            , autoScrollCmd options toMsg state
+                            ( { state | translateVector = Internal.Scroll.baseCoordinates state.startPosition state.currentPosition }
+                            , Browser.Dom.getViewport
+                                |> Task.andThen (\documentViewport -> Internal.Scroll.scrollOnDocumentByStep 35 state.currentPosition documentViewport)
+                                |> Task.attempt (\_ -> NoOp)
+                            )
+
+                ( True, Nothing ) ->
+                    ( { state | translateVector = Internal.Scroll.baseCoordinates state.startPosition state.currentPosition }
+                    , Browser.Dom.getViewport
+                        |> Task.andThen (\documentViewport -> Internal.Scroll.scrollOnDocumentByStep 35 state.currentPosition documentViewport)
+                        |> Task.attempt (\_ -> NoOp)
+                    )
+
+                ( False, Just scrollOptions ) ->
+                    case state.containerElement of
+                        Just containerElement ->
+                            ( state
+                            , Task.map2 (Internal.Scroll.ScrollMeta scrollOptions containerElement)
+                                (Browser.Dom.getViewportOf scrollOptions.containerElementId)
+                                Browser.Dom.getViewport
+                                |> Task.attempt ScrollOnContainer
+                            )
+
+                        Nothing ->
+                            ( { state | translateVector = Internal.Scroll.baseCoordinates state.startPosition state.currentPosition }
+                            , Cmd.none
+                            )
+
+                ( False, Nothing ) ->
+                    ( { state | translateVector = Internal.Scroll.baseCoordinates state.startPosition state.currentPosition }
+                    , Cmd.none
+                    )
+
+        AutoScrollOnContainer (Ok scrollMeta) ->
+            ( { state | translateVector = Internal.Scroll.coordinates state.startPosition state.currentPosition scrollMeta }
+            , [ Internal.Scroll.scrollOnDocumentByStep 35 state.currentPosition scrollMeta.documentViewport
+              , Internal.Scroll.scrollOnContainerByStep 35 state.currentPosition scrollMeta
+              ]
+                |> Task.sequence
+                |> Task.attempt (\_ -> NoOp)
             )
 
-        NoOp ->
-            ( list, state, Cmd.none )
-
-
-autoScrollCmd : Options item msg -> (Msg -> msg) -> State -> Cmd msg
-autoScrollCmd { containerElementId, offset, hasFence, area } toMsg state =
-    case state.containerElement of
-        Just containerElement ->
-            -- TODO Can I make this cheaper? Do not like the NoOp.
-            Browser.Dom.getViewportOf containerElementId
-                |> Task.andThen (Internal.Scroll.scrollByStep 35 area offset state.currentPosition containerElementId containerElement)
+        ScrollOnContainer (Ok scrollMeta) ->
+            ( { state | translateVector = Internal.Scroll.coordinates state.startPosition state.currentPosition scrollMeta }
+            , Internal.Scroll.scrollOnContainerByStep 35 state.currentPosition scrollMeta
                 |> Task.attempt (\_ -> NoOp)
-                |> Cmd.map (InBetweenMsg >> toMsg)
+            )
 
-        Nothing ->
-            Cmd.none
+        AutoScrollOnContainer (Err _) ->
+            ( state, Cmd.none )
+
+        ScrollOnContainer (Err _) ->
+            ( state, Cmd.none )
+
+        NoOp ->
+            ( state, Cmd.none )
 
 
 stateUpdate : Operation -> DropIndex -> State -> State
@@ -825,7 +890,7 @@ dragEvents : (Msg -> msg) -> DragIndex -> DragElementId -> List (Html.Attribute 
 dragEvents toMsg dragIndex dragElementId =
     [ Html.Events.preventDefaultOn "mousedown"
         (Internal.Decoders.decodeCoordinatesWithButtonCheck
-            |> Json.Decode.map (DownDragItem dragIndex dragElementId >> toMsg)
+            |> Json.Decode.map (DownInsideDragItem dragIndex dragElementId >> toMsg)
             |> Json.Decode.map (\msg -> ( msg, True ))
         )
     ]

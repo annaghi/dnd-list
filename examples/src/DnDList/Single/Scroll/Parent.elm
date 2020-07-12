@@ -11,8 +11,7 @@ module DnDList.Single.Scroll.Parent exposing
 
 import DnDList.Single.Scroll.Scroll
 import DnDList.Single.Scroll.ScrollWithOffset
-import DnDList.Single.Scroll.ScrollWithOffsetAndArea
-import DnDList.Single.Scroll.ScrollWithOffsetAndFence
+import DnDList.Single.Scroll.ScrollWithOffsetAndWall
 import Html
 import Views
 
@@ -30,8 +29,7 @@ type alias Model =
 type Example
     = Scroll DnDList.Single.Scroll.Scroll.Model
     | ScrollWithOffset DnDList.Single.Scroll.ScrollWithOffset.Model
-    | ScrollWithOffsetAndFence DnDList.Single.Scroll.ScrollWithOffsetAndFence.Model
-    | ScrollWithOffsetAndArea DnDList.Single.Scroll.ScrollWithOffsetAndArea.Model
+    | ScrollWithOffsetAndWall DnDList.Single.Scroll.ScrollWithOffsetAndWall.Model
 
 
 initialModel : Model
@@ -40,8 +38,7 @@ initialModel =
     , examples =
         [ Scroll DnDList.Single.Scroll.Scroll.initialModel
         , ScrollWithOffset DnDList.Single.Scroll.ScrollWithOffset.initialModel
-        , ScrollWithOffsetAndFence DnDList.Single.Scroll.ScrollWithOffsetAndFence.initialModel
-        , ScrollWithOffsetAndArea DnDList.Single.Scroll.ScrollWithOffsetAndArea.initialModel
+        , ScrollWithOffsetAndWall DnDList.Single.Scroll.ScrollWithOffsetAndWall.initialModel
         ]
     }
 
@@ -55,16 +52,13 @@ url : Int -> String
 url id =
     case id of
         0 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Scroll/Scroll.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Scroll/Horizontal.elm"
 
         1 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Scroll/ScrollWithOffset.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Scroll/Vertical.elm"
 
         2 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Scroll/ScrollWithOffsetAndFence.elm"
-
-        3 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Scroll/ScrollWithOffsetAndArea.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Scroll/Table.elm"
 
         _ ->
             ""
@@ -78,8 +72,7 @@ type Msg
     = LinkClicked Int
     | ScrollMsg DnDList.Single.Scroll.Scroll.Msg
     | ScrollWithOffsetMsg DnDList.Single.Scroll.ScrollWithOffset.Msg
-    | ScrollWithOffsetAndFenceMsg DnDList.Single.Scroll.ScrollWithOffsetAndFence.Msg
-    | ScrollWithOffsetAndAreaMsg DnDList.Single.Scroll.ScrollWithOffsetAndArea.Msg
+    | ScrollWithOffsetAndWallMsg DnDList.Single.Scroll.ScrollWithOffsetAndWall.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -99,11 +92,8 @@ update message model =
                             ( ScrollWithOffsetMsg msg, ScrollWithOffset mo ) ->
                                 stepScrollWithOffset (DnDList.Single.Scroll.ScrollWithOffset.update msg mo)
 
-                            ( ScrollWithOffsetAndFenceMsg msg, ScrollWithOffsetAndFence mo ) ->
-                                stepScrollWithOffsetAndFence (DnDList.Single.Scroll.ScrollWithOffsetAndFence.update msg mo)
-
-                            ( ScrollWithOffsetAndAreaMsg msg, ScrollWithOffsetAndArea mo ) ->
-                                stepScrollWithOffsetAndArea (DnDList.Single.Scroll.ScrollWithOffsetAndArea.update msg mo)
+                            ( ScrollWithOffsetAndWallMsg msg, ScrollWithOffsetAndWall mo ) ->
+                                stepScrollWithOffsetAndWall (DnDList.Single.Scroll.ScrollWithOffsetAndWall.update msg mo)
 
                             _ ->
                                 ( example, Cmd.none )
@@ -122,14 +112,9 @@ stepScrollWithOffset ( mo, cmds ) =
     ( ScrollWithOffset mo, Cmd.map ScrollWithOffsetMsg cmds )
 
 
-stepScrollWithOffsetAndFence : ( DnDList.Single.Scroll.ScrollWithOffsetAndFence.Model, Cmd DnDList.Single.Scroll.ScrollWithOffsetAndFence.Msg ) -> ( Example, Cmd Msg )
-stepScrollWithOffsetAndFence ( mo, cmds ) =
-    ( ScrollWithOffsetAndFence mo, Cmd.map ScrollWithOffsetAndFenceMsg cmds )
-
-
-stepScrollWithOffsetAndArea : ( DnDList.Single.Scroll.ScrollWithOffsetAndArea.Model, Cmd DnDList.Single.Scroll.ScrollWithOffsetAndArea.Msg ) -> ( Example, Cmd Msg )
-stepScrollWithOffsetAndArea ( mo, cmds ) =
-    ( ScrollWithOffsetAndArea mo, Cmd.map ScrollWithOffsetAndAreaMsg cmds )
+stepScrollWithOffsetAndWall : ( DnDList.Single.Scroll.ScrollWithOffsetAndWall.Model, Cmd DnDList.Single.Scroll.ScrollWithOffsetAndWall.Msg ) -> ( Example, Cmd Msg )
+stepScrollWithOffsetAndWall ( mo, cmds ) =
+    ( ScrollWithOffsetAndWall mo, Cmd.map ScrollWithOffsetAndWallMsg cmds )
 
 
 
@@ -148,11 +133,8 @@ subscriptions model =
                     ScrollWithOffset mo ->
                         Sub.map ScrollWithOffsetMsg (DnDList.Single.Scroll.ScrollWithOffset.subscriptions mo)
 
-                    ScrollWithOffsetAndFence mo ->
-                        Sub.map ScrollWithOffsetAndFenceMsg (DnDList.Single.Scroll.ScrollWithOffsetAndFence.subscriptions mo)
-
-                    ScrollWithOffsetAndArea mo ->
-                        Sub.map ScrollWithOffsetAndAreaMsg (DnDList.Single.Scroll.ScrollWithOffsetAndArea.subscriptions mo)
+                    ScrollWithOffsetAndWall mo ->
+                        Sub.map ScrollWithOffsetAndWallMsg (DnDList.Single.Scroll.ScrollWithOffsetAndWall.subscriptions mo)
             )
         |> Sub.batch
 
@@ -172,19 +154,17 @@ info example =
         Scroll mo ->
             { title = "Simple scroll"
             , subView = Html.map ScrollMsg (DnDList.Single.Scroll.Scroll.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Scroll/Horizontal.elm"
             }
 
         ScrollWithOffset mo ->
             { title = "Container with offset"
             , subView = Html.map ScrollWithOffsetMsg (DnDList.Single.Scroll.ScrollWithOffset.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Scroll/Vertical.elm"
             }
 
-        ScrollWithOffsetAndFence mo ->
-            { title = "Container with offset and fence"
-            , subView = Html.map ScrollWithOffsetAndFenceMsg (DnDList.Single.Scroll.ScrollWithOffsetAndFence.view mo)
-            }
-
-        ScrollWithOffsetAndArea mo ->
-            { title = "Container with scrollable area"
-            , subView = Html.map ScrollWithOffsetAndAreaMsg (DnDList.Single.Scroll.ScrollWithOffsetAndArea.view mo)
+        ScrollWithOffsetAndWall mo ->
+            { title = "Container with offset and wall"
+            , subView = Html.map ScrollWithOffsetAndWallMsg (DnDList.Single.Scroll.ScrollWithOffsetAndWall.view mo)
+            , link = "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/DnDList/Single/Scroll/Table.elm"
             }

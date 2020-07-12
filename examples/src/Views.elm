@@ -9,16 +9,42 @@ import Url.Builder
 import WeakCss
 
 
+type alias Metadata example =
+    { segment : String
+    , title : String
+    , description : String
+    , link : String
+    , initialModel : example
+    }
+
+
+type alias BlockMetadata =
+    { title : String
+    , slug : String
+    , allTags : List { segment : String, title : String }
+    }
+
+
 type alias Info =
     { slug : String
     , title : String
     , description : String
+    , link : String
     }
 
 
 type alias SubInfo msg =
     { title : String
     , subView : Html.Html msg
+    , link : String
+    }
+
+
+type alias MenuMeta example =
+    { title : String
+    , slug : String
+    , info : example -> Info
+    , initialModels : List example
     }
 
 
@@ -27,129 +53,134 @@ moduleClass =
     WeakCss.namespace "dnd"
 
 
+bodyView : msg -> Bool -> Html.Html msg -> List (Html.Html msg)
+bodyView showMenu isHome mainContent =
+    [ navView showMenu isHome
+    , mainContent
+    , footerView
+    ]
 
--- Main2
 
-
-headerView : Html.Html msg
-headerView =
-    Html.div
-        [ moduleClass |> WeakCss.nest "header" ]
-        [ Html.div
-            [ moduleClass |> WeakCss.nestMany [ "header", "shell" ] ]
-            [ Html.div
-                [ moduleClass |> WeakCss.nestMany [ "header", "shell", "brand" ] ]
-                [ Html.a
-                    [ moduleClass |> WeakCss.nestMany [ "header", "shell", "brand", "link" ]
-                    , Html.Attributes.href (Url.Builder.absolute [ Path.rootPath ] [])
-                    ]
-                    [ Html.text "dnd-list" ]
-                ]
-            , Html.div
-                [ moduleClass |> WeakCss.addMany [ "header", "shell", "icon" ] |> WeakCss.withStates [ ( "github", True ) ] ]
-                [ Html.a
-                    [ moduleClass |> WeakCss.nestMany [ "header", "shell", "icon", "link" ]
-                    , Html.Attributes.href "https://github.com/annaghi/dnd-list"
-                    ]
-                    [ Icons.githubLogo 22 ]
-                ]
-            , Html.div
-                [ moduleClass |> WeakCss.addMany [ "header", "shell", "icon" ] |> WeakCss.withStates [ ( "docs", True ) ] ]
-                [ Html.a
-                    [ moduleClass |> WeakCss.nestMany [ "header", "shell", "icon", "link" ]
-                    , Html.Attributes.href "https://package.elm-lang.org/packages/annaghi/dnd-list/latest"
-                    ]
-                    [ Icons.elmLogo 22 ]
-                ]
-            , Html.div
-                [ moduleClass |> WeakCss.addMany [ "header", "shell", "icon" ] |> WeakCss.withStates [ ( "menu", True ) ]
-
-                -- , Html.Events.onClick OpenedMenu
-                ]
-                [ Html.div
-                    [ moduleClass |> WeakCss.nestMany [ "header", "shell", "icon", "link" ] ]
-                    [ Icons.hamburger 21 ]
-                ]
+navView : msg -> Bool -> Html.Html msg
+navView showMenu isHome =
+    Html.nav
+        [ moduleClass |> WeakCss.add "nav" |> WeakCss.withStates [ ( "home", isHome ) ] ]
+        [ Html.a
+            [ moduleClass |> WeakCss.nestMany [ "nav", "brand" ]
+            , Html.Attributes.href (Url.Builder.absolute [ Path.rootPath ] [])
             ]
+            [ Html.text "annaghi/dnd-list" ]
+        , Html.a
+            [ moduleClass |> WeakCss.addMany [ "nav", "icon" ] |> WeakCss.withStates [ ( "github", True ) ]
+            , Html.Attributes.href "https://github.com/annaghi/dnd-list"
+            ]
+            [ Icons.githubLogo ]
+        , Html.a
+            [ moduleClass |> WeakCss.addMany [ "nav", "icon" ] |> WeakCss.withStates [ ( "docs", True ) ]
+            , Html.Attributes.href "https://package.elm-lang.org/packages/annaghi/dnd-list/latest"
+            ]
+            [ Icons.elmLogo ]
+        , Html.div
+            [ moduleClass |> WeakCss.addMany [ "nav", "icon" ] |> WeakCss.withStates [ ( "menu", True ) ]
+            , Html.Events.onClick showMenu
+            ]
+            -- TODO Draw a better icon with top padding
+            [ Icons.hamburger ]
         ]
 
 
 footerView : Html.Html msg
 footerView =
-    Html.div
+    Html.footer
         [ moduleClass |> WeakCss.nest "footer" ]
-        [ Html.div
-            [ moduleClass |> WeakCss.nestMany [ "footer", "author" ] ]
-            [ Html.text "© 2019 - 2020 Anna Bansaghi Site source" ]
-        ]
+        [ Html.text "© 2019 - 2020 Anna Bansaghi" ]
 
 
-homeView : Html.Html msg
-homeView =
-    Html.div
-        [ moduleClass |> WeakCss.nestMany [ "content", "main" ] ]
-        [ Html.div
-            [ moduleClass |> WeakCss.nestMany [ "content", "main", "name" ] ]
-            [ Html.text "elm dnd-list" ]
-        , Html.div
-            [ moduleClass |> WeakCss.nestMany [ "content", "main", "description" ] ]
-            [ Html.text "Drag and Drop for sortable lists in "
-            , Html.a [ Html.Attributes.target "_blank" ] [ Html.text "elm" ]
-            , Html.text " with mouse support"
+
+-- <main> CONTENT
+
+
+homeView : List (Html.Html msg) -> Html.Html msg
+homeView chapters =
+    Html.main_
+        [ moduleClass |> WeakCss.nest "home" ]
+        [ Html.section
+            [ moduleClass |> WeakCss.nestMany [ "home", "intro" ] ]
+            [ Html.h1
+                [ moduleClass |> WeakCss.nestMany [ "home", "intro", "name" ] ]
+                [ Html.text "elm dnd-list" ]
+            , Html.div
+                [ moduleClass |> WeakCss.nestMany [ "home", "intro", "description" ] ]
+                [ Html.text "Drag and Drop for sortable lists in "
+                , Html.a [ Html.Attributes.target "_blank" ] [ Html.text "elm" ]
+                , Html.text " with mouse support"
+                ]
             ]
+        , Html.section
+            [ moduleClass |> WeakCss.nestMany [ "home", "chapters" ] ]
+            chapters
         ]
 
 
-navigationView : String -> String -> (example -> Info) -> List example -> Html.Html msg
-navigationView title slug info initialModels =
+
+-- LEVEL 2 NAVIGATION
+
+
+chapterView : String -> BlockMetadata -> Html.Html msg
+chapterView class { title, slug, allTags } =
     Html.div
-        [ moduleClass |> WeakCss.nestMany [ "content", "nav", "section" ] ]
-        [ Html.div
-            [ moduleClass |> WeakCss.nestMany [ "content", "nav", "section", "title" ] ]
+        [ moduleClass |> WeakCss.nestMany [ class, "chapters", "chapter" ] ]
+        [ Html.h2
+            [ moduleClass |> WeakCss.nestMany [ class, "chapters", "chapter", "title" ] ]
             [ Html.text title ]
-        , initialModels
-            |> List.map (linkView slug info)
-            |> Html.ul [ moduleClass |> WeakCss.nestMany [ "content", "nav", "section", "links" ] ]
+        , allTags
+            |> List.map (linkView class slug)
+            |> Html.nav [ moduleClass |> WeakCss.nestMany [ class, "chapters", "chapter", "nav" ] ]
         ]
 
 
-linkView : String -> (example -> Info) -> example -> Html.Html msg
-linkView slug info example =
+linkView : String -> String -> { segment : String, title : String } -> Html.Html msg
+linkView class slug { segment, title } =
     let
         path : String
         path =
-            Url.Builder.absolute [ Path.rootPath, slug, info example |> .slug ] []
+            Url.Builder.absolute [ Path.rootPath, slug, segment ] []
     in
-    Html.li
-        [ moduleClass |> WeakCss.nestMany [ "sidebar", "nav", "section", "links", "item" ] ]
-        [ Html.a
-            [ moduleClass
-                |> WeakCss.addMany [ "sidebar", "nav", "section", "links", "item", "url" ]
-                |> WeakCss.withStates [ ( "is-active", path == slug ) ]
-            , Html.Attributes.href path
-            ]
-            [ Html.text (info example |> .title) ]
+    Html.a
+        [ moduleClass |> WeakCss.nestMany [ class, "chapters", "chapter", "nav", "link" ]
+        , Html.Attributes.href path
         ]
+        [ Html.text title ]
 
 
-demoHeaderView : (example -> Info) -> example -> Html.Html msg
-demoHeaderView info example =
-    let
-        title : String
-        title =
-            info example |> .title
 
-        description : String
-        description =
-            info example |> .description
-    in
+-- DEMO
+
+
+demoHeaderView : { title : String, description : String, link : String } -> Html.Html msg
+demoHeaderView { title, description, link } =
     Html.div
-        [ moduleClass |> WeakCss.nestMany [ "main", "header" ] ]
+        [ moduleClass |> WeakCss.nestMany [ "demo", "content", "intro" ] ]
         [ Html.div
-            [ moduleClass |> WeakCss.nestMany [ "main", "header", "title" ] ]
-            [ Html.text title ]
+            [ moduleClass |> WeakCss.nestMany [ "demo", "content", "intro", "title" ] ]
+            [ Html.h1
+                [ moduleClass |> WeakCss.nestMany [ "demo", "content", "intro", "title", "text" ] ]
+                [ Html.text title ]
+            , Html.a
+                [ moduleClass |> WeakCss.nestMany [ "demo", "content", "intro", "title", "link" ]
+                , Html.Attributes.href link
+                , Html.Attributes.target "_blank"
+                ]
+                [ Html.span
+                    [ moduleClass |> WeakCss.nestMany [ "demo", "content", "intro", "title", "link", "label" ] ]
+                    [ Html.text "Get the code" ]
+                , Html.span
+                    [ moduleClass |> WeakCss.nestMany [ "demo", "content", "intro", "title", "link", "icon" ] ]
+                    [ Icons.externalLink ]
+                ]
+            ]
         , Html.div
-            [ moduleClass |> WeakCss.nestMany [ "main", "header", "description" ] ]
+            [ moduleClass |> WeakCss.nestMany [ "demo", "content", "intro", "description" ] ]
             [ Html.text description ]
         ]
 
@@ -158,19 +189,19 @@ examplesView : (Int -> msg) -> (example -> SubInfo msg) -> Int -> List example -
 examplesView linkClicked info currentId examples =
     examples
         |> List.indexedMap (exampleView linkClicked info currentId)
-        |> Html.ul [ moduleClass |> WeakCss.nestMany [ "main", "examples" ] ]
+        |> Html.ul [ moduleClass |> WeakCss.nestMany [ "demo", "examples" ] ]
 
 
 exampleView : (Int -> msg) -> (example -> SubInfo msg) -> Int -> Int -> example -> Html.Html msg
 exampleView linkClicked info currentId id example =
     Html.li
-        [ moduleClass |> WeakCss.nestMany [ "main", "examples", "item" ] ]
-        [ info example |> .subView
-        , Html.div
+        [ moduleClass |> WeakCss.nestMany [ "demo", "examples", "item" ] ]
+        [ Html.h2
             [ moduleClass
-                |> WeakCss.addMany [ "main", "examples", "item", "link" ]
+                |> WeakCss.addMany [ "demo", "examples", "item", "title" ]
                 |> WeakCss.withStates [ ( "link", True ), ( "is-active", id == currentId ) ]
             , Html.Events.onClick (linkClicked id)
             ]
             [ Html.text (info example |> .title) ]
+        , info example |> .subView
         ]
