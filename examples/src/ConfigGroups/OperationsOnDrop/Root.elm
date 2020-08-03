@@ -11,6 +11,7 @@ module ConfigGroups.OperationsOnDrop.Root exposing
     )
 
 import ConfigGroups.OperationsOnDrop.InsertAfter
+import ConfigGroups.OperationsOnDrop.InsertAround
 import ConfigGroups.OperationsOnDrop.InsertBefore
 import ConfigGroups.OperationsOnDrop.Rotate
 import ConfigGroups.OperationsOnDrop.Swap
@@ -32,6 +33,7 @@ type alias Model =
 type Example
     = InsertAfter ConfigGroups.OperationsOnDrop.InsertAfter.Model
     | InsertBefore ConfigGroups.OperationsOnDrop.InsertBefore.Model
+    | InsertAround ConfigGroups.OperationsOnDrop.InsertAround.Model
     | Rotate ConfigGroups.OperationsOnDrop.Rotate.Model
     | Swap ConfigGroups.OperationsOnDrop.Swap.Model
 
@@ -42,6 +44,7 @@ initialModel =
     , examples =
         [ InsertAfter ConfigGroups.OperationsOnDrop.InsertAfter.initialModel
         , InsertBefore ConfigGroups.OperationsOnDrop.InsertBefore.initialModel
+        , InsertAround ConfigGroups.OperationsOnDrop.InsertAround.initialModel
         , Rotate ConfigGroups.OperationsOnDrop.Rotate.initialModel
         , Swap ConfigGroups.OperationsOnDrop.Swap.initialModel
         ]
@@ -63,9 +66,12 @@ url id =
             "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/ConfigGroups/OperationsOnDrop/InsertBefore.elm"
 
         2 ->
-            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/ConfigGroups/OperationsOnDrop/Rotate.elm"
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/ConfigGroups/OperationsOnDrop/InsertAround.elm"
 
         3 ->
+            "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/ConfigGroups/OperationsOnDrop/Rotate.elm"
+
+        4 ->
             "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/ConfigGroups/OperationsOnDrop/Swap.elm"
 
         _ ->
@@ -80,6 +86,7 @@ type Msg
     = LinkClicked Int
     | InsertAfterMsg ConfigGroups.OperationsOnDrop.InsertAfter.Msg
     | InsertBeforeMsg ConfigGroups.OperationsOnDrop.InsertBefore.Msg
+    | InsertAroundMsg ConfigGroups.OperationsOnDrop.InsertAround.Msg
     | RotateMsg ConfigGroups.OperationsOnDrop.Rotate.Msg
     | SwapMsg ConfigGroups.OperationsOnDrop.Swap.Msg
 
@@ -100,6 +107,9 @@ update message model =
 
                             ( InsertBeforeMsg msg, InsertBefore mo ) ->
                                 stepInsertBefore (ConfigGroups.OperationsOnDrop.InsertBefore.update msg mo)
+
+                            ( InsertAroundMsg msg, InsertAround mo ) ->
+                                stepInsertAround (ConfigGroups.OperationsOnDrop.InsertAround.update msg mo)
 
                             ( RotateMsg msg, Rotate mo ) ->
                                 stepRotate (ConfigGroups.OperationsOnDrop.Rotate.update msg mo)
@@ -122,6 +132,11 @@ stepInsertAfter ( mo, cmds ) =
 stepInsertBefore : ( ConfigGroups.OperationsOnDrop.InsertBefore.Model, Cmd ConfigGroups.OperationsOnDrop.InsertBefore.Msg ) -> ( Example, Cmd Msg )
 stepInsertBefore ( mo, cmds ) =
     ( InsertBefore mo, Cmd.map InsertBeforeMsg cmds )
+
+
+stepInsertAround : ( ConfigGroups.OperationsOnDrop.InsertAround.Model, Cmd ConfigGroups.OperationsOnDrop.InsertAround.Msg ) -> ( Example, Cmd Msg )
+stepInsertAround ( mo, cmds ) =
+    ( InsertAround mo, Cmd.map InsertAroundMsg cmds )
 
 
 stepRotate : ( ConfigGroups.OperationsOnDrop.Rotate.Model, Cmd ConfigGroups.OperationsOnDrop.Rotate.Msg ) -> ( Example, Cmd Msg )
@@ -149,6 +164,9 @@ subscriptions model =
 
                     InsertBefore mo ->
                         Sub.map InsertBeforeMsg (ConfigGroups.OperationsOnDrop.InsertBefore.subscriptions mo)
+
+                    InsertAround mo ->
+                        Sub.map InsertAroundMsg (ConfigGroups.OperationsOnDrop.InsertAround.subscriptions mo)
 
                     Rotate mo ->
                         Sub.map RotateMsg (ConfigGroups.OperationsOnDrop.Rotate.subscriptions mo)
@@ -196,6 +214,9 @@ demoView example =
         InsertBefore mo ->
             Html.map InsertBeforeMsg (ConfigGroups.OperationsOnDrop.InsertBefore.view mo)
 
+        InsertAround mo ->
+            Html.map InsertAroundMsg (ConfigGroups.OperationsOnDrop.InsertAround.view mo)
+
         Rotate mo ->
             Html.map RotateMsg (ConfigGroups.OperationsOnDrop.Rotate.view mo)
 
@@ -219,6 +240,9 @@ info example =
 
         InsertBefore _ ->
             "Insert before"
+
+        InsertAround _ ->
+            "Insert Around"
 
         Rotate _ ->
             "Rotate"
