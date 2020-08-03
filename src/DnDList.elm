@@ -621,14 +621,18 @@ update { beforeUpdate, listen, operation } msg (Model model) list =
             case ( model, listen ) of
                 ( Just state, OnDrag ) ->
                     if state.dragCounter > 1 && state.dragIndex /= dropIndex then
-                        ( Model (Just (stateUpdate operation dropIndex state))
+                        let
+                            half =
+                                getCurrentHalf state.currentPosition state.dropElement
+                        in
+                        ( Model (Just (stateUpdate operation dropIndex half state))
                         , list
                             |> beforeUpdate state.dragIndex dropIndex
                             |> listUpdate
                                 operation
                                 state.dragIndex
                                 dropIndex
-                                (getCurrentHalf state.currentPosition state.dropElement)
+                                half
                         )
 
                     else
@@ -689,8 +693,8 @@ update { beforeUpdate, listen, operation } msg (Model model) list =
             )
 
 
-stateUpdate : Operation -> DropIndex -> State -> State
-stateUpdate operation dropIndex state =
+stateUpdate : Operation -> DropIndex -> ElementHalf -> State -> State
+stateUpdate operation dropIndex whichHalf state =
     case operation of
         InsertAfter ->
             { state
@@ -715,11 +719,12 @@ stateUpdate operation dropIndex state =
             }
 
         InsertAround ->
-            { state
-                | -- TODO :shrug: I don't understand this yet
-                  dragIndex = dropIndex
-                , dragCounter = 0
-            }
+            case whichHalf of
+                LeftHalf ->
+                    stateUpdate InsertBefore dropIndex whichHalf state
+
+                RightHalf ->
+                    stateUpdate InsertAfter dropIndex whichHalf state
 
         Rotate ->
             { state | dragIndex = dropIndex, dragCounter = 0 }
