@@ -42,8 +42,8 @@ insertBefore dragIndex dropIndex list =
         list
 
 
-insertAround : Int -> Int -> ElementHalf -> List a -> List a
-insertAround dragIndex dropIndex whichHalf list =
+insertAround : ElementHalf -> Int -> Int -> List a -> List a
+insertAround whichHalf dragIndex dropIndex list =
     case whichHalf of
         LeftHalf ->
             insertBefore dragIndex dropIndex list

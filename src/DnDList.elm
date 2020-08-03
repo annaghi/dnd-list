@@ -741,7 +741,7 @@ listUpdate operation dragIndex dropIndex whichHalf list =
             Internal.Common.Operations.insertBefore dragIndex dropIndex list
 
         InsertAround ->
-            Internal.Common.Operations.insertAround dragIndex dropIndex whichHalf list
+            Internal.Common.Operations.insertAround whichHalf dragIndex dropIndex list
 
         Rotate ->
             Internal.Common.Operations.rotate dragIndex dropIndex list

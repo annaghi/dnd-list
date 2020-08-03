@@ -24,8 +24,8 @@ suite =
                 Expect.all
                     ([ insertAfter 0 0 []
                      , insertBefore 0 0 []
-                     , insertAround 0 0 LeftHalf []
-                     , insertAround 0 0 RightHalf []
+                     , insertAround LeftHalf 0 0 []
+                     , insertAround RightHalf 0 0 []
                      , rotate 0 0 []
                      , swap 0 0 []
                      ]
@@ -37,8 +37,8 @@ suite =
                 Expect.all
                     ([ insertAfter 0 0 [ 4 ]
                      , insertBefore 0 0 [ 4 ]
-                     , insertAround 0 0 LeftHalf [ 4 ]
-                     , insertAround 0 0 RightHalf [ 4 ]
+                     , insertAround LeftHalf 0 0 [ 4 ]
+                     , insertAround RightHalf 0 0 [ 4 ]
                      , rotate 0 0 [ 4 ]
                      , swap 0 0 [ 4 ]
                      ]
@@ -49,8 +49,8 @@ suite =
             \() ->
                 [ insertAfter 0 0 [ 4, 8 ]
                 , insertBefore 0 0 [ 4, 8 ]
-                , insertAround 0 0 LeftHalf [ 4, 8 ]
-                , insertAround 0 0 RightHalf [ 4, 8 ]
+                , insertAround LeftHalf 0 0 [ 4, 8 ]
+                , insertAround RightHalf 0 0 [ 4, 8 ]
                 , rotate 0 0 [ 4, 8 ]
                 , swap 0 0 [ 4, 8 ]
                 ]
@@ -66,8 +66,8 @@ suite =
             \() ->
                 [ insertAfter 1 1 [ 4, 8 ]
                 , insertBefore 1 1 [ 4, 8 ]
-                , insertAround 1 1 LeftHalf [ 4, 8 ]
-                , insertAround 1 1 RightHalf [ 4, 8 ]
+                , insertAround LeftHalf 1 1 [ 4, 8 ]
+                , insertAround RightHalf 1 1 [ 4, 8 ]
                 , rotate 1 1 [ 4, 8 ]
                 , swap 1 1 [ 4, 8 ]
                 ]
@@ -83,8 +83,8 @@ suite =
             \() ->
                 [ insertAfter 0 1 [ 4, 8 ]
                 , insertBefore 0 1 [ 4, 8 ]
-                , insertAround 0 1 LeftHalf [ 4, 8 ]
-                , insertAround 0 1 RightHalf [ 4, 8 ]
+                , insertAround LeftHalf 0 1 [ 4, 8 ]
+                , insertAround RightHalf 0 1 [ 4, 8 ]
                 , rotate 0 1 [ 4, 8 ]
                 , swap 0 1 [ 4, 8 ]
                 ]
@@ -100,8 +100,8 @@ suite =
             \() ->
                 [ insertAfter 1 0 [ 4, 8 ]
                 , insertBefore 1 0 [ 4, 8 ]
-                , insertAround 1 0 LeftHalf [ 4, 8 ]
-                , insertAround 1 0 RightHalf [ 4, 8 ]
+                , insertAround LeftHalf 1 0 [ 4, 8 ]
+                , insertAround RightHalf 1 0 [ 4, 8 ]
                 , rotate 1 0 [ 4, 8 ]
                 , swap 1 0 [ 4, 8 ]
                 ]
@@ -125,14 +125,14 @@ suite =
                 in
                 [ insertAfter dragIndex dropIndex list
                 , insertBefore dragIndex dropIndex list
-                , insertAround dragIndex dropIndex whichHalf list
+                , insertAround whichHalf dragIndex dropIndex list
                 , rotate dragIndex dropIndex list
                 , swap dragIndex dropIndex list
                 ]
                     |> Expect.equalLists
                         [ (List.reverse >> insertBefore (n - dragIndex) (n - dropIndex) >> List.reverse) list
                         , (List.reverse >> insertAfter (n - dragIndex) (n - dropIndex) >> List.reverse) list
-                        , (List.reverse >> insertAround (n - dragIndex) (n - dropIndex) theOtherHalf >> List.reverse) list
+                        , (List.reverse >> insertAround theOtherHalf (n - dragIndex) (n - dropIndex) >> List.reverse) list
                         , (List.reverse >> rotate (n - dragIndex) (n - dropIndex) >> List.reverse) list
                         , swap dropIndex dragIndex list
                         ]
