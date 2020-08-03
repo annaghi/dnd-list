@@ -1,9 +1,21 @@
 module Internal.Common.Operations exposing
-    ( insertAfter
+    ( ElementHalf(..)
+    , insertAfter
+    , insertAround
     , insertBefore
     , rotate
     , swap
     )
+
+{-| -}
+
+
+{-| Useful for insertAround, which does different things depending on which half
+of the element you drop on.
+-}
+type ElementHalf
+    = LeftHalf
+    | RightHalf
 
 
 insertAfter : Int -> Int -> List a -> List a
@@ -28,6 +40,16 @@ insertBefore dragIndex dropIndex list =
 
     else
         list
+
+
+insertAround : Int -> Int -> ElementHalf -> List a -> List a
+insertAround dragIndex dropIndex whichHalf list =
+    case whichHalf of
+        LeftHalf ->
+            insertBefore dragIndex dropIndex list
+
+        RightHalf ->
+            insertAfter dragIndex dropIndex list
 
 
 rotate : Int -> Int -> List a -> List a

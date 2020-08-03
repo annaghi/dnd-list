@@ -221,7 +221,7 @@ import Browser.Events
 import Html
 import Html.Attributes
 import Html.Events
-import Internal.Common.Operations
+import Internal.Common.Operations exposing (ElementHalf(..))
 import Internal.Common.Utils
 import Json.Decode
 import Task
@@ -388,6 +388,10 @@ and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop)
 
   - `InsertBefore`: The drag source item will be inserted before the drop target item.
 
+  - `InsertAround`: The drag source item will be inserted either before or after
+    the drop target item, depending on which half (left/right) of the drop target
+    item it was dropped on.
+
   - `Rotate`: The items between the drag source and the drop target items will be circularly shifted.
 
   - `Swap`: The drag source and the drop target items will be swapped.
@@ -398,6 +402,7 @@ and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop)
 type Operation
     = InsertAfter
     | InsertBefore
+    | InsertAround
     | Rotate
     | Swap
     | Unaltered
@@ -619,7 +624,11 @@ update { beforeUpdate, listen, operation } msg (Model model) list =
                         ( Model (Just (stateUpdate operation dropIndex state))
                         , list
                             |> beforeUpdate state.dragIndex dropIndex
-                            |> listUpdate operation state.dragIndex dropIndex
+                            |> listUpdate
+                                operation
+                                state.dragIndex
+                                dropIndex
+                                (getCurrentHalf state.currentPosition state.dropElement)
                         )
 
                     else
@@ -646,7 +655,11 @@ update { beforeUpdate, listen, operation } msg (Model model) list =
                         ( Model Nothing
                         , list
                             |> beforeUpdate state.dragIndex state.dropIndex
-                            |> listUpdate operation state.dragIndex state.dropIndex
+                            |> listUpdate
+                                operation
+                                state.dragIndex
+                                state.dropIndex
+                                (getCurrentHalf state.currentPosition state.dropElement)
                         )
 
                     else
@@ -701,6 +714,13 @@ stateUpdate operation dropIndex state =
                 , dragCounter = 0
             }
 
+        InsertAround ->
+            { state
+                | -- TODO :shrug: I don't understand this yet
+                  dragIndex = dropIndex
+                , dragCounter = 0
+            }
+
         Rotate ->
             { state | dragIndex = dropIndex, dragCounter = 0 }
 
@@ -711,14 +731,17 @@ stateUpdate operation dropIndex state =
             { state | dragCounter = 0 }
 
 
-listUpdate : Operation -> DragIndex -> DropIndex -> List a -> List a
-listUpdate operation dragIndex dropIndex list =
+listUpdate : Operation -> DragIndex -> DropIndex -> ElementHalf -> List a -> List a
+listUpdate operation dragIndex dropIndex whichHalf list =
     case operation of
         InsertAfter ->
             Internal.Common.Operations.insertAfter dragIndex dropIndex list
 
         InsertBefore ->
             Internal.Common.Operations.insertBefore dragIndex dropIndex list
+
+        InsertAround ->
+            Internal.Common.Operations.insertAround dragIndex dropIndex whichHalf list
 
         Rotate ->
             Internal.Common.Operations.rotate dragIndex dropIndex list
@@ -813,3 +836,22 @@ type alias Position =
     { x : Float
     , y : Float
     }
+
+
+getCurrentHalf : Position -> Maybe Browser.Dom.Element -> ElementHalf
+getCurrentHalf position dropElement =
+    case dropElement of
+        Nothing ->
+            -- Doesn't matter
+            LeftHalf
+
+        Just element ->
+            let
+                halfX =
+                    element.element.x + element.element.width / 2
+            in
+            if position.x < halfX then
+                LeftHalf
+
+            else
+                RightHalf

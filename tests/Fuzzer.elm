@@ -1,8 +1,9 @@
 module Fuzzer exposing (ddlFuzzer, fixedLFuzzer, glFuzzer, ilFuzzer)
 
 import Fuzz
+import Internal.Common.Operations exposing (ElementHalf(..))
 import Random
-import Shrink
+import Shrink exposing (Shrinker)
 
 
 
@@ -13,6 +14,7 @@ type alias DDL =
     { dragIndex : Int
     , dropIndex : Int
     , list : List Int
+    , whichHalf : ElementHalf
     }
 
 
@@ -21,17 +23,47 @@ ddlGenerator =
     Random.int 1 30
         |> Random.andThen
             (\n ->
-                Random.map3 DDL
+                Random.map4 DDL
                     (Random.int 0 (n - 1))
                     (Random.int 0 (n - 1))
                     (Random.list n (Random.int 0 5))
+                    (Random.uniform LeftHalf [ RightHalf ])
             )
 
 
-ddlShrinker { dragIndex, dropIndex, list } =
+ddlShrinker { dragIndex, dropIndex, list, whichHalf } =
     Shrink.map DDL (Shrink.int dragIndex)
         |> Shrink.andMap (Shrink.int dropIndex)
         |> Shrink.andMap (Shrink.list Shrink.int list)
+        |> Shrink.andMap (elementHalfShrinker whichHalf)
+
+
+elementHalfShrinker : Shrinker ElementHalf
+elementHalfShrinker =
+    Shrink.convert
+        elementHalfFromBool
+        elementHalfToBool
+        Shrink.bool
+
+
+elementHalfToBool : ElementHalf -> Bool
+elementHalfToBool half =
+    case half of
+        LeftHalf ->
+            False
+
+        RightHalf ->
+            True
+
+
+elementHalfFromBool : Bool -> ElementHalf
+elementHalfFromBool bool =
+    case bool of
+        False ->
+            LeftHalf
+
+        True ->
+            RightHalf
 
 
 ddlFuzzer : Fuzz.Fuzzer DDL
