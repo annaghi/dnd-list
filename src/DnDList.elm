@@ -585,7 +585,7 @@ type Msg
 
 
 update : Config a -> Msg -> Model -> List a -> ( Model, List a )
-update { beforeUpdate, listen, operation } msg (Model model) list =
+update { movement, beforeUpdate, listen, operation } msg (Model model) list =
     case msg of
         DragStart dragIndex dragElementId xy ->
             ( Model <|
@@ -623,7 +623,10 @@ update { beforeUpdate, listen, operation } msg (Model model) list =
                     if state.dragCounter > 1 && state.dragIndex /= dropIndex then
                         let
                             half =
-                                getCurrentHalf state.currentPosition state.dropElement
+                                getCurrentHalf
+                                    movement
+                                    state.currentPosition
+                                    state.dropElement
                         in
                         ( Model (Just (stateUpdate operation dropIndex half state))
                         , list
@@ -663,7 +666,11 @@ update { beforeUpdate, listen, operation } msg (Model model) list =
                                 operation
                                 state.dragIndex
                                 state.dropIndex
-                                (getCurrentHalf state.currentPosition state.dropElement)
+                                (getCurrentHalf
+                                    movement
+                                    state.currentPosition
+                                    state.dropElement
+                                )
                         )
 
                     else
@@ -843,20 +850,71 @@ type alias Position =
     }
 
 
-getCurrentHalf : Position -> Maybe Browser.Dom.Element -> ElementHalf
-getCurrentHalf position dropElement =
+getCurrentHalf : Movement -> Position -> Maybe Browser.Dom.Element -> ElementHalf
+getCurrentHalf movement position dropElement =
     case dropElement of
         Nothing ->
             -- Doesn't matter
             HalfBefore
 
         Just element ->
-            let
-                halfX =
-                    element.element.x + element.element.width / 2
-            in
-            if position.x < halfX then
-                HalfBefore
+            case movement of
+                Free ->
+                    {- Whichever is further from the center, we use that one.
 
-            else
-                HalfAfter
+                       There are edge cases: if center is (0,0) then:
+                       * (-1,1) = same distance to left (HalfBefore) and bottom (HalfAfter)
+                       * (1,-1) = same distance to right (HalfAfter) and top (HalfBefore)
+
+                       We prefer whatever the horizontal decision is in those cases:
+                       * (-1,1) => HalfBefore
+                       * (1,-1) => HalfAfter
+
+                    -}
+                    let
+                        halfX =
+                            element.element.x + element.element.width / 2
+
+                        halfY =
+                            element.element.y + element.element.height / 2
+
+                        distanceFromCenterX =
+                            abs (position.x - halfX)
+
+                        distanceFromCenterY =
+                            abs (position.y - halfY)
+                    in
+                    if distanceFromCenterX > distanceFromCenterY then
+                        if position.x < halfX then
+                            HalfBefore
+
+                        else
+                            HalfAfter
+
+                    else if position.y < halfY then
+                        HalfBefore
+
+                    else
+                        HalfAfter
+
+                Horizontal ->
+                    let
+                        halfX =
+                            element.element.x + element.element.width / 2
+                    in
+                    if position.x < halfX then
+                        HalfBefore
+
+                    else
+                        HalfAfter
+
+                Vertical ->
+                    let
+                        halfY =
+                            element.element.y + element.element.height / 2
+                    in
+                    if position.y < halfY then
+                        HalfBefore
+
+                    else
+                        HalfAfter
