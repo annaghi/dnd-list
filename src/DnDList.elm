@@ -389,8 +389,8 @@ and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop)
   - `InsertBefore`: The drag source item will be inserted before the drop target item.
 
   - `InsertAround`: The drag source item will be inserted either before or after
-    the drop target item, depending on which half (left/right) of the drop target
-    item it was dropped on.
+    the drop target item, depending on which half (left/right or top/bottom) of
+    the drop target item it was dropped on.
 
   - `Rotate`: The items between the drag source and the drop target items will be circularly shifted.
 
