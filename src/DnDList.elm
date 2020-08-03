@@ -720,10 +720,10 @@ stateUpdate operation dropIndex whichHalf state =
 
         InsertAround ->
             case whichHalf of
-                LeftHalf ->
+                HalfBefore ->
                     stateUpdate InsertBefore dropIndex whichHalf state
 
-                RightHalf ->
+                HalfAfter ->
                     stateUpdate InsertAfter dropIndex whichHalf state
 
         Rotate ->
@@ -848,7 +848,7 @@ getCurrentHalf position dropElement =
     case dropElement of
         Nothing ->
             -- Doesn't matter
-            LeftHalf
+            HalfBefore
 
         Just element ->
             let
@@ -856,7 +856,7 @@ getCurrentHalf position dropElement =
                     element.element.x + element.element.width / 2
             in
             if position.x < halfX then
-                LeftHalf
+                HalfBefore
 
             else
-                RightHalf
+                HalfAfter

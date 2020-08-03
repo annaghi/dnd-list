@@ -14,8 +14,8 @@ module Internal.Common.Operations exposing
 of the element you drop on.
 -}
 type ElementHalf
-    = LeftHalf
-    | RightHalf
+    = HalfBefore
+    | HalfAfter
 
 
 insertAfter : Int -> Int -> List a -> List a
@@ -45,10 +45,10 @@ insertBefore dragIndex dropIndex list =
 insertAround : ElementHalf -> Int -> Int -> List a -> List a
 insertAround whichHalf dragIndex dropIndex list =
     case whichHalf of
-        LeftHalf ->
+        HalfBefore ->
             insertBefore dragIndex dropIndex list
 
-        RightHalf ->
+        HalfAfter ->
             insertAfter dragIndex dropIndex list
 
 

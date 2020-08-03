@@ -28,8 +28,8 @@ ddlGenerator =
                     (Random.int 0 (n - 1))
                     (Random.list n (Random.int 0 5))
                     (Random.uniform
-                        Internal.Common.Operations.LeftHalf
-                        [ Internal.Common.Operations.RightHalf ]
+                        Internal.Common.Operations.HalfBefore
+                        [ Internal.Common.Operations.HalfAfter ]
                     )
             )
 
@@ -52,10 +52,10 @@ elementHalfShrinker =
 elementHalfToBool : Internal.Common.Operations.ElementHalf -> Bool
 elementHalfToBool half =
     case half of
-        Internal.Common.Operations.LeftHalf ->
+        Internal.Common.Operations.HalfBefore ->
             False
 
-        Internal.Common.Operations.RightHalf ->
+        Internal.Common.Operations.HalfAfter ->
             True
 
 
@@ -63,10 +63,10 @@ elementHalfFromBool : Bool -> Internal.Common.Operations.ElementHalf
 elementHalfFromBool bool =
     case bool of
         False ->
-            Internal.Common.Operations.LeftHalf
+            Internal.Common.Operations.HalfBefore
 
         True ->
-            Internal.Common.Operations.RightHalf
+            Internal.Common.Operations.HalfAfter
 
 
 ddlFuzzer : Fuzz.Fuzzer DDL

@@ -9,11 +9,11 @@ import Test
 otherHalf : ElementHalf -> ElementHalf
 otherHalf half =
     case half of
-        LeftHalf ->
-            RightHalf
+        HalfBefore ->
+            HalfAfter
 
-        RightHalf ->
-            LeftHalf
+        HalfAfter ->
+            HalfBefore
 
 
 suite : Test.Test
@@ -24,8 +24,8 @@ suite =
                 Expect.all
                     ([ insertAfter 0 0 []
                      , insertBefore 0 0 []
-                     , insertAround LeftHalf 0 0 []
-                     , insertAround RightHalf 0 0 []
+                     , insertAround HalfBefore 0 0 []
+                     , insertAround HalfAfter 0 0 []
                      , rotate 0 0 []
                      , swap 0 0 []
                      ]
@@ -37,8 +37,8 @@ suite =
                 Expect.all
                     ([ insertAfter 0 0 [ 4 ]
                      , insertBefore 0 0 [ 4 ]
-                     , insertAround LeftHalf 0 0 [ 4 ]
-                     , insertAround RightHalf 0 0 [ 4 ]
+                     , insertAround HalfBefore 0 0 [ 4 ]
+                     , insertAround HalfAfter 0 0 [ 4 ]
                      , rotate 0 0 [ 4 ]
                      , swap 0 0 [ 4 ]
                      ]
@@ -49,8 +49,8 @@ suite =
             \() ->
                 [ insertAfter 0 0 [ 4, 8 ]
                 , insertBefore 0 0 [ 4, 8 ]
-                , insertAround LeftHalf 0 0 [ 4, 8 ]
-                , insertAround RightHalf 0 0 [ 4, 8 ]
+                , insertAround HalfBefore 0 0 [ 4, 8 ]
+                , insertAround HalfAfter 0 0 [ 4, 8 ]
                 , rotate 0 0 [ 4, 8 ]
                 , swap 0 0 [ 4, 8 ]
                 ]
@@ -66,8 +66,8 @@ suite =
             \() ->
                 [ insertAfter 1 1 [ 4, 8 ]
                 , insertBefore 1 1 [ 4, 8 ]
-                , insertAround LeftHalf 1 1 [ 4, 8 ]
-                , insertAround RightHalf 1 1 [ 4, 8 ]
+                , insertAround HalfBefore 1 1 [ 4, 8 ]
+                , insertAround HalfAfter 1 1 [ 4, 8 ]
                 , rotate 1 1 [ 4, 8 ]
                 , swap 1 1 [ 4, 8 ]
                 ]
@@ -83,8 +83,8 @@ suite =
             \() ->
                 [ insertAfter 0 1 [ 4, 8 ]
                 , insertBefore 0 1 [ 4, 8 ]
-                , insertAround LeftHalf 0 1 [ 4, 8 ]
-                , insertAround RightHalf 0 1 [ 4, 8 ]
+                , insertAround HalfBefore 0 1 [ 4, 8 ]
+                , insertAround HalfAfter 0 1 [ 4, 8 ]
                 , rotate 0 1 [ 4, 8 ]
                 , swap 0 1 [ 4, 8 ]
                 ]
@@ -100,8 +100,8 @@ suite =
             \() ->
                 [ insertAfter 1 0 [ 4, 8 ]
                 , insertBefore 1 0 [ 4, 8 ]
-                , insertAround LeftHalf 1 0 [ 4, 8 ]
-                , insertAround RightHalf 1 0 [ 4, 8 ]
+                , insertAround HalfBefore 1 0 [ 4, 8 ]
+                , insertAround HalfAfter 1 0 [ 4, 8 ]
                 , rotate 1 0 [ 4, 8 ]
                 , swap 1 0 [ 4, 8 ]
                 ]
