@@ -244,7 +244,7 @@ import Browser.Events
 import Html
 import Html.Attributes
 import Html.Events
-import Internal.Common.Operations
+import Internal.Common.Operations exposing (ElementHalf(..))
 import Internal.Common.Utils
 import Internal.Groups
 import Json.Decode
@@ -448,6 +448,10 @@ and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop)
 
   - `InsertBefore`: The drag source item will be inserted before the drop target item.
 
+  - `InsertAround`: The drag source item will be inserted either before or after
+    the drop target item, depending on which half (left/right or top/bottom) of
+    the drop target item it was dropped on.
+
   - `Rotate`: The items between the drag source and the drop target items will be circularly shifted.
 
   - `Swap`: The drag source and the drop target items will be swapped.
@@ -458,6 +462,7 @@ and [sorting on drop](https://annaghi.github.io/dnd-list/config/operations-drop)
 type Operation
     = InsertAfter
     | InsertBefore
+    | InsertAround
     | Rotate
     | Swap
     | Unaltered
@@ -680,19 +685,23 @@ update { beforeUpdate, listen, operation, groups } msg (Model model) list =
                             equalGroups : Bool
                             equalGroups =
                                 Internal.Groups.equalGroups groups.comparator state.dragIndex dropIndex list
+
+                            half : ElementHalf
+                            half =
+                                getCurrentHalf state.currentPosition state.dropElement
                         in
                         if listen == OnDrag && equalGroups then
-                            ( Model (Just (stateUpdate operation dropIndex state))
+                            ( Model (Just (stateUpdate operation dropIndex half state))
                             , list
                                 |> beforeUpdate state.dragIndex dropIndex
-                                |> sublistUpdate operation state.dragIndex dropIndex
+                                |> sublistUpdate operation state.dragIndex dropIndex half
                             )
 
                         else if groups.listen == OnDrag && not equalGroups then
-                            ( Model (Just (stateUpdate groups.operation dropIndex state))
+                            ( Model (Just (stateUpdate groups.operation dropIndex half state))
                             , list
                                 |> beforeUpdate state.dragIndex dropIndex
-                                |> listUpdate groups.operation groups.comparator groups.setter state.dragIndex dropIndex
+                                |> listUpdate groups.operation groups.comparator groups.setter half state.dragIndex dropIndex
                             )
 
                         else
@@ -719,19 +728,23 @@ update { beforeUpdate, listen, operation, groups } msg (Model model) list =
                             equalGroups : Bool
                             equalGroups =
                                 Internal.Groups.equalGroups groups.comparator state.dragIndex state.dropIndex list
+
+                            half : ElementHalf
+                            half =
+                                getCurrentHalf state.currentPosition state.dropElement
                         in
                         if listen == OnDrop && equalGroups then
                             ( Model Nothing
                             , list
                                 |> beforeUpdate state.dragIndex state.dropIndex
-                                |> sublistUpdate operation state.dragIndex state.dropIndex
+                                |> sublistUpdate operation state.dragIndex state.dropIndex half
                             )
 
                         else if groups.listen == OnDrop && not equalGroups then
                             ( Model Nothing
                             , list
                                 |> beforeUpdate state.dragIndex state.dropIndex
-                                |> listUpdate groups.operation groups.comparator groups.setter state.dragIndex state.dropIndex
+                                |> listUpdate groups.operation groups.comparator groups.setter half state.dragIndex state.dropIndex
                             )
 
                         else
@@ -764,8 +777,8 @@ update { beforeUpdate, listen, operation, groups } msg (Model model) list =
             )
 
 
-stateUpdate : Operation -> DropIndex -> State -> State
-stateUpdate operation dropIndex state =
+stateUpdate : Operation -> DropIndex -> ElementHalf -> State -> State
+stateUpdate operation dropIndex whichHalf state =
     case operation of
         InsertAfter ->
             { state
@@ -789,6 +802,14 @@ stateUpdate operation dropIndex state =
                 , dragCounter = 0
             }
 
+        InsertAround ->
+            case whichHalf of
+                HalfBefore ->
+                    stateUpdate InsertBefore dropIndex whichHalf state
+
+                HalfAfter ->
+                    stateUpdate InsertAfter dropIndex whichHalf state
+
         Rotate ->
             { state | dragIndex = dropIndex, dragCounter = 0 }
 
@@ -799,14 +820,17 @@ stateUpdate operation dropIndex state =
             { state | dragCounter = 0 }
 
 
-sublistUpdate : Operation -> DragIndex -> DropIndex -> List a -> List a
-sublistUpdate operation dragIndex dropIndex list =
+sublistUpdate : Operation -> DragIndex -> DropIndex -> ElementHalf -> List a -> List a
+sublistUpdate operation dragIndex dropIndex whichHalf list =
     case operation of
         InsertAfter ->
             Internal.Common.Operations.insertAfter dragIndex dropIndex list
 
         InsertBefore ->
             Internal.Common.Operations.insertBefore dragIndex dropIndex list
+
+        InsertAround ->
+            Internal.Common.Operations.insertAround whichHalf dragIndex dropIndex list
 
         Rotate ->
             Internal.Common.Operations.rotate dragIndex dropIndex list
@@ -818,8 +842,8 @@ sublistUpdate operation dragIndex dropIndex list =
             list
 
 
-listUpdate : Operation -> (a -> a -> Bool) -> (a -> a -> a) -> DragIndex -> DropIndex -> List a -> List a
-listUpdate operation comparator setter dragIndex dropIndex list =
+listUpdate : Operation -> (a -> a -> Bool) -> (a -> a -> a) -> ElementHalf -> DragIndex -> DropIndex -> List a -> List a
+listUpdate operation comparator setter whichHalf dragIndex dropIndex list =
     case operation of
         InsertAfter ->
             list
@@ -830,6 +854,11 @@ listUpdate operation comparator setter dragIndex dropIndex list =
             list
                 |> Internal.Groups.dragGroupUpdate setter dragIndex dropIndex
                 |> Internal.Common.Operations.insertBefore dragIndex dropIndex
+
+        InsertAround ->
+            list
+                |> Internal.Groups.dragGroupUpdate setter dragIndex dropIndex
+                |> Internal.Common.Operations.insertAround whichHalf dragIndex dropIndex
 
         Rotate ->
             if dragIndex < dropIndex then
@@ -917,3 +946,49 @@ type alias Position =
     { x : Float
     , y : Float
     }
+
+
+getCurrentHalf : Position -> Maybe Browser.Dom.Element -> ElementHalf
+getCurrentHalf position dropElement =
+    case dropElement of
+        Nothing ->
+            -- Doesn't matter
+            HalfBefore
+
+        Just element ->
+            {- Whichever is further from the center, we use that one.
+
+               There are edge cases: if center is (0,0) then:
+               * (-1,1) = same distance to left (HalfBefore) and bottom (HalfAfter)
+               * (1,-1) = same distance to right (HalfAfter) and top (HalfBefore)
+
+               We prefer whatever the horizontal decision is in those cases:
+               * (-1,1) => HalfBefore
+               * (1,-1) => HalfAfter
+
+            -}
+            let
+                halfX =
+                    element.element.x + element.element.width / 2
+
+                halfY =
+                    element.element.y + element.element.height / 2
+
+                distanceFromCenterX =
+                    abs (position.x - halfX)
+
+                distanceFromCenterY =
+                    abs (position.y - halfY)
+            in
+            if distanceFromCenterX > distanceFromCenterY then
+                if position.x < halfX then
+                    HalfBefore
+
+                else
+                    HalfAfter
+
+            else if position.y < halfY then
+                HalfBefore
+
+            else
+                HalfAfter
