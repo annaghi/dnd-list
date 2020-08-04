@@ -216,14 +216,9 @@ itemView model offset localIndex { group, value, color } =
     in
     case ( system.info model.dnd, maybeDragItem model ) of
         ( Just { dragIndex, dropIndex }, Just dragItem ) ->
-            if value == "" && group /= dragItem.group then
+            if value == "" then
                 Html.div
                     (Html.Attributes.id itemId :: auxiliaryItemStyles ++ system.dropEvents globalIndex itemId)
-                    []
-
-            else if value == "" && group == dragItem.group then
-                Html.div
-                    (Html.Attributes.id itemId :: auxiliaryItemStyles)
                     []
 
             else if globalIndex /= dragIndex && globalIndex /= dropIndex then
