@@ -5,9 +5,12 @@ import DnDList
 import Html
 import Html.Attributes
 import Html.Events
+import Json.Encode
 
 
 
+
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -50,7 +53,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.create config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 

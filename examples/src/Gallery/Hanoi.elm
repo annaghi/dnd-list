@@ -4,9 +4,12 @@ import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Json.Encode
 
 
 
+
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -59,7 +62,7 @@ config =
 
 system : DnDList.System Disk Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.create config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 updateTower : Int -> Int -> List Disk -> List Disk

@@ -5,9 +5,12 @@ import DnDList
 import DnDList.Groups
 import Html
 import Html.Attributes
+import Json.Encode
 
 
 
+
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -96,7 +99,7 @@ columnConfig =
 
 columnSystem : DnDList.System (List Card) Msg
 columnSystem =
-    DnDList.create columnConfig ColumnMoved
+    DnDList.create columnConfig ColumnMoved onPointerMove onPointerUp releasePointerCapture
 
 
 

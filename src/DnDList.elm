@@ -224,7 +224,9 @@ import Html.Events
 import Internal.Common.Operations
 import Internal.Common.Utils
 import Json.Decode
+import Json.Encode
 import Task
+import Process
 
 
 {-| Represents the internal model of the current drag and drop features.
@@ -257,6 +259,7 @@ type alias State =
     , dropElementId : DropElementId
     , dragElement : Maybe Browser.Dom.Element
     , dropElement : Maybe Browser.Dom.Element
+    , pointerCaptureEvent : Maybe Json.Decode.Value
     }
 
 
@@ -298,14 +301,15 @@ Now the `System` is a wrapper type around the list item and our message types:
 
     system : DnDList.System Fruit Msg
     system =
-        DnDList.create config MyMsg
+        DnDList.create config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 -}
-create : Config a -> (Msg -> msg) -> System a msg
-create config stepMsg =
+create : Config a -> (Msg -> msg) -> ((Json.Encode.Value -> msg) -> Sub msg) -> ((Json.Encode.Value -> msg) -> Sub msg) -> (Json.Decode.Value -> Cmd msg) -> System a msg
+create config stepMsg onPointerMove onPointerUp releasePointerCapture =
+    -- probably onPointerMove onPointerUp should go in config
     { model = Model Nothing
-    , subscriptions = subscriptions stepMsg
-    , commands = commands stepMsg
+    , subscriptions = subscriptions stepMsg onPointerMove onPointerUp
+    , commands = commands stepMsg releasePointerCapture
     , update = update config
     , dragEvents = dragEvents stepMsg
     , dropEvents = dropEvents stepMsg
@@ -512,25 +516,41 @@ info (Model model) =
         model
 
 
-subscriptions : (Msg -> msg) -> Model -> Sub msg
-subscriptions stepMsg (Model model) =
+subscriptions : (Msg -> msg) -> ((Json.Encode.Value -> msg) -> Sub msg) -> ((Json.Encode.Value -> msg) -> Sub msg) -> Model -> Sub msg
+subscriptions stepMsg onPointerMove onPointerUp (Model model) =
     case model of
         Nothing ->
             Sub.none
 
         Just _ ->
             Sub.batch
-                [ Browser.Events.onMouseMove
-                    (Internal.Common.Utils.decodeCoordinates
-                        |> Json.Decode.map (stepMsg << Drag)
+                [ 
+                --     Browser.Events.onMouseMove
+                --     (Internal.Common.Utils.decodeCoordinates
+                --         |> Json.Decode.map (stepMsg << Drag)
+                --     )
+                -- , Browser.Events.onMouseUp
+                --     (Json.Decode.succeed (stepMsg DragEnd))
+                -- , 
+                onPointerMove
+                    (\value ->
+                        -- let
+                        --     _ =
+                        --         Debug.log "onPointerMove" value
+                        -- in
+                        Json.Decode.decodeValue
+                            Internal.Common.Utils.decodeCoordinates
+                            value
+                            |> Result.withDefault (Position 0.0 0.0)
+                            |> Drag
+                            |> stepMsg
                     )
-                , Browser.Events.onMouseUp
-                    (Json.Decode.succeed (stepMsg DragEnd))
+                , onPointerUp (\_ -> stepMsg DragEnd)
                 ]
 
 
-commands : (Msg -> msg) -> Model -> Cmd msg
-commands stepMsg (Model model) =
+commands : (Msg -> msg) -> (Json.Decode.Value -> Cmd msg) -> Model -> Cmd msg
+commands stepMsg releasePointerCapture (Model model) =
     case model of
         Nothing ->
             Cmd.none
@@ -539,6 +559,19 @@ commands stepMsg (Model model) =
             Cmd.batch
                 [ dragElementCommands stepMsg state
                 , dropElementCommands stepMsg state
+                , releasePointerCaptureCommand stepMsg state releasePointerCapture
+                ]
+
+releasePointerCaptureCommand : (Msg -> msg) -> State -> (Json.Decode.Value -> Cmd msg) -> Cmd msg
+releasePointerCaptureCommand stepMsg state releasePointerCapture =
+    case state.pointerCaptureEvent of
+        Nothing ->
+            Cmd.none
+
+        Just pointerCaptureEvent ->
+            Cmd.batch
+                [ Task.perform (stepMsg << (\_ -> ResetPointerCaptureEvent)) (Process.sleep 1)
+                , releasePointerCapture pointerCaptureEvent
                 ]
 
 
@@ -569,7 +602,8 @@ It should be wrapped within our message constructor:
 
 -}
 type Msg
-    = DragStart DragIndex DragElementId Position
+    = DragStart DragIndex DragElementId Position Json.Encode.Value
+    | ResetPointerCaptureEvent
     | Drag Position
     | DragOver DropIndex DropElementId
     | DragEnter DropIndex
@@ -582,7 +616,7 @@ type Msg
 update : Config a -> Msg -> Model -> List a -> ( Model, List a )
 update { beforeUpdate, listen, operation } msg (Model model) list =
     case msg of
-        DragStart dragIndex dragElementId xy ->
+        DragStart dragIndex dragElementId xy pointerCaptureEvent ->
             ( Model <|
                 Just
                     { dragIndex = dragIndex
@@ -594,11 +628,23 @@ update { beforeUpdate, listen, operation } msg (Model model) list =
                     , dropElementId = dragElementId
                     , dragElement = Nothing
                     , dropElement = Nothing
+                    , pointerCaptureEvent = Just pointerCaptureEvent
                     }
             , list
             )
 
+        ResetPointerCaptureEvent -> 
+            ( model
+                |> Maybe.map (\state -> { state | pointerCaptureEvent = Nothing })
+                |> Model
+            , list
+            )
+
         Drag xy ->
+            -- let
+            --     _ =
+            --         Debug.log "drag" xy
+            -- in
             ( model
                 |> Maybe.map (\state -> { state | currentPosition = xy, dragCounter = state.dragCounter + 1 })
                 |> Model
@@ -606,6 +652,9 @@ update { beforeUpdate, listen, operation } msg (Model model) list =
             )
 
         DragOver dropIndex dropElementId ->
+            -- let
+            --     _ = Debug.log "DragOver" (dropIndex, dropElementId)
+            -- in
             ( model
                 |> Maybe.map (\state -> { state | dropIndex = dropIndex, dropElementId = dropElementId })
                 |> Model
@@ -732,19 +781,36 @@ listUpdate operation dragIndex dropIndex list =
 
 dragEvents : (Msg -> msg) -> DragIndex -> DragElementId -> List (Html.Attribute msg)
 dragEvents stepMsg dragIndex dragElementId =
-    [ Html.Events.preventDefaultOn "mousedown"
-        (Internal.Common.Utils.decodeCoordinatesWithButtonCheck
-            |> Json.Decode.map (stepMsg << DragStart dragIndex dragElementId)
+    [ -- Html.Events.preventDefaultOn "mousedown"
+      -- (Internal.Common.Utils.decodeCoordinatesWithButtonCheck
+      --     |> Json.Decode.map (stepMsg << DragStart dragIndex dragElementId)
+      --     |> Json.Decode.map (\msg -> ( msg, True ))
+      -- )
+      --   ,
+      Html.Events.preventDefaultOn "pointerdown"
+        (
+            Json.Decode.map2
+                (DragStart dragIndex dragElementId)
+                    Internal.Common.Utils.decodeCoordinates
+                    Json.Decode.value
+            |> Json.Decode.map stepMsg
             |> Json.Decode.map (\msg -> ( msg, True ))
-        )
+        )        
     ]
 
 
 dropEvents : (Msg -> msg) -> DropIndex -> DropElementId -> List (Html.Attribute msg)
 dropEvents stepMsg dropIndex dropElementId =
-    [ Html.Events.onMouseOver (stepMsg (DragOver dropIndex dropElementId))
-    , Html.Events.onMouseEnter (stepMsg (DragEnter dropIndex))
-    , Html.Events.onMouseLeave (stepMsg DragLeave)
+    [ --     Html.Events.onMouseOver (stepMsg (DragOver dropIndex dropElementId))
+      -- , Html.Events.onMouseEnter (stepMsg (DragEnter dropIndex))
+      -- , Html.Events.onMouseLeave (stepMsg DragLeave)
+      -- ,
+      Html.Events.preventDefaultOn "pointerover"
+        (Json.Decode.succeed ( stepMsg (DragOver dropIndex dropElementId), True ))
+    , Html.Events.preventDefaultOn "pointerenter"
+        (Json.Decode.succeed ( stepMsg (DragEnter dropIndex), True ))
+    , Html.Events.preventDefaultOn "pointerleave"
+        (Json.Decode.succeed ( stepMsg DragLeave, True ))
     ]
 
 

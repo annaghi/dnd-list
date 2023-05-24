@@ -6,9 +6,12 @@ import Html
 import Html.Attributes
 import Svg
 import Svg.Attributes
+import Json.Encode
 
 
 
+
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -68,7 +71,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.create config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 updateColor : Int -> Int -> List Item -> List Item

@@ -5,9 +5,12 @@ import DnDList.Groups
 import Html
 import Html.Attributes
 import Random
+import Json.Encode
 
 
 
+
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 

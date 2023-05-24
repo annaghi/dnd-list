@@ -21,7 +21,28 @@
 
   <body>
     <script>
-      Elm.Main.init();
+      const app = Elm.Main.init();
+
+      // console.log(app.ports)
+
+      app.ports.releasePointerCapture.subscribe( event => {
+        console.log('releasePointerCapture', event.pointerId)
+			  event.target.releasePointerCapture(event.pointerId)
+		  })
+
+      window.addEventListener("pointermove", (event) => {
+        // console.log("Window Js Pointer move event");
+        app.ports.onPointerMove.send(event);
+      });
+
+      window.addEventListener("pointerup", (event) => {
+        // console.log("Window Js Pointer move event");
+        app.ports.onPointerUp.send(event);
+      });
+
+      // window.addEventListener("mousemove", (event) => {
+        // console.log("Window Js mouse move event");
+      // });
     </script>
   </body>
 </html>

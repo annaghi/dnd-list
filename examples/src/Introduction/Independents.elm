@@ -4,9 +4,12 @@ import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Json.Encode
 
 
 
+
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -53,7 +56,7 @@ redConfig =
 
 redSystem : DnDList.System String Msg
 redSystem =
-    DnDList.create redConfig RedMsg
+    DnDList.create redConfig RedMsg onPointerMove onPointerUp releasePointerCapture
 
 
 blueConfig : DnDList.Config String
@@ -67,7 +70,7 @@ blueConfig =
 
 blueSystem : DnDList.System String Msg
 blueSystem =
-    DnDList.create blueConfig BlueMsg
+    DnDList.create blueConfig BlueMsg onPointerMove onPointerUp releasePointerCapture
 
 
 

@@ -16,7 +16,11 @@ import Url
 import Url.Builder
 import Url.Parser exposing ((</>))
 
+-- PORTS
 
+-- port onPointerMove : (Json.Encode.Value -> msg) -> Sub msg
+-- port onPointerUp : (() -> msg) -> Sub msg
+-- port releasePointerCapture : Int -> Cmd msg
 
 -- MAIN
 
@@ -257,7 +261,7 @@ view model =
                 ]
             ]
         , Html.main_
-            [ Html.Attributes.id "main" ]
+            [ Html.Attributes.id "main", Html.Attributes.style "touch-action" "none" ]
             (case model.example of
                 NotFound ->
                     [ Html.text "Not found" ]

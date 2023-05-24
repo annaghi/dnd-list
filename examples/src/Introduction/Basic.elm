@@ -1,11 +1,20 @@
-module Introduction.Basic exposing (Model, Msg, initialModel, main, subscriptions, update, view)
+port module Introduction.Basic exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Json.Encode
 
 
+
+
+-- import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
+-- PORTS
+
+port onPointerMove : (Json.Encode.Value -> msg) -> Sub msg
+port onPointerUp : (Json.Encode.Value -> msg) -> Sub msg
+port releasePointerCapture : Json.Encode.Value -> Cmd msg
 
 -- MAIN
 
@@ -48,7 +57,7 @@ config =
 
 system : DnDList.System Fruit Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.create config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 

@@ -7,9 +7,12 @@ import Html
 import Html.Attributes
 import Path
 import Url.Builder
+import Json.Encode
 
 
 
+
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -77,7 +80,7 @@ config =
 
 system : DnDList.System Square Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.create config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 beforeUpdate : Int -> Int -> List Square -> List Square
