@@ -86,7 +86,7 @@ setter item1 item2 =
 
 system : DnDList.Groups.System Item Msg
 system =
-    DnDList.Groups.create config MyMsg
+    DnDList.Groups.create config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 
@@ -185,7 +185,7 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section []
+    Html.section [ Html.Attributes.style "touch-action" "none" ]
         [ List.range 0 3
             |> List.map
                 (\i ->

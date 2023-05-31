@@ -261,7 +261,7 @@ view model =
                 ]
             ]
         , Html.main_
-            [ Html.Attributes.id "main", Html.Attributes.style "touch-action" "none" ]
+            [ Html.Attributes.id "main" ]
             (case model.example of
                 NotFound ->
                     [ Html.text "Not found" ]

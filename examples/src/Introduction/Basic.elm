@@ -1,4 +1,4 @@
-port module Introduction.Basic exposing (Model, Msg, initialModel, main, subscriptions, update, view)
+module Introduction.Basic exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList
@@ -9,14 +9,7 @@ import Json.Encode
 
 
 
--- import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
--- PORTS
-
-port onPointerMove : (Json.Encode.Value -> msg) -> Sub msg
-port onPointerUp : (Json.Encode.Value -> msg) -> Sub msg
-port releasePointerCapture : Json.Encode.Value -> Cmd msg
-
--- MAIN
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 
 
 main : Program () Model Msg
@@ -119,7 +112,8 @@ update message model =
 view : Model -> Html.Html Msg
 view model =
     Html.section
-        [ Html.Attributes.style "text-align" "center" ]
+        [ Html.Attributes.style "text-align" "center"
+        , Html.Attributes.style "touch-action" "none" ]
         [ model.items
             |> List.indexedMap (itemView model.dnd)
             |> Html.div []

@@ -5,11 +5,8 @@ import DnDList.Groups
 import Html
 import Html.Attributes
 import Json.Encode
-
-
-
-
 import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
+
 -- MAIN
 
 
@@ -82,7 +79,7 @@ setter item1 item2 =
 
 system : DnDList.Groups.System Item Msg
 system =
-    DnDList.Groups.create config MyMsg
+    DnDList.Groups.create config MyMsg onPointerMove onPointerUp releasePointerCapture 
 
 
 
@@ -143,7 +140,8 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section sectionStyles
+    Html.section 
+        (Html.Attributes.style "touch-action" "none" :: sectionStyles)
         [ groupView model Left lightRed
         , groupView model Right lightBlue
         , ghostView model.dnd model.items

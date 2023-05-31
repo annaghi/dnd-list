@@ -322,6 +322,7 @@ sectionStyles =
     , Html.Attributes.style "flex-wrap" "wrap"
     , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "padding-bottom" "2em"
+    , Html.Attributes.style "touch-action" "none"
     ]
 
 

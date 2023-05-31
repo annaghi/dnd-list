@@ -184,7 +184,7 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section []
+    Html.section [ Html.Attributes.style "touch-action" "none" ]
         [ scoreView model.items
         , model.items
             |> List.take shapeNumber

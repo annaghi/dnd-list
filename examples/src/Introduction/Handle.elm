@@ -112,7 +112,8 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section []
+    Html.section 
+        [ Html.Attributes.style "touch-action" "none" ]
         [ model.fruits
             |> List.indexedMap (itemView model.dnd)
             |> Html.div containerStyles

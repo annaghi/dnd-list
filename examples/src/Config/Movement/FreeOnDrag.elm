@@ -131,7 +131,8 @@ update message model =
 view : Model -> Html.Html Msg
 view model =
     Html.section
-        [ Html.Events.onMouseDown ClearAffected ]
+        [ Html.Events.onMouseDown ClearAffected
+        , Html.Attributes.style "touch-action" "none" ]
         [ model.items
             |> List.indexedMap (itemView model.dnd model.affected)
             |> Html.div containerStyles

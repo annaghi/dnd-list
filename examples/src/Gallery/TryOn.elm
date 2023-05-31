@@ -317,6 +317,7 @@ sectionStyles =
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "padding-top" "2rem"
+    , Html.Attributes.style "touch-action" "none"
     ]
 
 

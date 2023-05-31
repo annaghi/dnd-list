@@ -26,7 +26,7 @@
       // console.log(app.ports)
 
       app.ports.releasePointerCapture.subscribe( event => {
-        console.log('releasePointerCapture', event.pointerId)
+        // console.log('releasePointerCapture', event.pointerId)
 			  event.target.releasePointerCapture(event.pointerId)
 		  })
 

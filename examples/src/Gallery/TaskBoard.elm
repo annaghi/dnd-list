@@ -85,7 +85,7 @@ setter card1 card2 =
 
 cardSystem : DnDList.Groups.System Card Msg
 cardSystem =
-    DnDList.Groups.create cardConfig CardMoved
+    DnDList.Groups.create cardConfig CardMoved onPointerMove onPointerUp releasePointerCapture
 
 
 columnConfig : DnDList.Config (List Card)
@@ -190,7 +190,7 @@ view model =
         calculateOffset columnIndex =
             columns |> List.map List.length |> List.take columnIndex |> List.foldl (+) 0
     in
-    Html.section []
+    Html.section [ Html.Attributes.style "touch-action" "none" ]
         [ columns
             |> List.indexedMap (\i column -> columnView model (calculateOffset i) i column)
             |> Html.div boardStyles
