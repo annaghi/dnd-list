@@ -304,7 +304,7 @@ Now the `System` is a wrapper type around the list item and our message types:
         DnDList.create config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 -}
-create : Config a -> (Msg -> msg) -> ((Json.Encode.Value -> msg) -> Sub msg) -> ((Json.Encode.Value -> msg) -> Sub msg) -> (Json.Decode.Value -> Cmd msg) -> System a msg
+create : Config a -> (Msg -> msg) -> ((Json.Encode.Value -> msg) -> Sub msg) -> ((Json.Encode.Value -> msg) -> Sub msg) -> (Json.Decode.Value  -> Cmd msg) -> System a msg
 create config stepMsg onPointerMove onPointerUp releasePointerCapture =
     -- probably onPointerMove onPointerUp should go in config
     { model = Model Nothing
