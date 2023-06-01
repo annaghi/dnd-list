@@ -24,7 +24,7 @@
       const app = Elm.Main.init();
 
       app.ports.releasePointerCapture.subscribe( event => {
-			  event.target.releasePointerCapture(event.pointerId)
+        event.target.releasePointerCapture(event.pointerId)
 		  })
 
       window.addEventListener("pointermove", (event) => {

@@ -660,7 +660,8 @@ subscriptionsWithTouch stepMsg onPointerMove onPointerUp (Model model) =
                         Json.Decode.decodeValue
                             Internal.Common.Utils.decodeCoordinates
                             value
-                            -- It would be better to default to Cmd.none here, but I couldn't get it to compile
+                            -- It would be better to default to Sub.none here, but it needs to return a `msg`,
+                            -- and `Sub.none` is a `Sub msg`
                             |> Result.withDefault (Position 0.0 0.0)
                             |> Drag
                             |> stepMsg
