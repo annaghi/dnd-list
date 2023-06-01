@@ -3,8 +3,10 @@ module Gallery.Knight exposing (Model, Msg, initialModel, main, subscriptions, u
 import Bitwise
 import Browser
 import DnDList
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
+import Json.Encode
 import Path
 import Url.Builder
 
@@ -77,7 +79,7 @@ config =
 
 system : DnDList.System Square Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 beforeUpdate : Int -> Int -> List Square -> List Square
@@ -160,7 +162,7 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section []
+    Html.section [ Html.Attributes.style "touch-action" "none" ]
         [ List.map2 Tuple.pair indices8x8 model.squares
             |> List.indexedMap (squareView model.dnd model.solved)
             |> Html.div containerStyles

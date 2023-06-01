@@ -3,8 +3,10 @@ module Gallery.TaskBoard exposing (Model, Msg, initialModel, main, subscriptions
 import Browser
 import DnDList
 import DnDList.Groups
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
+import Json.Encode
 
 
 
@@ -82,7 +84,7 @@ setter card1 card2 =
 
 cardSystem : DnDList.Groups.System Card Msg
 cardSystem =
-    DnDList.Groups.create cardConfig CardMoved
+    DnDList.Groups.createWithTouch cardConfig CardMoved onPointerMove onPointerUp releasePointerCapture
 
 
 columnConfig : DnDList.Config (List Card)
@@ -96,7 +98,7 @@ columnConfig =
 
 columnSystem : DnDList.System (List Card) Msg
 columnSystem =
-    DnDList.create columnConfig ColumnMoved
+    DnDList.createWithTouch columnConfig ColumnMoved onPointerMove onPointerUp releasePointerCapture
 
 
 
@@ -187,7 +189,7 @@ view model =
         calculateOffset columnIndex =
             columns |> List.map List.length |> List.take columnIndex |> List.foldl (+) 0
     in
-    Html.section []
+    Html.section [ Html.Attributes.style "touch-action" "none" ]
         [ columns
             |> List.indexedMap (\i column -> columnView model (calculateOffset i) i column)
             |> Html.div boardStyles

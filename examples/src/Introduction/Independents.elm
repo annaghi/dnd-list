@@ -2,8 +2,10 @@ module Introduction.Independents exposing (Model, Msg, initialModel, main, subsc
 
 import Browser
 import DnDList
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
+import Json.Encode
 
 
 
@@ -53,7 +55,7 @@ redConfig =
 
 redSystem : DnDList.System String Msg
 redSystem =
-    DnDList.create redConfig RedMsg
+    DnDList.createWithTouch redConfig RedMsg onPointerMove onPointerUp releasePointerCapture
 
 
 blueConfig : DnDList.Config String
@@ -67,7 +69,7 @@ blueConfig =
 
 blueSystem : DnDList.System String Msg
 blueSystem =
-    DnDList.create blueConfig BlueMsg
+    DnDList.createWithTouch blueConfig BlueMsg onPointerMove onPointerUp releasePointerCapture
 
 
 
@@ -304,6 +306,7 @@ sectionStyles =
     , Html.Attributes.style "flex-direction" "column"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "padding-top" "2em"
+    , Html.Attributes.style "touch-action" "none"
     ]
 
 

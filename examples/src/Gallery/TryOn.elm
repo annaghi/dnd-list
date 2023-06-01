@@ -2,8 +2,10 @@ module Gallery.TryOn exposing (Model, Msg, initialModel, main, subscriptions, up
 
 import Browser
 import DnDList
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
+import Json.Encode
 import Svg
 import Svg.Attributes
 
@@ -68,7 +70,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 updateColor : Int -> Int -> List Item -> List Item
@@ -314,6 +316,7 @@ sectionStyles =
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "padding-top" "2rem"
+    , Html.Attributes.style "touch-action" "none"
     ]
 
 

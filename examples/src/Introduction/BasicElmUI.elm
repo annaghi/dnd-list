@@ -4,8 +4,10 @@ import Browser
 import DnDList
 import Element
 import Element.Font
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
+import Json.Encode
 
 
 
@@ -50,7 +52,7 @@ config =
 
 system : DnDList.System Fruit Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 
@@ -111,7 +113,8 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section []
+    Html.section
+        [ Html.Attributes.style "touch-action" "none" ]
         [ Element.layout
             [ Element.width Element.fill
             , Element.height Element.fill

@@ -2,9 +2,11 @@ module Config.Movement.HorizontalOnDrag exposing (Model, Msg, initialModel, main
 
 import Browser
 import DnDList
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
 import Html.Events
+import Json.Encode
 
 
 
@@ -50,7 +52,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 
@@ -131,7 +133,9 @@ update message model =
 view : Model -> Html.Html Msg
 view model =
     Html.section
-        [ Html.Events.onMouseDown ClearAffected ]
+        [ Html.Events.onMouseDown ClearAffected
+        , Html.Attributes.style "touch-action" "none"
+        ]
         [ model.items
             |> List.indexedMap (itemView model.dnd model.affected)
             |> Html.div containerStyles

@@ -2,8 +2,10 @@ module Introduction.Masonry exposing (Model, Msg, commands, initialModel, main, 
 
 import Browser
 import DnDList
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
+import Json.Encode
 import Random
 
 
@@ -58,7 +60,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 
@@ -145,7 +147,8 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section []
+    Html.section
+        [ Html.Attributes.style "touch-action" "none" ]
         [ model.items
             |> List.indexedMap (itemView model.dnd)
             |> Html.div containerStyles
