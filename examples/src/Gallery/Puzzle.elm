@@ -2,15 +2,14 @@ module Gallery.Puzzle exposing (Model, Msg, commands, initialModel, main, subscr
 
 import Browser
 import DnDList.Groups
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
-import Random
 import Json.Encode
+import Random
 
 
 
-
-import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -86,7 +85,7 @@ setter item1 item2 =
 
 system : DnDList.Groups.System Item Msg
 system =
-    DnDList.Groups.create config MyMsg onPointerMove onPointerUp releasePointerCapture
+    DnDList.Groups.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 

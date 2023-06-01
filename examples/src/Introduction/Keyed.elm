@@ -2,6 +2,7 @@ module Introduction.Keyed exposing (Model, Msg, initialModel, main, subscription
 
 import Browser
 import DnDList
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
 import Html.Keyed
@@ -9,8 +10,6 @@ import Json.Encode
 
 
 
-
-import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -57,7 +56,7 @@ config =
 
 system : DnDList.System KeyedItem Msg
 system =
-    DnDList.create config MyMsg onPointerMove onPointerUp releasePointerCapture
+    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 
@@ -118,7 +117,7 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section 
+    Html.section
         [ Html.Attributes.style "touch-action" "none" ]
         [ model.items
             |> List.indexedMap (itemView model.dnd)

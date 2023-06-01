@@ -25,11 +25,11 @@ import Introduction.Resize
 import Path
 import Url.Builder
 
--- -- PORTS
 
+
+-- -- PORTS
 -- port onPointerMove : (Json.Encode.Value -> msg) -> Sub msg
 -- port onPointerUp : (() -> msg) -> Sub msg
-
 -- MODEL
 
 

@@ -2,6 +2,7 @@ module Config.Movement.HorizontalOnDrop exposing (Model, Msg, initialModel, main
 
 import Browser
 import DnDList
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
 import Html.Events
@@ -9,8 +10,6 @@ import Json.Encode
 
 
 
-
-import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -53,7 +52,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg onPointerMove onPointerUp releasePointerCapture
+    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 
@@ -135,7 +134,8 @@ view : Model -> Html.Html Msg
 view model =
     Html.section
         [ Html.Events.onMouseDown ClearAffected
-        , Html.Attributes.style "touch-action" "none" ]
+        , Html.Attributes.style "touch-action" "none"
+        ]
         [ model.items
             |> List.indexedMap (itemView model.dnd model.affected)
             |> Html.div containerStyles

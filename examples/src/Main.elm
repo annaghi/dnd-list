@@ -16,11 +16,7 @@ import Url
 import Url.Builder
 import Url.Parser exposing ((</>))
 
--- PORTS
 
--- port onPointerMove : (Json.Encode.Value -> msg) -> Sub msg
--- port onPointerUp : (() -> msg) -> Sub msg
--- port releasePointerCapture : Int -> Cmd msg
 
 -- MAIN
 

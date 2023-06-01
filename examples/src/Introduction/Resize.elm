@@ -2,14 +2,13 @@ module Introduction.Resize exposing (Model, Msg, initialModel, main, subscriptio
 
 import Browser
 import DnDList
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
 import Json.Encode
 
 
 
-
-import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -72,7 +71,7 @@ config =
 
 system : DnDList.System Color Msg
 system =
-    DnDList.create config MyMsg onPointerMove onPointerUp releasePointerCapture
+    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 
@@ -136,7 +135,7 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section 
+    Html.section
         [ Html.Attributes.style "touch-action" "none" ]
         [ List.map2 (\color spot -> ( color, spot )) model.colors spots
             |> List.indexedMap (itemView model)

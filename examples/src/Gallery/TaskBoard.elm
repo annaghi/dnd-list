@@ -3,14 +3,13 @@ module Gallery.TaskBoard exposing (Model, Msg, initialModel, main, subscriptions
 import Browser
 import DnDList
 import DnDList.Groups
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
 import Json.Encode
 
 
 
-
-import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -85,7 +84,7 @@ setter card1 card2 =
 
 cardSystem : DnDList.Groups.System Card Msg
 cardSystem =
-    DnDList.Groups.create cardConfig CardMoved onPointerMove onPointerUp releasePointerCapture
+    DnDList.Groups.createWithTouch cardConfig CardMoved onPointerMove onPointerUp releasePointerCapture
 
 
 columnConfig : DnDList.Config (List Card)
@@ -99,7 +98,7 @@ columnConfig =
 
 columnSystem : DnDList.System (List Card) Msg
 columnSystem =
-    DnDList.create columnConfig ColumnMoved onPointerMove onPointerUp releasePointerCapture
+    DnDList.createWithTouch columnConfig ColumnMoved onPointerMove onPointerUp releasePointerCapture
 
 
 

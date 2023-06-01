@@ -2,16 +2,15 @@ module Gallery.Shapes exposing (Model, Msg, initialModel, main, subscriptions, u
 
 import Browser
 import DnDList
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
+import Json.Encode
 import Svg
 import Svg.Attributes
-import Json.Encode
 
 
 
-
-import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -77,7 +76,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg onPointerMove onPointerUp releasePointerCapture
+    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 updateShapes : Int -> Int -> List Item -> List Item

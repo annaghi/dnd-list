@@ -2,6 +2,7 @@ module Config.OperationsOnDrop.Swap exposing (Model, Msg, initialModel, main, su
 
 import Browser
 import DnDList
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
 import Html.Events
@@ -9,8 +10,6 @@ import Json.Encode
 
 
 
-
-import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -55,7 +54,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg onPointerMove onPointerUp releasePointerCapture
+    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 beforeUpdate : Int -> Int -> List Item -> List Item
@@ -144,7 +143,8 @@ view : Model -> Html.Html Msg
 view model =
     Html.section
         [ Html.Events.onMouseDown ResetColors
-        , Html.Attributes.style "touch-action" "none" ]
+        , Html.Attributes.style "touch-action" "none"
+        ]
         [ model.items
             |> List.indexedMap (itemView model.dnd)
             |> Html.div containerStyles

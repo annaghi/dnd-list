@@ -1,24 +1,23 @@
-port module Home exposing (Model, Msg, init, initialModel, main, subscriptions, update, view, onPointerMove, onPointerUp, releasePointerCapture)
+port module Home exposing (Model, Msg, init, initialModel, main, onPointerMove, onPointerUp, releasePointerCapture, subscriptions, update, view)
 
 import Browser
 import Html
 import Json.Encode
 
 
+
+-- PORTS
+
+
 port onPointerMove : (Json.Encode.Value -> msg) -> Sub msg
+
+
 port onPointerUp : (Json.Encode.Value -> msg) -> Sub msg
+
+
 port releasePointerCapture : Json.Encode.Value -> Cmd msg
 
 
--- pretend ports
--- onPointerMove : (Json.Encode.Value -> msg) -> Sub msg
--- onPointerMove _ = Sub.none
-
--- onPointerUp : (Json.Encode.Value -> msg) -> Sub msg
--- onPointerUp _ = Sub.none
-
--- releasePointerCapture : Json.Encode.Value -> Cmd msg
--- releasePointerCapture _ = Cmd.none
 
 -- MAIN
 

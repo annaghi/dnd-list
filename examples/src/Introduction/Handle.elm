@@ -2,14 +2,13 @@ module Introduction.Handle exposing (Model, Msg, initialModel, main, subscriptio
 
 import Browser
 import DnDList
+import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
 import Json.Encode
 
 
 
-
-import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 -- MAIN
 
 
@@ -51,7 +50,7 @@ config =
 
 system : DnDList.System Fruit Msg
 system =
-    DnDList.create config MyMsg onPointerMove onPointerUp releasePointerCapture
+    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 
 
@@ -112,7 +111,7 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section 
+    Html.section
         [ Html.Attributes.style "touch-action" "none" ]
         [ model.fruits
             |> List.indexedMap (itemView model.dnd)
