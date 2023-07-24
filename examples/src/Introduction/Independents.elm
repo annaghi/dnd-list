@@ -2,10 +2,9 @@ module Introduction.Independents exposing (Model, Msg, initialModel, main, subsc
 
 import Browser
 import DnDList
-import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
-import Json.Encode
+import Port
 
 
 
@@ -55,7 +54,7 @@ redConfig =
 
 redSystem : DnDList.System String Msg
 redSystem =
-    DnDList.createWithTouch redConfig RedMsg onPointerMove onPointerUp releasePointerCapture
+    DnDList.createWithTouch redConfig RedMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 blueConfig : DnDList.Config String
@@ -69,7 +68,7 @@ blueConfig =
 
 blueSystem : DnDList.System String Msg
 blueSystem =
-    DnDList.createWithTouch blueConfig BlueMsg onPointerMove onPointerUp releasePointerCapture
+    DnDList.createWithTouch blueConfig BlueMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 

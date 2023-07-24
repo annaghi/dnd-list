@@ -3,11 +3,10 @@ module Gallery.Knight exposing (Model, Msg, initialModel, main, subscriptions, u
 import Bitwise
 import Browser
 import DnDList
-import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
-import Json.Encode
 import Path
+import Port
 import Url.Builder
 
 
@@ -79,7 +78,7 @@ config =
 
 system : DnDList.System Square Msg
 system =
-    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
+    DnDList.createWithTouch config MyMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 beforeUpdate : Int -> Int -> List Square -> List Square

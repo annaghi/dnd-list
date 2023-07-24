@@ -2,10 +2,9 @@ module Gallery.TryOn exposing (Model, Msg, initialModel, main, subscriptions, up
 
 import Browser
 import DnDList
-import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
-import Json.Encode
+import Port
 import Svg
 import Svg.Attributes
 
@@ -70,7 +69,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
+    DnDList.createWithTouch config MyMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 updateColor : Int -> Int -> List Item -> List Item

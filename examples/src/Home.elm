@@ -1,21 +1,7 @@
-port module Home exposing (Model, Msg, init, initialModel, main, onPointerMove, onPointerUp, releasePointerCapture, subscriptions, update, view)
+module Home exposing (Model, Msg, init, initialModel, main, subscriptions, update, view)
 
 import Browser
 import Html
-import Json.Encode
-
-
-
--- PORTS
-
-
-port onPointerMove : (Json.Encode.Value -> msg) -> Sub msg
-
-
-port onPointerUp : (Json.Encode.Value -> msg) -> Sub msg
-
-
-port releasePointerCapture : Json.Encode.Value -> Cmd msg
 
 
 
@@ -55,7 +41,7 @@ init _ =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
@@ -79,5 +65,5 @@ update message model =
 
 
 view : Model -> Html.Html Msg
-view model =
+view _ =
     Html.text ""

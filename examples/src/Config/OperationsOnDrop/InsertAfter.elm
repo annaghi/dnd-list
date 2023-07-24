@@ -2,11 +2,10 @@ module Config.OperationsOnDrop.InsertAfter exposing (Model, Msg, initialModel, m
 
 import Browser
 import DnDList
-import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
 import Html.Events
-import Json.Encode
+import Port
 
 
 
@@ -54,7 +53,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
+    DnDList.createWithTouch config MyMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 beforeUpdate : Int -> Int -> List Item -> List Item

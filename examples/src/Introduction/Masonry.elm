@@ -2,10 +2,9 @@ module Introduction.Masonry exposing (Model, Msg, commands, initialModel, main, 
 
 import Browser
 import DnDList
-import Home exposing (onPointerMove, onPointerUp, releasePointerCapture)
 import Html
 import Html.Attributes
-import Json.Encode
+import Port
 import Random
 
 
@@ -60,7 +59,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
+    DnDList.createWithTouch config MyMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 
