@@ -8571,7 +8571,7 @@ var $author$project$Gallery$Root$init = function (slug) {
 		$author$project$Gallery$Root$commands);
 };
 var $author$project$Introduction$Root$MasonryMsg = function (a) {
-	return {$: 5, a: a};
+	return {$: 6, a: a};
 };
 var $author$project$Introduction$Masonry$NewMasonry = function (a) {
 	return {$: 0, a: a};
@@ -8619,28 +8619,28 @@ var $author$project$Introduction$Root$Basic = function (a) {
 	return {$: 0, a: a};
 };
 var $author$project$Introduction$Root$BasicElmUI = function (a) {
-	return {$: 1, a: a};
-};
-var $author$project$Introduction$Root$Groups = function (a) {
-	return {$: 8, a: a};
-};
-var $author$project$Introduction$Root$Handle = function (a) {
 	return {$: 2, a: a};
 };
-var $author$project$Introduction$Root$Independents = function (a) {
-	return {$: 7, a: a};
+var $author$project$Introduction$Root$Groups = function (a) {
+	return {$: 9, a: a};
 };
-var $author$project$Introduction$Root$Keyed = function (a) {
+var $author$project$Introduction$Root$Handle = function (a) {
 	return {$: 3, a: a};
 };
-var $author$project$Introduction$Root$Margins = function (a) {
+var $author$project$Introduction$Root$Independents = function (a) {
+	return {$: 8, a: a};
+};
+var $author$project$Introduction$Root$Keyed = function (a) {
 	return {$: 4, a: a};
 };
-var $author$project$Introduction$Root$Masonry = function (a) {
+var $author$project$Introduction$Root$Margins = function (a) {
 	return {$: 5, a: a};
 };
-var $author$project$Introduction$Root$Resize = function (a) {
+var $author$project$Introduction$Root$Masonry = function (a) {
 	return {$: 6, a: a};
+};
+var $author$project$Introduction$Root$Resize = function (a) {
+	return {$: 7, a: a};
 };
 var $author$project$Introduction$Basic$data = _List_fromArray(
 	['Apples', 'Bananas', 'Cherries', 'Dates']);
@@ -8670,6 +8670,545 @@ var $author$project$Introduction$BasicElmUI$config = {
 };
 var $author$project$Introduction$BasicElmUI$system = A5($author$project$DnDList$createWithTouch, $author$project$Introduction$BasicElmUI$config, $elm$core$Basics$identity, $author$project$Port$onPointerMove, $author$project$Port$onPointerUp, $author$project$Port$releasePointerCapture);
 var $author$project$Introduction$BasicElmUI$initialModel = {aa: $author$project$Introduction$BasicElmUI$system.dj, au: $author$project$Introduction$BasicElmUI$data};
+var $author$project$Introduction$Basic_NoTouch$data = _List_fromArray(
+	['Apples', 'Bananas', 'Cherries', 'Dates']);
+var $author$project$Introduction$Basic_NoTouch$MyMsg = $elm$core$Basics$identity;
+var $author$project$Introduction$Basic_NoTouch$config = {
+	cv: F3(
+		function (_v0, _v1, list) {
+			return list;
+		}),
+	dg: 0,
+	dk: 0,
+	ds: 2
+};
+var $author$project$DnDList$commands = F2(
+	function (stepMsg, _v0) {
+		var model = _v0;
+		if (model.$ === 1) {
+			return $elm$core$Platform$Cmd$none;
+		} else {
+			var state = model.a;
+			return $elm$core$Platform$Cmd$batch(
+				_List_fromArray(
+					[
+						A2($author$project$DnDList$dragElementCommands, stepMsg, state),
+						A2($author$project$DnDList$dropElementCommands, stepMsg, state)
+					]));
+		}
+	});
+var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $author$project$Internal$Common$Utils$decodeMainMouseButton = function (decoder) {
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		function (button) {
+			return (!button) ? decoder : $elm$json$Json$Decode$fail('Event is only relevant when the main mouse button was pressed.');
+		},
+		A2($elm$json$Json$Decode$field, 'button', $elm$json$Json$Decode$int));
+};
+var $author$project$Internal$Common$Utils$decodeCoordinatesWithButtonCheck = $author$project$Internal$Common$Utils$decodeMainMouseButton($author$project$Internal$Common$Utils$decodeCoordinates);
+var $author$project$DnDList$dragEvents = F3(
+	function (stepMsg, dragIndex, dragElementId) {
+		return _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$Events$preventDefaultOn,
+				'mousedown',
+				A2(
+					$elm$json$Json$Decode$map,
+					function (msg) {
+						return _Utils_Tuple2(msg, true);
+					},
+					A2(
+						$elm$json$Json$Decode$map,
+						stepMsg,
+						A2(
+							$elm$json$Json$Decode$map,
+							A3($author$project$DnDList$DragStart, dragIndex, dragElementId, $elm$core$Maybe$Nothing),
+							$author$project$Internal$Common$Utils$decodeCoordinatesWithButtonCheck))))
+			]);
+	});
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 0, a: a};
+};
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$html$Html$Events$onMouseEnter = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'mouseenter',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$html$Html$Events$onMouseLeave = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'mouseleave',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$html$Html$Events$onMouseOver = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'mouseover',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $author$project$DnDList$dropEvents = F3(
+	function (stepMsg, dropIndex, dropElementId) {
+		return _List_fromArray(
+			[
+				$elm$html$Html$Events$onMouseOver(
+				stepMsg(
+					A2($author$project$DnDList$DragOver, dropIndex, dropElementId))),
+				$elm$html$Html$Events$onMouseEnter(
+				stepMsg(
+					$author$project$DnDList$DragEnter(dropIndex))),
+				$elm$html$Html$Events$onMouseLeave(
+				stepMsg($author$project$DnDList$DragLeave))
+			]);
+	});
+var $elm$browser$Browser$Events$Document = 0;
+var $elm$browser$Browser$Events$MySub = F3(
+	function (a, b, c) {
+		return {$: 0, a: a, b: b, c: c};
+	});
+var $elm$browser$Browser$Events$State = F2(
+	function (subs, pids) {
+		return {bW: pids, b5: subs};
+	});
+var $elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
+var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
+var $elm$browser$Browser$Events$init = $elm$core$Task$succeed(
+	A2($elm$browser$Browser$Events$State, _List_Nil, $elm$core$Dict$empty));
+var $elm$browser$Browser$Events$nodeToKey = function (node) {
+	if (!node) {
+		return 'd_';
+	} else {
+		return 'w_';
+	}
+};
+var $elm$browser$Browser$Events$addKey = function (sub) {
+	var node = sub.a;
+	var name = sub.b;
+	return _Utils_Tuple2(
+		_Utils_ap(
+			$elm$browser$Browser$Events$nodeToKey(node),
+			name),
+		sub);
+};
+var $elm$core$Dict$Black = 1;
+var $elm$core$Dict$RBNode_elm_builtin = F5(
+	function (a, b, c, d, e) {
+		return {$: -1, a: a, b: b, c: c, d: d, e: e};
+	});
+var $elm$core$Dict$Red = 0;
+var $elm$core$Dict$balance = F5(
+	function (color, key, value, left, right) {
+		if ((right.$ === -1) && (!right.a)) {
+			var _v1 = right.a;
+			var rK = right.b;
+			var rV = right.c;
+			var rLeft = right.d;
+			var rRight = right.e;
+			if ((left.$ === -1) && (!left.a)) {
+				var _v3 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var lLeft = left.d;
+				var lRight = left.e;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					0,
+					key,
+					value,
+					A5($elm$core$Dict$RBNode_elm_builtin, 1, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, 1, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					color,
+					rK,
+					rV,
+					A5($elm$core$Dict$RBNode_elm_builtin, 0, key, value, left, rLeft),
+					rRight);
+			}
+		} else {
+			if ((((left.$ === -1) && (!left.a)) && (left.d.$ === -1)) && (!left.d.a)) {
+				var _v5 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var _v6 = left.d;
+				var _v7 = _v6.a;
+				var llK = _v6.b;
+				var llV = _v6.c;
+				var llLeft = _v6.d;
+				var llRight = _v6.e;
+				var lRight = left.e;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					0,
+					lK,
+					lV,
+					A5($elm$core$Dict$RBNode_elm_builtin, 1, llK, llV, llLeft, llRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, 1, key, value, lRight, right));
+			} else {
+				return A5($elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
+			}
+		}
+	});
+var $elm$core$Basics$compare = _Utils_compare;
+var $elm$core$Dict$insertHelp = F3(
+	function (key, value, dict) {
+		if (dict.$ === -2) {
+			return A5($elm$core$Dict$RBNode_elm_builtin, 0, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
+		} else {
+			var nColor = dict.a;
+			var nKey = dict.b;
+			var nValue = dict.c;
+			var nLeft = dict.d;
+			var nRight = dict.e;
+			var _v1 = A2($elm$core$Basics$compare, key, nKey);
+			switch (_v1) {
+				case 0:
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						A3($elm$core$Dict$insertHelp, key, value, nLeft),
+						nRight);
+				case 1:
+					return A5($elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
+				default:
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						nLeft,
+						A3($elm$core$Dict$insertHelp, key, value, nRight));
+			}
+		}
+	});
+var $elm$core$Dict$insert = F3(
+	function (key, value, dict) {
+		var _v0 = A3($elm$core$Dict$insertHelp, key, value, dict);
+		if ((_v0.$ === -1) && (!_v0.a)) {
+			var _v1 = _v0.a;
+			var k = _v0.b;
+			var v = _v0.c;
+			var l = _v0.d;
+			var r = _v0.e;
+			return A5($elm$core$Dict$RBNode_elm_builtin, 1, k, v, l, r);
+		} else {
+			var x = _v0;
+			return x;
+		}
+	});
+var $elm$core$Dict$fromList = function (assocs) {
+	return A3(
+		$elm$core$List$foldl,
+		F2(
+			function (_v0, dict) {
+				var key = _v0.a;
+				var value = _v0.b;
+				return A3($elm$core$Dict$insert, key, value, dict);
+			}),
+		$elm$core$Dict$empty,
+		assocs);
+};
+var $elm$core$Process$kill = _Scheduler_kill;
+var $elm$core$Dict$foldl = F3(
+	function (func, acc, dict) {
+		foldl:
+		while (true) {
+			if (dict.$ === -2) {
+				return acc;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var $temp$func = func,
+					$temp$acc = A3(
+					func,
+					key,
+					value,
+					A3($elm$core$Dict$foldl, func, acc, left)),
+					$temp$dict = right;
+				func = $temp$func;
+				acc = $temp$acc;
+				dict = $temp$dict;
+				continue foldl;
+			}
+		}
+	});
+var $elm$core$Dict$merge = F6(
+	function (leftStep, bothStep, rightStep, leftDict, rightDict, initialResult) {
+		var stepState = F3(
+			function (rKey, rValue, _v0) {
+				stepState:
+				while (true) {
+					var list = _v0.a;
+					var result = _v0.b;
+					if (!list.b) {
+						return _Utils_Tuple2(
+							list,
+							A3(rightStep, rKey, rValue, result));
+					} else {
+						var _v2 = list.a;
+						var lKey = _v2.a;
+						var lValue = _v2.b;
+						var rest = list.b;
+						if (_Utils_cmp(lKey, rKey) < 0) {
+							var $temp$rKey = rKey,
+								$temp$rValue = rValue,
+								$temp$_v0 = _Utils_Tuple2(
+								rest,
+								A3(leftStep, lKey, lValue, result));
+							rKey = $temp$rKey;
+							rValue = $temp$rValue;
+							_v0 = $temp$_v0;
+							continue stepState;
+						} else {
+							if (_Utils_cmp(lKey, rKey) > 0) {
+								return _Utils_Tuple2(
+									list,
+									A3(rightStep, rKey, rValue, result));
+							} else {
+								return _Utils_Tuple2(
+									rest,
+									A4(bothStep, lKey, lValue, rValue, result));
+							}
+						}
+					}
+				}
+			});
+		var _v3 = A3(
+			$elm$core$Dict$foldl,
+			stepState,
+			_Utils_Tuple2(
+				$elm$core$Dict$toList(leftDict),
+				initialResult),
+			rightDict);
+		var leftovers = _v3.a;
+		var intermediateResult = _v3.b;
+		return A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v4, result) {
+					var k = _v4.a;
+					var v = _v4.b;
+					return A3(leftStep, k, v, result);
+				}),
+			intermediateResult,
+			leftovers);
+	});
+var $elm$browser$Browser$Events$Event = F2(
+	function (key, event) {
+		return {bD: event, bg: key};
+	});
+var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
+var $elm$browser$Browser$Events$spawn = F3(
+	function (router, key, _v0) {
+		var node = _v0.a;
+		var name = _v0.b;
+		var actualNode = function () {
+			if (!node) {
+				return _Browser_doc;
+			} else {
+				return _Browser_window;
+			}
+		}();
+		return A2(
+			$elm$core$Task$map,
+			function (value) {
+				return _Utils_Tuple2(key, value);
+			},
+			A3(
+				_Browser_on,
+				actualNode,
+				name,
+				function (event) {
+					return A2(
+						$elm$core$Platform$sendToSelf,
+						router,
+						A2($elm$browser$Browser$Events$Event, key, event));
+				}));
+	});
+var $elm$core$Dict$union = F2(
+	function (t1, t2) {
+		return A3($elm$core$Dict$foldl, $elm$core$Dict$insert, t2, t1);
+	});
+var $elm$browser$Browser$Events$onEffects = F3(
+	function (router, subs, state) {
+		var stepRight = F3(
+			function (key, sub, _v6) {
+				var deads = _v6.a;
+				var lives = _v6.b;
+				var news = _v6.c;
+				return _Utils_Tuple3(
+					deads,
+					lives,
+					A2(
+						$elm$core$List$cons,
+						A3($elm$browser$Browser$Events$spawn, router, key, sub),
+						news));
+			});
+		var stepLeft = F3(
+			function (_v4, pid, _v5) {
+				var deads = _v5.a;
+				var lives = _v5.b;
+				var news = _v5.c;
+				return _Utils_Tuple3(
+					A2($elm$core$List$cons, pid, deads),
+					lives,
+					news);
+			});
+		var stepBoth = F4(
+			function (key, pid, _v2, _v3) {
+				var deads = _v3.a;
+				var lives = _v3.b;
+				var news = _v3.c;
+				return _Utils_Tuple3(
+					deads,
+					A3($elm$core$Dict$insert, key, pid, lives),
+					news);
+			});
+		var newSubs = A2($elm$core$List$map, $elm$browser$Browser$Events$addKey, subs);
+		var _v0 = A6(
+			$elm$core$Dict$merge,
+			stepLeft,
+			stepBoth,
+			stepRight,
+			state.bW,
+			$elm$core$Dict$fromList(newSubs),
+			_Utils_Tuple3(_List_Nil, $elm$core$Dict$empty, _List_Nil));
+		var deadPids = _v0.a;
+		var livePids = _v0.b;
+		var makeNewPids = _v0.c;
+		return A2(
+			$elm$core$Task$andThen,
+			function (pids) {
+				return $elm$core$Task$succeed(
+					A2(
+						$elm$browser$Browser$Events$State,
+						newSubs,
+						A2(
+							$elm$core$Dict$union,
+							livePids,
+							$elm$core$Dict$fromList(pids))));
+			},
+			A2(
+				$elm$core$Task$andThen,
+				function (_v1) {
+					return $elm$core$Task$sequence(makeNewPids);
+				},
+				$elm$core$Task$sequence(
+					A2($elm$core$List$map, $elm$core$Process$kill, deadPids))));
+	});
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (!_v0.$) {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
+var $elm$browser$Browser$Events$onSelfMsg = F3(
+	function (router, _v0, state) {
+		var key = _v0.bg;
+		var event = _v0.bD;
+		var toMessage = function (_v2) {
+			var subKey = _v2.a;
+			var _v3 = _v2.b;
+			var node = _v3.a;
+			var name = _v3.b;
+			var decoder = _v3.c;
+			return _Utils_eq(subKey, key) ? A2(_Browser_decodeEvent, decoder, event) : $elm$core$Maybe$Nothing;
+		};
+		var messages = A2($elm$core$List$filterMap, toMessage, state.b5);
+		return A2(
+			$elm$core$Task$andThen,
+			function (_v1) {
+				return $elm$core$Task$succeed(state);
+			},
+			$elm$core$Task$sequence(
+				A2(
+					$elm$core$List$map,
+					$elm$core$Platform$sendToApp(router),
+					messages)));
+	});
+var $elm$browser$Browser$Events$subMap = F2(
+	function (func, _v0) {
+		var node = _v0.a;
+		var name = _v0.b;
+		var decoder = _v0.c;
+		return A3(
+			$elm$browser$Browser$Events$MySub,
+			node,
+			name,
+			A2($elm$json$Json$Decode$map, func, decoder));
+	});
+_Platform_effectManagers['Browser.Events'] = _Platform_createManager($elm$browser$Browser$Events$init, $elm$browser$Browser$Events$onEffects, $elm$browser$Browser$Events$onSelfMsg, 0, $elm$browser$Browser$Events$subMap);
+var $elm$browser$Browser$Events$subscription = _Platform_leaf('Browser.Events');
+var $elm$browser$Browser$Events$on = F3(
+	function (node, name, decoder) {
+		return $elm$browser$Browser$Events$subscription(
+			A3($elm$browser$Browser$Events$MySub, node, name, decoder));
+	});
+var $elm$browser$Browser$Events$onMouseMove = A2($elm$browser$Browser$Events$on, 0, 'mousemove');
+var $elm$browser$Browser$Events$onMouseUp = A2($elm$browser$Browser$Events$on, 0, 'mouseup');
+var $author$project$DnDList$subscriptions = F2(
+	function (stepMsg, _v0) {
+		var model = _v0;
+		if (model.$ === 1) {
+			return $elm$core$Platform$Sub$none;
+		} else {
+			return $elm$core$Platform$Sub$batch(
+				_List_fromArray(
+					[
+						$elm$browser$Browser$Events$onMouseMove(
+						A2(
+							$elm$json$Json$Decode$map,
+							A2($elm$core$Basics$composeL, stepMsg, $author$project$DnDList$Drag),
+							$author$project$Internal$Common$Utils$decodeCoordinates)),
+						$elm$browser$Browser$Events$onMouseUp(
+						$elm$json$Json$Decode$succeed(
+							stepMsg($author$project$DnDList$DragEnd)))
+					]));
+		}
+	});
+var $author$project$DnDList$create = F2(
+	function (config, stepMsg) {
+		return {
+			cM: $author$project$DnDList$commands(stepMsg),
+			cT: $author$project$DnDList$dragEvents(stepMsg),
+			cU: $author$project$DnDList$dropEvents(stepMsg),
+			c$: $author$project$DnDList$ghostStyles(config.dk),
+			bf: $author$project$DnDList$info,
+			dj: $elm$core$Maybe$Nothing,
+			b6: $author$project$DnDList$subscriptions(stepMsg),
+			ca: $author$project$DnDList$update(config)
+		};
+	});
+var $author$project$Introduction$Basic_NoTouch$system = A2($author$project$DnDList$create, $author$project$Introduction$Basic_NoTouch$config, $elm$core$Basics$identity);
+var $author$project$Introduction$Basic_NoTouch$initialModel = {aa: $author$project$Introduction$Basic_NoTouch$system.dj, au: $author$project$Introduction$Basic_NoTouch$data};
 var $author$project$Introduction$Groups$Item = F3(
 	function (group, value, color) {
 		return {aV: color, t: group, aB: value};
@@ -8827,6 +9366,8 @@ var $author$project$Introduction$Root$toExample = function (slug) {
 	switch (slug) {
 		case 'basic':
 			return $author$project$Introduction$Root$Basic($author$project$Introduction$Basic$initialModel);
+		case 'basic-no-touch':
+			return $author$project$Introduction$Root$Basic($author$project$Introduction$Basic_NoTouch$initialModel);
 		case 'basic-elm-ui':
 			return $author$project$Introduction$Root$BasicElmUI($author$project$Introduction$BasicElmUI$initialModel);
 		case 'handle':
@@ -8966,7 +9507,6 @@ var $elm$url$Url$Parser$addToParametersHelp = F2(
 		}
 	});
 var $elm$url$Url$percentDecode = _Url_percentDecode;
-var $elm$core$Basics$compare = _Utils_compare;
 var $elm$core$Dict$get = F2(
 	function (targetKey, dict) {
 		get:
@@ -8996,115 +9536,6 @@ var $elm$core$Dict$get = F2(
 						continue get;
 				}
 			}
-		}
-	});
-var $elm$core$Dict$Black = 1;
-var $elm$core$Dict$RBNode_elm_builtin = F5(
-	function (a, b, c, d, e) {
-		return {$: -1, a: a, b: b, c: c, d: d, e: e};
-	});
-var $elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
-var $elm$core$Dict$Red = 0;
-var $elm$core$Dict$balance = F5(
-	function (color, key, value, left, right) {
-		if ((right.$ === -1) && (!right.a)) {
-			var _v1 = right.a;
-			var rK = right.b;
-			var rV = right.c;
-			var rLeft = right.d;
-			var rRight = right.e;
-			if ((left.$ === -1) && (!left.a)) {
-				var _v3 = left.a;
-				var lK = left.b;
-				var lV = left.c;
-				var lLeft = left.d;
-				var lRight = left.e;
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					0,
-					key,
-					value,
-					A5($elm$core$Dict$RBNode_elm_builtin, 1, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, 1, rK, rV, rLeft, rRight));
-			} else {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					color,
-					rK,
-					rV,
-					A5($elm$core$Dict$RBNode_elm_builtin, 0, key, value, left, rLeft),
-					rRight);
-			}
-		} else {
-			if ((((left.$ === -1) && (!left.a)) && (left.d.$ === -1)) && (!left.d.a)) {
-				var _v5 = left.a;
-				var lK = left.b;
-				var lV = left.c;
-				var _v6 = left.d;
-				var _v7 = _v6.a;
-				var llK = _v6.b;
-				var llV = _v6.c;
-				var llLeft = _v6.d;
-				var llRight = _v6.e;
-				var lRight = left.e;
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					0,
-					lK,
-					lV,
-					A5($elm$core$Dict$RBNode_elm_builtin, 1, llK, llV, llLeft, llRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, 1, key, value, lRight, right));
-			} else {
-				return A5($elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
-			}
-		}
-	});
-var $elm$core$Dict$insertHelp = F3(
-	function (key, value, dict) {
-		if (dict.$ === -2) {
-			return A5($elm$core$Dict$RBNode_elm_builtin, 0, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
-		} else {
-			var nColor = dict.a;
-			var nKey = dict.b;
-			var nValue = dict.c;
-			var nLeft = dict.d;
-			var nRight = dict.e;
-			var _v1 = A2($elm$core$Basics$compare, key, nKey);
-			switch (_v1) {
-				case 0:
-					return A5(
-						$elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						A3($elm$core$Dict$insertHelp, key, value, nLeft),
-						nRight);
-				case 1:
-					return A5($elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
-				default:
-					return A5(
-						$elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						nLeft,
-						A3($elm$core$Dict$insertHelp, key, value, nRight));
-			}
-		}
-	});
-var $elm$core$Dict$insert = F3(
-	function (key, value, dict) {
-		var _v0 = A3($elm$core$Dict$insertHelp, key, value, dict);
-		if ((_v0.$ === -1) && (!_v0.a)) {
-			var _v1 = _v0.a;
-			var k = _v0.b;
-			var v = _v0.c;
-			var l = _v0.d;
-			var r = _v0.e;
-			return A5($elm$core$Dict$RBNode_elm_builtin, 1, k, v, l, r);
-		} else {
-			var x = _v0;
-			return x;
 		}
 	});
 var $elm$core$Dict$getMin = function (dict) {
@@ -9508,7 +9939,6 @@ var $elm$url$Url$Parser$addParam = F2(
 			return dict;
 		}
 	});
-var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
 var $elm$url$Url$Parser$prepareQuery = function (maybeQuery) {
 	if (maybeQuery.$ === 1) {
 		return $elm$core$Dict$empty;
@@ -10285,34 +10715,40 @@ var $author$project$Home$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$none;
 };
 var $author$project$Introduction$Root$BasicElmUIMsg = function (a) {
-	return {$: 1, a: a};
+	return {$: 2, a: a};
 };
 var $author$project$Introduction$Root$BasicMsg = function (a) {
 	return {$: 0, a: a};
 };
+var $author$project$Introduction$Root$BasicNoTouchMsg = function (a) {
+	return {$: 1, a: a};
+};
 var $author$project$Introduction$Root$GroupsMsg = function (a) {
-	return {$: 8, a: a};
+	return {$: 9, a: a};
 };
 var $author$project$Introduction$Root$HandleMsg = function (a) {
-	return {$: 2, a: a};
-};
-var $author$project$Introduction$Root$IndependentsMsg = function (a) {
-	return {$: 7, a: a};
-};
-var $author$project$Introduction$Root$KeyedMsg = function (a) {
 	return {$: 3, a: a};
 };
-var $author$project$Introduction$Root$MarginsMsg = function (a) {
+var $author$project$Introduction$Root$IndependentsMsg = function (a) {
+	return {$: 8, a: a};
+};
+var $author$project$Introduction$Root$KeyedMsg = function (a) {
 	return {$: 4, a: a};
 };
+var $author$project$Introduction$Root$MarginsMsg = function (a) {
+	return {$: 5, a: a};
+};
 var $author$project$Introduction$Root$ResizeMsg = function (a) {
-	return {$: 6, a: a};
+	return {$: 7, a: a};
 };
 var $author$project$Introduction$Basic$subscriptions = function (model) {
 	return $author$project$Introduction$Basic$system.b6(model.aa);
 };
 var $author$project$Introduction$BasicElmUI$subscriptions = function (model) {
 	return $author$project$Introduction$BasicElmUI$system.b6(model.aa);
+};
+var $author$project$Introduction$Basic_NoTouch$subscriptions = function (model) {
+	return $author$project$Introduction$Basic_NoTouch$system.b6(model.aa);
 };
 var $author$project$Introduction$Groups$subscriptions = function (model) {
 	return $author$project$Introduction$Groups$system.b6(model.aa);
@@ -10352,39 +10788,45 @@ var $author$project$Introduction$Root$subscriptions = function (model) {
 			var mo = model.a;
 			return A2(
 				$elm$core$Platform$Sub$map,
+				$author$project$Introduction$Root$BasicNoTouchMsg,
+				$author$project$Introduction$Basic_NoTouch$subscriptions(mo));
+		case 2:
+			var mo = model.a;
+			return A2(
+				$elm$core$Platform$Sub$map,
 				$author$project$Introduction$Root$BasicElmUIMsg,
 				$author$project$Introduction$BasicElmUI$subscriptions(mo));
-		case 2:
+		case 3:
 			var mo = model.a;
 			return A2(
 				$elm$core$Platform$Sub$map,
 				$author$project$Introduction$Root$HandleMsg,
 				$author$project$Introduction$Handle$subscriptions(mo));
-		case 3:
+		case 4:
 			var mo = model.a;
 			return A2(
 				$elm$core$Platform$Sub$map,
 				$author$project$Introduction$Root$KeyedMsg,
 				$author$project$Introduction$Keyed$subscriptions(mo));
-		case 4:
+		case 5:
 			var mo = model.a;
 			return A2(
 				$elm$core$Platform$Sub$map,
 				$author$project$Introduction$Root$MarginsMsg,
 				$author$project$Introduction$Margins$subscriptions(mo));
-		case 5:
+		case 6:
 			var mo = model.a;
 			return A2(
 				$elm$core$Platform$Sub$map,
 				$author$project$Introduction$Root$MasonryMsg,
 				$author$project$Introduction$Masonry$subscriptions(mo));
-		case 6:
+		case 7:
 			var mo = model.a;
 			return A2(
 				$elm$core$Platform$Sub$map,
 				$author$project$Introduction$Root$ResizeMsg,
 				$author$project$Introduction$Resize$subscriptions(mo));
-		case 7:
+		case 8:
 			var mo = model.a;
 			return A2(
 				$elm$core$Platform$Sub$map,
@@ -12216,6 +12658,16 @@ var $author$project$Introduction$Root$stepBasicElmUI = function (_v0) {
 		$author$project$Introduction$Root$BasicElmUI(mo),
 		A2($elm$core$Platform$Cmd$map, $author$project$Introduction$Root$BasicElmUIMsg, cmds));
 };
+var $author$project$Introduction$Root$BasicNoTouch = function (a) {
+	return {$: 1, a: a};
+};
+var $author$project$Introduction$Root$stepBasicNoTouch = function (_v0) {
+	var mo = _v0.a;
+	var cmds = _v0.b;
+	return _Utils_Tuple2(
+		$author$project$Introduction$Root$BasicNoTouch(mo),
+		A2($elm$core$Platform$Cmd$map, $author$project$Introduction$Root$BasicNoTouchMsg, cmds));
+};
 var $author$project$Introduction$Root$stepGroups = function (_v0) {
 	var mo = _v0.a;
 	var cmds = _v0.b;
@@ -12288,6 +12740,18 @@ var $author$project$Introduction$BasicElmUI$update = F2(
 				model,
 				{aa: dnd, au: items}),
 			$author$project$Introduction$BasicElmUI$system.cM(dnd));
+	});
+var $author$project$Introduction$Basic_NoTouch$update = F2(
+	function (message, model) {
+		var msg = message;
+		var _v1 = A3($author$project$Introduction$Basic_NoTouch$system.ca, msg, model.aa, model.au);
+		var dnd = _v1.a;
+		var items = _v1.b;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{aa: dnd, au: items}),
+			$author$project$Introduction$Basic_NoTouch$system.cM(dnd));
 	});
 var $author$project$Introduction$Groups$update = F2(
 	function (message, model) {
@@ -12410,7 +12874,7 @@ var $author$project$Introduction$Resize$update = F2(
 var $author$project$Introduction$Root$update = F2(
 	function (message, model) {
 		var _v0 = _Utils_Tuple2(message, model);
-		_v0$9:
+		_v0$10:
 		while (true) {
 			switch (_v0.a.$) {
 				case 0:
@@ -12420,79 +12884,88 @@ var $author$project$Introduction$Root$update = F2(
 						return $author$project$Introduction$Root$stepBasic(
 							A2($author$project$Introduction$Basic$update, msg, mo));
 					} else {
-						break _v0$9;
+						break _v0$10;
 					}
 				case 1:
 					if (_v0.b.$ === 1) {
 						var msg = _v0.a.a;
 						var mo = _v0.b.a;
-						return $author$project$Introduction$Root$stepBasicElmUI(
-							A2($author$project$Introduction$BasicElmUI$update, msg, mo));
+						return $author$project$Introduction$Root$stepBasicNoTouch(
+							A2($author$project$Introduction$Basic_NoTouch$update, msg, mo));
 					} else {
-						break _v0$9;
+						break _v0$10;
 					}
 				case 2:
 					if (_v0.b.$ === 2) {
 						var msg = _v0.a.a;
 						var mo = _v0.b.a;
-						return $author$project$Introduction$Root$stepHandle(
-							A2($author$project$Introduction$Handle$update, msg, mo));
+						return $author$project$Introduction$Root$stepBasicElmUI(
+							A2($author$project$Introduction$BasicElmUI$update, msg, mo));
 					} else {
-						break _v0$9;
+						break _v0$10;
 					}
 				case 3:
 					if (_v0.b.$ === 3) {
 						var msg = _v0.a.a;
 						var mo = _v0.b.a;
-						return $author$project$Introduction$Root$stepKeyed(
-							A2($author$project$Introduction$Keyed$update, msg, mo));
+						return $author$project$Introduction$Root$stepHandle(
+							A2($author$project$Introduction$Handle$update, msg, mo));
 					} else {
-						break _v0$9;
+						break _v0$10;
 					}
 				case 4:
 					if (_v0.b.$ === 4) {
 						var msg = _v0.a.a;
 						var mo = _v0.b.a;
-						return $author$project$Introduction$Root$stepMargins(
-							A2($author$project$Introduction$Margins$update, msg, mo));
+						return $author$project$Introduction$Root$stepKeyed(
+							A2($author$project$Introduction$Keyed$update, msg, mo));
 					} else {
-						break _v0$9;
+						break _v0$10;
 					}
 				case 5:
 					if (_v0.b.$ === 5) {
 						var msg = _v0.a.a;
 						var mo = _v0.b.a;
-						return $author$project$Introduction$Root$stepMasonry(
-							A2($author$project$Introduction$Masonry$update, msg, mo));
+						return $author$project$Introduction$Root$stepMargins(
+							A2($author$project$Introduction$Margins$update, msg, mo));
 					} else {
-						break _v0$9;
+						break _v0$10;
 					}
 				case 6:
 					if (_v0.b.$ === 6) {
 						var msg = _v0.a.a;
 						var mo = _v0.b.a;
-						return $author$project$Introduction$Root$stepResize(
-							A2($author$project$Introduction$Resize$update, msg, mo));
+						return $author$project$Introduction$Root$stepMasonry(
+							A2($author$project$Introduction$Masonry$update, msg, mo));
 					} else {
-						break _v0$9;
+						break _v0$10;
 					}
 				case 7:
 					if (_v0.b.$ === 7) {
 						var msg = _v0.a.a;
 						var mo = _v0.b.a;
+						return $author$project$Introduction$Root$stepResize(
+							A2($author$project$Introduction$Resize$update, msg, mo));
+					} else {
+						break _v0$10;
+					}
+				case 8:
+					if (_v0.b.$ === 8) {
+						var msg = _v0.a.a;
+						var mo = _v0.b.a;
 						return $author$project$Introduction$Root$stepIndependents(
 							A2($author$project$Introduction$Independents$update, msg, mo));
 					} else {
-						break _v0$9;
+						break _v0$10;
 					}
 				default:
-					if (_v0.b.$ === 8) {
+					if (_v0.b.$ === 9) {
 						var msg = _v0.a.a;
 						var mo = _v0.b.a;
 						return $author$project$Introduction$Root$stepGroups(
 							A2($author$project$Introduction$Groups$update, msg, mo));
 					} else {
-						break _v0$9;
+						break _v0$10;
 					}
 			}
 		}
@@ -12861,18 +13334,20 @@ var $author$project$Introduction$Root$codeView = function (model) {
 		case 0:
 			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Basic.elm');
 		case 1:
-			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/BasicElmUI.elm');
+			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Basic_NoTouch.elm');
 		case 2:
-			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Handle.elm');
+			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/BasicElmUI.elm');
 		case 3:
-			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Keyed.elm');
+			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Handle.elm');
 		case 4:
-			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Margins.elm');
+			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Keyed.elm');
 		case 5:
-			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Masonry.elm');
+			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Margins.elm');
 		case 6:
-			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Resize.elm');
+			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Masonry.elm');
 		case 7:
+			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Resize.elm');
+		case 8:
 			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Independents.elm');
 		default:
 			return $author$project$Introduction$Root$toCode('https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Groups.elm');
@@ -13002,16 +13477,6 @@ var $author$project$Config$Movement$FreeOnDrag$itemView = F4(
 						$elm$html$Html$text(item)
 					]));
 		}
-	});
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 0, a: a};
-};
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
 	});
 var $elm$html$Html$Events$onMouseDown = function (msg) {
 	return A2(
@@ -17149,24 +17614,6 @@ var $author$project$Gallery$Knight$ghostView = F2(
 		} else {
 			return $elm$html$Html$text('');
 		}
-	});
-var $elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _v0 = f(mx);
-		if (!_v0.$) {
-			var x = _v0.a;
-			return A2($elm$core$List$cons, x, xs);
-		} else {
-			return xs;
-		}
-	});
-var $elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			$elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
 	});
 var $author$project$Gallery$Knight$indices8x8 = A2(
 	$elm$core$List$filterMap,
@@ -24319,6 +24766,87 @@ var $author$project$Introduction$BasicElmUI$view = function (model) {
 						model.au)))
 			]));
 };
+var $author$project$Introduction$Basic_NoTouch$ghostView = F2(
+	function (dnd, items) {
+		var maybeDragItem = A2(
+			$elm$core$Maybe$andThen,
+			function (_v1) {
+				var dragIndex = _v1.ba;
+				return $elm$core$List$head(
+					A2($elm$core$List$drop, dragIndex, items));
+			},
+			$author$project$Introduction$Basic_NoTouch$system.bf(dnd));
+		if (!maybeDragItem.$) {
+			var item = maybeDragItem.a;
+			return A2(
+				$elm$html$Html$div,
+				$author$project$Introduction$Basic_NoTouch$system.c$(dnd),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(item)
+					]));
+		} else {
+			return $elm$html$Html$text('');
+		}
+	});
+var $author$project$Introduction$Basic_NoTouch$itemView = F3(
+	function (dnd, index, item) {
+		var itemId = 'id-' + item;
+		var _v0 = $author$project$Introduction$Basic_NoTouch$system.bf(dnd);
+		if (!_v0.$) {
+			var dragIndex = _v0.a.ba;
+			return (!_Utils_eq(dragIndex, index)) ? A2(
+				$elm$html$Html$p,
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$id(itemId),
+					A2($author$project$Introduction$Basic_NoTouch$system.cU, index, itemId)),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(item)
+					])) : A2(
+				$elm$html$Html$p,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id(itemId)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('[---------]')
+					]));
+		} else {
+			return A2(
+				$elm$html$Html$p,
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$id(itemId),
+					A2($author$project$Introduction$Basic_NoTouch$system.cT, index, itemId)),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(item)
+					]));
+		}
+	});
+var $author$project$Introduction$Basic_NoTouch$view = function (model) {
+	return A2(
+		$elm$html$Html$section,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+				A2($elm$html$Html$Attributes$style, 'touch-action', 'none')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				A2(
+					$elm$core$List$indexedMap,
+					$author$project$Introduction$Basic_NoTouch$itemView(model.aa),
+					model.au)),
+				A2($author$project$Introduction$Basic_NoTouch$ghostView, model.aa, model.au)
+			]));
+};
 var $author$project$Introduction$Groups$itemStyles = function (color) {
 	return _List_fromArray(
 		[
@@ -25381,39 +25909,45 @@ var $author$project$Introduction$Root$demoView = function (model) {
 			var mo = model.a;
 			return A2(
 				$elm$html$Html$map,
+				$author$project$Introduction$Root$BasicNoTouchMsg,
+				$author$project$Introduction$Basic_NoTouch$view(mo));
+		case 2:
+			var mo = model.a;
+			return A2(
+				$elm$html$Html$map,
 				$author$project$Introduction$Root$BasicElmUIMsg,
 				$author$project$Introduction$BasicElmUI$view(mo));
-		case 2:
+		case 3:
 			var mo = model.a;
 			return A2(
 				$elm$html$Html$map,
 				$author$project$Introduction$Root$HandleMsg,
 				$author$project$Introduction$Handle$view(mo));
-		case 3:
+		case 4:
 			var mo = model.a;
 			return A2(
 				$elm$html$Html$map,
 				$author$project$Introduction$Root$KeyedMsg,
 				$author$project$Introduction$Keyed$view(mo));
-		case 4:
+		case 5:
 			var mo = model.a;
 			return A2(
 				$elm$html$Html$map,
 				$author$project$Introduction$Root$MarginsMsg,
 				$author$project$Introduction$Margins$view(mo));
-		case 5:
+		case 6:
 			var mo = model.a;
 			return A2(
 				$elm$html$Html$map,
 				$author$project$Introduction$Root$MasonryMsg,
 				$author$project$Introduction$Masonry$view(mo));
-		case 6:
+		case 7:
 			var mo = model.a;
 			return A2(
 				$elm$html$Html$map,
 				$author$project$Introduction$Root$ResizeMsg,
 				$author$project$Introduction$Resize$view(mo));
-		case 7:
+		case 8:
 			var mo = model.a;
 			return A2(
 				$elm$html$Html$map,
@@ -25568,18 +26102,20 @@ var $author$project$Introduction$Root$info = function (example) {
 		case 0:
 			return {aG: 'Plain sortable list', aK: 'basic', aA: 'Basic'};
 		case 1:
-			return {aG: 'Designed with mdgriffith/elm-ui', aK: 'basic-elm-ui', aA: 'Basic + Elm UI'};
+			return {aG: 'Plain sortable list', aK: 'basic-no-touch', aA: 'Basic (No Touch)'};
 		case 2:
-			return {aG: 'Use a subelement as a drag handle.', aK: 'handle', aA: 'Drag handle'};
+			return {aG: 'Designed with mdgriffith/elm-ui', aK: 'basic-elm-ui', aA: 'Basic + Elm UI'};
 		case 3:
-			return {aG: 'Use Html.Keyed for optimized DOM updates.', aK: 'keyed', aA: 'Keyed nodes'};
+			return {aG: 'Use a subelement as a drag handle.', aK: 'handle', aA: 'Drag handle'};
 		case 4:
-			return {aG: 'Wrap elements in case top or left margins are needed.', aK: 'margins', aA: 'Margins'};
+			return {aG: 'Use Html.Keyed for optimized DOM updates.', aK: 'keyed', aA: 'Keyed nodes'};
 		case 5:
-			return {aG: 'Simple horizontal masonry.', aK: 'masonry', aA: 'Masonry'};
+			return {aG: 'Wrap elements in case top or left margins are needed.', aK: 'margins', aA: 'Margins'};
 		case 6:
-			return {aG: 'Put a drag handle to the top-left corner with resizable ghost element.', aK: 'resize', aA: 'Resize'};
+			return {aG: 'Simple horizontal masonry.', aK: 'masonry', aA: 'Masonry'};
 		case 7:
+			return {aG: 'Put a drag handle to the top-left corner with resizable ghost element.', aK: 'resize', aA: 'Resize'};
+		case 8:
 			return {aG: 'Without thinking: duplicate everything.', aK: 'independents', aA: 'Independent lists'};
 		default:
 			return {aG: 'The list state invariant is that the list is gathered by the grouping property, and the auxiliary items preserve their places.', aK: 'groups', aA: 'Groupable items'};
@@ -25925,6 +26461,7 @@ var $author$project$Introduction$Root$navigationView = function (currentPath) {
 					_List_fromArray(
 						[
 							$author$project$Introduction$Root$Basic($author$project$Introduction$Basic$initialModel),
+							$author$project$Introduction$Root$BasicNoTouch($author$project$Introduction$Basic_NoTouch$initialModel),
 							$author$project$Introduction$Root$BasicElmUI($author$project$Introduction$BasicElmUI$initialModel),
 							$author$project$Introduction$Root$Handle($author$project$Introduction$Handle$initialModel),
 							$author$project$Introduction$Root$Keyed($author$project$Introduction$Keyed$initialModel),

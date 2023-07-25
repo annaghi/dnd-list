@@ -15,6 +15,7 @@ import Html
 import Html.Attributes
 import Introduction.Basic
 import Introduction.BasicElmUI
+import Introduction.Basic_NoTouch
 import Introduction.Groups
 import Introduction.Handle
 import Introduction.Independents
@@ -36,6 +37,7 @@ type alias Model =
 
 type Example
     = Basic Introduction.Basic.Model
+    | BasicNoTouch Introduction.Basic_NoTouch.Model
     | BasicElmUI Introduction.BasicElmUI.Model
     | Handle Introduction.Handle.Model
     | Keyed Introduction.Keyed.Model
@@ -57,6 +59,7 @@ init slug =
 
 type Msg
     = BasicMsg Introduction.Basic.Msg
+    | BasicNoTouchMsg Introduction.Basic_NoTouch.Msg
     | BasicElmUIMsg Introduction.BasicElmUI.Msg
     | HandleMsg Introduction.Handle.Msg
     | KeyedMsg Introduction.Keyed.Msg
@@ -72,6 +75,9 @@ update message model =
     case ( message, model ) of
         ( BasicMsg msg, Basic mo ) ->
             stepBasic (Introduction.Basic.update msg mo)
+
+        ( BasicNoTouchMsg msg, BasicNoTouch mo ) ->
+            stepBasicNoTouch (Introduction.Basic_NoTouch.update msg mo)
 
         ( BasicElmUIMsg msg, BasicElmUI mo ) ->
             stepBasicElmUI (Introduction.BasicElmUI.update msg mo)
@@ -104,6 +110,11 @@ update message model =
 stepBasic : ( Introduction.Basic.Model, Cmd Introduction.Basic.Msg ) -> ( Model, Cmd Msg )
 stepBasic ( mo, cmds ) =
     ( Basic mo, Cmd.map BasicMsg cmds )
+
+
+stepBasicNoTouch : ( Introduction.Basic_NoTouch.Model, Cmd Introduction.Basic_NoTouch.Msg ) -> ( Model, Cmd Msg )
+stepBasicNoTouch ( mo, cmds ) =
+    ( BasicNoTouch mo, Cmd.map BasicNoTouchMsg cmds )
 
 
 stepBasicElmUI : ( Introduction.BasicElmUI.Model, Cmd Introduction.BasicElmUI.Msg ) -> ( Model, Cmd Msg )
@@ -156,6 +167,9 @@ subscriptions model =
         Basic mo ->
             Sub.map BasicMsg (Introduction.Basic.subscriptions mo)
 
+        BasicNoTouch mo ->
+            Sub.map BasicNoTouchMsg (Introduction.Basic_NoTouch.subscriptions mo)
+
         BasicElmUI mo ->
             Sub.map BasicElmUIMsg (Introduction.BasicElmUI.subscriptions mo)
 
@@ -200,6 +214,7 @@ navigationView currentPath =
         [ Html.Attributes.class "navigation" ]
         [ Html.h4 [] [ Html.text "Introduction" ]
         , [ Basic Introduction.Basic.initialModel
+          , BasicNoTouch Introduction.Basic_NoTouch.initialModel
           , BasicElmUI Introduction.BasicElmUI.initialModel
           , Handle Introduction.Handle.initialModel
           , Keyed Introduction.Keyed.initialModel
@@ -253,6 +268,9 @@ demoView model =
         Basic mo ->
             Html.map BasicMsg (Introduction.Basic.view mo)
 
+        BasicNoTouch mo ->
+            Html.map BasicNoTouchMsg (Introduction.Basic_NoTouch.view mo)
+
         BasicElmUI mo ->
             Html.map BasicElmUIMsg (Introduction.BasicElmUI.view mo)
 
@@ -283,6 +301,9 @@ codeView model =
     case model of
         Basic _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Basic.elm"
+
+        BasicNoTouch _ ->
+            toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/Basic_NoTouch.elm"
 
         BasicElmUI _ ->
             toCode "https://raw.githubusercontent.com/annaghi/dnd-list/master/examples/src/Introduction/BasicElmUI.elm"
@@ -323,6 +344,9 @@ toExample slug =
     case slug of
         "basic" ->
             Basic Introduction.Basic.initialModel
+
+        "basic-no-touch" ->
+            Basic Introduction.Basic_NoTouch.initialModel
 
         "basic-elm-ui" ->
             BasicElmUI Introduction.BasicElmUI.initialModel
@@ -365,6 +389,12 @@ info example =
         Basic _ ->
             { slug = "basic"
             , title = "Basic"
+            , description = "Plain sortable list"
+            }
+
+        BasicNoTouch _ ->
+            { slug = "basic-no-touch"
+            , title = "Basic (No Touch)"
             , description = "Plain sortable list"
             }
 
