@@ -1,10 +1,9 @@
 module DnDList exposing
-    ( System, create, Msg
+    ( System, create, createWithTouch, Msg
     , Config
     , Movement(..), Listen(..), Operation(..)
     , Info
     , Model
-    , createWithTouch
     )
 
 {-| While dragging and dropping a list item, the mouse events, the ghost element's positioning
@@ -48,7 +47,7 @@ You can add position styling attributes to this element using the`System` object
 
 # System
 
-@docs System, create, Msg
+@docs System, create, createWithTouch, Msg
 
 
 # Config

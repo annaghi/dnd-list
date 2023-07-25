@@ -1,10 +1,9 @@
 module DnDList.Groups exposing
-    ( System, create, Msg
+    ( System, create, createWithTouch, Msg
     , Config
     , Listen(..), Operation(..)
     , Info
     , Model
-    , createWithTouch
     )
 
 {-| If the list is groupable by a certain property, the items can be transferred between those groups.
@@ -47,7 +46,7 @@ So now the internal sorting distinguishes between these two cases and we need to
 
 # System
 
-@docs System, create, Msg
+@docs System, create, createWithTouch, Msg
 
 
 # Config
