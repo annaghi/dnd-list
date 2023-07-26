@@ -107,7 +107,6 @@ view : Model -> Html.Html Msg
 view model =
     Html.section
         [ Html.Attributes.style "text-align" "center"
-        , Html.Attributes.style "touch-action" "none"
         ]
         [ model.items
             |> List.indexedMap (itemView model.dnd)
