@@ -22,7 +22,19 @@
 
   <body>
     <script>
-      Elm.Main.init();
+      const app = Elm.Main.init();
+
+      app.ports.releasePointerCapture.subscribe( event => {
+        event.target.releasePointerCapture(event.pointerId)
+		  })
+
+      window.addEventListener("pointermove", (event) => {
+        app.ports.onPointerMove.send(event);
+      });
+
+      window.addEventListener("pointerup", (event) => {
+        app.ports.onPointerUp.send(event);
+      });
     </script>
   </body>
 </html>
