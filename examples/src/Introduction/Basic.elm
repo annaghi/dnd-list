@@ -4,10 +4,7 @@ import Browser
 import DnDList
 import Html
 import Html.Attributes
-
-
-
--- MAIN
+import Port
 
 
 main : Program () Model Msg
@@ -48,7 +45,7 @@ config =
 
 system : DnDList.System Fruit Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.createWithTouch config MyMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 
@@ -110,7 +107,9 @@ update message model =
 view : Model -> Html.Html Msg
 view model =
     Html.section
-        [ Html.Attributes.style "text-align" "center" ]
+        [ Html.Attributes.style "text-align" "center"
+        , Html.Attributes.style "touch-action" "none"
+        ]
         [ model.items
             |> List.indexedMap (itemView model.dnd)
             |> Html.div []

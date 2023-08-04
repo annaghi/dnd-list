@@ -4,6 +4,7 @@ import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Port
 import Svg
 import Svg.Attributes
 
@@ -68,7 +69,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.createWithTouch config MyMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 updateColor : Int -> Int -> List Item -> List Item
@@ -314,6 +315,7 @@ sectionStyles =
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "padding-top" "2rem"
+    , Html.Attributes.style "touch-action" "none"
     ]
 
 

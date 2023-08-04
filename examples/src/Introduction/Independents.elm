@@ -4,6 +4,7 @@ import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Port
 
 
 
@@ -53,7 +54,7 @@ redConfig =
 
 redSystem : DnDList.System String Msg
 redSystem =
-    DnDList.create redConfig RedMsg
+    DnDList.createWithTouch redConfig RedMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 blueConfig : DnDList.Config String
@@ -67,7 +68,7 @@ blueConfig =
 
 blueSystem : DnDList.System String Msg
 blueSystem =
-    DnDList.create blueConfig BlueMsg
+    DnDList.createWithTouch blueConfig BlueMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 
@@ -304,6 +305,7 @@ sectionStyles =
     , Html.Attributes.style "flex-direction" "column"
     , Html.Attributes.style "align-items" "center"
     , Html.Attributes.style "padding-top" "2em"
+    , Html.Attributes.style "touch-action" "none"
     ]
 
 

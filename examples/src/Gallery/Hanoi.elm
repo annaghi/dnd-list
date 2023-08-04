@@ -4,6 +4,7 @@ import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Port
 
 
 
@@ -59,7 +60,7 @@ config =
 
 system : DnDList.System Disk Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.createWithTouch config MyMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 updateTower : Int -> Int -> List Disk -> List Disk
@@ -319,6 +320,7 @@ sectionStyles =
     , Html.Attributes.style "flex-wrap" "wrap"
     , Html.Attributes.style "justify-content" "center"
     , Html.Attributes.style "padding-bottom" "2em"
+    , Html.Attributes.style "touch-action" "none"
     ]
 
 

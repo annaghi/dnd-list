@@ -1,5 +1,5 @@
 module DnDList.Groups exposing
-    ( System, create, Msg
+    ( System, create, createWithTouch, Msg
     , Config
     , Listen(..), Operation(..)
     , Info
@@ -46,7 +46,7 @@ So now the internal sorting distinguishes between these two cases and we need to
 
 # System
 
-@docs System, create, Msg
+@docs System, create, createWithTouch, Msg
 
 
 # Config
@@ -248,6 +248,8 @@ import Internal.Common.Operations
 import Internal.Common.Utils
 import Internal.Groups
 import Json.Decode
+import Json.Encode
+import Process
 import Task
 
 
@@ -281,6 +283,11 @@ type alias State =
     , dropElementId : DropElementId
     , dragElement : Maybe Browser.Dom.Element
     , dropElement : Maybe Browser.Dom.Element
+
+    -- this is only required for "withTouch", ideally we would
+    -- have two State's for these two cases, but it leads to a
+    -- lot of duplication
+    , pointerCaptureEvent : Maybe Json.Decode.Value
     }
 
 
@@ -347,7 +354,7 @@ And now the `System` is a wrapper type around the list item and our message type
 
     system : DnDList.Groups.System Item Msg
     system =
-        DnDList.Groups.create config MyMsg
+        DnDList.Groups.createWithTouch config MyMsg onPointerMove onPointerUp releasePointerCapture
 
 -}
 create : Config a -> (Msg -> msg) -> System a msg
@@ -358,6 +365,56 @@ create config stepMsg =
     , update = update config
     , dragEvents = dragEvents stepMsg
     , dropEvents = dropEvents stepMsg
+    , ghostStyles = ghostStyles
+    , info = info
+    }
+
+
+{-| Creates a `System` object according to the configuration.
+
+Same as `create`, but uses pointer events, so also supports touch.
+
+Requires ports to be passed in for `onPointerMove`, `onPointerUp`
+and `releasePointerCapture`
+
+example Elm ports:
+
+    port onPointerMove : (Json.Encode.Value -> msg) -> Sub msg
+
+    port onPointerUp : (Json.Encode.Value -> msg) -> Sub msg
+
+    port releasePointerCapture : Json.Encode.Value -> Cmd msg
+
+example index.html:
+
+```html
+<script>
+    const app = Elm.Main.init();
+
+    app.ports.releasePointerCapture.subscribe( event => {
+        event.target.releasePointerCapture(event.pointerId)
+    })
+
+    window.addEventListener("pointermove", (event) => {
+        app.ports.onPointerMove.send(event);
+    });
+
+    window.addEventListener("pointerup", (event) => {
+        app.ports.onPointerUp.send(event);
+    });
+
+</script>
+```
+
+-}
+createWithTouch : Config a -> (Msg -> msg) -> ((Json.Encode.Value -> msg) -> Sub msg) -> ((Json.Encode.Value -> msg) -> Sub msg) -> (Json.Decode.Value -> Cmd msg) -> System a msg
+createWithTouch config stepMsg onPointerMove onPointerUp releasePointerCapture =
+    { model = Model Nothing
+    , subscriptions = subscriptionsWithTouch stepMsg onPointerMove onPointerUp
+    , commands = commandsWithTouch stepMsg releasePointerCapture
+    , update = update config
+    , dragEvents = dragEventsWithTouch stepMsg
+    , dropEvents = dropEventsWithTouch stepMsg
     , ghostStyles = ghostStyles
     , info = info
     }
@@ -589,6 +646,29 @@ subscriptions stepMsg (Model model) =
                 ]
 
 
+subscriptionsWithTouch : (Msg -> msg) -> ((Json.Encode.Value -> msg) -> Sub msg) -> ((Json.Encode.Value -> msg) -> Sub msg) -> Model -> Sub msg
+subscriptionsWithTouch stepMsg onPointerMove onPointerUp (Model model) =
+    case model of
+        Nothing ->
+            Sub.none
+
+        Just _ ->
+            Sub.batch
+                [ onPointerMove
+                    (\value ->
+                        Json.Decode.decodeValue
+                            Internal.Common.Utils.decodeCoordinates
+                            value
+                            -- It would be better to default to Sub.none here, but it needs to return a `msg`,
+                            -- and `Sub.none` is a `Sub msg`
+                            |> Result.withDefault (Position 0.0 0.0)
+                            |> Drag
+                            |> stepMsg
+                    )
+                , onPointerUp (\_ -> stepMsg DragEnd)
+                ]
+
+
 commands : (Msg -> msg) -> Model -> Cmd msg
 commands stepMsg (Model model) =
     case model of
@@ -599,6 +679,34 @@ commands stepMsg (Model model) =
             Cmd.batch
                 [ dragElementCommands stepMsg state
                 , dropElementCommands stepMsg state
+                ]
+
+
+commandsWithTouch : (Msg -> msg) -> (Json.Decode.Value -> Cmd msg) -> Model -> Cmd msg
+commandsWithTouch stepMsg releasePointerCapture (Model model) =
+    case model of
+        Nothing ->
+            Cmd.none
+
+        Just state ->
+            Cmd.batch
+                [ dragElementCommands stepMsg state
+                , dropElementCommands stepMsg state
+                , releasePointerCaptureCommand stepMsg state releasePointerCapture
+                ]
+
+
+releasePointerCaptureCommand : (Msg -> msg) -> State -> (Json.Decode.Value -> Cmd msg) -> Cmd msg
+releasePointerCaptureCommand stepMsg state releasePointerCapture =
+    case state.pointerCaptureEvent of
+        Nothing ->
+            Cmd.none
+
+        Just pointerCaptureEvent ->
+            Cmd.batch
+                [ -- Task.perform is only here because I couldn't find another way to create a Cmd msg
+                  Task.perform (stepMsg << (\_ -> ResetPointerCaptureEvent)) (Process.sleep 1)
+                , releasePointerCapture pointerCaptureEvent
                 ]
 
 
@@ -628,8 +736,14 @@ It should be wrapped within our message constructor:
         = MyMsg DnDList.Groups.Msg
 
 -}
-type Msg
-    = DragStart DragIndex DragElementId Position
+type
+    Msg
+    -- (Maybe Json.Encode.Value) in DragStart and ResetPointerCaptureEvent
+    -- are only required for "withTouch", ideally we would
+    -- have two State's for these two cases, but it leads to a
+    -- lot of duplication
+    = DragStart DragIndex DragElementId (Maybe Json.Encode.Value) Position
+    | ResetPointerCaptureEvent
     | Drag Position
     | DragOver DropIndex DropElementId
     | DragEnter DropIndex
@@ -642,7 +756,7 @@ type Msg
 update : Config a -> Msg -> Model -> List a -> ( Model, List a )
 update { beforeUpdate, listen, operation, groups } msg (Model model) list =
     case msg of
-        DragStart dragIndex dragElementId xy ->
+        DragStart dragIndex dragElementId pointerCaptureEvent xy ->
             ( Model <|
                 Just
                     { dragIndex = dragIndex
@@ -654,7 +768,15 @@ update { beforeUpdate, listen, operation, groups } msg (Model model) list =
                     , dropElementId = dragElementId
                     , dragElement = Nothing
                     , dropElement = Nothing
+                    , pointerCaptureEvent = pointerCaptureEvent
                     }
+            , list
+            )
+
+        ResetPointerCaptureEvent ->
+            ( model
+                |> Maybe.map (\state -> { state | pointerCaptureEvent = Nothing })
+                |> Model
             , list
             )
 
@@ -858,7 +980,21 @@ dragEvents : (Msg -> msg) -> DragIndex -> DragElementId -> List (Html.Attribute 
 dragEvents stepMsg dragIndex dragElementId =
     [ Html.Events.preventDefaultOn "mousedown"
         (Internal.Common.Utils.decodeCoordinatesWithButtonCheck
-            |> Json.Decode.map (stepMsg << DragStart dragIndex dragElementId)
+            |> Json.Decode.map (DragStart dragIndex dragElementId Nothing)
+            |> Json.Decode.map stepMsg
+            |> Json.Decode.map (\msg -> ( msg, True ))
+        )
+    ]
+
+
+dragEventsWithTouch : (Msg -> msg) -> DragIndex -> DragElementId -> List (Html.Attribute msg)
+dragEventsWithTouch stepMsg dragIndex dragElementId =
+    [ Html.Events.preventDefaultOn "pointerdown"
+        (Json.Decode.map2
+            (DragStart dragIndex dragElementId)
+            (Json.Decode.map Just Json.Decode.value)
+            Internal.Common.Utils.decodeCoordinates
+            |> Json.Decode.map stepMsg
             |> Json.Decode.map (\msg -> ( msg, True ))
         )
     ]
@@ -869,6 +1005,17 @@ dropEvents stepMsg dropIndex dropElementId =
     [ Html.Events.onMouseOver (stepMsg (DragOver dropIndex dropElementId))
     , Html.Events.onMouseEnter (stepMsg (DragEnter dropIndex))
     , Html.Events.onMouseLeave (stepMsg DragLeave)
+    ]
+
+
+dropEventsWithTouch : (Msg -> msg) -> DropIndex -> DropElementId -> List (Html.Attribute msg)
+dropEventsWithTouch stepMsg dropIndex dropElementId =
+    [ Html.Events.preventDefaultOn "pointerover"
+        (Json.Decode.succeed ( stepMsg (DragOver dropIndex dropElementId), True ))
+    , Html.Events.preventDefaultOn "pointerenter"
+        (Json.Decode.succeed ( stepMsg (DragEnter dropIndex), True ))
+    , Html.Events.preventDefaultOn "pointerleave"
+        (Json.Decode.succeed ( stepMsg DragLeave, True ))
     ]
 
 

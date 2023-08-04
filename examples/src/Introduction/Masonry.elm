@@ -4,6 +4,7 @@ import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Port
 import Random
 
 
@@ -58,7 +59,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.createWithTouch config MyMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 
@@ -145,7 +146,8 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section []
+    Html.section
+        [ Html.Attributes.style "touch-action" "none" ]
         [ model.items
             |> List.indexedMap (itemView model.dnd)
             |> Html.div containerStyles

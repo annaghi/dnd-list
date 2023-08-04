@@ -4,6 +4,7 @@ import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Port
 
 
 
@@ -69,7 +70,7 @@ config =
 
 system : DnDList.System Color Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.createWithTouch config MyMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 
@@ -133,7 +134,8 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section []
+    Html.section
+        [ Html.Attributes.style "touch-action" "none" ]
         [ List.map2 (\color spot -> ( color, spot )) model.colors spots
             |> List.indexedMap (itemView model)
             |> Html.div containerStyles

@@ -4,6 +4,7 @@ import Browser
 import DnDList
 import Html
 import Html.Attributes
+import Port
 import Svg
 import Svg.Attributes
 
@@ -74,7 +75,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.createWithTouch config MyMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 updateShapes : Int -> Int -> List Item -> List Item
@@ -181,7 +182,7 @@ update message model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.section []
+    Html.section [ Html.Attributes.style "touch-action" "none" ]
         [ scoreView model.items
         , model.items
             |> List.take shapeNumber

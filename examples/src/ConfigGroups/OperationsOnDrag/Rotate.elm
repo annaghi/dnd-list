@@ -5,6 +5,7 @@ import DnDList.Groups
 import Html
 import Html.Attributes
 import Html.Events
+import Port
 
 
 
@@ -76,7 +77,7 @@ setter item1 item2 =
 
 system : DnDList.Groups.System Item Msg
 system =
-    DnDList.Groups.create config MyMsg
+    DnDList.Groups.createWithTouch config MyMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 beforeUpdate : Int -> Int -> List Item -> List Item
@@ -184,7 +185,7 @@ update message model =
 view : Model -> Html.Html Msg
 view model =
     Html.section
-        (Html.Events.onMouseDown ResetColors :: sectionStyles)
+        (Html.Events.onMouseDown ResetColors :: Html.Attributes.style "touch-action" "none" :: sectionStyles)
         [ groupView model 1
         , groupView model 2
         , groupView model 3

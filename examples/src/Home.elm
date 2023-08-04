@@ -41,7 +41,7 @@ init _ =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
@@ -65,5 +65,5 @@ update message model =
 
 
 view : Model -> Html.Html Msg
-view model =
+view _ =
     Html.text ""

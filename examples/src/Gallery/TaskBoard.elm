@@ -5,6 +5,7 @@ import DnDList
 import DnDList.Groups
 import Html
 import Html.Attributes
+import Port
 
 
 
@@ -82,7 +83,7 @@ setter card1 card2 =
 
 cardSystem : DnDList.Groups.System Card Msg
 cardSystem =
-    DnDList.Groups.create cardConfig CardMoved
+    DnDList.Groups.createWithTouch cardConfig CardMoved Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 columnConfig : DnDList.Config (List Card)
@@ -96,7 +97,7 @@ columnConfig =
 
 columnSystem : DnDList.System (List Card) Msg
 columnSystem =
-    DnDList.create columnConfig ColumnMoved
+    DnDList.createWithTouch columnConfig ColumnMoved Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 
@@ -187,7 +188,7 @@ view model =
         calculateOffset columnIndex =
             columns |> List.map List.length |> List.take columnIndex |> List.foldl (+) 0
     in
-    Html.section []
+    Html.section [ Html.Attributes.style "touch-action" "none" ]
         [ columns
             |> List.indexedMap (\i column -> columnView model (calculateOffset i) i column)
             |> Html.div boardStyles

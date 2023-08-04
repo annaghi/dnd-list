@@ -5,6 +5,7 @@ import DnDList
 import Html
 import Html.Attributes
 import Html.Events
+import Port
 
 
 
@@ -52,7 +53,7 @@ config =
 
 system : DnDList.System Item Msg
 system =
-    DnDList.create config MyMsg
+    DnDList.createWithTouch config MyMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
 
 
 beforeUpdate : Int -> Int -> List Item -> List Item
@@ -140,7 +141,9 @@ update message model =
 view : Model -> Html.Html Msg
 view model =
     Html.section
-        [ Html.Events.onMouseDown ResetColors ]
+        [ Html.Events.onMouseDown ResetColors
+        , Html.Attributes.style "touch-action" "none"
+        ]
         [ model.items
             |> List.indexedMap (itemView model.dnd)
             |> Html.div containerStyles

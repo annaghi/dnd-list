@@ -1,16 +1,9 @@
-module Introduction.BasicElmUI exposing (Model, Msg, initialModel, main, subscriptions, update, view)
+module Introduction.Basic_NoTouch exposing (Model, Msg, initialModel, main, subscriptions, update, view)
 
 import Browser
 import DnDList
-import Element
-import Element.Font
 import Html
 import Html.Attributes
-import Port
-
-
-
--- MAIN
 
 
 main : Program () Model Msg
@@ -51,7 +44,7 @@ config =
 
 system : DnDList.System Fruit Msg
 system =
-    DnDList.createWithTouch config MyMsg Port.onPointerMove Port.onPointerUp Port.releasePointerCapture
+    DnDList.create config MyMsg
 
 
 
@@ -113,20 +106,16 @@ update message model =
 view : Model -> Html.Html Msg
 view model =
     Html.section
-        [ Html.Attributes.style "touch-action" "none" ]
-        [ Element.layout
-            [ Element.width Element.fill
-            , Element.height Element.fill
-            , Element.inFront (ghostView model.dnd model.items)
-            ]
-            (Element.column
-                [ Element.centerX, Element.centerY, Element.padding 10, Element.spacing 10 ]
-                (model.items |> List.indexedMap (itemView model.dnd))
-            )
+        [ Html.Attributes.style "text-align" "center"
+        ]
+        [ model.items
+            |> List.indexedMap (itemView model.dnd)
+            |> Html.div []
+        , ghostView model.dnd model.items
         ]
 
 
-itemView : DnDList.Model -> Int -> Fruit -> Element.Element Msg
+itemView : DnDList.Model -> Int -> Fruit -> Html.Html Msg
 itemView dnd index item =
     let
         itemId : String
@@ -136,30 +125,22 @@ itemView dnd index item =
     case system.info dnd of
         Just { dragIndex } ->
             if dragIndex /= index then
-                Element.el
-                    (Element.Font.color (Element.rgb 1 1 1)
-                        :: Element.htmlAttribute (Html.Attributes.id itemId)
-                        :: List.map Element.htmlAttribute (system.dropEvents index itemId)
-                    )
-                    (Element.text item)
+                Html.p
+                    (Html.Attributes.id itemId :: system.dropEvents index itemId)
+                    [ Html.text item ]
 
             else
-                Element.el
-                    [ Element.Font.color (Element.rgb 1 1 1)
-                    , Element.htmlAttribute (Html.Attributes.id itemId)
-                    ]
-                    (Element.text "[---------]")
+                Html.p
+                    [ Html.Attributes.id itemId ]
+                    [ Html.text "[---------]" ]
 
         Nothing ->
-            Element.el
-                (Element.Font.color (Element.rgb 1 1 1)
-                    :: Element.htmlAttribute (Html.Attributes.id itemId)
-                    :: List.map Element.htmlAttribute (system.dragEvents index itemId)
-                )
-                (Element.text item)
+            Html.p
+                (Html.Attributes.id itemId :: system.dragEvents index itemId)
+                [ Html.text item ]
 
 
-ghostView : DnDList.Model -> List Fruit -> Element.Element Msg
+ghostView : DnDList.Model -> List Fruit -> Html.Html Msg
 ghostView dnd items =
     let
         maybeDragItem : Maybe Fruit
@@ -169,11 +150,9 @@ ghostView dnd items =
     in
     case maybeDragItem of
         Just item ->
-            Element.el
-                (Element.Font.color (Element.rgb 1 1 1)
-                    :: List.map Element.htmlAttribute (system.ghostStyles dnd)
-                )
-                (Element.text item)
+            Html.div
+                (system.ghostStyles dnd)
+                [ Html.text item ]
 
         Nothing ->
-            Element.none
+            Html.text ""
